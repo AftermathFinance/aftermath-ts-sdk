@@ -921,21 +921,21 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
 	  }
 );
 
-export type ApiPerpetualsPreviewReduceOrderBody = {
-	marketId: PerpetualsMarketId;
-	leverage?: number;
-	orderId: PerpetualsOrderId;
-	sizeToSubtract: bigint;
-	// TODO: remove eventually ?
-	// collateralCoinType: CoinType;
-} & (
-	| {
-			accountId: PerpetualsAccountId;
-	  }
-	| {
-			vaultId: ObjectId;
-	  }
-);
+// export type ApiPerpetualsPreviewReduceOrderBody = {
+// 	marketId: PerpetualsMarketId;
+// 	leverage?: number;
+// 	orderId: PerpetualsOrderId;
+// 	sizeToSubtract: bigint;
+// 	// TODO: remove eventually ?
+// 	// collateralCoinType: CoinType;
+// } & (
+// 	| {
+// 			accountId: PerpetualsAccountId;
+// 	  }
+// 	| {
+// 			vaultId: ObjectId;
+// 	  }
+// );
 
 export type ApiPerpetualsPreviewSetLeverageBody = {
 	marketId: PerpetualsMarketId;
@@ -950,14 +950,14 @@ export type ApiPerpetualsPreviewSetLeverageBody = {
 	  }
 );
 
-export type ApiPerpetualsPreviewReduceOrderResponse =
-	| {
-			error: string;
-	  }
-	| {
-			positionAfterReduceOrder: PerpetualsPosition;
-			collateralChange: number;
-	  };
+// export type ApiPerpetualsPreviewReduceOrderResponse =
+// 	| {
+// 			error: string;
+// 	  }
+// 	| {
+// 			positionAfterReduceOrder: PerpetualsPosition;
+// 			collateralChange: number;
+// 	  };
 
 export type ApiPerpetualsPreviewSetLeverageResponse =
 	| {
@@ -1338,21 +1338,21 @@ export type ApiPerpetualsCancelStopOrdersBody = {
 	  }
 );
 
-export type ApiPerpetualsReduceOrderBody = {
-	marketId: PerpetualsMarketId;
-	collateralChange: number;
-	leverage?: number;
-	orderId: PerpetualsOrderId;
-	sizeToSubtract: bigint;
-	txKind?: SerializedTransaction;
-} & (
-	| {
-			accountId: PerpetualsAccountId;
-	  }
-	| {
-			vaultId: ObjectId;
-	  }
-);
+// export type ApiPerpetualsReduceOrderBody = {
+// 	marketId: PerpetualsMarketId;
+// 	collateralChange: number;
+// 	leverage?: number;
+// 	orderId: PerpetualsOrderId;
+// 	sizeToSubtract: bigint;
+// 	txKind?: SerializedTransaction;
+// } & (
+// 	| {
+// 			accountId: PerpetualsAccountId;
+// 	  }
+// 	| {
+// 			vaultId: ObjectId;
+// 	  }
+// );
 
 export type ApiPerpetualsSetLeverageTxBody = {
 	marketId: PerpetualsMarketId;

@@ -43,11 +43,11 @@ import {
 	ApiPerpetualsPreviewCancelOrdersBody,
 	ApiPerpetualsPreviewCancelOrdersResponse,
 	PackageId,
-	ApiPerpetualsPreviewReduceOrderBody,
-	ApiPerpetualsPreviewReduceOrderResponse,
+	// ApiPerpetualsPreviewReduceOrderBody,
+	// ApiPerpetualsPreviewReduceOrderResponse,
 	ApiPerpetualsAllocateCollateralBody,
 	ApiPerpetualsDeallocateCollateralBody,
-	ApiPerpetualsReduceOrderBody,
+	// ApiPerpetualsReduceOrderBody,
 	ApiPerpetualsPreviewSetLeverageBody,
 	ApiPerpetualsPreviewSetLeverageResponse,
 	ApiPerpetualsSetLeverageTxBody,
@@ -616,41 +616,41 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getReduceOrderTx(inputs: {
-		tx?: Transaction;
-		collateralChange: number;
-		marketId: PerpetualsMarketId;
-		orderId: PerpetualsOrderId;
-		sizeToSubtract: bigint;
-		leverage?: number;
-	}) {
-		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiPerpetualsReduceOrderBody,
-			ApiTransactionResponse
-		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"transactions/reduce-order",
-			{
-				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
-				walletAddress: this.ownerAddress(),
-				...("vaultId" in this.accountCap
-					? {
-							vaultId: this.accountCap.vaultId,
-					  }
-					: {
-							accountId: this.accountCap.accountId,
-					  }),
-			},
-			undefined,
-			{
-				txKind: true,
-			}
-		);
-	}
+	// public async getReduceOrderTx(inputs: {
+	// 	tx?: Transaction;
+	// 	collateralChange: number;
+	// 	marketId: PerpetualsMarketId;
+	// 	orderId: PerpetualsOrderId;
+	// 	sizeToSubtract: bigint;
+	// 	leverage?: number;
+	// }) {
+	// 	const { tx, ...otherInputs } = inputs;
+	// 	return this.fetchApiTxObject<
+	// 		ApiPerpetualsReduceOrderBody,
+	// 		ApiTransactionResponse
+	// 	>(
+	// 		`${this.vaultId ? "vault" : "account"}/` +
+	// 			"transactions/reduce-order",
+	// 		{
+	// 			...otherInputs,
+	// 			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+	// 				{ tx }
+	// 			),
+	// 			walletAddress: this.ownerAddress(),
+	// 			...("vaultId" in this.accountCap
+	// 				? {
+	// 						vaultId: this.accountCap.vaultId,
+	// 				  }
+	// 				: {
+	// 						accountId: this.accountCap.accountId,
+	// 				  }),
+	// 		},
+	// 		undefined,
+	// 		{
+	// 			txKind: true,
+	// 		}
+	// 	);
+	// }
 
 	public async getSetLeverageTx(inputs: {
 		tx?: Transaction;
@@ -692,18 +692,18 @@ export class PerpetualsAccount extends Caller {
 	//  Position Txs
 	// =========================================================================
 
-	public async getClosePositionTx(inputs: {
-		size: bigint;
-		market: PerpetualsMarket;
-		orderDatas: PerpetualsOrderData[];
-		indexPrice: number;
-		collateralPrice: number;
-	}) {
-		throw new Error("TODO");
-		// return this.getPlaceMarketOrderTx({
-		// 	...this.closePositionTxInputs(inputs),
-		// });
-	}
+	// public async getClosePositionTx(inputs: {
+	// 	size: bigint;
+	// 	market: PerpetualsMarket;
+	// 	orderDatas: PerpetualsOrderData[];
+	// 	indexPrice: number;
+	// 	collateralPrice: number;
+	// }) {
+	// 	throw new Error("TODO");
+	// 	// return this.getPlaceMarketOrderTx({
+	// 	// 	...this.closePositionTxInputs(inputs),
+	// 	// });
+	// }
 
 	// =========================================================================
 	//  Interactions
@@ -877,41 +877,41 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getReduceOrderPreview(
-		inputs: {
-			marketId: PerpetualsMarketId;
-			orderId: PerpetualsOrderId;
-			sizeToSubtract: bigint;
-			leverage?: number;
-		},
-		abortSignal?: AbortSignal
-	): Promise<
-		| {
-				positionAfterReduceOrder: PerpetualsPosition;
-				collateralChange: number;
-		  }
-		| {
-				error: string;
-		  }
-	> {
-		return this.fetchApi<
-			ApiPerpetualsPreviewReduceOrderResponse,
-			ApiPerpetualsPreviewReduceOrderBody
-		>(
-			`${this.vaultId ? "vault" : "account"}/` + "previews/reduce-order",
-			{
-				...inputs,
-				...("vaultId" in this.accountCap
-					? {
-							vaultId: this.accountCap.vaultId,
-					  }
-					: {
-							accountId: this.accountCap.accountId,
-					  }),
-			},
-			abortSignal
-		);
-	}
+	// public async getReduceOrderPreview(
+	// 	inputs: {
+	// 		marketId: PerpetualsMarketId;
+	// 		orderId: PerpetualsOrderId;
+	// 		sizeToSubtract: bigint;
+	// 		leverage?: number;
+	// 	},
+	// 	abortSignal?: AbortSignal
+	// ): Promise<
+	// 	| {
+	// 			positionAfterReduceOrder: PerpetualsPosition;
+	// 			collateralChange: number;
+	// 	  }
+	// 	| {
+	// 			error: string;
+	// 	  }
+	// > {
+	// 	return this.fetchApi<
+	// 		ApiPerpetualsPreviewReduceOrderResponse,
+	// 		ApiPerpetualsPreviewReduceOrderBody
+	// 	>(
+	// 		`${this.vaultId ? "vault" : "account"}/` + "previews/reduce-order",
+	// 		{
+	// 			...inputs,
+	// 			...("vaultId" in this.accountCap
+	// 				? {
+	// 						vaultId: this.accountCap.vaultId,
+	// 				  }
+	// 				: {
+	// 						accountId: this.accountCap.accountId,
+	// 				  }),
+	// 		},
+	// 		abortSignal
+	// 	);
+	// }
 
 	public async getSetLeveragePreview(
 		inputs: {
@@ -949,6 +949,43 @@ export class PerpetualsAccount extends Caller {
 			abortSignal
 		);
 	}
+
+	// public getPlaceClosePositionOrderPreview = async (
+	// 	inputs: {
+	// 		size: bigint;
+	// 		marketId: PerpetualsMarketId;
+	// 		leverage?: number;
+	// 	} & (
+	// 		| {
+	// 				accountId: PerpetualsAccountId;
+	// 		  }
+	// 		| {
+	// 				vaultId: ObjectId;
+	// 		  }
+	// 	),
+	// 	abortSignal?: AbortSignal
+	// ): Promise<ReturnType<PerpetualsAccount["getPlaceMarketOrderPreview"]>> => {
+	// 	// TODO: make this fetch instead ?
+	// 	const position = this.positionForMarketId({
+	// 		marketId: inputs.marketId,
+	// 	});
+	// 	if (!position)
+	// 		throw new Error(
+	// 			`Account has no position for market id: ${inputs.marketId}`
+	// 		);
+	// 	return this.getPlaceMarketOrderPreview(
+	// 		{
+	// 			...inputs,
+	// 			reduceOnly: true,
+	// 			side:
+	// 				Perpetuals.positionSide(position) ===
+	// 				PerpetualsOrderSide.Ask
+	// 					? PerpetualsOrderSide.Bid
+	// 					: PerpetualsOrderSide.Ask,
+	// 		},
+	// 		abortSignal
+	// 	);
+	// };
 
 	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {
 		const orderDatas = this.account.positions.reduce(
