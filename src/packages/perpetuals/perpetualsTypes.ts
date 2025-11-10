@@ -212,20 +212,27 @@ export interface PerpetualsMarketCandleDataPoint {
 //  Orderbook
 // =========================================================================
 
+export interface PerpetualsOrderbookItem {
+	size: number;
+	price: number;
+}
+
 export interface PerpetualsOrderbook {
-	bids: {
-		size: number;
-		price: number;
-	}[];
-	asks: {
-		size: number;
-		price: number;
-	}[];
+	bids: PerpetualsOrderbookItem[];
+	asks: PerpetualsOrderbookItem[];
 	asksTotalSize: number;
 	bidsTotalSize: number;
 	bestBidPrice: number | undefined;
 	bestAskPrice: number | undefined;
 	midPrice: number | undefined;
+	nonce: bigint;
+}
+
+export interface PerpetualsOrderbookDeltas {
+	bidsDeltas: PerpetualsOrderbookItem[];
+	asksDeltas: PerpetualsOrderbookItem[];
+	asksTotalSizeDelta: number;
+	bidsTotalSizeDelta: number;
 	nonce: bigint;
 }
 
@@ -1665,6 +1672,11 @@ export interface PerpetualsWsUpdatesTradesPayload {
 	trades: PerpetualsTradeHistoryData[];
 }
 
+export interface PerpetualsWsUpdatesOrderbookPayload {
+	marketId: PerpetualsMarketId;
+	orderbookDeltas: PerpetualsOrderbookDeltas;
+}
+
 export interface PerpetualsWsUpdatesUserPayload {
 	account: PerpetualsAccountObject;
 	stopOrders: PerpetualsStopOrderData[] | undefined;
@@ -1679,7 +1691,7 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| { market: PerpetualsMarketData }
 	| { user: PerpetualsWsUpdatesUserPayload }
 	| { oracle: PerpetualsWsUpdatesOraclePayload }
-	| { orderbook: PerpetualsOrderbook }
+	| { orderbook: PerpetualsWsUpdatesOrderbookPayload }
 	| { trades: PerpetualsWsUpdatesTradesPayload };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
