@@ -1662,13 +1662,7 @@ export interface PerpetualsWsUpdatesOraclePayload {
 
 export interface PerpetualsWsUpdatesTradesPayload {
 	marketId: PerpetualsMarketId;
-	trades: {
-		timestamp: Timestamp;
-		txDigest: TransactionDigest;
-		isAsk: boolean;
-		size: number;
-		price: number;
-	}[];
+	trades: PerpetualsTradeHistoryData[];
 }
 
 export interface PerpetualsWsUpdatesUserPayload {
