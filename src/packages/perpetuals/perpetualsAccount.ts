@@ -792,7 +792,6 @@ export class PerpetualsAccount extends Caller {
 					: {
 							accountId: this.accountCap.accountId,
 					  }),
-				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
 		);
@@ -832,7 +831,6 @@ export class PerpetualsAccount extends Caller {
 					: {
 							accountId: this.accountCap.accountId,
 					  }),
-				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
 		);
@@ -874,7 +872,6 @@ export class PerpetualsAccount extends Caller {
 					: {
 							accountId: this.accountCap.accountId,
 					  }),
-				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
 		);
@@ -911,7 +908,6 @@ export class PerpetualsAccount extends Caller {
 					: {
 							accountId: this.accountCap.accountId,
 					  }),
-				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
 		);
@@ -949,7 +945,6 @@ export class PerpetualsAccount extends Caller {
 					: {
 							accountId: this.accountCap.accountId,
 					  }),
-				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
 		);

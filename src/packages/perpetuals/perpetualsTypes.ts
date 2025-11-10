@@ -864,7 +864,7 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	| "accountId"
 	| "slTp"
 > & {
-	collateralCoinType: CoinType;
+	// collateralCoinType: CoinType;
 	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
@@ -888,7 +888,7 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	| "accountId"
 	| "slTp"
 > & {
-	collateralCoinType: CoinType;
+	// collateralCoinType: CoinType;
 	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
@@ -905,7 +905,7 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 
 export type ApiPerpetualsPreviewCancelOrdersBody = {
 	// TODO: remove eventually ?
-	collateralCoinType: CoinType;
+	// collateralCoinType: CoinType;
 	marketIdsToData: Record<
 		PerpetualsMarketId,
 		{
@@ -927,7 +927,7 @@ export type ApiPerpetualsPreviewReduceOrderBody = {
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
 	// TODO: remove eventually ?
-	collateralCoinType: CoinType;
+	// collateralCoinType: CoinType;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -940,7 +940,7 @@ export type ApiPerpetualsPreviewReduceOrderBody = {
 export type ApiPerpetualsPreviewSetLeverageBody = {
 	marketId: PerpetualsMarketId;
 	leverage: number;
-	collateralCoinType: CoinType;
+	// collateralCoinType: CoinType;
 } & (
 	| {
 			accountId: PerpetualsAccountId;

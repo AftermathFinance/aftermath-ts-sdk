@@ -167,7 +167,6 @@ export class PerpetualsMarket extends Caller {
 			"account/previews/place-market-order",
 			{
 				...inputs,
-				collateralCoinType: this.collateralCoinType,
 				accountId: undefined,
 			},
 			abortSignal
@@ -200,7 +199,6 @@ export class PerpetualsMarket extends Caller {
 			"account/previews/place-limit-order",
 			{
 				...inputs,
-				collateralCoinType: this.collateralCoinType,
 				accountId: undefined,
 			},
 			abortSignal
