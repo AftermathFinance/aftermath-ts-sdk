@@ -1,19 +1,28 @@
 {
-	"include": ["src/**/*"],
-	"exclude": ["node_modules"],
+	"include": [
+		"src/**/*",
+		"tests/**/*"
+	],
+	"exclude": [
+		"node_modules"
+	],
 	"compilerOptions": {
 		"target": "ES6",
 		"declaration": true,
-		"outDir": "dist",
 		"declarationMap": true,
 		"moduleResolution": "Node16",
-		"lib": ["es2021", "dom"],
+		"lib": [
+			"es2021",
+			"dom"
+		],
 		"skipLibCheck": true,
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
 		"module": "NodeNext"
 	}
 }
