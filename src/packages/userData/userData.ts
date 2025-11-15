@@ -1,9 +1,9 @@
-import { Caller } from "../../general/utils/caller";
-import { CallerConfig } from "../../types";
+import { Caller } from "../../general/utils/caller.ts";
+import { CallerConfig } from "../../types.ts";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataPublicKeyBody,
-} from "./userDataTypes";
+} from "./userDataTypes.ts";
 
 /**
  * The `UserData` class provides functionality for managing user-specific

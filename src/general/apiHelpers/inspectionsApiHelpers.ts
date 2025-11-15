@@ -1,6 +1,6 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../providers/aftermathApi";
-import { Byte, SuiAddress } from "../../types";
+import { AftermathApi } from "../providers/aftermathApi.ts";
+import { Byte, SuiAddress } from "../../types.ts";
 import { SuiEvent, TransactionEffects } from "@mysten/sui/client";
 
 export class InspectionsApiHelpers {

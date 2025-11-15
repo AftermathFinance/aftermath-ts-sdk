@@ -1,7 +1,7 @@
-import { Sui } from "../../packages";
-import { CoinType } from "../../types";
-import { CoinDecimal } from "../../types";
-import { ObjectId, SuiAddress } from "./generalTypes";
+import { Sui } from "../../packages/index.ts";
+import { CoinType } from "../../types.ts";
+import { CoinDecimal } from "../../types.ts";
+import { ObjectId, SuiAddress } from "./generalTypes.ts";
 
 // =========================================================================
 //  Name Only

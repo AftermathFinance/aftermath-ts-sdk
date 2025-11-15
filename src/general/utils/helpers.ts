@@ -17,18 +17,18 @@ import {
 	SuiAddress,
 	CoinType,
 	CoinGeckoChain,
-} from "../../types";
-import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import { Casting } from "./casting";
+} from "../../types.ts";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers.ts";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers.ts";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers.ts";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers.ts";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers.ts";
+import { Casting } from "./casting.ts";
 import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { MoveErrors } from "../types/moveErrorsInterface";
+import { MoveErrors } from "../types/moveErrorsInterface.ts";
 import { isValidSuiAddress } from "@mysten/sui/utils";
 import { decodeSuiPrivateKey, Keypair } from "@mysten/sui/cryptography";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";

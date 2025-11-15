@@ -1,7 +1,7 @@
-import { Casting, Coin, Helpers, PerpetualsAccount } from "../..";
-import { Caller } from "../../general/utils/caller";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
+import { Casting, Coin, Helpers, PerpetualsAccount } from "../../index.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
+import { IFixedUtils } from "../../general/utils/iFixedUtils.ts";
 import {
 	ApiIndexerEventsBody,
 	ApiPerpetualsExecutionPriceBody,
@@ -31,9 +31,9 @@ import {
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
 	CallerConfig,
-} from "../../types";
-import { Perpetuals } from "./perpetuals";
-import { PerpetualsOrderUtils } from "./utils";
+} from "../../types.ts";
+import { Perpetuals } from "./perpetuals.ts";
+import { PerpetualsOrderUtils } from "./utils/index.ts";
 
 export class PerpetualsMarket extends Caller {
 	// =========================================================================

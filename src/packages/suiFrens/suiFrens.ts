@@ -24,13 +24,13 @@ import {
 	HarvestSuiFrenFeesEvent,
 	ObjectId,
 	CallerConfig,
-} from "../../types";
-import { SuiFren } from "./suiFren";
-import { StakedSuiFren } from "./stakedSuiFren";
-import { Caller } from "../../general/utils/caller";
-import { Coin } from "../coin";
-import { Helpers } from "../../general/utils";
-import { AftermathApi } from "../../general/providers";
+} from "../../types.ts";
+import { SuiFren } from "./suiFren.ts";
+import { StakedSuiFren } from "./stakedSuiFren.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { Coin } from "../coin/index.ts";
+import { Helpers } from "../../general/utils/index.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 export class SuiFrens extends Caller {
 	// =========================================================================

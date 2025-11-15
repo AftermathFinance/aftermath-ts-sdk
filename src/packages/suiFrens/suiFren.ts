@@ -14,11 +14,11 @@ import {
 	ObjectId,
 	SuiAddress,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import dayjs from "dayjs";
-import { Coin } from "..";
-import { AftermathApi } from "../../general/providers";
+import { Coin } from "../index.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -62,14 +62,14 @@ export class SuiFren extends Caller {
 		return {
 			...(this.suiFren.mixLimit
 				? {
-						"Mixes Remaining": this.suiFren.mixLimit.toString(),
-				  }
+					"Mixes Remaining": this.suiFren.mixLimit.toString(),
+				}
 				: {}),
 			...(this.suiFren.lastEpochMixed
 				? {
-						"Last Epoch Mixed":
-							this.suiFren.lastEpochMixed.toString(),
-				  }
+					"Last Epoch Mixed":
+						this.suiFren.lastEpochMixed.toString(),
+				}
 				: {}),
 		};
 	}

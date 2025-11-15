@@ -1,1 +1,1 @@
-export * from "./referralVault";
+export * from "./referralVault.ts";

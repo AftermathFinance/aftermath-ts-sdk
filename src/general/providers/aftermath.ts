@@ -1,20 +1,20 @@
-import { Pools } from "../../packages/pools/pools";
+import { Pools } from "../../packages/pools/pools.ts";
 import {
 	CoinType,
 	ConfigAddresses,
 	SuiAddress,
 	SuiNetwork,
 	Url,
-} from "../../types";
-import { Wallet } from "../wallet/wallet";
-import { SuiFrens } from "../../packages/suiFrens/suiFrens";
-import { Coin } from "../../packages/coin/coin";
-import { Faucet } from "../../packages/faucet/faucet";
-import { Staking } from "../../packages/staking/staking";
-import { Helpers } from "../utils/helpers";
-import { Casting } from "../utils/casting";
-import { Caller } from "../utils/caller";
-import { Prices } from "../prices/prices";
+} from "../../types.ts";
+import { Wallet } from "../wallet/wallet.ts";
+import { SuiFrens } from "../../packages/suiFrens/suiFrens.ts";
+import { Coin } from "../../packages/coin/coin.ts";
+import { Faucet } from "../../packages/faucet/faucet.ts";
+import { Staking } from "../../packages/staking/staking.ts";
+import { Helpers } from "../utils/helpers.ts";
+import { Casting } from "../utils/casting.ts";
+import { Caller } from "../utils/caller.ts";
+import { Prices } from "../prices/prices.ts";
 import {
 	Auth,
 	LeveragedStaking,
@@ -22,18 +22,18 @@ import {
 	ReferralVault,
 	Router,
 	Sui,
-} from "../../packages";
-import { Perpetuals } from "../../packages/perpetuals";
-import { Oracle } from "../../packages/oracle/oracle";
-import { Farms } from "../../packages/farms/farms";
-import { DynamicGas } from "../dynamicGas/dynamicGas";
-import { AftermathApi } from "./aftermathApi";
+} from "../../packages/index.ts";
+import { Perpetuals } from "../../packages/perpetuals/index.ts";
+import { Oracle } from "../../packages/oracle/oracle.ts";
+import { Farms } from "../../packages/farms/farms.ts";
+import { DynamicGas } from "../dynamicGas/dynamicGas.ts";
+import { AftermathApi } from "./aftermathApi.ts";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
-import { Dca } from "../../packages/dca/dca";
-import { Multisig } from "../../packages/multisig/multisig";
-import { LimitOrders } from "../../packages/limitOrders/limitOrders";
-import { UserData } from "../../packages/userData/userData";
-import { Referrals } from "../../packages/referrals/referrals";
+import { Dca } from "../../packages/dca/dca.ts";
+import { Multisig } from "../../packages/multisig/multisig.ts";
+import { LimitOrders } from "../../packages/limitOrders/limitOrders.ts";
+import { UserData } from "../../packages/userData/userData.ts";
+import { Referrals } from "../../packages/referrals/referrals.ts";
 
 /**
  * The `Aftermath` class serves as the primary entry point for interacting with

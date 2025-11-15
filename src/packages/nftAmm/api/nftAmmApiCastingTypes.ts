@@ -1,8 +1,8 @@
-import { BigIntAsString } from "../../../types";
+import { BigIntAsString } from "../../../types.ts";
 import {
 	SupplyOnChain,
 	TableOnChain,
-} from "../../../general/types/castingTypes";
+} from "../../../general/types/castingTypes.ts";
 import { SuiObjectResponse } from "@mysten/sui/client";
 
 // =========================================================================

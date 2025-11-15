@@ -1,4 +1,4 @@
-import { Event, ObjectId, Timestamp } from "../../types";
+import { Event, ObjectId, Timestamp } from "../../types.ts";
 
 // =========================================================================
 //  Events

@@ -3,7 +3,7 @@ import {
 	EventId,
 	SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
-import { SuiNetwork } from "./suiTypes";
+import { SuiNetwork } from "./suiTypes.ts";
 
 /**
  * Represents a token or currency balance in the system, defined as a bigint.

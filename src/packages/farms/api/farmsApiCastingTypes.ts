@@ -1,9 +1,9 @@
-import { BigIntAsString, CoinType, ObjectId } from "../../../types";
+import { BigIntAsString, CoinType, ObjectId } from "../../../types.ts";
 import {
 	EventOnChain,
 	TableOnChain,
 	WrappedEventOnChain,
-} from "../../../general/types/castingTypes";
+} from "../../../general/types/castingTypes.ts";
 import { SuiObjectData } from "@mysten/sui/client";
 
 // =========================================================================

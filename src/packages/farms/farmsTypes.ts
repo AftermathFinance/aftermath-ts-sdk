@@ -1,11 +1,11 @@
-import { ObjectId, SuiAddress } from "../../types";
+import { ObjectId, SuiAddress } from "../../types.ts";
 import {
 	Balance,
 	Event,
 	Object,
 	Timestamp,
-} from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+} from "../../general/types/generalTypes.ts";
+import { CoinType } from "../coin/coinTypes.ts";
 
 // =========================================================================
 //  Name Only

@@ -1,6 +1,6 @@
-import { Perpetuals } from "..";
-import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
-const BN = require("bn.js");
+import { Perpetuals } from "../index.ts";
+import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types.ts";
+import BN from "bn.js"
 
 export class PerpetualsOrderUtils {
 	// Return order_id given price, counter and side

@@ -1,3 +1,3 @@
-export * from "./perpetuals";
-export * from "./perpetualsAccount";
-export * from "./perpetualsMarket";
+export * from "./perpetuals.ts";
+export * from "./perpetualsAccount.ts";
+export * from "./perpetualsMarket.ts";

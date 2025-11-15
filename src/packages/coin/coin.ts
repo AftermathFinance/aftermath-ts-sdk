@@ -13,11 +13,11 @@ import {
 	KeyType,
 	SuiNetwork,
 	Url,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { Helpers } from "../../general/utils/helpers";
-import { Prices } from "../../general/prices/prices";
-import { AftermathApi } from "../../general/providers";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { Helpers } from "../../general/utils/helpers.ts";
+import { Prices } from "../../general/prices/prices.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 import { CoinMetadata } from "@mysten/sui/client";
 
 /**

@@ -1,17 +1,17 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	UserEventsInputs,
 	RouterTradeEvent,
 	AnyObjectType,
 	RouterAddresses,
-} from "../../../types";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { RouterApiCasting } from "./routerApiCasting";
+} from "../../../types.ts";
+import { RouterTradeEventOnChain } from "./routerApiCastingTypes.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { RouterApiCasting } from "./routerApiCasting.ts";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+} from "../../../general/types/moveErrorsInterface.ts";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.

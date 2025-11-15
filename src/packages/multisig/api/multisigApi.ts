@@ -1,8 +1,8 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { SharedCustodyAddresses } from "../../../types";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
+import { SharedCustodyAddresses } from "../../../types.ts";
 import { MultiSigPublicKey } from "@mysten/sui/multisig";
 import { Ed25519PublicKey } from "@mysten/sui/keypairs/ed25519";
-import { ApiMultisigUserBody, MultisigData } from "../multisigTypes";
+import { ApiMultisigUserBody, MultisigData } from "../multisigTypes.ts";
 
 export class MultisigApi {
 	// =========================================================================

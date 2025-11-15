@@ -1,4 +1,4 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	AnyObjectType,
 	FarmsAddresses,
@@ -36,10 +36,10 @@ import {
 	ApiFarmsCreateStakingPoolBodyV1,
 	ApiFarmsStakeBodyV1,
 	FarmsVersion,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Sui } from "../../sui";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Sui } from "../../sui/index.ts";
 import {
 	FarmsCreatedVaultEventOnChainV1,
 	FarmsDepositedPrincipalEventOnChainV1,
@@ -49,18 +49,18 @@ import {
 	FarmsStakedRelaxedEventOnChainV1,
 	FarmsUnlockedEventOnChainV1,
 	FarmsWithdrewPrincipalEventOnChainV1,
-} from "./farmsApiCastingTypes";
+} from "./farmsApiCastingTypes.ts";
 import {
 	TransactionArgument,
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { Coin } from "../..";
+import { Coin } from "../../index.ts";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+} from "../../../general/types/moveErrorsInterface.ts";
 
 export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================

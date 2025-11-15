@@ -21,14 +21,14 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
-} from "../../types";
-import { Pool } from "./pool";
-import { Coin } from "../../packages/coin/coin";
-import { Caller } from "../../general/utils/caller";
-import { Helpers } from "../../general/utils/helpers";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { AftermathApi } from "../../general/providers";
-import { PoolsApi } from "./api/poolsApi";
+} from "../../types.ts";
+import { Pool } from "./pool.ts";
+import { Coin } from "../../packages/coin/coin.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { Helpers } from "../../general/utils/helpers.ts";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
+import { PoolsApi } from "./api/poolsApi.ts";
 
 /**
  * The `Pools` class provides a high-level interface for interacting with

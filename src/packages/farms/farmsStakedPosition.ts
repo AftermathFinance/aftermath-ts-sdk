@@ -1,4 +1,4 @@
-import { Caller } from "../../general/utils/caller";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiFarmsDepositPrincipalBody,
 	ApiFarmsLockBody,
@@ -17,14 +17,14 @@ import {
 	SuiNetwork,
 	Timestamp,
 	Url,
-} from "../../types";
-import { FarmsStakingPool } from "./farmsStakingPool";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Helpers } from "../../general/utils";
+} from "../../types.ts";
+import { FarmsStakingPool } from "./farmsStakingPool.ts";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
+import { Helpers } from "../../general/utils/index.ts";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { Farms } from "./farms";
-import { AftermathApi } from "../../general/providers";
+import duration from "dayjs/plugin/duration.js";
+import { Farms } from "./farms.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 /**
  * The `FarmsStakedPosition` class represents a user's individual staked position
@@ -250,9 +250,9 @@ export class FarmsStakedPosition extends Caller {
 		// to the pool's maximum allowed lock multiplier or duration.
 		if (
 			this.stakedPosition.lockDurationMs <=
-				stakingPool.stakingPool.maxLockDurationMs &&
+			stakingPool.stakingPool.maxLockDurationMs &&
 			this.stakedPosition.lockMultiplier <=
-				stakingPool.stakingPool.maxLockMultiplier
+			stakingPool.stakingPool.maxLockMultiplier
 		) {
 			// Lock multiplier is valid; do nothing special
 		} else {

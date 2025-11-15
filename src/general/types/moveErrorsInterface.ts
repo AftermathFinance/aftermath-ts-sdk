@@ -1,4 +1,4 @@
-import { ModuleName, MoveErrorCode, PackageId } from "./generalTypes";
+import { ModuleName, MoveErrorCode, PackageId } from "./generalTypes.ts";
 
 export interface MoveErrorsInterface {
 	readonly moveErrors: MoveErrors;

@@ -1,5 +1,5 @@
 import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	StakeEvent,
 	StakingPosition,
@@ -15,7 +15,7 @@ import {
 	ApiUpdateValidatorFeeBody,
 	UnstakeEvent,
 	UnstakeRequestedEvent,
-} from "../stakingTypes";
+} from "../stakingTypes.ts";
 import {
 	AnyObjectType,
 	Balance,
@@ -24,16 +24,16 @@ import {
 	ObjectId,
 	StakingAddresses,
 	SuiAddress,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Coin } from "../../coin";
-import { Sui } from "../../sui";
-import { Staking } from "../..";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Coin } from "../../coin/index.ts";
+import { Sui } from "../../sui/index.ts";
+import { Staking } from "../../index.ts";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+} from "../../../general/types/moveErrorsInterface.ts";
 
 export class StakingApi implements MoveErrorsInterface {
 	// =========================================================================

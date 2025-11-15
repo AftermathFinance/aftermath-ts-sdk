@@ -3,15 +3,15 @@ import {
 	SignMessageCallback,
 	SuiAddress,
 	SuiNetwork,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiCreateAuthAccountBody,
 	ApiGetAccessTokenBody,
 	ApiGetAccessTokenResponse,
 	RateLimit,
-} from "./authTypes";
-import { Helpers } from "../../general/utils";
+} from "./authTypes.ts";
+import { Helpers } from "../../general/utils/index.ts";
 
 /**
  * The `Auth` class manages creation and refreshing of access tokens

@@ -1,4 +1,4 @@
-import { SuiAddress } from "../../types";
+import { SuiAddress } from "../../types.ts";
 
 /**
  * Request body for creating or registering a user’s public key in Aftermath’s backend.

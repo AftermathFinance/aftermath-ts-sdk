@@ -17,11 +17,11 @@ import {
 	StakingApyDataPoint,
 	StakingApyTimeframeKey,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/client";
-import { Casting } from "../../general/utils";
-import { AftermathApi } from "../../general/providers";
+import { Casting } from "../../general/utils/index.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 /**
  * The `Staking` class provides methods for interacting with Aftermath's

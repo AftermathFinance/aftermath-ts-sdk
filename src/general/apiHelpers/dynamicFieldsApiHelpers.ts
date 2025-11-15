@@ -5,8 +5,8 @@ import {
 	DynamicFieldsInputs,
 	DynamicFieldsWithCursor,
 	ObjectId,
-} from "../../types";
-import { AftermathApi } from "../providers/aftermathApi";
+} from "../../types.ts";
+import { AftermathApi } from "../providers/aftermathApi.ts";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================

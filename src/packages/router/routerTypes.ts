@@ -14,8 +14,8 @@ import {
 	IFixedAsString,
 	IFixed,
 	ApiIndexerEventsBody,
-} from "../../general/types/generalTypes";
-import { CoinType, ServiceCoinData } from "../coin/coinTypes";
+} from "../../general/types/generalTypes.ts";
+import { CoinType, ServiceCoinData } from "../coin/coinTypes.ts";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
 
 /**
