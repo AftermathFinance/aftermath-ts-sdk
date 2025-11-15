@@ -6,9 +6,6 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	SuiNetwork,
-	CoinsToDecimals,
-	CoinsToPrice,
 	ObjectId,
 	Slippage,
 	ModuleName,
@@ -74,6 +71,20 @@ export class Helpers {
 	 * queries for transaction data by digest or other criteria.
 	 */
 	public static readonly transactions = TransactionsApiHelpers;
+
+	/**
+	 * Asserts that a condition is true, throwing an error with the specified message
+	 * if the condition is false.
+	 *
+	 * @param condition - The boolean condition to check
+	 * @param errorMessage - The error message to throw if the condition is false
+	 * @throws {Error} Throws an error with the provided message if the condition is false
+	 */
+	public static assert = (condition: boolean, errorMessage: string) => {
+		if (!condition) {
+			throw new Error(errorMessage);
+		}
+	};
 
 	// =========================================================================
 	//  Type Manipulation
@@ -420,10 +431,8 @@ export class Helpers {
 
 		for (let index = 0; index < array.length; index++) {
 			const item = array[index];
-			if(func(item, index,array))
-				trues[trues.length] = item;
-			else
-				falses[falses.length] = item;
+			if (func(item, index, array)) trues[trues.length] = item;
+			else falses[falses.length] = item;
 		}
 
 		return [trues, falses];
