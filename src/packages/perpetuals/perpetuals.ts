@@ -39,6 +39,8 @@ import {
 	PerpetualsWsUpdatesSubscriptionMessage,
 	PerpetualsWsUpdatesResponseMessage,
 	PerpetualsWsCandleResponseMessage,
+	ApiPerpetualsCreateVaultBody,
+	ApiPerpetualsCreateVaultCapBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -358,40 +360,67 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	public async getCreateVaultTx(
-		inputs: {
-			walletAddress: SuiAddress;
-			collateralCoinType: CoinType;
-			lockPeriodMs: number;
-			ownerFeePercentage: Percentage;
-			forceWithdrawDelayMs: number;
-			lpCoinMetadata: {
-				// NOTE: is this needed ?
-				// decimals: number;
-				symbol: string;
-				description: string;
-				name: string;
-				iconUrl?: string;
-			};
+	public async getCreateVaultCapTx(
+		// TODO: add tx support
+		inputs: Omit<ApiPerpetualsCreateVaultCapBody, "txKind"> & {
 			tx?: Transaction;
-		} & (
-			| {
-					initialDepositAmount?: Balance;
-			  }
-			| {
-					initialDepositCoinArg: TransactionObjectArgument;
-			  }
-		)
+		}
 	) {
-		const { walletAddress, collateralCoinType, tx } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsCreateAccountBody,
+			ApiPerpetualsCreateVaultCapBody,
 			ApiTransactionResponse
 		>(
-			"transactions/create-vault",
+			"vault/transactions/create-vault-cap",
 			{
-				walletAddress,
-				collateralCoinType,
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getCreateVaultTx(
+		// inputs: {
+		// 	walletAddress: SuiAddress;
+		// 	collateralCoinType: CoinType;
+		// 	lockPeriodMs: number;
+		// 	ownerFeePercentage: Percentage;
+		// 	forceWithdrawDelayMs: number;
+		// 	lpCoinMetadata: {
+		// 		// NOTE: is this needed ?
+		// 		// decimals: number;
+		// 		symbol: string;
+		// 		description: string;
+		// 		name: string;
+		// 		iconUrl?: string;
+		// 	};
+		// 	tx?: Transaction;
+		// } & (
+		// 	| {
+		// 			initialDepositAmount?: Balance;
+		// 	  }
+		// 	| {
+		// 			initialDepositCoinArg: TransactionObjectArgument;
+		// 	  }
+		// )
+		inputs: Omit<ApiPerpetualsCreateVaultBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateVaultBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/create-vault",
+			{
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),

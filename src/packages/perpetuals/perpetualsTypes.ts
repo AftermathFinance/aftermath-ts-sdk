@@ -1058,6 +1058,27 @@ export interface ApiPerpetualsAccountStopOrderDatasBody {
 //  Transactions
 // =========================================================================
 
+export interface ApiPerpetualsCreateVaultCapBody {
+	walletAddress: SuiAddress;
+	// TODO: add tx support
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsCreateVaultBody {
+	// walletAddress: SuiAddress;
+	lpCoinType: CoinType;
+	collateralCoinType: String;
+	collateralOracleId: String;
+	// NOTE: is this correct ?
+	lockPeriodMs: bigint;
+	ownerFeePercentage: Percentage;
+	// NOTE: is this correct ?
+	forceWithdrawDelayMs: bigint;
+	// TODO: add support for amount as well
+	initialDepositCoinArg: TransactionObjectArgument;
+	txKind?: SerializedTransaction;
+}
+
 export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
