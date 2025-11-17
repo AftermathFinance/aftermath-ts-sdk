@@ -1,5 +1,5 @@
-import { CallerConfig, ObjectId, SuiAddress } from "../../types";
-import { Caller } from "../../general/utils/caller";
+import { CallerConfig, ObjectId, SuiAddress } from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiDCAsOwnedBody,
 	ApiDcaTransactionForCreateOrderBody,
@@ -7,7 +7,7 @@ import {
 	DcaOrderObject,
 	DcaOrdersObject,
 	ApiDcaCreateUserBody,
-} from "./dcaTypes";
+} from "./dcaTypes.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 /**

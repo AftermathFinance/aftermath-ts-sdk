@@ -1,5 +1,5 @@
-import { CoinType } from "../../types";
-import { SerializedTransaction, SuiAddress } from "../types";
+import { CoinType } from "../../types.ts";
+import { SerializedTransaction, SuiAddress } from "../types/index.ts";
 
 /**
  * Represents the body payload sent to the dynamic gas service,

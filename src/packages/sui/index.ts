@@ -1,1 +1,1 @@
-export * from "./sui";
+export * from "./sui.ts";

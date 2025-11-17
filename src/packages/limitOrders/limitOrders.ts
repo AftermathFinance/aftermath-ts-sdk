@@ -1,12 +1,12 @@
-import { CallerConfig, CoinType, ObjectId, SuiAddress } from "../../types";
-import { Caller } from "../../general/utils/caller";
+import { CallerConfig, CoinType, ObjectId, SuiAddress } from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiLimitOrdersPastOrdersOwnedBody,
 	ApiLimitOrdersCreateOrderTransactionBody,
 	ApiLimitOrdersCancelOrderTransactionBody,
 	LimitOrderObject,
 	ApiLimitOrdersActiveOrdersOwnedBody,
-} from "./limitOrdersTypes";
+} from "./limitOrdersTypes.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 /**

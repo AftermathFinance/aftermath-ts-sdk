@@ -1,7 +1,7 @@
 import { SuiSystemStateSummary } from "@mysten/sui/client";
-import { Caller } from "../../general/utils/caller";
-import { CallerConfig, CoinType, SuiNetwork, Url } from "../../types";
-import { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller.ts";
+import { CallerConfig, CoinType, SuiNetwork, Url } from "../../types.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 /**
  * The `Sui` class provides utilities to fetch core Sui chain information,

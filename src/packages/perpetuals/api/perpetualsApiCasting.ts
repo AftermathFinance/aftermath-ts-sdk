@@ -31,11 +31,11 @@ import {
 	UpdatedFundingEvent,
 	UpdatedMarketVersionEvent,
 	ReducedOrderEvent,
-} from "../perpetualsTypes";
-import { Casting, Helpers } from "../../../general/utils";
-import { Coin, Perpetuals } from "../..";
-import { CoinSymbol, CoinType } from "../../coin/coinTypes";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
+} from "../perpetualsTypes.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { Coin, Perpetuals } from "../../index.ts";
+import { CoinSymbol, CoinType } from "../../coin/coinTypes.ts";
+import { FixedUtils } from "../../../general/utils/fixedUtils.ts";
 import {
 	CanceledOrderEventOnChain,
 	CreatedAccountEventOnChain,
@@ -60,9 +60,9 @@ import {
 	UpdatedFundingEventOnChain,
 	UpdatedMarketVersionEventOnChain,
 	ReducedOrderEventOnChain,
-} from "../perpetualsCastingTypes";
+} from "../perpetualsCastingTypes.ts";
 import { bcs } from "@mysten/sui/bcs";
-import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
+import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types.ts";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {

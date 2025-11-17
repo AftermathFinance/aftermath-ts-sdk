@@ -1,6 +1,6 @@
-import { AftermathApi } from "../../../general/providers";
-import { AnyObjectType, LimitAddresses } from "../../../types";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { AftermathApi } from "../../../general/providers/index.ts";
+import { AnyObjectType, LimitAddresses } from "../../../types.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
 
 export class LimitOrdersApi {
 	// =========================================================================

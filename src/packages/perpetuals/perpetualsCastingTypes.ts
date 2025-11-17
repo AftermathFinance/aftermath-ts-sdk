@@ -1,4 +1,4 @@
-import { EventOnChain } from "../../general/types/castingTypes";
+import { EventOnChain } from "../../general/types/castingTypes.ts";
 import {
 	AnyObjectType,
 	BigIntAsString,
@@ -13,7 +13,7 @@ import {
 	PerpetualsOrderId,
 	PerpetualsOrderIdAsString,
 	SuiAddress,
-} from "../../types";
+} from "../../types.ts";
 
 // =========================================================================
 //  Objects

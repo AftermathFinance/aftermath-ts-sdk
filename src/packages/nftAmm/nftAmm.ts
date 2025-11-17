@@ -1,13 +1,13 @@
-import { AftermathApi } from "../../general/providers";
-import { Caller } from "../../general/utils/caller";
+import { AftermathApi } from "../../general/providers/index.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	CallerConfig,
 	NftAmmMarketObject,
 	ObjectId,
 	SuiNetwork,
 	Url,
-} from "../../types";
-import { NftAmmMarket } from "./nftAmmMarket";
+} from "../../types.ts";
+import { NftAmmMarket } from "./nftAmmMarket.ts";
 
 export class NftAmm extends Caller {
 	// =========================================================================

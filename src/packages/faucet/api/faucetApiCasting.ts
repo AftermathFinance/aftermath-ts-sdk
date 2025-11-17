@@ -1,8 +1,8 @@
 import {
 	FaucetAddCoinEventOnChain,
 	FaucetMintCoinEventOnChain,
-} from "./faucetApiCastingTypes";
-import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
+} from "./faucetApiCastingTypes.ts";
+import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes.ts";
 
 export class FaucetApiCasting {
 	// =========================================================================

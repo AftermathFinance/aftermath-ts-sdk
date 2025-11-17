@@ -14,8 +14,8 @@ import {
 	Slippage,
 	ApiIndexerEventsBody,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 /**

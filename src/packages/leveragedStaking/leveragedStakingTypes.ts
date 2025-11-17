@@ -7,9 +7,9 @@ import {
 	ObjectId,
 	SuiAddress,
 	Timestamp,
-} from "../../general/types/generalTypes";
+} from "../../general/types/generalTypes.ts";
 import { ManipulateType } from "dayjs";
-import { LeveragedStakingApi } from "./api/leveragedStakingApi";
+import { LeveragedStakingApi } from "./api/leveragedStakingApi.ts";
 
 // =========================================================================
 //  Scallop

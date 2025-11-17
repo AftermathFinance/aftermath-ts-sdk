@@ -12,8 +12,8 @@ import {
 	LeveragedStakingEvent,
 	ApiIndexerUserEventsBody,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 
 /**
  * Represents the Leveraged Staking module.

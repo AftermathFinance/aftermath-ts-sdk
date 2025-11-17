@@ -1,1 +1,1 @@
-export * from "./referrals";
+export * from "./referrals.ts";

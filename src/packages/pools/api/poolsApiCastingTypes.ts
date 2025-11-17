@@ -6,12 +6,12 @@ import {
 	PoolName,
 	ObjectId,
 	SuiAddress,
-} from "../../../types";
+} from "../../../types.ts";
 import {
 	EventOnChain,
 	IndexerEventOnChain,
 	SupplyOnChain,
-} from "../../../general/types/castingTypes";
+} from "../../../general/types/castingTypes.ts";
 
 // =========================================================================
 //  Objects

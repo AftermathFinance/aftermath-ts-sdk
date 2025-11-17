@@ -11,7 +11,7 @@ import {
 	SuiAddress,
 	AnyObjectType,
 	IFixedAsString,
-} from "../../../types";
+} from "../../../types.ts";
 import {
 	EpochWasChangedEventOnChain,
 	StakedEventOnChain,
@@ -19,9 +19,9 @@ import {
 	UnstakeRequestedEventOnChain,
 	UnstakedEventOnChain,
 	ValidatorOperationCapFieldsOnChain,
-} from "./stakingApiCastingTypes";
-import { Helpers } from "../../../general/utils";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
+} from "./stakingApiCastingTypes.ts";
+import { Helpers } from "../../../general/utils/index.ts";
+import { FixedUtils } from "../../../general/utils/fixedUtils.ts";
 
 export class StakingApiCasting {
 	// =========================================================================

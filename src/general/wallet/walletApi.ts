@@ -1,8 +1,8 @@
-import { Helpers } from "../utils/helpers";
-import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import { AftermathApi } from "../providers/aftermathApi";
-import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
-import { SuiAddress, TransactionDigest } from "../types";
+import { Helpers } from "../utils/helpers.ts";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers.ts";
+import { AftermathApi } from "../providers/aftermathApi.ts";
+import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes.ts";
+import { SuiAddress, TransactionDigest } from "../types/index.ts";
 
 export class WalletApi {
 	// =========================================================================

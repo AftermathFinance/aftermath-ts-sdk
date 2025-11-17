@@ -1,8 +1,8 @@
-import { BigIntAsString, ObjectId, SuiAddress } from "../../../types";
+import { BigIntAsString, ObjectId, SuiAddress } from "../../../types.ts";
 import {
 	EventOnChain,
 	TableOnChain,
-} from "../../../general/types/castingTypes";
+} from "../../../general/types/castingTypes.ts";
 
 // =========================================================================
 //  Objects

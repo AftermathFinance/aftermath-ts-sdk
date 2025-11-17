@@ -1,4 +1,4 @@
-import { AftermathApi } from "../providers/aftermathApi";
+import { AftermathApi } from "../providers/aftermathApi.ts";
 import {
 	AnyObjectType,
 	KioskObject,
@@ -7,9 +7,9 @@ import {
 	NftsAddresses,
 	ObjectId,
 	SuiAddress,
-} from "../../types";
-import { Casting, Helpers } from "../utils";
-import { NftsApiCasting } from "./nftsApiCasting";
+} from "../../types.ts";
+import { Casting, Helpers } from "../utils/index.ts";
+import { NftsApiCasting } from "./nftsApiCasting.ts";
 
 export class NftsApi {
 	// =========================================================================

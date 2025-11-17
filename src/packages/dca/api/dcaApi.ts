@@ -1,12 +1,12 @@
-import { AftermathApi } from "../../../general/providers";
+import { AftermathApi } from "../../../general/providers/index.ts";
 import {
 	AnyObjectType,
 	CoinType,
 	DcaAddresses,
 	ObjectId,
-} from "../../../types";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Helpers } from "../../../general/utils";
+} from "../../../types.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Helpers } from "../../../general/utils/index.ts";
 import { Transaction, TransactionArgument } from "@mysten/sui/transactions";
 
 export class DcaApi {

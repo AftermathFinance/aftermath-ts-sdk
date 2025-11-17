@@ -3,14 +3,14 @@ import {
 	Transaction,
 } from "@mysten/sui/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	CoinDecimal,
 	CoinType,
 	CoinsToBalance,
 	CoinsToDecimals,
 	CoinsToPrice,
-} from "../../coin/coinTypes";
+} from "../../coin/coinTypes.ts";
 import {
 	Balance,
 	PoolDepositEvent,
@@ -50,7 +50,7 @@ import {
 	ApiCreatePoolBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	DaoFeePoolOwnerCapObject,
-} from "../../../types";
+} from "../../../types.ts";
 import {
 	DaoFeePoolFieldsOnChain,
 	PoolDepositEventOnChain,
@@ -58,24 +58,24 @@ import {
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
-} from "./poolsApiCastingTypes";
-import { Casting } from "../../../general/utils/casting";
-import { Pool } from "../pool";
-import { Pools } from "../pools";
-import { Aftermath } from "../../../general/providers";
-import { Helpers } from "../../../general/utils";
-import { Coin } from "../../coin";
+} from "./poolsApiCastingTypes.ts";
+import { Casting } from "../../../general/utils/casting.ts";
+import { Pool } from "../pool.ts";
+import { Pools } from "../pools.ts";
+import { Aftermath } from "../../../general/providers/index.ts";
+import { Helpers } from "../../../general/utils/index.ts";
+import { Coin } from "../../coin/index.ts";
 import dayjs, { ManipulateType } from "dayjs";
-import { PoolsApiCasting } from "./poolsApiCasting";
-import duration, { DurationUnitType } from "dayjs/plugin/duration";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { PoolsApiCasting } from "./poolsApiCasting.ts";
+import duration, { DurationUnitType } from "dayjs/plugin/duration.js";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes.ts";
+import { FixedUtils } from "../../../general/utils/fixedUtils.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
 import { bcs } from "@mysten/sui/bcs";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+} from "../../../general/types/moveErrorsInterface.ts";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -314,15 +314,15 @@ export class PoolsApi implements MoveErrorsInterface {
 			},
 			...(this.addresses.daoFeePools
 				? {
-						[this.addresses.daoFeePools.packages.amm]: {
-							version: {
-								/// A user tried to interact with an old contract.
-								0: "Invalid Version",
-								/// `init_package_version` has been called outside of this packages `init` function.
-								1: "Version Object Already Created",
-							},
+					[this.addresses.daoFeePools.packages.amm]: {
+						version: {
+							/// A user tried to interact with an old contract.
+							0: "Invalid Version",
+							/// `init_package_version` has been called outside of this packages `init` function.
+							1: "Version Object Already Created",
 						},
-				  }
+					},
+				}
 				: {}),
 		};
 	}

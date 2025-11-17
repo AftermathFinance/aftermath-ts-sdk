@@ -4,7 +4,7 @@ import {
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { SuiEvent, Unsubscribe } from "@mysten/sui/client";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	CoinType,
 	PerpetualsAccountObject,
@@ -25,9 +25,9 @@ import {
 	BigIntAsString,
 	NumberAsString,
 	PackageId,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { Sui } from "../../sui/index.ts";
 import {
 	perpetualsRegistry,
 	PerpetualsMarketParams,
@@ -79,11 +79,11 @@ import {
 	ApiPerpetualsPreviewReduceOrdersBody,
 	ApiPerpetualsPreviewReduceOrdersResponse,
 	ApiPerpetualsReduceOrdersBody,
-} from "../perpetualsTypes";
-import { PerpetualsApiCasting } from "./perpetualsApiCasting";
-import { Perpetuals } from "../perpetuals";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { EventOnChain } from "../../../general/types/castingTypes";
+} from "../perpetualsTypes.ts";
+import { PerpetualsApiCasting } from "./perpetualsApiCasting.ts";
+import { Perpetuals } from "../perpetuals.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { EventOnChain } from "../../../general/types/castingTypes.ts";
 import {
 	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,
@@ -102,18 +102,18 @@ import {
 	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
 	WithdrewCollateralEventOnChain,
-} from "../perpetualsCastingTypes";
-import { Aftermath } from "../../..";
-import { PerpetualsOrderUtils } from "../utils";
+} from "../perpetualsCastingTypes.ts";
+import { Aftermath } from "../../../index.ts";
+import { PerpetualsOrderUtils } from "../utils/index.ts";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { InspectionsApiHelpers } from "../../../general/apiHelpers/inspectionsApiHelpers";
-import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import duration from "dayjs/plugin/duration.js";
+import { InspectionsApiHelpers } from "../../../general/apiHelpers/inspectionsApiHelpers.ts";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers.ts";
 import { bcs } from "@mysten/sui/bcs";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+} from "../../../general/types/moveErrorsInterface.ts";
 
 export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
@@ -306,13 +306,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			collateralCoinType: CoinType;
 			accountCapId: ObjectId | TransactionArgument;
 		} & (
-			| {
+				| {
 					coinId: ObjectId | TransactionArgument;
-			  }
-			| {
+				}
+				| {
 					coinBytes: Uint8Array;
-			  }
-		)
+				}
+			)
 	) => {
 		const { tx, collateralCoinType, accountCapId } = inputs;
 		return tx.moveCall({
@@ -329,8 +329,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				"coinBytes" in inputs
 					? tx.pure(inputs.coinBytes)
 					: typeof inputs.coinId === "string"
-					? tx.object(inputs.coinId)
-					: inputs.coinId,
+						? tx.object(inputs.coinId)
+						: inputs.coinId,
 			],
 		});
 	};

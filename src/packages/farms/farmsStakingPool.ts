@@ -10,8 +10,8 @@ import {
 	SuiNetwork,
 	Timestamp,
 	Url,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiFarmsGrantOneTimeAdminCapBody,
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
@@ -22,14 +22,14 @@ import {
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
 	FarmsVersion,
-} from "./farmsTypes";
-import { Casting, Helpers } from "../../general/utils";
+} from "./farmsTypes.ts";
+import { Casting, Helpers } from "../../general/utils/index.ts";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Coin } from "../coin/coin";
-import { AftermathApi } from "../../general/providers";
-import { Farms } from "./farms";
+import duration from "dayjs/plugin/duration.js";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
+import { Coin } from "../coin/coin.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
+import { Farms } from "./farms.ts";
 
 /**
  * The `FarmsStakingPool` class represents a staking pool (also referred
@@ -305,8 +305,8 @@ export class FarmsStakingPool extends Caller {
 			inputs.lockDurationMs > this.stakingPool.maxLockDurationMs
 				? this.stakingPool.maxLockDurationMs
 				: inputs.lockDurationMs < this.stakingPool.minLockDurationMs
-				? this.stakingPool.minLockDurationMs
-				: inputs.lockDurationMs;
+					? this.stakingPool.minLockDurationMs
+					: inputs.lockDurationMs;
 
 		const totalPossibleLockDurationMs =
 			this.stakingPool.maxLockDurationMs -
@@ -318,10 +318,10 @@ export class FarmsStakingPool extends Caller {
 				(totalPossibleLockDurationMs <= 0
 					? 1
 					: totalPossibleLockDurationMs)) *
-				(Casting.bigIntToFixedNumber(
-					this.stakingPool.maxLockMultiplier
-				) -
-					1);
+			(Casting.bigIntToFixedNumber(
+				this.stakingPool.maxLockMultiplier
+			) -
+				1);
 
 		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
 		return multiplier < FixedUtils.fixedOneB
@@ -358,8 +358,8 @@ export class FarmsStakingPool extends Caller {
 		return this.version() === 1
 			? this.useProvider().fetchBuildStakeTxV1(args)
 			: this.useProvider().fetchBuildStakeTxV2({
-					...args,
-			  });
+				...args,
+			});
 	}
 
 	// =========================================================================
@@ -413,11 +413,11 @@ export class FarmsStakingPool extends Caller {
 		};
 		return this.version() === 1
 			? this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV1(
-					args
-			  )
+				args
+			)
 			: this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV2(
-					args
-			  );
+				args
+			);
 	}
 
 	/**
@@ -486,8 +486,8 @@ export class FarmsStakingPool extends Caller {
 		return this.version() === 1
 			? this.useProvider().fetchBuildInitializeStakingPoolRewardTxV1(args)
 			: this.useProvider().fetchBuildInitializeStakingPoolRewardTxV2(
-					args
-			  );
+				args
+			);
 	}
 
 	/**

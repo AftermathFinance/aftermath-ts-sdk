@@ -1,12 +1,12 @@
-import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Casting, Helpers } from "../utils";
+import { AftermathApi } from "../providers/aftermathApi.ts";
+import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types.ts";
+import { Casting, Helpers } from "../utils/index.ts";
 import {
 	SuiObjectDataFilter,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
 } from "@mysten/sui/client";
-import { BcsTypeName } from "../types/castingTypes";
+import { BcsTypeName } from "../types/castingTypes.ts";
 import {
 	Transaction,
 	TransactionObjectArgument,

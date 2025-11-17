@@ -1,1 +1,1 @@
-export * from "./staking";
+export * from "./staking.ts";

@@ -1,4 +1,4 @@
-import { Caller } from "../../general/utils/caller";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiReferralsCreateReferralLinkBody,
 	ApiReferralsCreateReferralLinkResponse,
@@ -15,7 +15,7 @@ import {
 	ApiReferralsGetLinkedRefCodeResponse,
 	SuiAddress,
 	Timestamp,
-} from "../../types";
+} from "../../types.ts";
 
 export class Referrals extends Caller {
 	// =========================================================================
