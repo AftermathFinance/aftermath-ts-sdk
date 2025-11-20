@@ -90,7 +90,7 @@ export interface PerpetualsAccountCap {
 	accountObjectId: ObjectId;
 	collateralCoinType: CoinType;
 	collateral: number;
-	collateralDecimals: CoinDecimal;
+	// collateralDecimals: CoinDecimal;
 	objectVersion: ObjectVersion;
 	objectDigest: ObjectDigest;
 	// subAccount: PerpetualsSubAccount;
@@ -109,7 +109,7 @@ export type PerpetualsVaultCapExtended = {
 	accountId: PerpetualsAccountId;
 	accountObjectId: ObjectId;
 	collateralCoinType: CoinType;
-	collateralDecimals: CoinDecimal;
+	// collateralDecimals: CoinDecimal;
 };
 
 export interface PerpetualsPosition {
@@ -298,8 +298,6 @@ export interface PerpetualsAccountObject {
 }
 
 export interface PerpetualsVaultObject {
-	// TODO: add owner
-
 	/// Unique identifier for distinct network identification.
 	objectId: ObjectId;
 	/// Contract version number for controlled upgrades.
@@ -330,6 +328,10 @@ export interface PerpetualsVaultObject {
 		/// The maximum number of pending orders allowed for a single position in the `Vault`.
 		maxPendingOrdersPerPosition: bigint;
 	};
+	ownerAddress: SuiAddress;
+	creationTimestamp: Timestamp;
+	collateralCoinType: CoinType;
+	lpCoinDecimals: CoinDecimal;
 	accountId: PerpetualsAccountId;
 	accountObjectId: ObjectId;
 }
@@ -1060,12 +1062,12 @@ export interface ApiPerpetualsAccountStopOrderDatasBody {
 
 export interface ApiPerpetualsCreateVaultCapBody {
 	walletAddress: SuiAddress;
-	// TODO: add tx support
-	txKind?: SerializedTransaction;
+	// TODO: add tx support ?
+	// txKind?: SerializedTransaction;
 }
 
-export interface ApiPerpetualsCreateVaultBody {
-	// walletAddress: SuiAddress;
+export type ApiPerpetualsCreateVaultBody = {
+	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
 	collateralCoinType: String;
 	collateralOracleId: String;
@@ -1074,10 +1076,16 @@ export interface ApiPerpetualsCreateVaultBody {
 	ownerFeePercentage: Percentage;
 	// NOTE: is this correct ?
 	forceWithdrawDelayMs: bigint;
-	// TODO: add support for amount as well
-	initialDepositCoinArg: TransactionObjectArgument;
 	txKind?: SerializedTransaction;
-}
+	isSponsoredTx?: boolean;
+} & (
+	| {
+			initialDepositAmount: Balance;
+	  }
+	| {
+			initialDepositCoinArg: TransactionObjectArgument;
+	  }
+);
 
 export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
@@ -1111,6 +1119,7 @@ export type ApiPerpetualsWithdrawCollateralBody = {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
 	withdrawAmount: Balance;
+	// TODO: find out if this is needed
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 } & (
@@ -1124,7 +1133,9 @@ export type ApiPerpetualsWithdrawCollateralBody = {
 
 export interface ApiPerpetualsWithdrawCollateralResponse {
 	txKind: SerializedTransaction;
-	coinOutArg: TransactionObjectArgument | undefined;
+	// TODO: find out if this is needed
+	// coinOutArg: TransactionObjectArgument | undefined;
+	coinOutArg: TransactionObjectArgument; // | undefined;
 }
 
 export interface ApiPerpetualsTransferCollateralBody {

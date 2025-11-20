@@ -360,29 +360,41 @@ export class Perpetuals extends Caller {
 		);
 	}
 
+	// public async getCreateVaultCapTx(
+	// 	// TODO: add tx support
+	// 	inputs: Omit<ApiPerpetualsCreateVaultCapBody, "txKind"> & {
+	// 		tx?: Transaction;
+	// 	}
+	// ) {
+	// 	const { tx, ...otherInputs } = inputs;
+	// 	return this.fetchApiTxObject<
+	// 		ApiPerpetualsCreateVaultCapBody,
+	// 		ApiTransactionResponse
+	// 	>(
+	// 		"vault/transactions/create-vault-cap",
+	// 		{
+	// 			...otherInputs,
+	// 			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+	// 				{ tx }
+	// 			),
+	// 		},
+	// 		undefined,
+	// 		{
+	// 			txKind: true,
+	// 		}
+	// 	);
+	// }
+
 	public async getCreateVaultCapTx(
-		// TODO: add tx support
-		inputs: Omit<ApiPerpetualsCreateVaultCapBody, "txKind"> & {
-			tx?: Transaction;
-		}
+		// TODO: add tx support ?
+		inputs: ApiPerpetualsCreateVaultCapBody
 	) {
-		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateVaultCapBody,
 			ApiTransactionResponse
-		>(
-			"vault/transactions/create-vault-cap",
-			{
-				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
-			},
-			undefined,
-			{
-				txKind: true,
-			}
-		);
+		>("vault/transactions/create-vault-cap", inputs, undefined, {
+			txKind: true,
+		});
 	}
 
 	public async getCreateVaultTx(
@@ -409,9 +421,26 @@ export class Perpetuals extends Caller {
 		// 			initialDepositCoinArg: TransactionObjectArgument;
 		// 	  }
 		// )
-		inputs: Omit<ApiPerpetualsCreateVaultBody, "txKind"> & {
+		inputs: {
+			walletAddress: SuiAddress;
+			lpCoinType: CoinType;
+			collateralCoinType: String;
+			collateralOracleId: String;
+			// NOTE: is this correct ?
+			lockPeriodMs: bigint;
+			ownerFeePercentage: Percentage;
+			// NOTE: is this correct ?
+			forceWithdrawDelayMs: bigint;
 			tx?: Transaction;
-		}
+			isSponsoredTx?: boolean;
+		} & (
+			| {
+					initialDepositAmount: Balance;
+			  }
+			| {
+					initialDepositCoinArg: TransactionObjectArgument;
+			  }
+		)
 	) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<

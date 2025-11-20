@@ -36,6 +36,7 @@ import {
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
 	PerpetualsVaultCap,
 	ApiTransactionResponse,
+	PerpetualsVaultCapExtended,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -496,27 +497,29 @@ export class PerpetualsVault extends Caller {
 	//  Account
 	// =========================================================================
 
+	public vaultCapExtended(): PerpetualsVaultCapExtended {
+		return {
+			vaultId: this.vaultObject.objectId,
+			ownerAddress: this.vaultObject.ownerAddress,
+			accountId: this.vaultObject.accountId,
+			accountObjectId: this.vaultObject.accountObjectId,
+			collateralCoinType: this.vaultObject.collateralCoinType,
+			// collateralDecimals: "TODO",
+		};
+	}
+
 	public async getAccountObject() {
-		throw new Error("TODO");
-		// return (
-		// 	await new Perpetuals(this.config, this.Provider).getAccountObjects({
-		// 		accountIds: [this.vaultObject.accountId],
-		// 		collateralCoinType: this.vaultObject.collateralCoinType,
-		// 	})
-		// )[0];
+		return (
+			await new Perpetuals(this.config, this.Provider).getAccountObjects({
+				accountIds: [this.vaultObject.accountId],
+				collateralCoinType: this.vaultObject.collateralCoinType,
+			})
+		)[0];
 	}
 
 	public async getAccount() {
-		throw new Error("TODO");
-		// return new Perpetuals(this.config, this.Provider).getAccount({
-		// 	accountCap: {
-		// 		vaultId: this.vaultObject.objectId,
-		// 		ownerAddress: this.vaultObject.ownerAddress,
-		// 		accountId: this.vaultObject.accountId,
-		// 		accountObjectId: this.vaultObject.accountObjectId,
-		// 		collateralCoinType: this.vaultObject.collateralCoinType,
-		// 		collateralDecimals: "TODO",
-		// 	},
-		// });
+		return new Perpetuals(this.config, this.Provider).getAccount({
+			accountCap: this.vaultCapExtended(),
+		});
 	}
 }

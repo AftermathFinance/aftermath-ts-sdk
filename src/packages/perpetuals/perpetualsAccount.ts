@@ -1204,16 +1204,16 @@ export class PerpetualsAccount extends Caller {
 		return this.account.availableCollateral;
 	}
 
-	public collateralDecimals(): CoinDecimal {
-		return this.accountCap.collateralDecimals;
-	}
+	// public collateralDecimals(): CoinDecimal {
+	// 	return this.accountCap.collateralDecimals;
+	// }
 
-	public collateralBalance(): Balance {
-		return Coin.normalizeBalance(
-			this.collateral(),
-			this.collateralDecimals()
-		);
-	}
+	// public collateralBalance(): Balance {
+	// 	return Coin.normalizeBalance(
+	// 		this.collateral(),
+	// 		this.collateralDecimals()
+	// 	);
+	// }
 
 	public isVault(): boolean {
 		return this.isVault !== undefined;
