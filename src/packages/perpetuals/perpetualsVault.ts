@@ -262,7 +262,6 @@ export class PerpetualsVault extends Caller {
 	//  Admin Interactions Txs
 	// =========================================================================
 
-	// TODO: find out if returns coin out or not
 	public async getWithdrawOwnerFeesTx(inputs: {
 		withdrawAmount: Balance;
 		ownerFeePercentage: number;

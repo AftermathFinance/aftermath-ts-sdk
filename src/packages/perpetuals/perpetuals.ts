@@ -98,19 +98,16 @@ export class Perpetuals extends Caller {
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
 		// withOrderbook: boolean;
 	}): Promise<PerpetualsMarket> {
 		const markets = await this.getMarkets({
 			marketIds: [inputs.marketId],
-			collateralCoinType: inputs.collateralCoinType,
 		});
 		return markets[0];
 	}
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
-		collateralCoinType: CoinType;
 		// withOrderbook: boolean;
 	}): Promise<PerpetualsMarket[]> {
 		const marketDatas = await this.fetchApi<
@@ -120,7 +117,6 @@ export class Perpetuals extends Caller {
 			}[],
 			{
 				marketIds: PerpetualsMarketId[];
-				collateralCoinType: CoinType;
 				withOrderbook: boolean | undefined;
 			}
 		>("markets", {
@@ -422,10 +418,14 @@ export class Perpetuals extends Caller {
 		// 	  }
 		// )
 		inputs: {
+			name: string;
 			walletAddress: SuiAddress;
 			lpCoinType: CoinType;
-			collateralCoinType: String;
-			collateralOracleId: String;
+			collateralCoinType: CoinType;
+			collateralOracleId: ObjectId;
+			// TODO: find out if needed
+			collateralPriceFeedId: ObjectId;
+			collateralPriceFeedTolerance: bigint;
 			// NOTE: is this correct ?
 			lockPeriodMs: bigint;
 			ownerFeePercentage: Percentage;
@@ -672,24 +672,64 @@ export class Perpetuals extends Caller {
 				subscriptionType: { orderbook: { marketId } },
 			});
 
-		const subscribeTrades = ({
+		const subscribeMarketTrades = ({
 			marketId,
 		}: {
 			marketId: PerpetualsMarketId;
 		}) =>
 			ctl.send({
 				action: "subscribe",
-				subscriptionType: { trades: { marketId } },
+				subscriptionType: { marketTrades: { marketId } },
 			});
 
-		const unsubscribeTrades = ({
+		const unsubscribeMarketTrades = ({
 			marketId,
 		}: {
 			marketId: PerpetualsMarketId;
 		}) =>
 			ctl.send({
 				action: "unsubscribe",
-				subscriptionType: { trades: { marketId } },
+				subscriptionType: { marketTrades: { marketId } },
+			});
+
+		const subscribeUserTrades = ({
+			accountId,
+		}: {
+			accountId: PerpetualsAccountId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { userTrades: { accountId } },
+			});
+
+		const unsubscribeUserTrades = ({
+			accountId,
+		}: {
+			accountId: PerpetualsAccountId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { userTrades: { accountId } },
+			});
+
+		const subscribeUserCollateralChanges = ({
+			accountId,
+		}: {
+			accountId: PerpetualsAccountId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { userCollateralChanges: { accountId } },
+			});
+
+		const unsubscribeUserCollateralChanges = ({
+			accountId,
+		}: {
+			accountId: PerpetualsAccountId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { userCollateralChanges: { accountId } },
 			});
 
 		return {
@@ -702,8 +742,12 @@ export class Perpetuals extends Caller {
 			unsubscribeOracle,
 			subscribeOrderbook,
 			unsubscribeOrderbook,
-			subscribeTrades,
-			unsubscribeTrades,
+			subscribeMarketTrades,
+			unsubscribeMarketTrades,
+			subscribeUserTrades,
+			unsubscribeUserTrades,
+			subscribeUserCollateralChanges,
+			unsubscribeUserCollateralChanges,
 			close: ctl.close,
 		};
 	}

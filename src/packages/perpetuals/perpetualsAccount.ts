@@ -64,7 +64,7 @@ import {
 	ServiceCoinData,
 	SdkPerpetualsPlaceSlTpOrdersInputs,
 	ApiPerpetualsPlaceSlTpOrdersBody,
-	ApiPerpetualsAccountMarginHistoryBody,
+	// ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsAccountMarginData,
 	ApiPerpetualsWithdrawCollateralResponse,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
@@ -1054,15 +1054,15 @@ export class PerpetualsAccount extends Caller {
 		});
 	}
 
-	public async getMarginHistory() {
-		return this.fetchApi<
-			PerpetualsAccountMarginData[],
-			ApiPerpetualsAccountMarginHistoryBody
-		>("account/margin-history", {
-			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-		});
-	}
+	// public async getMarginHistory() {
+	// 	return this.fetchApi<
+	// 		PerpetualsAccountMarginData[],
+	// 		ApiPerpetualsAccountMarginHistoryBody
+	// 	>("account/margin-history", {
+	// 		accountId: this.accountCap.accountId,
+	// 		collateralCoinType: this.accountCap.collateralCoinType,
+	// 	});
+	// }
 
 	// public async getOwnedWithdrawRequests() {
 	// 	return new Perpetuals(

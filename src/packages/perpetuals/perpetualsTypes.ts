@@ -811,10 +811,10 @@ export interface ApiPerpetualsAccountCapsBody {
 //  Interactions
 // =========================================================================
 
-export interface ApiPerpetualsAccountMarginHistoryBody {
-	accountId: PerpetualsAccountId;
-	collateralCoinType: CoinType;
-}
+// export interface ApiPerpetualsAccountMarginHistoryBody {
+// 	accountId: PerpetualsAccountId;
+// 	collateralCoinType: CoinType;
+// }
 
 export type ApiPerpetualsAccountOrderHistoryBody =
 	ApiDataWithCursorBody<Timestamp> & {
@@ -1067,10 +1067,14 @@ export interface ApiPerpetualsCreateVaultCapBody {
 }
 
 export type ApiPerpetualsCreateVaultBody = {
+	name: string;
 	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
-	collateralCoinType: String;
-	collateralOracleId: String;
+	collateralCoinType: CoinType;
+	collateralOracleId: ObjectId;
+	// TODO: find out if needed
+	collateralPriceFeedId: ObjectId;
+	collateralPriceFeedTolerance: bigint;
 	// NOTE: is this correct ?
 	lockPeriodMs: bigint;
 	ownerFeePercentage: Percentage;
@@ -1465,8 +1469,8 @@ export interface ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody {
 
 export interface ApiPerpetualsVaultWithdrawOwnerFeesTxBody {
 	vaultId: ObjectId;
-	// recipientAddress: SuiAddress
 	withdrawAmount: Balance;
+	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 }
 
@@ -1680,9 +1684,21 @@ export interface PerpetualsWsUpdatesOrderbookSubscriptionType {
 	};
 }
 
-export interface PerpetualsWsUpdatesTradesSubscriptionType {
-	trades: {
+export interface PerpetualsWsUpdatesMarketTradesSubscriptionType {
+	marketTrades: {
 		marketId: PerpetualsMarketId;
+	};
+}
+
+export interface PerpetualsWsUpdatesUserTradesSubscriptionType {
+	userTrades: {
+		accountId: PerpetualsAccountId;
+	};
+}
+
+export interface PerpetualsWsUpdatesUserCollateralChangesSubscriptionType {
+	userCollateralChanges: {
+		accountId: PerpetualsAccountId;
 	};
 }
 
@@ -1691,7 +1707,9 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesUserSubscriptionType
 	| PerpetualsWsUpdatesOracleSubscriptionType
 	| PerpetualsWsUpdatesOrderbookSubscriptionType
-	| PerpetualsWsUpdatesTradesSubscriptionType;
+	| PerpetualsWsUpdatesMarketTradesSubscriptionType
+	| PerpetualsWsUpdatesUserTradesSubscriptionType
+	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType;
 
 export interface PerpetualsWsUpdatesOraclePayload {
 	priceFeedId: ObjectId;
@@ -1699,9 +1717,19 @@ export interface PerpetualsWsUpdatesOraclePayload {
 	isBasePriceFeed: boolean;
 }
 
-export interface PerpetualsWsUpdatesTradesPayload {
+export interface PerpetualsWsUpdatesMarketTradesPayload {
 	marketId: PerpetualsMarketId;
 	trades: PerpetualsTradeHistoryData[];
+}
+
+export interface PerpetualsWsUpdatesUserTradesPayload {
+	accountId: PerpetualsAccountId;
+	trades: PerpetualsAccountTrade[];
+}
+
+export interface PerpetualsWsUpdatesUserCollateralChangesPayload {
+	accountId: PerpetualsAccountId;
+	collateralChanges: PerpetualsAccountCollateralChange[];
 }
 
 export interface PerpetualsWsUpdatesOrderbookPayload {
@@ -1724,7 +1752,11 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| { user: PerpetualsWsUpdatesUserPayload }
 	| { oracle: PerpetualsWsUpdatesOraclePayload }
 	| { orderbook: PerpetualsWsUpdatesOrderbookPayload }
-	| { trades: PerpetualsWsUpdatesTradesPayload };
+	| { marketTrades: PerpetualsWsUpdatesMarketTradesPayload }
+	| { userTrades: PerpetualsWsUpdatesUserTradesPayload }
+	| {
+			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
+	  };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 
