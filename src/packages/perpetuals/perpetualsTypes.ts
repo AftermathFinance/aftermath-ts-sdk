@@ -1712,9 +1712,9 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType;
 
 export interface PerpetualsWsUpdatesOraclePayload {
-	priceFeedId: ObjectId;
-	price: number;
-	isBasePriceFeed: boolean;
+	marketId: PerpetualsMarketId;
+	basePrice: number;
+	collateralPrice: number;
 }
 
 export interface PerpetualsWsUpdatesMarketTradesPayload {
