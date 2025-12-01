@@ -80,7 +80,9 @@ export class PerpetualsMarket extends Caller {
 	// NOTE: should this be entirely removed since data already in orderbook function ?
 	public getOrderbookMidPrice() {
 		return this.fetchApi<
-			number | undefined,
+			{
+				midPrice: number | undefined;
+			},
 			{
 				marketId: PerpetualsMarketId;
 			}
