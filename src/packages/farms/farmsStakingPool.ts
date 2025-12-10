@@ -109,6 +109,22 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
+	 * Returns whether this pool uses strict lock enforcement.
+	 * Strict: positions must be unlocked before any principal can be withdrawn.
+	 */
+	public isStrictLockEnforcement = (): boolean => {
+		return this.stakingPool.lockEnforcement === "Strict";
+	};
+
+	/**
+	 * Returns whether this pool uses relaxed lock enforcement.
+	 * Relaxed: positions can withdraw principal while locked, forfeiting pro-rata locked rewards.
+	 */
+	public isRelaxedLockEnforcement = (): boolean => {
+		return this.stakingPool.lockEnforcement === "Relaxed";
+	};
+
+	/**
 	 * Lists all reward coin types offered by this staking pool.
 	 *
 	 * @returns An array of `CoinType` strings.

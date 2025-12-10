@@ -90,6 +90,38 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
+	 * Checks if the position is strictly locked, meaning it is currently locked and the pool uses strict lock enforcement.
+	 *
+	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
+	 * @returns `true` if locked with strict enforcement; otherwise, `false`.
+	 */
+	public isStrictlyLocked = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+		return (
+			this.isLocked({ stakingPool }) &&
+			stakingPool.isStrictLockEnforcement()
+		);
+	};
+
+	/**
+	 * Checks if the position is relaxed locked, meaning it is currently locked and the pool uses relaxed lock enforcement.
+	 *
+	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
+	 * @returns `true` if locked with relaxed enforcement; otherwise, `false`.
+	 */
+	public isRelaxedLocked = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+		return (
+			this.isLocked({ stakingPool }) &&
+			stakingPool.isRelaxedLockEnforcement()
+		);
+	};
+
+	/**
 	 * Checks whether the position has a non-zero lock duration.
 	 *
 	 * @returns `true` if the position was created with a lock duration > 0.
