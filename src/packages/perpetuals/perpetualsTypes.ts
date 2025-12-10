@@ -574,10 +574,20 @@ export interface PerpetualsVaultObject {
 	objectId: ObjectId;
 	/// Contract version number for controlled upgrades.
 	version: bigint;
+	// TODO
+	name: string;
 	/// Supply of LP coins from a `TreasuryCap` for liquidity integrity.
 	lpSupply: Balance;
 	/// Total balance of underlying Coin (`C`), deposited by users.
-	collateral: Balance;
+	idleCollateral: Balance;
+	// TODO
+	idleCollateralUsd: number;
+	// TODO
+	totalCollateral: Balance;
+	// TODO
+	totalCollateralUsd: number;
+	// TODO
+	tvlUsd: number;
 	/// IDs of `ClearingHouse` where `Vault` has positions.
 	marketIds: PerpetualsMarketId[];
 	/// A linked table that keeps track of pending withdrawal requests made by users.
@@ -592,6 +602,12 @@ export interface PerpetualsVaultObject {
 		forceWithdrawDelayMs: bigint;
 		/// Price feed storage id idetifying the oracle price for `C`
 		collateralPriceFeedStorageId: ObjectId;
+		// TODO
+		collateralPriceFeedStorageSourceId: ObjectId;
+		// TODO
+		collateralPriceFeedStorageTolerance: bigint;
+		// TODO
+		maxForceWithdrawMarginRatioTolerance: number;
 		/// Scaling factor to apply to `C` to convert a balance to ifixed.
 		/// Used to calculate user's minimum deposit value in usd
 		scalingFactor: number;
@@ -599,19 +615,23 @@ export interface PerpetualsVaultObject {
 		maxMarketsInVault: bigint;
 		/// The maximum number of pending orders allowed for a single position in the `Vault`.
 		maxPendingOrdersPerPosition: bigint;
+		// TODO
+		max_total_deposited_collateral: Balance;
 	};
 	/** Owner address of the vault. */
 	ownerAddress: SuiAddress;
 	/** Creation timestamp of the vault. */
 	creationTimestamp: Timestamp;
-	/** Collateral coin type accepted by this vault. */
-	collateralCoinType: CoinType;
-	/** Decimals for the LP token minted by this vault. */
-	lpCoinDecimals: CoinDecimal;
 	/** Underlying perpetuals account ID that the vault uses. */
 	accountId: PerpetualsAccountId;
 	/** Account object ID used by the vault. */
 	accountObjectId: ObjectId;
+	/** Collateral coin type accepted by this vault. */
+	collateralCoinType: CoinType;
+	// TODO
+	lpCoinType: CoinType;
+	/** Decimals for the LP token minted by this vault. */
+	lpCoinDecimals: CoinDecimal;
 }
 
 /**
@@ -620,6 +640,8 @@ export interface PerpetualsVaultObject {
 export interface PerpetualsVaultWithdrawRequest {
 	/// The address of the user that created the withdraw request
 	userAddress: SuiAddress;
+	/// Object id of the vault associated with the withdraw request
+	vaultId: SuiAddress;
 	/// The amount of the shares requested for withdrawal.
 	lpAmountOut: Balance;
 	/// Timestamp of request's creation
@@ -2197,10 +2219,10 @@ export interface ApiPerpetualsVaultWithdrawOwnerFeesTxResponse {
 }
 
 /**
- * Request body for fetching all withdrawal requests for a specific vault.
+ * Request body for fetching all withdrawal requests for specific vaults.
  */
-export interface ApiPerpetualsVaultAllWithdrawRequestsBody {
-	vaultId: ObjectId;
+export interface ApiPerpetualsVaultsWithdrawRequestsBody {
+	vaultIds: ObjectId[];
 }
 
 /**
@@ -2245,6 +2267,7 @@ export type ApiPerpetualsVaultDepositTxBody = {
 } & (
 	| {
 			depositAmount: Balance;
+			collateralCoinType: CoinType;
 	  }
 	| {
 			depositCoinArg: TransactionObjectArgument;
@@ -2263,8 +2286,8 @@ export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
  * Response body for vault withdrawal preview.
  */
 export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse {
-	collateralAmountOut: number;
-	collateralAmountOutUsd: number;
+	collateralAmountOut: Balance;
+	collateralPrice: number;
 }
 
 /**
@@ -2280,8 +2303,9 @@ export interface ApiPerpetualsVaultPreviewDepositBody {
  * Response body for vault deposit preview.
  */
 export interface ApiPerpetualsVaultPreviewDepositResponse {
-	// provided_balance -- what is this ?
 	lpAmountOut: number;
+	collateralPrice: number;
+	depositedAmountUsd: number;
 }
 
 /**
@@ -2296,10 +2320,10 @@ export interface ApiPerpetualsVaultPreviewProcessForceWithdrawBody {
  * Response body for forced withdraw processing preview.
  */
 export interface ApiPerpetualsVaultPreviewProcessForceWithdrawResponse {
-	collateralAmountOut: number;
-	collateralAmountOutUsd: number;
+	collateralAmountOut: Balance;
+	collateralPrice: number;
 	// TODO: change to arr ?
-	sizesToClose: Record<PerpetualsMarketId, Balance>;
+	sizesToClose: Record<PerpetualsMarketId, bigint>;
 }
 
 /**
@@ -2313,10 +2337,13 @@ export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
 /**
  * Response body for previewing normal withdraw requests processing.
  */
-export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse = {
-	// userAddress: SuiAddress;
-	lpAmountOut: number;
-}[];
+export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse {
+	userPreviews: {
+		userAddress: SuiAddress;
+		lpAmountOut: number;
+	}[];
+	collateralPrice: number;
+}
 
 /**
  * Request body for previewing maximum owner fees withdrawable from a vault.

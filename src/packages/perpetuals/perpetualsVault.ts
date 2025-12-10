@@ -18,7 +18,7 @@ import {
 	ApiPerpetualsVaultWithdrawOwnerFeesTxResponse,
 	ApiPerpetualsVaultWithdrawOwnerFeesTxBody,
 	PerpetualsVaultWithdrawRequest,
-	ApiPerpetualsVaultAllWithdrawRequestsBody,
+	ApiPerpetualsVaultsWithdrawRequestsBody,
 	ApiPerpetualsVaultWithdrawRequestsBody,
 	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
 	ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
@@ -37,6 +37,7 @@ import {
 	PerpetualsVaultCap,
 	ApiTransactionResponse,
 	PerpetualsVaultCapExtended,
+	ObjectId,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -83,7 +84,7 @@ export class PerpetualsVault extends Caller {
 		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(config, "perpetuals/vaults");
+		super(config, "perpetuals");
 	}
 
 	// =========================================================================
@@ -104,7 +105,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultProcessForceWithdrawsTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/process-force-withdraws",
+			"vault/transactions/process-force-withdraws",
 			{
 				...otherInputs,
 				// NOTE: should this be `vaultIds` ?
@@ -131,7 +132,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/process-withdraw-requests",
+			"vault/transactions/process-withdraw-requests",
 			{
 				...otherInputs,
 				// NOTE: should this be `vaultIds` ?
@@ -158,7 +159,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/update-withdraw-request-slippages",
+			"vault/transactions/update-withdraw-request-slippages",
 			{
 				...otherInputs,
 				vaultIds: [this.vaultObject.objectId],
@@ -189,7 +190,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/update-force-withdraw-delay",
+			"vault/transactions/update-force-withdraw-delay",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -215,7 +216,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultUpdateLockPeriodTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/update-lock-period",
+			"vault/transactions/update-lock-period",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -241,7 +242,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/update-owner-fee-percentage",
+			"vault/transactions/update-owner-fee-percentage",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -272,7 +273,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultWithdrawOwnerFeesTxBody,
 			ApiPerpetualsVaultWithdrawOwnerFeesTxResponse
 		>(
-			"transactions/withdraw-owner-fees",
+			"vault/transactions/withdraw-owner-fees",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -303,7 +304,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultCreateWithdrawRequestTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/create-withdraw-request",
+			"vault/transactions/create-withdraw-request",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -329,7 +330,7 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/cancel-withdraw-requests",
+			"vault/transactions/cancel-withdraw-requests",
 			{
 				...otherInputs,
 				vaultIds: [this.vaultObject.objectId],
@@ -363,13 +364,25 @@ export class PerpetualsVault extends Caller {
 		)
 	) {
 		const { tx, ...otherInputs } = inputs;
+
+		const depositInputs =
+			"depositAmount" in otherInputs
+				? {
+						depositAmount: otherInputs.depositAmount,
+						collateralCoinType: this.vaultObject.collateralCoinType,
+				  }
+				: {
+						depositCoinArg: otherInputs.depositCoinArg,
+				  };
+
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultDepositTxBody,
 			ApiTransactionResponse
 		>(
-			"transactions/deposit",
+			"vault/transactions/deposit",
 			{
 				...otherInputs,
+				...depositInputs,
 				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -388,13 +401,13 @@ export class PerpetualsVault extends Caller {
 	//  Objects
 	// =========================================================================
 
-	// vault_caps_ids ?
-	public async getAllWithdrawRequests() {
+	// TODO: move to `Perpetuals` ?
+	public getAllWithdrawRequests(): Promise<PerpetualsVaultWithdrawRequest[]> {
 		return this.fetchApi<
 			PerpetualsVaultWithdrawRequest[],
-			ApiPerpetualsVaultAllWithdrawRequestsBody
-		>("admin-withdraw-requests", {
-			vaultId: this.vaultObject.objectId,
+			ApiPerpetualsVaultsWithdrawRequestsBody
+		>("vaults/withdraw-requests", {
+			vaultIds: [this.vaultObject.objectId],
 		});
 	}
 
@@ -423,7 +436,7 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
 			ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody
-		>("previews/process-withdraw-requests", {
+		>("vault/previews/process-withdraw-requests", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -435,7 +448,7 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
 			ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody
-		>("previews/withdraw-owner-fees", {
+		>("vault/previews/withdraw-owner-fees", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -451,7 +464,7 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
 			ApiPerpetualsVaultPreviewCreateWithdrawRequestBody
-		>("previews/create-withdraw-request", {
+		>("vault/previews/create-withdraw-request", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -461,7 +474,7 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewDepositResponse,
 			ApiPerpetualsVaultPreviewDepositBody
-		>("previews/deposit", {
+		>("vault/previews/deposit", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -474,7 +487,7 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewProcessForceWithdrawResponse,
 			ApiPerpetualsVaultPreviewProcessForceWithdrawBody
-		>("previews/process-force-withdraw", {
+		>("vault/previews/process-force-withdraw", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
