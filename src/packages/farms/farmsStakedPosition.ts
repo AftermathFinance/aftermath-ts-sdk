@@ -425,6 +425,29 @@ export class FarmsStakedPosition extends Caller {
 			: this.useProvider().buildUnstakeTxV2(args);
 	}
 
+	/**
+	 * Builds a transaction to withdraw a partial amount of principal from this staked position.
+	 * Unlike `getUnstakeTransaction`, this does NOT destroy the position.
+	 *
+	 * @param inputs - Contains `walletAddress`, `withdrawAmount`, and the `FarmsStakingPool` reference.
+	 * @returns A transaction that can be signed and executed to withdraw principal without destroying the position.
+	 */
+	public async getWithdrawPrincipalTransaction(inputs: {
+		walletAddress: SuiAddress;
+		withdrawAmount: Balance;
+		stakingPool: FarmsStakingPool;
+	}) {
+		const args = {
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		};
+		return this.version() === 1
+			? this.useProvider().buildWithdrawPrincipalTxV1(args)
+			: this.useProvider().buildWithdrawPrincipalTxV2(args);
+	}
+
 	// =========================================================================
 	//  Locking Transactions
 	// =========================================================================
