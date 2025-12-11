@@ -1506,6 +1506,21 @@ export type ApiPerpetualsPreviewSetLeverageBody = {
 	  }
 );
 
+/**
+ * Request body for previewing a collateral allocation/deallocation for a given position.
+ */
+export type ApiPerpetualsPreviewEditCollateralBody = {
+	marketId: PerpetualsMarketId;
+	collateralChange: Balance;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
 // export type ApiPerpetualsPreviewReduceOrderResponse =
 // 	| {
 // 			error: string;
@@ -1525,7 +1540,21 @@ export type ApiPerpetualsPreviewSetLeverageResponse =
 			error: string;
 	  }
 	| {
-			positionAfterSetLeverage: PerpetualsPosition;
+			updatedPosition: PerpetualsPosition;
+			collateralChange: number;
+	  };
+
+/**
+ * Response type for a allocate/deallocate collateral preview request.
+ *
+ * Either returns an error, or the position and collateral after the change.
+ */
+export type ApiPerpetualsPreviewEditCollateralResponse =
+	| {
+			error: string;
+	  }
+	| {
+			updatedPosition: PerpetualsPosition;
 			collateralChange: number;
 	  };
 
@@ -1537,7 +1566,7 @@ export type ApiPerpetualsPreviewPlaceOrderResponse =
 			error: string;
 	  }
 	| {
-			positionAfterOrder: PerpetualsPosition;
+			updatedPosition: PerpetualsPosition;
 			priceSlippage: number;
 			percentSlippage: Percentage;
 			filledSize: number;
@@ -1556,10 +1585,7 @@ export type ApiPerpetualsPreviewCancelOrdersResponse =
 			error: string;
 	  }
 	| {
-			marketIdsToPositionAfterCancelOrders: Record<
-				PerpetualsMarketId,
-				PerpetualsPosition
-			>;
+			updatedPositions: PerpetualsPosition[];
 			collateralChange: number;
 	  };
 

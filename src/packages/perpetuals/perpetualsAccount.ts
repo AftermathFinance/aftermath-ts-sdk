@@ -55,6 +55,8 @@ import {
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
 	PerpetualsVaultCapExtended,
 	ApiTransactionResponse,
+	ApiPerpetualsPreviewEditCollateralResponse,
+	ApiPerpetualsPreviewEditCollateralBody,
 } from "../../types";
 import { Casting } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -963,7 +965,7 @@ export class PerpetualsAccount extends Caller {
 	// 			error: string;
 	// 	  }
 	// 	| {
-	// 			positionAfterOrder: PerpetualsPosition;
+	// 			updatedPosition: PerpetualsPosition;
 	// 			priceSlippage: number;
 	// 			percentSlippage: Percentage;
 	// 			filledSize: number;
@@ -995,7 +997,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
 	 * @returns Either an error message or a preview including:
-	 * - `positionAfterOrder`
+	 * - `updatedPosition`
 	 * - `priceSlippage`, `percentSlippage`
 	 * - `filledSize`, `filledSizeUsd`
 	 * - `postedSize`, `postedSizeUsd`
@@ -1010,7 +1012,7 @@ export class PerpetualsAccount extends Caller {
 				error: string;
 		  }
 		| {
-				positionAfterOrder: PerpetualsPosition;
+				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
 				percentSlippage: Percentage;
 				filledSize: number;
@@ -1058,7 +1060,7 @@ export class PerpetualsAccount extends Caller {
 				error: string;
 		  }
 		| {
-				positionAfterOrder: PerpetualsPosition;
+				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
 				percentSlippage: Percentage;
 				filledSize: number;
@@ -1094,13 +1096,13 @@ export class PerpetualsAccount extends Caller {
 	 *
 	 * If `marketIdsToData` is empty, this returns a trivial preview with:
 	 * - `collateralChange: 0`
-	 * - `marketIdsToPositionAfterCancelOrders: {}`
+	 * - `updatedPositions: []`
 	 *
 	 * @param inputs - See {@link SdkPerpetualsCancelOrdersPreviewInputs}.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
 	 * @returns Either:
-	 * - `{ marketIdsToPositionAfterCancelOrders, collateralChange }`, or
+	 * - `{ updatedPositions, collateralChange }`, or
 	 * - `{ error }`.
 	 */
 	public async getCancelOrdersPreview(
@@ -1108,10 +1110,7 @@ export class PerpetualsAccount extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
-				marketIdsToPositionAfterCancelOrders: Record<
-					PerpetualsMarketId,
-					PerpetualsPosition
-				>;
+				updatedPositions: PerpetualsPosition[];
 				collateralChange: number;
 		  }
 		| {
@@ -1122,7 +1121,7 @@ export class PerpetualsAccount extends Caller {
 		if (Object.keys(inputs.marketIdsToData).length <= 0)
 			return {
 				collateralChange: 0,
-				marketIdsToPositionAfterCancelOrders: {},
+				updatedPositions: [],
 			};
 
 		return this.fetchApi<
@@ -1188,7 +1187,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
 	 * @returns Either:
-	 * - `{ positionAfterSetLeverage, collateralChange }`, or
+	 * - `{ updatedPosition, collateralChange }`, or
 	 * - `{ error }`.
 	 */
 	public async getSetLeveragePreview(
@@ -1199,7 +1198,7 @@ export class PerpetualsAccount extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
-				positionAfterSetLeverage: PerpetualsPosition;
+				updatedPosition: PerpetualsPosition;
 				collateralChange: number;
 		  }
 		| {
@@ -1216,6 +1215,58 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+					  }),
+			},
+			abortSignal
+		);
+	}
+
+	/**
+	 * Preview the effects of allocating/deallocating collateral for the position in
+	 * a given market.
+	 *
+	 * @param inputs.marketId - Market of whose position you want to allocate/deallocate
+	 * collateral to/from.
+	 * @param inputs.collateralChange - The target collateral change (a positive number
+	 * for allocating collateral, negative for deallocating collateral).
+	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
+	 *
+	 * @returns Either:
+	 * - `{ updatedPosition, collateralChange }`, or
+	 * - `{ error }`.
+	 */
+	public async getEditCollateralPreview(
+		inputs: {
+			marketId: PerpetualsMarketId;
+			collateralChange: Balance;
+		},
+		abortSignal?: AbortSignal
+	): Promise<
+		| {
+				updatedPosition: PerpetualsPosition;
+				collateralChange: number;
+		  }
+		| {
+				error: string;
+		  }
+	> {
+		const { marketId, collateralChange } = inputs;
+
+		return this.fetchApi<
+			ApiPerpetualsPreviewEditCollateralResponse,
+			ApiPerpetualsPreviewEditCollateralBody
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"previews/edit-collateral",
+			{
+				marketId,
+				collateralChange,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,

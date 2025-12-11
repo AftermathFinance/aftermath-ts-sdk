@@ -280,7 +280,7 @@ export class PerpetualsMarket extends Caller {
 	 * @returns Either:
 	 * - `{ error }`, or
 	 * - A preview with:
-	 *   - `positionAfterOrder`
+	 *   - `updatedPosition`
 	 *   - `priceSlippage` / `percentSlippage`
 	 *   - `filledSize` / `filledSizeUsd`
 	 *   - `postedSize` / `postedSizeUsd`
@@ -295,7 +295,7 @@ export class PerpetualsMarket extends Caller {
 				error: string;
 		  }
 		| {
-				positionAfterOrder: PerpetualsPosition;
+				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
 				percentSlippage: Percentage;
 				filledSize: number;
@@ -341,7 +341,7 @@ export class PerpetualsMarket extends Caller {
 				error: string;
 		  }
 		| {
-				positionAfterOrder: PerpetualsPosition;
+				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
 				percentSlippage: Percentage;
 				filledSize: number;
