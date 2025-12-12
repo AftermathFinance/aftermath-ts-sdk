@@ -722,8 +722,6 @@ export class Perpetuals extends Caller {
 	 * @param inputs.lpCoinType - Coin type for the LP token.
 	 * @param inputs.collateralCoinType - Collateral coin type for the vault.
 	 * @param inputs.collateralOracleId - Oracle ID for collateral.
-	 * @param inputs.collateralPriceFeedId - Price feed ID for collateral (if used).
-	 * @param inputs.collateralPriceFeedTolerance - Tolerance for oracle price deviations.
 	 * @param inputs.lockPeriodMs - Lock-in period for deposits in milliseconds.
 	 * @param inputs.ownerFeePercentage - Percentage of user profits taken as owner fee.
 	 * @param inputs.forceWithdrawDelayMs - Delay before forced withdrawals are processed.
@@ -742,8 +740,6 @@ export class Perpetuals extends Caller {
 	 *   lpCoinType: "0x...::lp::LP",
 	 *   collateralCoinType: "0x2::sui::SUI",
 	 *   collateralOracleId: "0xoracle",
-	 *   collateralPriceFeedId: "0xfeed",
-	 *   collateralPriceFeedTolerance: BigInt(1_000_000),
 	 *   lockPeriodMs: BigInt(7 * 24 * 60 * 60 * 1000),
 	 *   ownerFeePercentage: 0.2,
 	 *   forceWithdrawDelayMs: BigInt(24 * 60 * 60 * 1000),
@@ -759,8 +755,8 @@ export class Perpetuals extends Caller {
 			collateralCoinType: CoinType;
 			collateralOracleId: ObjectId;
 			// TODO: find out if needed
-			collateralPriceFeedId: ObjectId;
-			collateralPriceFeedTolerance: bigint;
+			// collateralPriceFeedId: ObjectId;
+			// collateralPriceFeedTolerance: bigint;
 			// NOTE: is this correct ?
 			lockPeriodMs: bigint;
 			ownerFeePercentage: Percentage;

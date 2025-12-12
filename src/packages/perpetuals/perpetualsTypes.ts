@@ -616,7 +616,7 @@ export interface PerpetualsVaultObject {
 		/// The maximum number of pending orders allowed for a single position in the `Vault`.
 		maxPendingOrdersPerPosition: bigint;
 		// TODO
-		max_total_deposited_collateral: Balance;
+		maxTotalDepositedCollateral: Balance;
 	};
 	/** Owner address of the vault. */
 	ownerAddress: SuiAddress;
@@ -1706,9 +1706,6 @@ export type ApiPerpetualsCreateVaultBody = {
 	lpCoinType: CoinType;
 	collateralCoinType: CoinType;
 	collateralOracleId: ObjectId;
-	// TODO: find out if needed
-	collateralPriceFeedId: ObjectId;
-	collateralPriceFeedTolerance: bigint;
 	// NOTE: is this correct ?
 	lockPeriodMs: bigint;
 	ownerFeePercentage: Percentage;
