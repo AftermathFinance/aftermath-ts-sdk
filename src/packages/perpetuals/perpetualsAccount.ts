@@ -57,6 +57,8 @@ import {
 	ApiTransactionResponse,
 	ApiPerpetualsPreviewEditCollateralResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
+	PerpetualsAccountMarginData,
+	ApiPerpetualsAccountMarginHistoryBody,
 } from "../../types";
 import { Casting } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -1422,15 +1424,18 @@ export class PerpetualsAccount extends Caller {
 		});
 	}
 
-	// public async getMarginHistory() {
-	// 	return this.fetchApi<
-	// 		PerpetualsAccountMarginData[],
-	// 		ApiPerpetualsAccountMarginHistoryBody
-	// 	>("account/margin-history", {
-	// 		accountId: this.accountCap.accountId,
-	// 		collateralCoinType: this.accountCap.collateralCoinType,
-	// 	});
-	// }
+	// TODO: docs
+	// public async getMarginHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+	public async getMarginHistory() {
+		return this.fetchApi<
+			PerpetualsAccountMarginData[],
+			ApiPerpetualsAccountMarginHistoryBody
+		>("account/margin-history", {
+			// ...inputs,
+			accountId: this.accountCap.accountId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+		});
+	}
 
 	// public async getOwnedWithdrawRequests() {
 	// 	return new Perpetuals(

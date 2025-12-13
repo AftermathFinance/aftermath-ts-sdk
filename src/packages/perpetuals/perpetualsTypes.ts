@@ -574,19 +574,19 @@ export interface PerpetualsVaultObject {
 	objectId: ObjectId;
 	/// Contract version number for controlled upgrades.
 	version: bigint;
-	// TODO
+	// TODO: docs
 	name: string;
 	/// Supply of LP coins from a `TreasuryCap` for liquidity integrity.
 	lpSupply: Balance;
 	/// Total balance of underlying Coin (`C`), deposited by users.
 	idleCollateral: Balance;
-	// TODO
+	// TODO: docs
 	idleCollateralUsd: number;
-	// TODO
+	// TODO: docs
 	totalCollateral: Balance;
-	// TODO
+	// TODO: docs
 	totalCollateralUsd: number;
-	// TODO
+	// TODO: docs
 	tvlUsd: number;
 	/// IDs of `ClearingHouse` where `Vault` has positions.
 	marketIds: PerpetualsMarketId[];
@@ -602,11 +602,11 @@ export interface PerpetualsVaultObject {
 		forceWithdrawDelayMs: bigint;
 		/// Price feed storage id idetifying the oracle price for `C`
 		collateralPriceFeedStorageId: ObjectId;
-		// TODO
+		// TODO: docs
 		collateralPriceFeedStorageSourceId: ObjectId;
-		// TODO
+		// TODO: docs
 		collateralPriceFeedStorageTolerance: bigint;
-		// TODO
+		// TODO: docs
 		maxForceWithdrawMarginRatioTolerance: number;
 		/// Scaling factor to apply to `C` to convert a balance to ifixed.
 		/// Used to calculate user's minimum deposit value in usd
@@ -615,7 +615,7 @@ export interface PerpetualsVaultObject {
 		maxMarketsInVault: bigint;
 		/// The maximum number of pending orders allowed for a single position in the `Vault`.
 		maxPendingOrdersPerPosition: bigint;
-		// TODO
+		// TODO: docs
 		maxTotalDepositedCollateral: Balance;
 	};
 	/** Owner address of the vault. */
@@ -628,7 +628,7 @@ export interface PerpetualsVaultObject {
 	accountObjectId: ObjectId;
 	/** Collateral coin type accepted by this vault. */
 	collateralCoinType: CoinType;
-	// TODO
+	// TODO: docs
 	lpCoinType: CoinType;
 	/** Decimals for the LP token minted by this vault. */
 	lpCoinDecimals: CoinDecimal;
@@ -1340,10 +1340,12 @@ export interface ApiPerpetualsAccountCapsBody {
 //  Interactions
 // =========================================================================
 
-// export interface ApiPerpetualsAccountMarginHistoryBody {
-// 	accountId: PerpetualsAccountId;
-// 	collateralCoinType: CoinType;
-// }
+// TODO: docs
+export type ApiPerpetualsAccountMarginHistoryBody =
+	ApiDataWithCursorBody<Timestamp> & {
+		accountId: PerpetualsAccountId;
+		collateralCoinType: CoinType;
+	};
 
 /**
  * Request body for fetching account-level order history with a cursor.
@@ -2326,7 +2328,7 @@ export interface ApiPerpetualsVaultPreviewDepositBody {
  * Response body for vault deposit preview.
  */
 export interface ApiPerpetualsVaultPreviewDepositResponse {
-	lpAmountOut: number;
+	lpAmountOut: Balance;
 	collateralPrice: number;
 	depositedAmountUsd: number;
 }
