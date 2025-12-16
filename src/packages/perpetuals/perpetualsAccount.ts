@@ -39,7 +39,7 @@ import {
 	ApiPerpetualsSetLeverageTxBody,
 	CallerConfig,
 	SdkPerpetualsCancelOrdersPreviewInputs,
-	ApiPerpetualsAccountStopOrderDatasBody,
+	ApiPerpetualsStopOrderDatasBody,
 	PerpetualsStopOrderData,
 	ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsPlaceStopOrdersBody,
@@ -1372,13 +1372,19 @@ export class PerpetualsAccount extends Caller {
 
 		return this.fetchApi<
 			PerpetualsStopOrderData[],
-			ApiPerpetualsAccountStopOrderDatasBody
-		>("account/stop-order-datas", {
+			ApiPerpetualsStopOrderDatasBody
+		>(`${this.vaultId ? "vault" : "account"}/` + "stop-order-datas", {
 			bytes,
 			signature,
-			accountId: this.accountCap.accountId,
 			walletAddress: this.ownerAddress(),
 			marketIds: marketIds ?? [],
+			...("vaultId" in this.accountCap
+				? {
+						vaultId: this.accountCap.vaultId,
+				  }
+				: {
+						accountId: this.accountCap.accountId,
+				  }),
 		});
 	}
 

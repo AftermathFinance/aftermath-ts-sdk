@@ -295,6 +295,7 @@ export class PerpetualsVault extends Caller {
 	// =========================================================================
 
 	public async getCreateWithdrawRequestTx(inputs: {
+		walletAddress: SuiAddress;
 		lpWithdrawAmount: Balance;
 		minLpWithdrawAmount: Balance;
 		tx?: Transaction;

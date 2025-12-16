@@ -41,6 +41,7 @@ import {
 	PerpetualsWsCandleResponseMessage,
 	ApiPerpetualsCreateVaultBody,
 	ApiPerpetualsCreateVaultCapBody,
+	PerpetualsVaultLpCoin,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -476,12 +477,12 @@ export class Perpetuals extends Caller {
 	 *
 	 * @example
 	 * ```ts
-	 * const withdrawRequests = await perps.getOwnedWithdrawRequests({
+	 * const withdrawRequests = await perps.getOwnedVaultWithdrawRequests({
 	 *   walletAddress: "0x...",
 	 * });
 	 * ```
 	 */
-	public async getOwnedWithdrawRequests(inputs: {
+	public async getOwnedVaultWithdrawRequests(inputs: {
 		walletAddress: SuiAddress;
 	}) {
 		return this.fetchApi<
@@ -491,6 +492,13 @@ export class Perpetuals extends Caller {
 			...inputs,
 			// vaultIds: undefined,
 		});
+	}
+
+	// TODO: docs
+	public async getOwnedVaultLpCoins(inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PerpetualsVaultLpCoin[]> {
+		return this.fetchApi("vaults/owned-lp-coins", inputs);
 	}
 
 	/**

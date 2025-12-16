@@ -181,6 +181,8 @@ export interface PerpetualsVaultCap {
 	objectId: ObjectId;
 	/** Owner of the vault-capability. */
 	ownerAddress: SuiAddress;
+	/** Collateral coin type used by the vault account. */
+	collateralCoinType: CoinType;
 }
 
 /**
@@ -189,8 +191,8 @@ export interface PerpetualsVaultCap {
  * This combines vault and account metadata for convenience when interacting
  * with vault-owned perpetuals accounts.
  */
-// TODO: rename
-export type PerpetualsVaultCapExtended = {
+// TODO: rename ?
+export interface PerpetualsVaultCapExtended {
 	/** Vault object ID. */
 	vaultId: ObjectId;
 	/** Owner address of the vault. */
@@ -202,7 +204,15 @@ export type PerpetualsVaultCapExtended = {
 	/** Collateral coin type used by the vault account. */
 	collateralCoinType: CoinType;
 	// collateralDecimals: CoinDecimal;
-};
+}
+
+// TODO: docs
+export interface PerpetualsVaultLpCoin {
+	vaultId: ObjectId;
+	objectId: ObjectId;
+	lpAmount: Balance;
+	lpAmountUsd: number;
+}
 
 /**
  * Aggregate position data for a single perpetuals market and account.
@@ -1671,16 +1681,22 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 }
 
 /**
- * Request body for fetching stop-order data associated with an account,
+ * Request body for fetching stop-order data associated with an account or vault,
  * validated using a wallet signature.
  */
-export interface ApiPerpetualsAccountStopOrderDatasBody {
-	accountId: PerpetualsAccountId;
+export type ApiPerpetualsStopOrderDatasBody = {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
-	marketIds: PerpetualsMarketId[];
-}
+	marketIds?: PerpetualsMarketId[];
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 // =========================================================================
 //  Transactions
@@ -2264,6 +2280,7 @@ export interface ApiPerpetualsVaultWithdrawRequestsBody {
  */
 export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 	vaultId: ObjectId;
+	walletAddress: SuiAddress;
 	lpWithdrawAmount: Balance;
 	minLpWithdrawAmount: Balance;
 	txKind?: SerializedTransaction;
