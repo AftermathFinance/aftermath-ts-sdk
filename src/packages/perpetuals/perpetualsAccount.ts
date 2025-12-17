@@ -53,12 +53,13 @@ import {
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
-	PerpetualsVaultCapExtended,
 	ApiTransactionResponse,
 	ApiPerpetualsPreviewEditCollateralResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
 	PerpetualsAccountMarginData,
 	ApiPerpetualsAccountMarginHistoryBody,
+	PerpetualsVaultCap,
+	PerpetualsPartialVaultCap,
 } from "../../types";
 import { Casting } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -137,7 +138,7 @@ export class PerpetualsAccount extends Caller {
 		public readonly account: PerpetualsAccountObject,
 		public readonly accountCap:
 			| PerpetualsAccountCap
-			| PerpetualsVaultCapExtended,
+			| PerpetualsPartialVaultCap,
 		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {

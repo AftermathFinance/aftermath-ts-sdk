@@ -183,28 +183,13 @@ export interface PerpetualsVaultCap {
 	ownerAddress: SuiAddress;
 	/** Collateral coin type used by the vault account. */
 	collateralCoinType: CoinType;
-}
-
-/**
- * Extended vault capability structure used in the SDK.
- *
- * This combines vault and account metadata for convenience when interacting
- * with vault-owned perpetuals accounts.
- */
-// TODO: rename ?
-export interface PerpetualsVaultCapExtended {
-	/** Vault object ID. */
-	vaultId: ObjectId;
-	/** Owner address of the vault. */
-	ownerAddress: SuiAddress;
 	/** Perpetuals account ID controlled by the vault. */
 	accountId: PerpetualsAccountId;
 	/** Object ID of the account object owned by the vault. */
 	accountObjectId: ObjectId;
-	/** Collateral coin type used by the vault account. */
-	collateralCoinType: CoinType;
-	// collateralDecimals: CoinDecimal;
 }
+
+export type PerpetualsPartialVaultCap = Omit<PerpetualsVaultCap, "objectId">;
 
 // TODO: docs
 export interface PerpetualsVaultLpCoin {
@@ -1723,7 +1708,6 @@ export type ApiPerpetualsCreateVaultBody = {
 	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
 	collateralCoinType: CoinType;
-	collateralOracleId: ObjectId;
 	// NOTE: is this correct ?
 	lockPeriodMs: bigint;
 	ownerFeePercentage: Percentage;

@@ -33,7 +33,6 @@ import {
 	PerpetualsVaultCap,
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultWithdrawRequestsBody,
-	PerpetualsVaultCapExtended,
 	PerpetualsOrderPrice,
 	ApiTransactionResponse,
 	PerpetualsWsUpdatesSubscriptionMessage,
@@ -42,6 +41,7 @@ import {
 	ApiPerpetualsCreateVaultBody,
 	ApiPerpetualsCreateVaultCapBody,
 	PerpetualsVaultLpCoin,
+	PerpetualsPartialVaultCap,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -314,7 +314,7 @@ export class Perpetuals extends Caller {
 	 */
 	// TODO: merge this with `getAccountObjects` as an option ?
 	public async getAccount(inputs: {
-		accountCap: PerpetualsAccountCap | PerpetualsVaultCapExtended;
+		accountCap: PerpetualsAccountCap | PerpetualsPartialVaultCap;
 		marketIds?: PerpetualsMarketId[];
 	}): Promise<PerpetualsAccount> {
 		const { accountCap, marketIds } = inputs;
@@ -348,7 +348,7 @@ export class Perpetuals extends Caller {
 	 */
 	// TODO: make account fetching get positions and account cap data all at once ?
 	public async getAccounts(inputs: {
-		accountCaps: (PerpetualsAccountCap | PerpetualsVaultCapExtended)[];
+		accountCaps: (PerpetualsAccountCap | PerpetualsPartialVaultCap)[];
 		marketIds?: PerpetualsMarketId[];
 	}): Promise<PerpetualsAccount[]> {
 		const { accountCaps, marketIds } = inputs;
@@ -729,7 +729,6 @@ export class Perpetuals extends Caller {
 	 * @param inputs.walletAddress - Address of vault owner.
 	 * @param inputs.lpCoinType - Coin type for the LP token.
 	 * @param inputs.collateralCoinType - Collateral coin type for the vault.
-	 * @param inputs.collateralOracleId - Oracle ID for collateral.
 	 * @param inputs.lockPeriodMs - Lock-in period for deposits in milliseconds.
 	 * @param inputs.ownerFeePercentage - Percentage of user profits taken as owner fee.
 	 * @param inputs.forceWithdrawDelayMs - Delay before forced withdrawals are processed.
@@ -747,7 +746,6 @@ export class Perpetuals extends Caller {
 	 *   walletAddress: "0x...",
 	 *   lpCoinType: "0x...::lp::LP",
 	 *   collateralCoinType: "0x2::sui::SUI",
-	 *   collateralOracleId: "0xoracle",
 	 *   lockPeriodMs: BigInt(7 * 24 * 60 * 60 * 1000),
 	 *   ownerFeePercentage: 0.2,
 	 *   forceWithdrawDelayMs: BigInt(24 * 60 * 60 * 1000),
@@ -761,10 +759,6 @@ export class Perpetuals extends Caller {
 			walletAddress: SuiAddress;
 			lpCoinType: CoinType;
 			collateralCoinType: CoinType;
-			collateralOracleId: ObjectId;
-			// TODO: find out if needed
-			// collateralPriceFeedId: ObjectId;
-			// collateralPriceFeedTolerance: bigint;
 			// NOTE: is this correct ?
 			lockPeriodMs: bigint;
 			ownerFeePercentage: Percentage;

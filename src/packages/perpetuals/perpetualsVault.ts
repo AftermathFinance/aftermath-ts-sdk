@@ -36,8 +36,8 @@ import {
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
 	PerpetualsVaultCap,
 	ApiTransactionResponse,
-	PerpetualsVaultCapExtended,
 	ObjectId,
+	PerpetualsPartialVaultCap,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -510,14 +510,13 @@ export class PerpetualsVault extends Caller {
 	//  Account
 	// =========================================================================
 
-	public vaultCapExtended(): PerpetualsVaultCapExtended {
+	public partialVaultCap(): PerpetualsPartialVaultCap {
 		return {
 			vaultId: this.vaultObject.objectId,
 			ownerAddress: this.vaultObject.ownerAddress,
 			accountId: this.vaultObject.accountId,
 			accountObjectId: this.vaultObject.accountObjectId,
 			collateralCoinType: this.vaultObject.collateralCoinType,
-			// collateralDecimals: "TODO",
 		};
 	}
 
@@ -532,7 +531,7 @@ export class PerpetualsVault extends Caller {
 
 	public async getAccount() {
 		return new Perpetuals(this.config, this.Provider).getAccount({
-			accountCap: this.vaultCapExtended(),
+			accountCap: this.partialVaultCap(),
 		});
 	}
 }
