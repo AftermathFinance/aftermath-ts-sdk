@@ -7,7 +7,7 @@ import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
 	ApiPerpetualsVaultUpdateLockPeriodTxBody,
-	ApiPerpetualsVaultProcessForceWithdrawsTxBody,
+	ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
 	ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
 	Balance,
 	CallerConfig,
@@ -21,15 +21,15 @@ import {
 	ApiPerpetualsVaultsWithdrawRequestsBody,
 	ApiPerpetualsVaultWithdrawRequestsBody,
 	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
-	ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
+	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
 	ApiPerpetualsVaultDepositTxBody,
 	ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
 	ApiPerpetualsVaultPreviewCreateWithdrawRequestBody,
 	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
 	ApiPerpetualsVaultPreviewDepositResponse,
 	ApiPerpetualsVaultPreviewDepositBody,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawResponse,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawBody,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody,
 	ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
 	ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody,
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
@@ -95,17 +95,18 @@ export class PerpetualsVault extends Caller {
 	//  Withdraw Request Txs
 	// =========================================================================
 
-	public async getProcessForceWithdrawsTx(inputs: {
+	public async getProcessForceWithdrawRequestTx(inputs: {
+		walletAddress: SuiAddress;
 		// TODO: change to arr ?
 		sizesToClose: Record<PerpetualsMarketId, Balance>;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultProcessForceWithdrawsTxBody,
+			ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/process-force-withdraws",
+			"vault/transactions/process-force-withdraw-request",
 			{
 				...otherInputs,
 				// NOTE: should this be `vaultIds` ?
@@ -328,13 +329,13 @@ export class PerpetualsVault extends Caller {
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
+			ApiPerpetualsVaultCancelWithdrawRequestTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/cancel-withdraw-requests",
+			"vault/transactions/cancel-withdraw-request",
 			{
 				...otherInputs,
-				vaultIds: [this.vaultObject.objectId],
+				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -481,14 +482,13 @@ export class PerpetualsVault extends Caller {
 		});
 	}
 
-	// TODO: change all `withdraws` to `withdrawals` ?
-	public async getPreviewProcessForceWithdraw(inputs: {
+	public async getPreviewProcessForceWithdrawRequest(inputs: {
 		walletAddress: SuiAddress;
 	}) {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewProcessForceWithdrawResponse,
-			ApiPerpetualsVaultPreviewProcessForceWithdrawBody
-		>("vault/previews/process-force-withdraw", {
+			ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
+			ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody
+		>("vault/previews/process-force-withdraw-request", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});

@@ -2172,7 +2172,8 @@ export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
 /**
  * API body to process forced withdrawals in a vault.
  */
-export interface ApiPerpetualsVaultProcessForceWithdrawsTxBody {
+export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
+	walletAddress: SuiAddress;
 	vaultId: ObjectId;
 	/** Per-market sizes to close as part of force withdraw. */
 	sizesToClose: Record<PerpetualsMarketId, Balance>;
@@ -2273,8 +2274,8 @@ export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 /**
  * API body for canceling withdrawal requests across vaults for a wallet.
  */
-export interface ApiPerpetualsVaultCancelWithdrawRequestsTxBody {
-	vaultIds: ObjectId[];
+export interface ApiPerpetualsVaultCancelWithdrawRequestTxBody {
+	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 	txKind?: SerializedTransaction;
 }
@@ -2311,10 +2312,14 @@ export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
 /**
  * Response body for vault withdrawal preview.
  */
-export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse {
-	collateralAmountOut: Balance;
-	collateralPrice: number;
-}
+export type ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse =
+	| {
+			error: string;
+	  }
+	| {
+			collateralAmountOut: Balance;
+			collateralPrice: number;
+	  };
 
 /**
  * Request body for previewing a vault deposit.
@@ -2328,16 +2333,20 @@ export interface ApiPerpetualsVaultPreviewDepositBody {
 /**
  * Response body for vault deposit preview.
  */
-export interface ApiPerpetualsVaultPreviewDepositResponse {
-	lpAmountOut: Balance;
-	collateralPrice: number;
-	depositedAmountUsd: number;
-}
+export type ApiPerpetualsVaultPreviewDepositResponse =
+	| {
+			error: string;
+	  }
+	| {
+			lpAmountOut: Balance;
+			collateralPrice: number;
+			depositedAmountUsd: number;
+	  };
 
 /**
  * Request body for previewing forced withdraw processing for a vault.
  */
-export interface ApiPerpetualsVaultPreviewProcessForceWithdrawBody {
+export interface ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody {
 	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 }
@@ -2345,12 +2354,16 @@ export interface ApiPerpetualsVaultPreviewProcessForceWithdrawBody {
 /**
  * Response body for forced withdraw processing preview.
  */
-export interface ApiPerpetualsVaultPreviewProcessForceWithdrawResponse {
-	collateralAmountOut: Balance;
-	collateralPrice: number;
-	// TODO: change to arr ?
-	sizesToClose: Record<PerpetualsMarketId, bigint>;
-}
+export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
+	| {
+			error: string;
+	  }
+	| {
+			collateralAmountOut: Balance;
+			collateralPrice: number;
+			// TODO: change to arr ?
+			sizesToClose: Record<PerpetualsMarketId, bigint>;
+	  };
 
 /**
  * Request body for previewing normal withdraw requests processing for a vault.
@@ -2363,13 +2376,17 @@ export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
 /**
  * Response body for previewing normal withdraw requests processing.
  */
-export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse {
-	userPreviews: {
-		userAddress: SuiAddress;
-		lpAmountOut: number;
-	}[];
-	collateralPrice: number;
-}
+export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse =
+	| {
+			error: string;
+	  }
+	| {
+			userPreviews: {
+				userAddress: SuiAddress;
+				lpAmountOut: Balance;
+			}[];
+			collateralPrice: number;
+	  };
 
 /**
  * Request body for previewing maximum owner fees withdrawable from a vault.
@@ -2381,11 +2398,15 @@ export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody {
 /**
  * Response body for previewing vault owner fee withdrawal.
  */
-export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse {
-	maxFeesToWithdraw: Balance;
-	// maxFeesToWithdrawUsd: number;
-	feeCoinType: CoinType;
-}
+export type ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse =
+	| {
+			error: string;
+	  }
+	| {
+			maxFeesToWithdraw: Balance;
+			// maxFeesToWithdrawUsd: number;
+			feeCoinType: CoinType;
+	  };
 
 // =========================================================================
 //  SDK
