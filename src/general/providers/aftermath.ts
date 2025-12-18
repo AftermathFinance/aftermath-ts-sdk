@@ -32,6 +32,7 @@ import { Dca } from "../../packages/dca/dca";
 import { Multisig } from "../../packages/multisig/multisig";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { UserData } from "../../packages/userData/userData";
+import { Referrals } from "../../packages/referrals/referrals";
 
 /**
  * The `Aftermath` class serves as the primary entry point for interacting with
@@ -191,8 +192,14 @@ export class Aftermath extends Caller {
 
 	/**
 	 * Returns an instance of `ReferralVault` for referral-based interactions in the protocol.
+	 * @deprecated Use `Referrals` instead
 	 */
-	public ReferralVault = () => new ReferralVault(this.config, this.Provider);
+	public ReferralVault = () => new ReferralVault(this.config);
+
+	/**
+	 * Returns an instance of `Referrals` for referral-based interactions in the protocol.
+	 */
+	public Referrals = () => new Referrals(this.config);
 
 	/**
 	 * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.

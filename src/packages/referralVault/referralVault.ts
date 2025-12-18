@@ -6,6 +6,8 @@ import { CallerConfig, SuiAddress, SuiNetwork, Url } from "../../types";
  * The `ReferralVault` class provides functionality for querying and managing
  * referral information within the Aftermath protocol. It allows you to look
  * up the referrer for a given address.
+ *
+ * @deprecated Use `Referral` class instead
  */
 export class ReferralVault extends Caller {
 	// =========================================================================
@@ -26,13 +28,11 @@ export class ReferralVault extends Caller {
 	 * Creates a new instance of `ReferralVault` to interact with referral-related
 	 * features in the Aftermath protocol.
 	 *
+	 * @deprecated Use `Referral` class instead
 	 * @param config - Optional caller configuration, including Sui network and access token.
 	 * @param Provider - An optional `AftermathApi` provider instance for referral-specific methods.
 	 */
-	constructor(
-		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
-	) {
+	constructor(config?: CallerConfig) {
 		super(config, "referral-vault");
 	}
 
@@ -43,6 +43,7 @@ export class ReferralVault extends Caller {
 	/**
 	 * Retrieves the referrer address for a specified referee (user).
 	 *
+	 * @deprecated Use `Referral` class instead
 	 * @param inputs - An object containing the `referee` Sui address.
 	 * @returns A promise that resolves to either the referrer's `SuiAddress` or the string `"None"` if no referrer exists.
 	 *
@@ -62,18 +63,4 @@ export class ReferralVault extends Caller {
 	}): Promise<SuiAddress | "None"> {
 		return this.fetchApi(`${inputs.referee}/referrer`);
 	}
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	/**
-	 * Internal helper to retrieve the configured `ReferralVault` provider from
-	 * `AftermathApi`, throwing an error if not defined.
-	 */
-	private useProvider = () => {
-		const provider = this.Provider?.ReferralVault();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
 }
