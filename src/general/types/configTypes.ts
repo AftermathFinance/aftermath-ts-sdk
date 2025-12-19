@@ -23,6 +23,7 @@ export interface ConfigAddresses {
 	router?: RouterAddresses;
 	referralVault?: ReferralVaultAddresses;
 	perpetuals?: PerpetualsAddresses;
+	perpetualsVaults?: PerpetualsVaultsAddresses;
 	farms?: FarmsAddresses;
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
@@ -98,7 +99,7 @@ export interface PoolsAddresses {
 export interface DaoFeePoolsAddresses {
 	packages: {
 		amm: SuiAddress;
-		events: SuiAddress
+		events: SuiAddress;
 	};
 	objects: {
 		version: ObjectId;
@@ -156,6 +157,12 @@ export interface PerpetualsAddresses {
 	};
 	objects: {
 		registry: ObjectId;
+	};
+}
+
+export interface PerpetualsVaultsAddresses {
+	other: {
+		createLpCoinPackageCompilation: string;
 	};
 }
 

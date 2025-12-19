@@ -1693,16 +1693,14 @@ export type ApiPerpetualsStopOrderDatasBody = {
 export interface ApiPerpetualsCreateVaultCapBody {
 	walletAddress: SuiAddress;
 	lpCoinMetadata: {
-		/** Number of decimal places the coin uses. */
-		decimals: number;
-		/** Description of the token */
-		description: string;
-		/** URL for the token logo */
-		iconUrl: string | undefined;
 		/** Name for the token */
 		name: string;
 		/** Symbol for the token */
 		symbol: string;
+		/** Description of the token */
+		description: string;
+		/** URL for the token logo */
+		iconUrl?: string;
 	};
 }
 
