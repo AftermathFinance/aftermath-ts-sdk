@@ -684,27 +684,8 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	/**
-	 * Build a `create-vault-cap` transaction.
-	 *
-	 * This helper directly forwards the body through to the backend. If you wish
-	 * to extend an existing {@link Transaction}, build the `txKind` yourself
-	 * and pass it as part of {@link ApiPerpetualsCreateVaultCapBody}.
-	 *
-	 * @param inputs - Request body for the create-vault-cap endpoint.
-	 * @returns API transaction response containing `txKind`.
-	 *
-	 * @example
-	 * ```ts
-	 * const { txKind } = await perps.getCreateVaultCapTx({
-	 *   walletAddress: "0x...",
-	 * });
-	 * ```
-	 */
-	public async getCreateVaultCapTx(
-		// TODO: add tx support ?
-		inputs: ApiPerpetualsCreateVaultCapBody
-	) {
+	// TODO: docs
+	public async getCreateVaultCapTx(inputs: ApiPerpetualsCreateVaultCapBody) {
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateVaultCapBody,
 			ApiTransactionResponse
