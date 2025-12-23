@@ -1408,7 +1408,6 @@ export class PerpetualsAccount extends Caller {
 		>("account/collateral-history", {
 			...inputs,
 			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
 		});
 	}
 
@@ -1440,7 +1439,6 @@ export class PerpetualsAccount extends Caller {
 		>("account/margin-history", {
 			// ...inputs,
 			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
 		});
 	}
 

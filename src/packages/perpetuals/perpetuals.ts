@@ -42,6 +42,7 @@ import {
 	ApiPerpetualsCreateVaultCapBody,
 	PerpetualsVaultLpCoin,
 	PerpetualsPartialVaultCap,
+	PerpetualsVaultMetatada,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -694,6 +695,8 @@ export class Perpetuals extends Caller {
 		});
 	}
 
+	// TODO: docs (for metadata)
+
 	/**
 	 * Build a `create-vault` transaction.
 	 *
@@ -706,7 +709,6 @@ export class Perpetuals extends Caller {
 	 * You can specify the initial deposit either as an explicit amount or as a
 	 * `depositCoinArg` referring to an existing transaction argument.
 	 *
-	 * @param inputs.name - Human-readable vault name.
 	 * @param inputs.walletAddress - Address of vault owner.
 	 * @param inputs.lpCoinType - Coin type for the LP token.
 	 * @param inputs.collateralCoinType - Collateral coin type for the vault.
@@ -723,7 +725,6 @@ export class Perpetuals extends Caller {
 	 * @example
 	 * ```ts
 	 * const { txKind } = await perps.getCreateVaultTx({
-	 *   name: "My Vault",
 	 *   walletAddress: "0x...",
 	 *   lpCoinType: "0x...::lp::LP",
 	 *   collateralCoinType: "0x2::sui::SUI",
@@ -736,14 +737,12 @@ export class Perpetuals extends Caller {
 	 */
 	public async getCreateVaultTx(
 		inputs: {
-			name: string;
 			walletAddress: SuiAddress;
+			metadata: PerpetualsVaultMetatada;
 			lpCoinType: CoinType;
 			collateralCoinType: CoinType;
-			// NOTE: is this correct ?
 			lockPeriodMs: bigint;
 			ownerFeePercentage: Percentage;
-			// NOTE: is this correct ?
 			forceWithdrawDelayMs: bigint;
 			tx?: Transaction;
 			isSponsoredTx?: boolean;

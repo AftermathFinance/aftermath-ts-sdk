@@ -266,7 +266,7 @@ export class PerpetualsVault extends Caller {
 
 	public async getWithdrawOwnerFeesTx(inputs: {
 		withdrawAmount: Balance;
-		ownerFeePercentage: number;
+		recipientAddress?: SuiAddress;
 		tx?: Transaction;
 	}) {
 		const { tx: txFromInputs, ...otherInputs } = inputs;
@@ -444,14 +444,11 @@ export class PerpetualsVault extends Caller {
 		});
 	}
 
-	public async getPreviewWithdrawOwnerFees(inputs: {
-		walletAddress: SuiAddress;
-	}) {
+	public async getPreviewWithdrawOwnerFees() {
 		return this.fetchApi<
 			ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
 			ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody
 		>("vault/previews/withdraw-owner-fees", {
-			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
 	}

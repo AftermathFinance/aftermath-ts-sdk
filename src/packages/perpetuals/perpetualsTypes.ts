@@ -560,6 +560,22 @@ export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
 }
 
+// TODO: docs
+export interface PerpetualsVaultMetatada {
+	/// A human-readable name for the `Vault`.
+	name: string;
+	/// A verbose description of the `Vault`.
+	description: string;
+	/// The `Vault` curator's name.
+	curatorName?: string;
+	/// A url for the `Vault`'s curator. Ideally their website.
+	curatorUrl?: string;
+	/// An image url for the `Vault`'s curator. Ideally their logo.
+	curatorLogoUrl?: string;
+	/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+	extraFields?: Record<string, string>;
+}
+
 /**
  * On-chain representation of a vault that manages user collateral and
  * interacts with clearing houses on their behalf.
@@ -570,7 +586,7 @@ export interface PerpetualsVaultObject {
 	/// Contract version number for controlled upgrades.
 	version: bigint;
 	// TODO: docs
-	name: string;
+	metadata: PerpetualsVaultMetatada;
 	/// Supply of LP coins from a `TreasuryCap` for liquidity integrity.
 	lpSupply: Balance;
 	/// Total balance of underlying Coin (`C`), deposited by users.
@@ -747,7 +763,7 @@ export interface PerpetualsAccountMarginData {
 	/** Collateral value in USD at that time. */
 	collateralUsd: number;
 	/** Unrealized funding PnL in USD at that time. */
-	unrealizedFundingUsd: number;
+	unrealizedFundingsUsd: number;
 	/** Unrealized position PnL in USD at that time. */
 	unrealizedPnlUsd: number;
 }
@@ -1339,7 +1355,6 @@ export interface ApiPerpetualsAccountCapsBody {
 export type ApiPerpetualsAccountMarginHistoryBody =
 	ApiDataWithCursorBody<Timestamp> & {
 		accountId: PerpetualsAccountId;
-		collateralCoinType: CoinType;
 	};
 
 /**
@@ -1356,7 +1371,6 @@ export type ApiPerpetualsAccountOrderHistoryBody =
 export type ApiPerpetualsAccountCollateralHistoryBody =
 	ApiDataWithCursorBody<Timestamp> & {
 		accountId: PerpetualsAccountId;
-		collateralCoinType: CoinType;
 	};
 
 // export type ApiPerpetualsPreviewOrderBody = (
@@ -1712,14 +1726,12 @@ export interface ApiPerpetualsCreateVaultCapBody {
  * - As an existing `depositCoinArg` (coin object).
  */
 export type ApiPerpetualsCreateVaultBody = {
-	name: string;
 	walletAddress: SuiAddress;
+	metadata: PerpetualsVaultMetatada;
 	lpCoinType: CoinType;
 	collateralCoinType: CoinType;
-	// NOTE: is this correct ?
 	lockPeriodMs: bigint;
 	ownerFeePercentage: Percentage;
-	// NOTE: is this correct ?
 	forceWithdrawDelayMs: bigint;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
