@@ -2420,7 +2420,7 @@ export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse =
 	| {
 			userPreviews: {
 				userAddress: SuiAddress;
-				lpAmountOut: Balance;
+				collateralAmountOut: Balance;
 			}[];
 			collateralPrice: number;
 	  };
