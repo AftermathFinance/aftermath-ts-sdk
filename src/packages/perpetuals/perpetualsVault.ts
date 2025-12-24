@@ -152,19 +152,18 @@ export class PerpetualsVault extends Caller {
 	}
 
 	public async getUpdateWithdrawRequestSlippageTx(inputs: {
-		minLpAmountOut: Balance;
+		minCollateralAmountOut: Balance;
 		tx?: Transaction;
 	}) {
-		const { tx, minLpAmountOut, ...otherInputs } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/update-withdraw-request-slippages",
+			"vault/transactions/update-withdraw-request-slippage",
 			{
 				...otherInputs,
-				vaultIds: [this.vaultObject.objectId],
-				minLpAmountsOut: [minLpAmountOut],
+				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -298,7 +297,7 @@ export class PerpetualsVault extends Caller {
 	public async getCreateWithdrawRequestTx(inputs: {
 		walletAddress: SuiAddress;
 		lpWithdrawAmount: Balance;
-		minLpWithdrawAmount: Balance;
+		minCollateralAmountOut: Balance;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;

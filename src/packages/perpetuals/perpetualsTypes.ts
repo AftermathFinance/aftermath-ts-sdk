@@ -654,11 +654,15 @@ export interface PerpetualsVaultWithdrawRequest {
 	/// Object id of the vault associated with the withdraw request
 	vaultId: SuiAddress;
 	/// The amount of the shares requested for withdrawal.
-	lpAmountOut: Balance;
+	lpAmountIn: Balance;
+	// TODO: docs
+	lpAmountInUsd: number;
 	/// Timestamp of request's creation
 	requestTimestamp: Timestamp;
-	/// The minimum amount of the balance expected as output for this withdrawal
-	minLpAmountOut: Balance;
+	/// The minimum amount of the collateral balance expected as output for this withdrawal
+	minCollateralAmountOut: Balance;
+	// TODO: docs
+	minCollateralAmountOutUsd: number;
 }
 
 // =========================================================================
@@ -2227,8 +2231,8 @@ export interface ApiPerpetualsVaultProcessWithdrawRequestsTxBody {
  * requests across several vaults.
  */
 export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody {
-	vaultIds: ObjectId[];
-	minLpAmountsOut: Balance[];
+	vaultId: ObjectId;
+	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
 }
 
@@ -2300,7 +2304,7 @@ export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 	lpWithdrawAmount: Balance;
-	minLpWithdrawAmount: Balance;
+	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
 }
 
