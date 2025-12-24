@@ -46,17 +46,31 @@ export class Caller {
 	//  Private Methods
 	// =========================================================================
 
+	private static nullToUndefined<T>(value: T): T {
+		// Reviver already converts null -> undefined for object properties,
+		// but this ensures top-level `null` also becomes `undefined`.
+		return value === null ? (undefined as unknown as T) : value;
+	}
+
 	private static async fetchResponseToType<OutputType>(
 		response: Response,
 		disableBigIntJsonParsing: boolean
 	): Promise<OutputType> {
 		if (!response.ok) throw new Error(await response.text());
 
+		// Keep your existing stringify->parse approach so BigInt parsing stays consistent.
 		const json = JSON.stringify(await response.json());
+
 		const output = disableBigIntJsonParsing
-			? JSON.parse(json)
-			: Helpers.parseJsonWithBigint(json);
-		return output as OutputType;
+			? JSON.parse(json, (_key, value) =>
+					value === null ? undefined : value
+			  )
+			: Helpers.parseJsonWithBigint(
+					json /* unsafeStringNumberConversion */
+			  );
+
+		// Ensure top-level `null` becomes `undefined` too.
+		return Caller.nullToUndefined(output) as OutputType;
 	}
 
 	// =========================================================================
@@ -116,17 +130,14 @@ export class Caller {
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const headers = {
-			// "Content-Type": "text/plain",
 			"Content-Type": "application/json",
 			...(this.config.accessToken
 				? { Authorization: `Bearer ${this.config.accessToken}` }
 				: {}),
 		};
+
 		const uncastResponse = await (body === undefined
-			? fetch(apiCallUrl, {
-					headers,
-					signal,
-			  })
+			? fetch(apiCallUrl, { headers, signal })
 			: fetch(apiCallUrl, {
 					method: "POST",
 					body: JSON.stringify(body),

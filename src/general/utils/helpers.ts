@@ -304,6 +304,9 @@ export class Helpers {
 		unsafeStringNumberConversion = false
 	) =>
 		JSON.parse(json, (key, value) => {
+			// convert null -> undefined everywhere
+			if (value === null) return undefined;
+
 			// handles bigint casting
 			if (typeof value === "string" && /^-?\d+n$/.test(value)) {
 				return BigInt(value.slice(0, -1));
@@ -437,10 +440,8 @@ export class Helpers {
 
 		for (let index = 0; index < array.length; index++) {
 			const item = array[index];
-			if(func(item, index,array))
-				trues[trues.length] = item;
-			else
-				falses[falses.length] = item;
+			if (func(item, index, array)) trues[trues.length] = item;
+			else falses[falses.length] = item;
 		}
 
 		return [trues, falses];

@@ -567,13 +567,13 @@ export interface PerpetualsVaultMetatada {
 	/// A verbose description of the `Vault`.
 	description: string;
 	/// The `Vault` curator's name.
-	curatorName?: string;
+	curatorName: string | undefined;
 	/// A url for the `Vault`'s curator. Ideally their website.
-	curatorUrl?: string;
+	curatorUrl: string | undefined;
 	/// An image url for the `Vault`'s curator. Ideally their logo.
-	curatorLogoUrl?: string;
+	curatorLogoUrl: string | undefined;
 	/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
-	extraFields?: Record<string, string>;
+	extraFields: Record<string, string>;
 }
 
 /**
@@ -1727,7 +1727,20 @@ export interface ApiPerpetualsCreateVaultCapBody {
  */
 export type ApiPerpetualsCreateVaultBody = {
 	walletAddress: SuiAddress;
-	metadata: PerpetualsVaultMetatada;
+	metadata: {
+		/// A human-readable name for the `Vault`.
+		name: string;
+		/// A verbose description of the `Vault`.
+		description: string;
+		/// The `Vault` curator's name.
+		curatorName?: string;
+		/// A url for the `Vault`'s curator. Ideally their website.
+		curatorUrl?: string;
+		/// An image url for the `Vault`'s curator. Ideally their logo.
+		curatorLogoUrl?: string;
+		/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+		extraFields?: Record<string, string>;
+	};
 	lpCoinType: CoinType;
 	collateralCoinType: CoinType;
 	lockPeriodMs: bigint;
