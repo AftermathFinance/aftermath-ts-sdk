@@ -713,7 +713,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.lpCoinType - Coin type for the LP token.
 	 * @param inputs.collateralCoinType - Collateral coin type for the vault.
 	 * @param inputs.lockPeriodMs - Lock-in period for deposits in milliseconds.
-	 * @param inputs.ownerFeePercentage - Percentage of user profits taken as owner fee.
+	 * @param inputs.performanceFeePercentage - Percentage of user profits taken as owner fee.
 	 * @param inputs.forceWithdrawDelayMs - Delay before forced withdrawals are processed.
 	 * @param inputs.isSponsoredTx - Whether this transaction is sponsored (fees paid by another party).
 	 * @param inputs.initialDepositAmount - Initial deposit amount (mutually exclusive with `initialDepositCoinArg`).
@@ -729,7 +729,7 @@ export class Perpetuals extends Caller {
 	 *   lpCoinType: "0x...::lp::LP",
 	 *   collateralCoinType: "0x2::sui::SUI",
 	 *   lockPeriodMs: BigInt(7 * 24 * 60 * 60 * 1000),
-	 *   ownerFeePercentage: 0.2,
+	 *   performanceFeePercentage: 0.2,
 	 *   forceWithdrawDelayMs: BigInt(24 * 60 * 60 * 1000),
 	 *   initialDepositAmount: BigInt("1000000000"),
 	 * });
@@ -755,7 +755,7 @@ export class Perpetuals extends Caller {
 			lpCoinType: CoinType;
 			collateralCoinType: CoinType;
 			lockPeriodMs: bigint;
-			ownerFeePercentage: Percentage;
+			performanceFeePercentage: Percentage;
 			forceWithdrawDelayMs: bigint;
 			tx?: Transaction;
 			isSponsoredTx?: boolean;

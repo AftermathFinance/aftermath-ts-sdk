@@ -198,29 +198,21 @@ export class PerpetualsAccount extends Caller {
 	) {
 		const { tx, ...otherInputs } = inputs;
 
-		// TODO: add vault support
 		if (this.vaultId)
-			throw new Error("this function is not supported for vaults");
+			throw new Error(
+				"this method is not supported for vaults, please use method `getAdminDepositTx` on class `PerpetualsVault` instead"
+			);
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsDepositCollateralBody,
 			ApiTransactionResponse
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"transactions/deposit-collateral",
+			"account/transactions/deposit-collateral",
 			{
 				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				collateralCoinType: this.accountCap.collateralCoinType,
-				...("vaultId" in this.accountCap
-					? {
-							vaultId: this.accountCap.vaultId,
-							accountId: undefined,
-					  }
-					: {
-							accountId: this.accountCap.accountId,
-							vaultId: undefined,
-					  }),
+				accountId: this.accountCap.accountId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -266,30 +258,21 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { withdrawAmount, recipientAddress, tx: txFromInputs } = inputs;
 
-		// TODO: add vault support
 		if (this.vaultId)
-			throw new Error("this function is not supported for vaults");
+			throw new Error(
+				"this method is not supported for vaults, please use method `getAdminWithdrawTx` on class `PerpetualsVault` instead"
+			);
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsWithdrawCollateralBody,
 			ApiPerpetualsWithdrawCollateralResponse
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"transactions/withdraw-collateral",
+			"account/transactions/withdraw-collateral",
 			{
 				withdrawAmount,
 				recipientAddress,
 				walletAddress: this.ownerAddress(),
-				collateralCoinType: this.accountCap.collateralCoinType,
-				...("vaultId" in this.accountCap
-					? {
-							vaultId: this.accountCap.vaultId,
-							accountId: undefined,
-					  }
-					: {
-							accountId: this.accountCap.accountId,
-							vaultId: undefined,
-					  }),
+				accountId: this.accountCap.accountId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: txFromInputs ?? new Transaction(),

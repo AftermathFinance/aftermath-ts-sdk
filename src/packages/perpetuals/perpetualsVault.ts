@@ -5,39 +5,42 @@ import {
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import {
-	ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
-	ApiPerpetualsVaultUpdateLockPeriodTxBody,
+	ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody,
+	ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody,
 	ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
-	ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
+	ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody,
 	Balance,
 	CallerConfig,
 	PerpetualsMarketId,
 	PerpetualsVaultObject,
 	SuiAddress,
-	ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody,
-	ApiPerpetualsVaultWithdrawOwnerFeesTxResponse,
-	ApiPerpetualsVaultWithdrawOwnerFeesTxBody,
+	ApiPerpetualsVaultOwnerUpdatePerformanceFeeTxBody,
+	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse,
+	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody,
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultsWithdrawRequestsBody,
 	ApiPerpetualsVaultWithdrawRequestsBody,
 	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
 	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
 	ApiPerpetualsVaultDepositTxBody,
-	ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
+	ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody,
 	ApiPerpetualsVaultPreviewCreateWithdrawRequestBody,
 	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
 	ApiPerpetualsVaultPreviewDepositResponse,
 	ApiPerpetualsVaultPreviewDepositBody,
 	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
 	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody,
-	ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
-	ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody,
-	ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
-	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
+	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse,
+	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody,
+	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody,
 	PerpetualsVaultCap,
 	ApiTransactionResponse,
 	ObjectId,
 	PerpetualsPartialVaultCap,
+	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
+	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -62,9 +65,9 @@ export class PerpetualsVault extends Caller {
 		/// Minimum period for force withdraw delay in milliseconds.
 		minForceWithdrawDelayMs: 3600000, // 1 hour
 		/// Minimum vault fee.
-		minOwnerFeePercentage: 0.0, // 0%
+		minPerformanceFeePercentage: 0.0, // 0%
 		/// Maximum vault fee.
-		maxOwnerFeePercentage: 0.2, // 20%
+		maxPerformanceFeePercentage: 0.2, // 20%
 		// Minimum USD value required for users deposits.
 		minDepositUsd: 1,
 		// Minimum USD value required to be locked by vault owner during vault creation.
@@ -124,40 +127,13 @@ export class PerpetualsVault extends Caller {
 		);
 	}
 
-	public async getProcessWithdrawRequestsTx(inputs: {
-		userAddresses: SuiAddress[];
-		tx?: Transaction;
-	}) {
-		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
-			ApiTransactionResponse
-		>(
-			"vault/transactions/process-withdraw-requests",
-			{
-				...otherInputs,
-				// NOTE: should this be `vaultIds` ?
-				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
-			},
-			undefined,
-			{
-				txKind: true,
-			}
-		);
-	}
-
 	public async getUpdateWithdrawRequestSlippageTx(inputs: {
 		minCollateralAmountOut: Balance;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
+			ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody,
 			ApiTransactionResponse
 		>(
 			"vault/transactions/update-withdraw-request-slippage",
@@ -178,19 +154,19 @@ export class PerpetualsVault extends Caller {
 	}
 
 	// =========================================================================
-	//  Admin Settings Txs
+	//  Owner Settings Txs
 	// =========================================================================
 
-	public async getUpdateForceWithdrawDelayTx(inputs: {
+	public async getOwnerUpdateForceWithdrawDelayTx(inputs: {
 		forceWithdrawDelayMs: bigint;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
+			ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/update-force-withdraw-delay",
+			"vault/transactions/owner/update-force-withdraw-delay",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -207,16 +183,16 @@ export class PerpetualsVault extends Caller {
 		);
 	}
 
-	public async getUpdateLockPeriodTx(inputs: {
+	public async getOwnerUpdateLockPeriodTx(inputs: {
 		lockPeriodMs: bigint;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultUpdateLockPeriodTxBody,
+			ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/update-lock-period",
+			"vault/transactions/owner/update-lock-period",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -233,16 +209,16 @@ export class PerpetualsVault extends Caller {
 		);
 	}
 
-	public async getUpdateOwnerFeePercentageTx(inputs: {
-		ownerFeePercentage: number;
+	public async getOwnerUpdatePerformanceFeeTx(inputs: {
+		performanceFeePercentage: number;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody,
+			ApiPerpetualsVaultOwnerUpdatePerformanceFeeTxBody,
 			ApiTransactionResponse
 		>(
-			"vault/transactions/update-owner-fee-percentage",
+			"vault/transactions/owner/update-performance-fee",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
@@ -260,26 +236,81 @@ export class PerpetualsVault extends Caller {
 	}
 
 	// =========================================================================
-	//  Admin Interactions Txs
+	//  Owner Interactions Txs
 	// =========================================================================
 
-	public async getWithdrawOwnerFeesTx(inputs: {
+	public async getOwnerProcessWithdrawRequestsTx(inputs: {
+		userAddresses: SuiAddress[];
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/process-withdraw-requests",
+			{
+				...otherInputs,
+				// NOTE: should this be `vaultIds` ?
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getOwnerWithdrawPerformanceFeesTx(inputs: {
 		withdrawAmount: Balance;
 		recipientAddress?: SuiAddress;
 		tx?: Transaction;
 	}) {
 		const { tx: txFromInputs, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
-			ApiPerpetualsVaultWithdrawOwnerFeesTxBody,
-			ApiPerpetualsVaultWithdrawOwnerFeesTxResponse
+			ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody,
+			ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse
 		>(
-			"vault/transactions/withdraw-owner-fees",
+			"vault/transactions/owner/withdraw-performance-fees",
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: txFromInputs ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getOwnerWithdrawCollateralTx(inputs: {
+		lpWithdrawAmount: Balance;
+		minCollateralAmountOut: Balance;
+		recipientAddress?: SuiAddress;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/withdraw-collateral",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
 					}
 				),
 			},
@@ -427,27 +458,39 @@ export class PerpetualsVault extends Caller {
 	// }
 
 	// =========================================================================
-	//  Admin Previews
+	//  Owner Previews
 	// =========================================================================
 
-	public async getPreviewProcessWithdrawRequests(inputs: {
+	public async getPreviewOwnerProcessWithdrawRequests(inputs: {
 		// NOTE: should these be `walletAddresses` instead ?
 		userAddresses: SuiAddress[];
 	}) {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
-			ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody
-		>("vault/previews/process-withdraw-requests", {
+			ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse,
+			ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody
+		>("vault/previews/owner/process-withdraw-requests", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
 	}
 
-	public async getPreviewWithdrawOwnerFees() {
+	public async getPreviewOwnerWithdrawPerformanceFees() {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
-			ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody
-		>("vault/previews/withdraw-owner-fees", {
+			ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse,
+			ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody
+		>("vault/previews/owner/withdraw-performance-fees", {
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	public async getPreviewOwnerWithdrawCollateral(inputs: {
+		lpWithdrawAmount: Balance;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
+			ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody
+		>("vault/previews/owner/withdraw-collateral", {
+			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
 	}

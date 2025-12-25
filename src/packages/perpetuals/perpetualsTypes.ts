@@ -608,7 +608,7 @@ export interface PerpetualsVaultObject {
 		/// Lock-in duration for engaged assets in milliseconds.
 		lockPeriodMs: bigint;
 		/// Fee rate for vault's owner, collected from user's profits when they withdraw
-		ownerFeePercentage: number;
+		performanceFeePercentage: number;
 		/// Delay period to wait for eventual force withdrawing
 		forceWithdrawDelayMs: bigint;
 		/// Price feed storage id idetifying the oracle price for `C`
@@ -643,6 +643,8 @@ export interface PerpetualsVaultObject {
 	lpCoinType: CoinType;
 	/** Decimals for the LP token minted by this vault. */
 	lpCoinDecimals: CoinDecimal;
+	// TODO: docs
+	monthlyAprPercentage: Percentage;
 }
 
 /**
@@ -1748,7 +1750,7 @@ export type ApiPerpetualsCreateVaultBody = {
 	lpCoinType: CoinType;
 	collateralCoinType: CoinType;
 	lockPeriodMs: bigint;
-	ownerFeePercentage: Percentage;
+	performanceFeePercentage: Percentage;
 	forceWithdrawDelayMs: bigint;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
@@ -1772,7 +1774,7 @@ export interface ApiPerpetualsCreateAccountBody {
 }
 
 /**
- * Request body for depositing collateral into a perpetuals account or vault.
+ * Request body for depositing collateral into a perpetuals account.
  *
  * The deposit can be provided by:
  * - `depositAmount` (numeric amount), or
@@ -1780,6 +1782,7 @@ export interface ApiPerpetualsCreateAccountBody {
  */
 export type ApiPerpetualsDepositCollateralBody = {
 	walletAddress: SuiAddress;
+	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
@@ -1790,35 +1793,17 @@ export type ApiPerpetualsDepositCollateralBody = {
 	| {
 			depositCoinArg: TransactionObjectArgument;
 	  }
-) &
-	(
-		| {
-				accountId: PerpetualsAccountId;
-		  }
-		| {
-				vaultId: ObjectId;
-		  }
-	);
+);
 
 /**
- * Request body for withdrawing collateral from an account or vault.
+ * Request body for withdrawing collateral from an account.
  */
 export type ApiPerpetualsWithdrawCollateralBody = {
-	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
 	withdrawAmount: Balance;
-	// TODO: find out if this is needed
-	/** Optional destination wallet address; defaults to owner if omitted. */
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
-} & (
-	| {
-			accountId: PerpetualsAccountId;
-	  }
-	| {
-			vaultId: ObjectId;
-	  }
-);
+};
 
 /**
  * Response body for withdraw-collateral transactions.
@@ -1827,9 +1812,7 @@ export type ApiPerpetualsWithdrawCollateralBody = {
  */
 export interface ApiPerpetualsWithdrawCollateralResponse {
 	txKind: SerializedTransaction;
-	// TODO: find out if this is needed
-	// coinOutArg: TransactionObjectArgument | undefined;
-	coinOutArg: TransactionObjectArgument; // | undefined;
+	coinOutArg: TransactionObjectArgument | undefined;
 }
 
 /**
@@ -2220,17 +2203,17 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
 /**
  * API body to process regular withdraw requests for a vault.
  */
-export interface ApiPerpetualsVaultProcessWithdrawRequestsTxBody {
+export interface ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody {
 	vaultId: ObjectId;
 	userAddresses: SuiAddress[];
 	txKind?: SerializedTransaction;
 }
 
 /**
- * API body to update slippage parameters for pending vault withdraw
- * requests across several vaults.
+ * API body to update slippage parameter for pending vault withdraw
+ * request for a specific vault.
  */
-export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody {
+export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody {
 	vaultId: ObjectId;
 	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
@@ -2239,7 +2222,7 @@ export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody {
 /**
  * API body to update the force-withdrawal delay in a vault.
  */
-export interface ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody {
+export interface ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody {
 	vaultId: ObjectId;
 	forceWithdrawDelayMs: bigint;
 	txKind?: SerializedTransaction;
@@ -2248,7 +2231,7 @@ export interface ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody {
 /**
  * API body to update the lock period on a vault.
  */
-export interface ApiPerpetualsVaultUpdateLockPeriodTxBody {
+export interface ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody {
 	vaultId: ObjectId;
 	lockPeriodMs: bigint;
 	txKind?: SerializedTransaction;
@@ -2257,16 +2240,16 @@ export interface ApiPerpetualsVaultUpdateLockPeriodTxBody {
 /**
  * API body to update the owner's fee percentage on a vault.
  */
-export interface ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody {
+export interface ApiPerpetualsVaultOwnerUpdatePerformanceFeeTxBody {
 	vaultId: ObjectId;
-	ownerFeePercentage: number;
+	performanceFeePercentage: number;
 	txKind?: SerializedTransaction;
 }
 
 /**
  * API body for the vault owner withdrawing collected fees.
  */
-export interface ApiPerpetualsVaultWithdrawOwnerFeesTxBody {
+export interface ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody {
 	vaultId: ObjectId;
 	withdrawAmount: Balance;
 	recipientAddress?: SuiAddress;
@@ -2276,7 +2259,7 @@ export interface ApiPerpetualsVaultWithdrawOwnerFeesTxBody {
 /**
  * Response for owner-fee withdrawal transactions.
  */
-export interface ApiPerpetualsVaultWithdrawOwnerFeesTxResponse {
+export interface ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse {
 	txKind: SerializedTransaction;
 	coinOutArg: TransactionObjectArgument | undefined;
 }
@@ -2306,6 +2289,27 @@ export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 	lpWithdrawAmount: Balance;
 	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
+}
+
+/**
+ * API body for withdrawing collateral from a vault as owner.
+ */
+export interface ApiPerpetualsVaultOwnerWithdrawCollateralTxBody {
+	vaultId: ObjectId;
+	lpWithdrawAmount: Balance;
+	minCollateralAmountOut: Balance;
+	recipientAddress?: SuiAddress;
+	txKind?: SerializedTransaction;
+}
+
+/**
+ * Response body for vault owner withdraw-collateral transactions.
+ *
+ * The SDK typically uses `txKind` to reconstruct a transaction locally.
+ */
+export interface ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse {
+	txKind: SerializedTransaction;
+	coinOutArg: TransactionObjectArgument | undefined;
 }
 
 /**
@@ -2350,6 +2354,26 @@ export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
  * Response body for vault withdrawal preview.
  */
 export type ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse =
+	| {
+			error: string;
+	  }
+	| {
+			collateralAmountOut: Balance;
+			collateralPrice: number;
+	  };
+
+/**
+ * Request body for previewing a vault owner collateral withdrawal.
+ */
+export interface ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody {
+	vaultId: ObjectId;
+	lpWithdrawAmount: Balance;
+}
+
+/**
+ * Response body for vault owner collateral withdrawal preview.
+ */
+export type ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse =
 	| {
 			error: string;
 	  }
@@ -2405,7 +2429,7 @@ export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
 /**
  * Request body for previewing normal withdraw requests processing for a vault.
  */
-export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
+export interface ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody {
 	vaultId: ObjectId;
 	userAddresses: SuiAddress[];
 }
@@ -2413,7 +2437,7 @@ export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
 /**
  * Response body for previewing normal withdraw requests processing.
  */
-export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse =
+export type ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse =
 	| {
 			error: string;
 	  }
@@ -2426,16 +2450,16 @@ export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse =
 	  };
 
 /**
- * Request body for previewing maximum owner fees withdrawable from a vault.
+ * Request body for previewing maximum performance fees withdrawable from a vault.
  */
-export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody {
+export interface ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody {
 	vaultId: ObjectId;
 }
 
 /**
- * Response body for previewing vault owner fee withdrawal.
+ * Response body for previewing vault performance fee withdrawal.
  */
-export type ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse =
+export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 	| {
 			error: string;
 	  }
