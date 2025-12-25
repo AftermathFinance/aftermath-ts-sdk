@@ -215,9 +215,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -282,9 +284,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -329,9 +333,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				walletAddress: this.ownerAddress(),
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
@@ -375,9 +381,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				walletAddress: this.ownerAddress(),
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
@@ -499,9 +507,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
@@ -553,9 +563,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
@@ -605,9 +617,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			undefined,
@@ -645,9 +659,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			undefined,
@@ -697,9 +713,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			undefined,
@@ -752,9 +770,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 				positionSide: Perpetuals.positionSide({
 					baseAssetAmount: position.baseAssetAmount,
@@ -805,9 +825,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			undefined,
@@ -841,9 +863,11 @@ export class PerpetualsAccount extends Caller {
 	// 			...("vaultId" in this.accountCap
 	// 				? {
 	// 						vaultId: this.accountCap.vaultId,
+	// accountId: undefined,
 	// 				  }
 	// 				: {
 	// 						accountId: this.accountCap.accountId,
+	// vaultId: undefined,
 	// 				  }),
 	// 		},
 	// 		undefined,
@@ -891,9 +915,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			undefined,
@@ -1037,9 +1063,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			abortSignal
@@ -1085,9 +1113,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			abortSignal
@@ -1137,9 +1167,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			abortSignal
@@ -1173,9 +1205,11 @@ export class PerpetualsAccount extends Caller {
 	// 			...("vaultId" in this.accountCap
 	// 				? {
 	// 						vaultId: this.accountCap.vaultId,
+	//						accountId: undefined,
 	// 				  }
 	// 				: {
 	// 						accountId: this.accountCap.accountId,
+	//						vaultId: undefined,
 	// 				  }),
 	// 		},
 	// 		abortSignal
@@ -1221,9 +1255,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			abortSignal
@@ -1273,9 +1309,11 @@ export class PerpetualsAccount extends Caller {
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							vaultId: undefined,
 					  }),
 			},
 			abortSignal
@@ -1382,9 +1420,11 @@ export class PerpetualsAccount extends Caller {
 			...("vaultId" in this.accountCap
 				? {
 						vaultId: this.accountCap.vaultId,
+						accountId: undefined,
 				  }
 				: {
 						accountId: this.accountCap.accountId,
+						vaultId: undefined,
 				  }),
 		});
 	}
