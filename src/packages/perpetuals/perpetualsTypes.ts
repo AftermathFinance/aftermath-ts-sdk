@@ -2347,6 +2347,7 @@ export type ApiPerpetualsVaultDepositTxBody = {
  */
 export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
 	vaultId: ObjectId;
+	walletAddress: SuiAddress;
 	lpWithdrawAmount: Balance;
 }
 

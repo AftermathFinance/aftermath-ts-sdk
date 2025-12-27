@@ -500,6 +500,7 @@ export class PerpetualsVault extends Caller {
 	// =========================================================================
 
 	public async getPreviewCreateWithdrawRequest(inputs: {
+		walletAddress: SuiAddress;
 		lpWithdrawAmount: Balance;
 	}) {
 		return this.fetchApi<
