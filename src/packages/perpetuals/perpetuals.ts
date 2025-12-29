@@ -16,7 +16,7 @@ import {
 	FilledTakerOrderEvent,
 	Timestamp,
 	PerpetualsMarketCandleDataPoint,
-	ApiPerpetualsHistoricalMarketDataResponse,
+	ApiPerpetualsMarketCandleHistoryResponse,
 	PerpetualsAccountCap,
 	PerpetualsAccountId,
 	PerpetualsAccountObject,
@@ -43,6 +43,7 @@ import {
 	PerpetualsVaultLpCoin,
 	PerpetualsPartialVaultCap,
 	PerpetualsVaultMetatada,
+	ApiPerpetualsMarketCandleHistoryBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -68,7 +69,7 @@ import { PerpetualsVault } from "./perpetualsVault";
  * - Vault discovery (`getAllVaults`, `getVaults`, `getVault`)
  * - Account & position data (`getAccount`, `getAccounts`, `getAccountObjects`)
  * - Ownership queries (`getOwnedAccountCaps`, `getOwnedVaultCaps`)
- * - Historical data & stats (`getMarketHistoricalData`, `getMarkets24hrStats`)
+ * - Historical data & stats (`getMarketCandleHistory`, `getMarkets24hrStats`)
  * - Pricing helpers (`getPrices`, `getLpCoinPrices`)
  * - Transaction builders (`getCreateAccountTx`, `getCreateVaultCapTx`, `getCreateVaultTx`)
  * - Websocket feeds (`openUpdatesWebsocketStream`, `openMarketCandlesWebsocketStream`)
@@ -539,7 +540,7 @@ export class Perpetuals extends Caller {
 	 *
 	 * @example
 	 * ```ts
-	 * const candles = await perps.getMarketHistoricalData({
+	 * const candles = await perps.getMarketCandleHistory({
 	 *   marketId: "0x...",
 	 *   fromTimestamp: Date.now() - 24 * 60 * 60 * 1000,
 	 *   toTimestamp: Date.now(),
@@ -547,14 +548,16 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public getMarketHistoricalData(inputs: {
-		marketId: PerpetualsMarketId;
-		fromTimestamp: Timestamp;
-		toTimestamp: Timestamp;
-		intervalMs: number;
-	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> {
+
+	// TODO: move to market class
+	public getMarketCandleHistory(
+		inputs: ApiPerpetualsMarketCandleHistoryBody
+	) {
 		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
-		return this.fetchApi("market/candle-history", {
+		return this.fetchApi<
+			ApiPerpetualsMarketCandleHistoryResponse,
+			ApiPerpetualsMarketCandleHistoryBody
+		>("market/candle-history", {
 			marketId,
 			fromTimestamp,
 			toTimestamp,
@@ -985,8 +988,8 @@ export class Perpetuals extends Caller {
 	 *   - `subscribeUser` / `unsubscribeUser`
 	 *   - `subscribeOracle` / `unsubscribeOracle`
 	 *   - `subscribeOrderbook` / `unsubscribeOrderbook`
-	 *   - `subscribeMarketTrades` / `unsubscribeMarketTrades`
-	 *   - `subscribeUserTrades` / `unsubscribeUserTrades`
+	 *   - `subscribeMarketOrders` / `unsubscribeMarketOrders`
+	 *   - `subscribeUserOrders` / `unsubscribeUserOrders`
 	 *   - `subscribeUserCollateralChanges` / `unsubscribeUserCollateralChanges`
 	 * - `close`: function to close the websocket
 	 *
@@ -1120,44 +1123,44 @@ export class Perpetuals extends Caller {
 				subscriptionType: { orderbook: { marketId } },
 			});
 
-		const subscribeMarketTrades = ({
+		const subscribeMarketOrders = ({
 			marketId,
 		}: {
 			marketId: PerpetualsMarketId;
 		}) =>
 			ctl.send({
 				action: "subscribe",
-				subscriptionType: { marketTrades: { marketId } },
+				subscriptionType: { marketOrders: { marketId } },
 			});
 
-		const unsubscribeMarketTrades = ({
+		const unsubscribeMarketOrders = ({
 			marketId,
 		}: {
 			marketId: PerpetualsMarketId;
 		}) =>
 			ctl.send({
 				action: "unsubscribe",
-				subscriptionType: { marketTrades: { marketId } },
+				subscriptionType: { marketOrders: { marketId } },
 			});
 
-		const subscribeUserTrades = ({
+		const subscribeUserOrders = ({
 			accountId,
 		}: {
 			accountId: PerpetualsAccountId;
 		}) =>
 			ctl.send({
 				action: "subscribe",
-				subscriptionType: { userTrades: { accountId } },
+				subscriptionType: { userOrders: { accountId } },
 			});
 
-		const unsubscribeUserTrades = ({
+		const unsubscribeUserOrders = ({
 			accountId,
 		}: {
 			accountId: PerpetualsAccountId;
 		}) =>
 			ctl.send({
 				action: "unsubscribe",
-				subscriptionType: { userTrades: { accountId } },
+				subscriptionType: { userOrders: { accountId } },
 			});
 
 		const subscribeUserCollateralChanges = ({
@@ -1190,10 +1193,10 @@ export class Perpetuals extends Caller {
 			unsubscribeOracle,
 			subscribeOrderbook,
 			unsubscribeOrderbook,
-			subscribeMarketTrades,
-			unsubscribeMarketTrades,
-			subscribeUserTrades,
-			unsubscribeUserTrades,
+			subscribeMarketOrders,
+			unsubscribeMarketOrders,
+			subscribeUserOrders,
+			unsubscribeUserOrders,
 			subscribeUserCollateralChanges,
 			unsubscribeUserCollateralChanges,
 			close: ctl.close,

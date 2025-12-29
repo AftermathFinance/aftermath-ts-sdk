@@ -704,12 +704,11 @@ export const isUpdatedMarketVersion = (
 /**
  * Cursor-based response wrapping a list of collateral changes for an account.
  */
-export interface PerpetualsAccountCollateralChangesWithCursor {
-	/** Collateral changes in chronological order (or per backend contract). */
-	collateralChanges: PerpetualsAccountCollateralChange[];
-	/** Next cursor (timestamp) or undefined if there is no next page. */
-	nextCursor: Timestamp | undefined;
-}
+export type ApiPerpetualsAccountCollateralHistoryResponse =
+	ApiPerpetualsHistoricalDataWithCursorResponse & {
+		/** Collateral changes in chronological order. */
+		collateralChanges: PerpetualsAccountCollateralChange[];
+	};
 
 /**
  * Single collateral change record for an account.
@@ -751,23 +750,24 @@ export type PerpetualsAccountCollateralChange = {
 };
 
 /**
- * Cursor-based response wrapping a list of trades for an account.
+ * Cursor-based response wrapping a list of orders for an account.
  */
-export interface PerpetualsAccountTradesWithCursor {
-	/** Trades in chronological order (or per backend contract). */
-	trades: PerpetualsAccountTrade[];
-	/** Next cursor (timestamp) or undefined if no next page. */
-	nextCursor: Timestamp | undefined;
-}
+export type ApiPerpetualsAccountOrderHistoryResponse =
+	ApiPerpetualsHistoricalDataWithCursorResponse & {
+		/** Orders in chronological order. */
+		orders: PerpetualsAccountOrderHistoryData[];
+	};
 
 /**
  * Historical margin data point for an account, used in margin history views.
  */
-export interface PerpetualsAccountMarginData {
+export interface PerpetualsAccountMarginHistoryData {
 	/** Timestamp of this snapshot. */
 	timestamp: Timestamp;
-	/** Collateral value in USD at that time. */
-	collateralUsd: number;
+	/** Total collateral allocated to positions, denominated in USD. */
+	allocatedCollateralUsd: number;
+	/** Total collateral within account, denominated in USD. */
+	totalCollateralUsd: number;
 	/** Unrealized funding PnL in USD at that time. */
 	unrealizedFundingsUsd: number;
 	/** Unrealized position PnL in USD at that time. */
@@ -777,7 +777,7 @@ export interface PerpetualsAccountMarginData {
 /**
  * Individual trade affecting an account.
  */
-export type PerpetualsAccountTrade = {
+export type PerpetualsAccountOrderHistoryData = {
 	/** Timestamp of the trade. */
 	timestamp: Timestamp;
 	/** Sui transaction digest. */
@@ -978,7 +978,7 @@ export interface SetPositionInitialMarginRatioEvent extends Event {
 /**
  * Trade data used for market-level trade history.
  */
-export interface PerpetualsTradeHistoryData {
+export interface PerpetualsMarketOrderHistoryData {
 	/** Timestamp of the trade. */
 	timestamp: Timestamp;
 	/** Transaction digest. */
@@ -992,15 +992,13 @@ export interface PerpetualsTradeHistoryData {
 }
 
 /**
- * Cursor-based wrapper for market-level trade history.
+ * Cursor-based wrapper for market-level order history.
  */
-export interface PerpetualsTradeHistoryWithCursor {
-	/** Trades in this page. */
-	trades: PerpetualsTradeHistoryData[];
-	// TODO: move `nextCursor` pattern to general types ?
-	/** Next cursor or undefined if there are no more pages. */
-	nextCursor: Timestamp | undefined;
-}
+export type ApiPerpetualsMarketOrderHistoryResponse =
+	ApiPerpetualsHistoricalDataWithCursorResponse & {
+		/** Orders in this page. */
+		orders: PerpetualsMarketOrderHistoryData[];
+	};
 
 /**
  * Event emitted when an order is filled or dropped by the orderbook
@@ -1357,26 +1355,80 @@ export interface ApiPerpetualsAccountCapsBody {
 //  Interactions
 // =========================================================================
 
-// TODO: docs
-export type ApiPerpetualsAccountMarginHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
-		accountId: PerpetualsAccountId;
+/**
+ * Generic shape for Perpetuals API historical data requests that include
+ * `beforeTimestampCursor` and `limit` pagination parameters.
+ */
+export interface ApiPerpetualsHistoricalDataWithCursorBody {
+	/**
+	 * Cursor for pagination.
+	 */
+	beforeTimestampCursor?: Timestamp;
+	/**
+	 * Limit for pagination.
+	 */
+	limit?: number;
+}
+
+/**
+ * Generic shape for Perpetuals API historical data responses that include
+ * `nextBeforeTimestampCursor` pagination parameter.
+ */
+export interface ApiPerpetualsHistoricalDataWithCursorResponse {
+	/**
+	 * The next cursor position. If undefined, no more data is available.
+	 */
+	nextBeforeTimestampCursor: Timestamp | undefined;
+}
+
+/// Request payload for fetching historical margin metrics for an account.
+export interface ApiPerpetualsAccountMarginHistoryBody {
+	/// Account ID.
+	accountId: PerpetualsAccountId;
+
+	/// Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	fromTimestamp: Timestamp;
+
+	/// End of the time range to query, as a Unix timestamp in **milliseconds**.
+	toTimestamp: Timestamp;
+
+	/// Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
+	/// 300_000 for 5m).
+	intervalMs: number;
+}
+
+/**
+ * Request body for fetching account-level order history with a cursor.
+ */
+export type ApiPerpetualsMarketOrderHistoryBody =
+	ApiPerpetualsHistoricalDataWithCursorBody & {
+		marketId: PerpetualsMarketId;
 	};
 
 /**
  * Request body for fetching account-level order history with a cursor.
  */
 export type ApiPerpetualsAccountOrderHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
+	ApiPerpetualsHistoricalDataWithCursorBody & {
 		accountId: PerpetualsAccountId;
+		authentication?: {
+			walletAddress: SuiAddress;
+			bytes: string;
+			signature: string;
+		};
 	};
 
 /**
  * Request body for fetching account collateral history with a cursor.
  */
 export type ApiPerpetualsAccountCollateralHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
+	ApiPerpetualsHistoricalDataWithCursorBody & {
 		accountId: PerpetualsAccountId;
+		authentication?: {
+			walletAddress: SuiAddress;
+			bytes: string;
+			signature: string;
+		};
 	};
 
 // export type ApiPerpetualsPreviewOrderBody = (
@@ -1642,10 +1694,29 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	fills: PerpetualsFilledOrderData[];
 }
 
+/// Request payload for fetching historical candle (OHLCV) data for a given
+/// perpetuals market.
+export interface ApiPerpetualsMarketCandleHistoryBody {
+	/// Identifier of the perpetuals market whose candles you want to fetch.
+	///
+	/// Must be a valid on-chain market ID.
+	marketId: PerpetualsMarketId;
+
+	/// Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	fromTimestamp: Timestamp;
+
+	/// End of the time range to query, as a Unix timestamp in **milliseconds**.
+	toTimestamp: Timestamp;
+
+	/// Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
+	/// 300_000 for 5m).
+	intervalMs: number;
+}
+
 /**
  * Response type for historical market candle data.
  */
-export type ApiPerpetualsHistoricalMarketDataResponse =
+export type ApiPerpetualsMarketCandleHistoryResponse =
 	PerpetualsMarketCandleDataPoint[];
 
 /**
@@ -2621,19 +2692,19 @@ export interface PerpetualsWsUpdatesOrderbookSubscriptionType {
 }
 
 /**
- * Websocket subscription payload for market trades stream.
+ * Websocket subscription payload for market orders stream.
  */
-export interface PerpetualsWsUpdatesMarketTradesSubscriptionType {
-	marketTrades: {
+export interface PerpetualsWsUpdatesMarketOrdersSubscriptionType {
+	marketOrders: {
 		marketId: PerpetualsMarketId;
 	};
 }
 
 /**
- * Websocket subscription payload for user-specific trade updates.
+ * Websocket subscription payload for user-specific order updates.
  */
-export interface PerpetualsWsUpdatesUserTradesSubscriptionType {
-	userTrades: {
+export interface PerpetualsWsUpdatesUserOrdersSubscriptionType {
+	userOrders: {
 		accountId: PerpetualsAccountId;
 	};
 }
@@ -2655,8 +2726,8 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesUserSubscriptionType
 	| PerpetualsWsUpdatesOracleSubscriptionType
 	| PerpetualsWsUpdatesOrderbookSubscriptionType
-	| PerpetualsWsUpdatesMarketTradesSubscriptionType
-	| PerpetualsWsUpdatesUserTradesSubscriptionType
+	| PerpetualsWsUpdatesMarketOrdersSubscriptionType
+	| PerpetualsWsUpdatesUserOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType;
 
 /**
@@ -2669,19 +2740,19 @@ export interface PerpetualsWsUpdatesOraclePayload {
 }
 
 /**
- * Websocket payload for market trades stream.
+ * Websocket payload for market orders stream.
  */
-export interface PerpetualsWsUpdatesMarketTradesPayload {
+export interface PerpetualsWsUpdatesMarketOrdersPayload {
 	marketId: PerpetualsMarketId;
-	trades: PerpetualsTradeHistoryData[];
+	orders: PerpetualsMarketOrderHistoryData[];
 }
 
 /**
- * Websocket payload for user-specific trades stream.
+ * Websocket payload for user-specific orders stream.
  */
-export interface PerpetualsWsUpdatesUserTradesPayload {
+export interface PerpetualsWsUpdatesUserOrdersPayload {
 	accountId: PerpetualsAccountId;
-	trades: PerpetualsAccountTrade[];
+	orders: PerpetualsAccountOrderHistoryData[];
 }
 
 /**
@@ -2727,8 +2798,8 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| { user: PerpetualsWsUpdatesUserPayload }
 	| { oracle: PerpetualsWsUpdatesOraclePayload }
 	| { orderbook: PerpetualsWsUpdatesOrderbookPayload }
-	| { marketTrades: PerpetualsWsUpdatesMarketTradesPayload }
-	| { userTrades: PerpetualsWsUpdatesUserTradesPayload }
+	| { marketOrders: PerpetualsWsUpdatesMarketOrdersPayload }
+	| { userOrders: PerpetualsWsUpdatesUserOrdersPayload }
 	| {
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
 	  };

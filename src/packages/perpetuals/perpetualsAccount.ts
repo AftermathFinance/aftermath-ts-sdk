@@ -22,8 +22,8 @@ import {
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiDataWithCursorBody,
 	Timestamp,
-	PerpetualsAccountCollateralChangesWithCursor,
-	PerpetualsAccountTradesWithCursor,
+	ApiPerpetualsAccountCollateralHistoryResponse,
+	ApiPerpetualsAccountOrderHistoryResponse,
 	PerpetualsAccountId,
 	ApiPerpetualsAccountCollateralHistoryBody,
 	ApiPerpetualsAccountOrderHistoryBody,
@@ -56,7 +56,7 @@ import {
 	ApiTransactionResponse,
 	ApiPerpetualsPreviewEditCollateralResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
-	PerpetualsAccountMarginData,
+	PerpetualsAccountMarginHistoryData,
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsVaultCap,
 	PerpetualsPartialVaultCap,
@@ -1416,17 +1416,17 @@ export class PerpetualsAccount extends Caller {
 	 * Fetch paginated collateral-change history for this account, including
 	 * deposits, withdrawals, funding settlements, liquidations, etc.
 	 *
-	 * @param inputs.cursor - Optional cursor for pagination.
+	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
-	 * @returns {@link PerpetualsAccountCollateralChangesWithCursor} containing
-	 *   an array of changes and a `nextCursor`.
+	 * @returns {@link ApiPerpetualsAccountCollateralHistoryResponse} containing
+	 *   an array of changes and a `nextBeforeTimestampCursor`.
 	 */
 	public async getCollateralHistory(
-		inputs: ApiDataWithCursorBody<Timestamp>
+		inputs: Omit<ApiPerpetualsAccountCollateralHistoryBody, "accountId">
 	) {
 		return this.fetchApi<
-			PerpetualsAccountCollateralChangesWithCursor,
+			ApiPerpetualsAccountCollateralHistoryResponse,
 			ApiPerpetualsAccountCollateralHistoryBody
 		>("account/collateral-history", {
 			...inputs,
@@ -1435,32 +1435,35 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	/**
-	 * Fetch paginated trade (order fill) history for this account.
+	 * Fetch paginated order history for this account.
 	 *
-	 * @param inputs.cursor - Optional cursor for pagination.
+	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
-	 * @returns {@link PerpetualsAccountTradesWithCursor} containing a list of
-	 *   trades and a `nextCursor`.
+	 * @returns {@link ApiPerpetualsAccountOrderHistoryResponse} containing a list of
+	 *   orders and a `nextBeforeTimestampCursor`.
 	 */
-	public async getOrderHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+	public async getOrderHistory(
+		inputs: Omit<ApiPerpetualsAccountOrderHistoryBody, "accountId">
+	) {
 		return this.fetchApi<
-			PerpetualsAccountTradesWithCursor,
+			ApiPerpetualsAccountOrderHistoryResponse,
 			ApiPerpetualsAccountOrderHistoryBody
-		>("account/trade-history", {
+		>("account/order-history", {
 			...inputs,
 			accountId: this.accountCap.accountId,
 		});
 	}
 
 	// TODO: docs
-	// public async getMarginHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
-	public async getMarginHistory() {
+	public async getMarginHistory(
+		inputs: Omit<ApiPerpetualsAccountMarginHistoryBody, "accountId">
+	) {
 		return this.fetchApi<
-			PerpetualsAccountMarginData[],
+			PerpetualsAccountMarginHistoryData[],
 			ApiPerpetualsAccountMarginHistoryBody
 		>("account/margin-history", {
-			// ...inputs,
+			...inputs,
 			accountId: this.accountCap.accountId,
 		});
 	}

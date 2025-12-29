@@ -29,7 +29,7 @@ import {
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsMarkets24hrStatsResponse,
 	ApiDataWithCursorBody,
-	PerpetualsTradeHistoryWithCursor,
+	ApiPerpetualsMarketOrderHistoryResponse,
 	CallerConfig,
 	Percentage,
 	ApiPerpetualsPreviewPlaceOrderResponse,
@@ -39,6 +39,7 @@ import {
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	PerpetualsAccountId,
+	ApiPerpetualsMarketOrderHistoryBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -53,7 +54,7 @@ import { PerpetualsOrderUtils } from "./utils";
  *   - `marketParams`, `marketState`
  * - Read endpoints for:
  *   - Orderbook snapshots
- *   - 24h stats and trade history
+ *   - 24h stats and order history
  *   - Market prices and derived funding metrics
  * - Helpers for:
  *   - Order sizing (max size, lot/tick rounding)
@@ -366,34 +367,34 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	// =========================================================================
-	//  Trade History
+	//  Order History
 	// =========================================================================
 
 	/**
-	 * Fetch paginated trade history for this market.
+	 * Fetch paginated order history for this market.
 	 *
-	 * This returns *market-level* trade history (not account-specific), useful
-	 * for charting, recent trades lists, etc.
+	 * This returns *market-level* order history (not account-specific), useful
+	 * for charting, recent orders lists, etc.
 	 *
 	 * @param inputs.cursor - Optional pagination cursor.
-	 * @param inputs.limit - Optional number of trades per page.
+	 * @param inputs.limit - Optional number of orders per page.
 	 *
-	 * @returns {@link PerpetualsTradeHistoryWithCursor} including a list of
-	 *   trades and a `nextCursor`.
+	 * @returns {@link ApiPerpetualsMarketOrderHistoryResponse} including a list of
+	 *   orders and a `nextBeforeTimestampCursor`.
 	 *
 	 * @example
 	 * ```ts
-	 * const result = await market.getTradeHistory({ limit: 100 });
-	 * console.log(result.trades.length, result.nextCursor);
+	 * const result = await market.getOrderHistory({ limit: 100 });
+	 * console.log(result.orders.length, result.nextBeforeTimestampCursor);
 	 * ```
 	 */
-	public async getTradeHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+	public async getOrderHistory(
+		inputs: Omit<ApiPerpetualsMarketOrderHistoryBody, "marketId">
+	) {
 		return this.fetchApi<
-			PerpetualsTradeHistoryWithCursor,
-			ApiDataWithCursorBody<Timestamp> & {
-				marketId: PerpetualsMarketId;
-			}
-		>("market/trade-history", {
+			ApiPerpetualsMarketOrderHistoryResponse,
+			ApiPerpetualsMarketOrderHistoryBody
+		>("market/order-history", {
 			...inputs,
 			marketId: this.marketId,
 		});
