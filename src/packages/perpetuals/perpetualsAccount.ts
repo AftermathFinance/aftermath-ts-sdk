@@ -415,7 +415,6 @@ export class PerpetualsAccount extends Caller {
 				transferAmount,
 				toAccountId,
 				walletAddress: this.ownerAddress(),
-				collateralCoinType: this.accountCap.collateralCoinType,
 				fromAccountId: this.accountCap.accountId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }

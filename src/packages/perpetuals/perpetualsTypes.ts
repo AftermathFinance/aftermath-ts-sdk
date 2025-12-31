@@ -1897,7 +1897,6 @@ export interface ApiPerpetualsWithdrawCollateralResponse {
  */
 export interface ApiPerpetualsTransferCollateralBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
 	fromAccountId: PerpetualsAccountId;
 	toAccountId: PerpetualsAccountId;
 	transferAmount: Balance;
