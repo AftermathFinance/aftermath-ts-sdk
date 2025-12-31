@@ -788,10 +788,16 @@ export type PerpetualsAccountOrderHistoryData = {
 	eventType: AnyObjectType;
 	/** Side of the trade relative to the account (Bid/Ask). */
 	side: PerpetualsOrderSide;
-	/** Execution price. */
-	price: number;
-	/** Trade size in base units. */
-	size: number;
+
+	// /** Execution price. */
+	// price: number;
+	// /** Trade size in base units. */
+	// size: number;
+
+	/** Filled size in base units. */
+	sizeFilled: number;
+	/** Order price (limit price) used for the trade. */
+	orderPrice: number;
 };
 
 /**

@@ -598,4 +598,19 @@ export class PerpetualsVault extends Caller {
 	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
 		return /^[A-Z][A-Z0-9]*$/i.test(value);
 	};
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	public static calcWithdrawRequestSlippage = (inputs: {
+		withdrawRequest: PerpetualsVaultWithdrawRequest;
+	}) => {
+		const { withdrawRequest } = inputs;
+		return withdrawRequest.lpAmountInUsd
+			? (withdrawRequest.lpAmountInUsd -
+					withdrawRequest.minCollateralAmountOutUsd) /
+					withdrawRequest.lpAmountInUsd
+			: 0;
+	};
 }
