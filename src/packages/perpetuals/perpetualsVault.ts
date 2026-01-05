@@ -19,7 +19,7 @@ import {
 	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody,
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultsWithdrawRequestsBody,
-	ApiPerpetualsVaultWithdrawRequestsBody,
+	ApiPerpetualsVaultOwnedWithdrawRequestsBody,
 	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
 	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
 	ApiPerpetualsVaultDepositTxBody,
@@ -41,6 +41,7 @@ import {
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
+	ApiPerpetualsVaultsWithdrawRequestsResponse,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -433,10 +434,10 @@ export class PerpetualsVault extends Caller {
 	//  Objects
 	// =========================================================================
 
-	// TODO: move to `Perpetuals` ?
-	public getAllWithdrawRequests(): Promise<PerpetualsVaultWithdrawRequest[]> {
+	// TODO: move to `Perpetuals` (as well) ?
+	public getAllWithdrawRequests(): Promise<ApiPerpetualsVaultsWithdrawRequestsResponse> {
 		return this.fetchApi<
-			PerpetualsVaultWithdrawRequest[],
+			ApiPerpetualsVaultsWithdrawRequestsResponse,
 			ApiPerpetualsVaultsWithdrawRequestsBody
 		>("vaults/withdraw-requests", {
 			vaultIds: [this.vaultObject.objectId],
@@ -543,7 +544,7 @@ export class PerpetualsVault extends Caller {
 			await new Perpetuals(this.config, this.Provider).getLpCoinPrices({
 				vaultIds: [this.vaultObject.objectId],
 			})
-		)[0];
+		).lpCoinPrices[0];
 	}
 
 	// =========================================================================
@@ -564,9 +565,8 @@ export class PerpetualsVault extends Caller {
 		return (
 			await new Perpetuals(this.config, this.Provider).getAccountObjects({
 				accountIds: [this.vaultObject.accountId],
-				collateralCoinType: this.vaultObject.collateralCoinType,
 			})
-		)[0];
+		).accounts[0];
 	}
 
 	public async getAccount() {

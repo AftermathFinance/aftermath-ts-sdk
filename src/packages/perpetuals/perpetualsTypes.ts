@@ -1348,6 +1348,7 @@ export const isUpdatedFundingEvent = (
  */
 export interface ApiPerpetualsOwnedAccountCapsBody {
 	walletAddress: SuiAddress;
+	collateralCoinTypes?: CoinType[];
 }
 
 /**
@@ -1355,6 +1356,34 @@ export interface ApiPerpetualsOwnedAccountCapsBody {
  */
 export interface ApiPerpetualsAccountCapsBody {
 	accountCapIds: ObjectId[];
+}
+
+/**
+ * TODO: docs
+ */
+export interface ApiPerpetualsAccountPositionsResponse {
+	accounts: PerpetualsAccountObject[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsAccountPositionsBody {
+	accountIds: PerpetualsAccountId[];
+	// TODO: remove eventually ?
+	marketIds?: PerpetualsMarketId[];
+}
+
+/**
+ * TODO: docs
+ */
+export interface ApiPerpetualsAccountCapsResponse {
+	accountCaps: PerpetualsAccountCap[];
+}
+
+/**
+ * TODO: docs
+ */
+export interface ApiPerpetualsOwnedAccountCapsResponse {
+	accountCaps: PerpetualsAccountCap[];
 }
 
 // =========================================================================
@@ -1401,6 +1430,11 @@ export interface ApiPerpetualsAccountMarginHistoryBody {
 	/// Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
 	/// 300_000 for 5m).
 	intervalMs: number;
+}
+
+// TODO: docs
+export interface ApiPerpetualsAccountMarginHistoryResponse {
+	marginHistoryDatas: PerpetualsAccountMarginHistoryData[];
 }
 
 /**
@@ -1727,8 +1761,9 @@ export interface ApiPerpetualsMarketCandleHistoryBody {
 /**
  * Response type for historical market candle data.
  */
-export type ApiPerpetualsMarketCandleHistoryResponse =
-	PerpetualsMarketCandleDataPoint[];
+export interface ApiPerpetualsMarketCandleHistoryResponse {
+	candles: PerpetualsMarketCandleDataPoint[];
+}
 
 /**
  * Request body for computing the maximum order size for an account in a
@@ -1754,17 +1789,10 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 }
 
 /**
- * (Duplicated) request body for fetching enriched order data for an account.
- *
- * NOTE: This is intentionally left for compatibility; both interfaces are
- * identical.
+ * TODO: docs
  */
-export interface ApiPerpetualsAccountOrderDatasBody {
-	accountId: PerpetualsAccountId;
-	orderDatas: {
-		orderId: PerpetualsOrderId;
-		currentSize: bigint;
-	}[];
+export interface ApiPerpetualsAccountOrderDatasResponse {
+	orderDatas: PerpetualsOrderData[];
 }
 
 /**
@@ -1784,6 +1812,11 @@ export type ApiPerpetualsStopOrderDatasBody = {
 			vaultId: ObjectId;
 	  }
 );
+
+// TODO: docs
+export interface ApiPerpetualsStopOrderDatasResponse {
+	stopOrderDatas: PerpetualsStopOrderData[];
+}
 
 // =========================================================================
 //  Transactions
@@ -2264,11 +2297,91 @@ export interface PerpetualsMarket24hrStats {
 /**
  * Response type for requesting 24h stats for multiple markets.
  */
-export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
+export interface ApiPerpetualsMarkets24hrStatsResponse {
+	marketsStats: PerpetualsMarket24hrStats[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsAllMarketsBody {
+	collateralCoinType: CoinType;
+}
+
+// TODO: docs
+export interface ApiPerpetualsAllMarketsResponse {
+	markets: PerpetualsMarketData[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsMarketsBody {
+	marketIds: PerpetualsMarketId[];
+	withOrderbook?: boolean;
+}
+
+// TODO: docs
+export interface ApiPerpetualsMarketsResponse {
+	marketDatas: {
+		market: PerpetualsMarketData;
+		orderbook: PerpetualsOrderbook;
+	}[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultsBody {
+	vaultIds?: ObjectId[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultsResponse {
+	vaults: PerpetualsVaultObject[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsMarketsPricesBody {
+	marketIds: PerpetualsMarketId[];
+	withOrderbook?: boolean;
+}
+
+// TODO: docs
+export interface ApiPerpetualsMarketsPricesResponse {
+	marketsPrices: {
+		basePrice: number;
+		collateralPrice: number;
+	}[];
+}
 
 // =========================================================================
 //  Vaults
 // =========================================================================
+
+// TODO: docs
+export interface ApiPerpetualsVaultLpCoinPricesBody {
+	vaultIds: ObjectId[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultLpCoinPricesResponse {
+	lpCoinPrices: number[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultOwnedLpCoinsBody {
+	walletAddress: SuiAddress;
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultOwnedLpCoinsResponse {
+	ownedLpCoins: PerpetualsVaultLpCoin[];
+}
+
+// TODO: docs
+export interface ApiPerpetualsOwnedVaultCapsBody {
+	walletAddress: SuiAddress;
+}
+
+// TODO: docs
+export interface ApiPerpetualsOwnedVaultCapsResponse {
+	ownedVaultCaps: PerpetualsVaultCap[];
+}
 
 /**
  * API body to process forced withdrawals in a vault.
@@ -2352,13 +2465,23 @@ export interface ApiPerpetualsVaultsWithdrawRequestsBody {
 	vaultIds: ObjectId[];
 }
 
+// TODO: docs
+export interface ApiPerpetualsVaultsWithdrawRequestsResponse {
+	withdrawRequests: PerpetualsVaultWithdrawRequest[];
+}
+
 /**
  * Request body for fetching withdrawal requests for a given wallet across
  * its vault positions.
  */
-export interface ApiPerpetualsVaultWithdrawRequestsBody {
+export interface ApiPerpetualsVaultOwnedWithdrawRequestsBody {
 	walletAddress: SuiAddress;
 	// vaultIds: ObjectId[] | undefined;
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultOwnedWithdrawRequestsResponse {
+	ownedWithdrawRequests: PerpetualsVaultWithdrawRequest[];
 }
 
 /**

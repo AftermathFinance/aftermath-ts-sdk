@@ -60,6 +60,9 @@ import {
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsVaultCap,
 	PerpetualsPartialVaultCap,
+	ApiPerpetualsAccountOrderDatasResponse,
+	ApiPerpetualsAccountMarginHistoryResponse,
+	ApiPerpetualsStopOrderDatasResponse,
 } from "../../types";
 import { Casting } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -1339,7 +1342,7 @@ export class PerpetualsAccount extends Caller {
 	 * @returns Array of {@link PerpetualsOrderData} describing each pending order.
 	 *   Returns `[]` if there are no pending orders.
 	 */
-	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {
+	public async getOrderDatas(): Promise<ApiPerpetualsAccountOrderDatasResponse> {
 		const orderDatas = this.account.positions.reduce(
 			(acc, position) => [
 				...acc,
@@ -1353,10 +1356,13 @@ export class PerpetualsAccount extends Caller {
 				currentSize: bigint;
 			}[]
 		);
-		if (orderDatas.length <= 0) return [];
+		if (orderDatas.length <= 0)
+			return {
+				orderDatas: [],
+			};
 
 		return this.fetchApi<
-			PerpetualsOrderData[],
+			ApiPerpetualsAccountOrderDatasResponse,
 			ApiPerpetualsAccountOrderDatasBody
 		>("account/order-datas", {
 			accountId: this.accountCap.accountId,
@@ -1379,11 +1385,11 @@ export class PerpetualsAccount extends Caller {
 		bytes: string;
 		signature: string;
 		marketIds?: PerpetualsMarketId[];
-	}): Promise<PerpetualsStopOrderData[]> {
+	}) {
 		const { bytes, signature, marketIds } = inputs;
 
 		return this.fetchApi<
-			PerpetualsStopOrderData[],
+			ApiPerpetualsStopOrderDatasResponse,
 			ApiPerpetualsStopOrderDatasBody
 		>(`${this.vaultId ? "vault" : "account"}/` + "stop-order-datas", {
 			bytes,
@@ -1450,7 +1456,7 @@ export class PerpetualsAccount extends Caller {
 		inputs: Omit<ApiPerpetualsAccountMarginHistoryBody, "accountId">
 	) {
 		return this.fetchApi<
-			PerpetualsAccountMarginHistoryData[],
+			ApiPerpetualsAccountMarginHistoryResponse,
 			ApiPerpetualsAccountMarginHistoryBody
 		>("account/margin-history", {
 			...inputs,

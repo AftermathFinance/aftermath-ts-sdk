@@ -32,7 +32,7 @@ import {
 	Balance,
 	PerpetualsVaultCap,
 	PerpetualsVaultWithdrawRequest,
-	ApiPerpetualsVaultWithdrawRequestsBody,
+	ApiPerpetualsVaultOwnedWithdrawRequestsBody,
 	PerpetualsOrderPrice,
 	ApiTransactionResponse,
 	PerpetualsWsUpdatesSubscriptionMessage,
@@ -44,6 +44,25 @@ import {
 	PerpetualsPartialVaultCap,
 	PerpetualsVaultMetatada,
 	ApiPerpetualsMarketCandleHistoryBody,
+	ApiPerpetualsAccountCapsResponse,
+	ApiPerpetualsOwnedAccountCapsResponse,
+	ApiPerpetualsAccountPositionsResponse,
+	ApiPerpetualsAccountPositionsBody,
+	ApiPerpetualsAllMarketsResponse,
+	ApiPerpetualsAllMarketsBody,
+	ApiPerpetualsMarketsBody,
+	ApiPerpetualsMarketsResponse,
+	ApiPerpetualsMarketsPricesResponse,
+	ApiPerpetualsMarketsPricesBody,
+	ApiPerpetualsVaultLpCoinPricesResponse,
+	ApiPerpetualsVaultLpCoinPricesBody,
+	ApiPerpetualsVaultOwnedLpCoinsResponse,
+	ApiPerpetualsVaultOwnedLpCoinsBody,
+	ApiPerpetualsOwnedVaultCapsBody,
+	ApiPerpetualsOwnedVaultCapsResponse,
+	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
+	ApiPerpetualsVaultsResponse,
+	ApiPerpetualsVaultsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -155,13 +174,11 @@ export class Perpetuals extends Caller {
 	public async getAllMarkets(inputs: {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
-		const marketDatas = await this.fetchApi<
-			PerpetualsMarketData[],
-			{
-				collateralCoinType: CoinType;
-			}
+		const res = await this.fetchApi<
+			ApiPerpetualsAllMarketsResponse,
+			ApiPerpetualsAllMarketsBody
 		>("all-markets", inputs);
-		return marketDatas.map(
+		return res.markets.map(
 			(marketData) => new PerpetualsMarket(marketData, this.config)
 		);
 	}
@@ -210,20 +227,14 @@ export class Perpetuals extends Caller {
 		marketIds: PerpetualsMarketId[];
 		// withOrderbook: boolean;
 	}): Promise<PerpetualsMarket[]> {
-		const marketDatas = await this.fetchApi<
-			{
-				market: PerpetualsMarketData;
-				orderbook: PerpetualsOrderbook;
-			}[],
-			{
-				marketIds: PerpetualsMarketId[];
-				withOrderbook: boolean | undefined;
-			}
+		const res = await this.fetchApi<
+			ApiPerpetualsMarketsResponse,
+			ApiPerpetualsMarketsBody
 		>("markets", {
 			...inputs,
 			withOrderbook: false,
 		});
-		return marketDatas.map(
+		return res.marketDatas.map(
 			(marketData) =>
 				// TODO: make orderbook as input ?
 				new PerpetualsMarket(marketData.market, this.config)
@@ -241,11 +252,11 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getAllVaults(): Promise<PerpetualsVault[]> {
-		const vaultObjects = await this.fetchApi<PerpetualsVaultObject[], {}>(
-			"vaults",
-			{}
-		);
-		return vaultObjects.map(
+		const res = await this.fetchApi<
+			ApiPerpetualsVaultsResponse,
+			ApiPerpetualsVaultsBody
+		>("vaults", {});
+		return res.vaults.map(
 			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
 		);
 	}
@@ -288,13 +299,11 @@ export class Perpetuals extends Caller {
 	public async getVaults(inputs: {
 		vaultIds: ObjectId[];
 	}): Promise<PerpetualsVault[]> {
-		const vaultObjects = await this.fetchApi<
-			PerpetualsVaultObject[],
-			{
-				vaultIds: ObjectId[];
-			}
+		const res = await this.fetchApi<
+			ApiPerpetualsVaultsResponse,
+			ApiPerpetualsVaultsBody
 		>("vaults", inputs);
-		return vaultObjects.map(
+		return res.vaults.map(
 			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
 		);
 	}
@@ -356,12 +365,15 @@ export class Perpetuals extends Caller {
 		const { accountCaps, marketIds } = inputs;
 		if (accountCaps.length <= 0) return [];
 
-		// TODO: handle different collateral coin types
-		const accountObjects = await this.getAccountObjects({
-			accountIds: accountCaps.map((accountCap) => accountCap.accountId),
-			collateralCoinType: accountCaps[0].collateralCoinType,
-			marketIds,
-		});
+		const accountObjects = (
+			await this.getAccountObjects({
+				accountIds: accountCaps.map(
+					(accountCap) => accountCap.accountId
+				),
+				marketIds,
+			})
+		).accounts;
+
 		return accountObjects.map(
 			(account, index) =>
 				new PerpetualsAccount(
@@ -376,38 +388,33 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch raw account objects (including positions) for one or more account IDs.
 	 *
+	 * NOTE: The backend response is wrapped as `{ accounts: [...] }`.
+	 *
 	 * @param inputs.accountIds - List of account IDs to query.
-	 * @param inputs.collateralCoinType - Collateral coin type to use for valuation.
 	 * @param inputs.marketIds - Optional list of market IDs to filter positions by.
-	 * @returns Array of {@link PerpetualsAccountObject} in the same order as `accountIds`.
+	 * @returns Array of {@link PerpetualsAccountObject}.
 	 *
 	 * @example
 	 * ```ts
 	 * const accountObjects = await perps.getAccountObjects({
 	 *   accountIds: [123n, 456n],
-	 *   collateralCoinType: "0x2::sui::SUI",
 	 * });
 	 * ```
 	 */
-	// TODO: handle different collateral coin types ?
-	public async getAccountObjects(inputs: {
-		accountIds: PerpetualsAccountId[];
-		collateralCoinType: CoinType;
-		marketIds?: PerpetualsMarketId[];
-	}): Promise<PerpetualsAccountObject[]> {
-		const { accountIds, collateralCoinType, marketIds } = inputs;
-		if (accountIds.length <= 0) return [];
+	public async getAccountObjects(
+		inputs: ApiPerpetualsAccountPositionsBody
+	): Promise<ApiPerpetualsAccountPositionsResponse> {
+		const { accountIds, marketIds } = inputs;
+		if (accountIds.length <= 0)
+			return {
+				accounts: [],
+			};
 
 		return this.fetchApi<
-			PerpetualsAccountObject[],
-			{
-				accountIds: PerpetualsAccountId[];
-				collateralCoinType: CoinType;
-				marketIds: PerpetualsMarketId[] | undefined;
-			}
+			ApiPerpetualsAccountPositionsResponse,
+			ApiPerpetualsAccountPositionsBody
 		>("accounts/positions", {
 			accountIds,
-			collateralCoinType,
 			marketIds,
 		});
 	}
@@ -415,6 +422,8 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch all account caps (perpetuals accounts) owned by a wallet, optionally
 	 * filtered by collateral coin types.
+	 *
+	 * NOTE: The backend response is wrapped as `{ accounts: [...] }`.
 	 *
 	 * @param inputs.walletAddress - Owner wallet address.
 	 * @param inputs.collateralCoinTypes - Optional list of collateral coin types to filter by.
@@ -429,18 +438,12 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getOwnedAccountCaps(
-		inputs: ApiPerpetualsOwnedAccountCapsBody & {
-			collateralCoinTypes?: CoinType[];
-		}
-	): Promise<PerpetualsAccountCap[]> {
+		inputs: ApiPerpetualsOwnedAccountCapsBody
+	) {
 		const { walletAddress, collateralCoinTypes } = inputs;
-
 		return this.fetchApi<
-			PerpetualsAccountCap[],
-			{
-				walletAddress: SuiAddress;
-				collateralCoinTypes: CoinType[] | undefined;
-			}
+			ApiPerpetualsOwnedAccountCapsResponse,
+			ApiPerpetualsOwnedAccountCapsBody
 		>("accounts/owned", {
 			walletAddress,
 			collateralCoinTypes,
@@ -460,14 +463,10 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getOwnedVaultCaps(
-		inputs: ApiPerpetualsOwnedAccountCapsBody
-	): Promise<PerpetualsVaultCap[]> {
+	public async getOwnedVaultCaps(inputs: ApiPerpetualsOwnedVaultCapsBody) {
 		return this.fetchApi<
-			PerpetualsVaultCap[],
-			{
-				walletAddress: SuiAddress;
-			}
+			ApiPerpetualsOwnedVaultCapsResponse,
+			ApiPerpetualsOwnedVaultCapsBody
 		>("vaults/owned-vault-caps", inputs);
 	}
 
@@ -484,12 +483,12 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getOwnedVaultWithdrawRequests(inputs: {
-		walletAddress: SuiAddress;
-	}) {
+	public async getOwnedVaultWithdrawRequests(
+		inputs: ApiPerpetualsVaultOwnedWithdrawRequestsBody
+	) {
 		return this.fetchApi<
-			PerpetualsVaultWithdrawRequest[],
-			ApiPerpetualsVaultWithdrawRequestsBody
+			ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
+			ApiPerpetualsVaultOwnedWithdrawRequestsBody
 		>("vaults/owned-withdraw-requests", {
 			...inputs,
 			// vaultIds: undefined,
@@ -497,10 +496,13 @@ export class Perpetuals extends Caller {
 	}
 
 	// TODO: docs
-	public async getOwnedVaultLpCoins(inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<PerpetualsVaultLpCoin[]> {
-		return this.fetchApi("vaults/owned-lp-coins", inputs);
+	public async getOwnedVaultLpCoins(
+		inputs: ApiPerpetualsVaultOwnedLpCoinsBody
+	): Promise<ApiPerpetualsVaultOwnedLpCoinsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsVaultOwnedLpCoinsResponse,
+			ApiPerpetualsVaultOwnedLpCoinsBody
+		>("vaults/owned-lp-coins", inputs);
 	}
 
 	/**
@@ -516,11 +518,9 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getAccountCaps(
-		inputs: ApiPerpetualsAccountCapsBody
-	): Promise<PerpetualsAccountCap[]> {
+	public async getAccountCaps(inputs: ApiPerpetualsAccountCapsBody) {
 		return this.fetchApi<
-			PerpetualsAccountCap[],
+			ApiPerpetualsAccountCapsResponse,
 			ApiPerpetualsAccountCapsBody
 		>("accounts", inputs);
 	}
@@ -549,7 +549,7 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 
-	// TODO: move to market class
+	// TODO: move to market class ?
 	public getMarketCandleHistory(
 		inputs: ApiPerpetualsMarketCandleHistoryBody
 	) {
@@ -606,14 +606,17 @@ export class Perpetuals extends Caller {
 	 * const { basePrice, collateralPrice } = prices[0];
 	 * ```
 	 */
-	public async getPrices(inputs: { marketIds: ObjectId[] }): Promise<
-		{
-			basePrice: number;
-			collateralPrice: number;
-		}[]
-	> {
-		if (inputs.marketIds.length <= 0) return [];
-		return this.fetchApi("markets/prices", inputs);
+	public async getPrices(inputs: {
+		marketIds: ObjectId[];
+	}): Promise<ApiPerpetualsMarketsPricesResponse> {
+		if (inputs.marketIds.length <= 0)
+			return {
+				marketsPrices: [],
+			};
+		return this.fetchApi<
+			ApiPerpetualsMarketsPricesResponse,
+			ApiPerpetualsMarketsPricesBody
+		>("markets/prices", inputs);
 	}
 
 	/**
@@ -627,11 +630,17 @@ export class Perpetuals extends Caller {
 	 * const [price] = await perps.getLpCoinPrices({ vaultIds: ["0x..."] });
 	 * ```
 	 */
-	public async getLpCoinPrices(inputs: {
-		vaultIds: ObjectId[];
-	}): Promise<number[]> {
-		if (inputs.vaultIds.length <= 0) return [];
-		return this.fetchApi("vaults/lp-coin-prices", inputs);
+	public async getLpCoinPrices(
+		inputs: ApiPerpetualsVaultLpCoinPricesBody
+	): Promise<ApiPerpetualsVaultLpCoinPricesResponse> {
+		if (inputs.vaultIds.length <= 0)
+			return {
+				lpCoinPrices: [],
+			};
+		return this.fetchApi<
+			ApiPerpetualsVaultLpCoinPricesResponse,
+			ApiPerpetualsVaultLpCoinPricesBody
+		>("vaults/lp-coin-prices", inputs);
 	}
 
 	// =========================================================================
@@ -940,22 +949,6 @@ export class Perpetuals extends Caller {
 	}): string => {
 		return `${inputs.eventType}<${inputs.collateralCoinType}>`;
 	};
-
-	// =========================================================================
-	//  Calculations
-	// =========================================================================
-
-	// public static calcEntryPrice(inputs: {
-	// 	baseAssetAmount: number;
-	// 	quoteAssetNotionalAmount: number;
-	// }): number {
-	// 	const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
-
-	// 	const denominator = baseAssetAmount;
-	// 	if (!denominator) return 0;
-
-	// 	return Math.abs(quoteAssetNotionalAmount / denominator);
-	// }
 
 	// =========================================================================
 	//  Websocket

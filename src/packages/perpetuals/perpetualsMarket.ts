@@ -174,10 +174,10 @@ export class PerpetualsMarket extends Caller {
 	 * ```
 	 */
 	public async get24hrStats(): Promise<PerpetualsMarket24hrStats> {
-		const stats = await new Perpetuals(this.config).getMarkets24hrStats({
+		const res = await new Perpetuals(this.config).getMarkets24hrStats({
 			marketIds: [this.marketId],
 		});
-		return stats[0];
+		return res.marketsStats[0];
 	}
 
 	/**
@@ -428,7 +428,7 @@ export class PerpetualsMarket extends Caller {
 			).getPrices({
 				marketIds: [this.marketId],
 			})
-		)[0];
+		).marketsPrices[0];
 	}
 
 	// =========================================================================
