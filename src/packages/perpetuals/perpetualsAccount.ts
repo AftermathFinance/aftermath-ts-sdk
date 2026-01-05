@@ -1123,20 +1123,11 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrdersPreview(
 		inputs: SdkPerpetualsCancelOrdersPreviewInputs,
 		abortSignal?: AbortSignal
-	): Promise<
-		| {
-				updatedPositions: PerpetualsPosition[];
-				collateralChange: number;
-		  }
-		| {
-				error: string;
-		  }
-	> {
+	): Promise<ApiPerpetualsPreviewCancelOrdersResponse> {
 		// NOTE: should this case return an error instead ?
 		if (Object.keys(inputs.marketIdsToData).length <= 0)
 			return {
-				collateralChange: 0,
-				updatedPositions: [],
+				marketIdsToData: {},
 			};
 
 		return this.fetchApi<

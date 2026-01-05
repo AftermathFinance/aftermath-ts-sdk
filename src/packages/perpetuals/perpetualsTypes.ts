@@ -1660,8 +1660,13 @@ export type ApiPerpetualsPreviewCancelOrdersResponse =
 			error: string;
 	  }
 	| {
-			updatedPositions: PerpetualsPosition[];
-			collateralChange: number;
+			marketIdsToData: Record<
+				PerpetualsMarketId,
+				{
+					updatedPosition: PerpetualsPosition;
+					collateralChange: number;
+				}
+			>;
 	  };
 
 // export interface ApiPerpetualsOrderbookStateBody {

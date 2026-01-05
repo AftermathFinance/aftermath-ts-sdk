@@ -586,7 +586,7 @@ export class PerpetualsVault extends Caller {
 	 * @returns `true` if `value` is can be used as a valid LP coin name, otherwise `false`.
 	 */
 	public static isValidLpCoinName = (value: string): boolean => {
-		return /^[A-Z][_a-zA-Z0-9]*$/.test(value);
+		return /^[\x00-\x7F]+$/.test(value);
 	};
 
 	/**
@@ -596,7 +596,7 @@ export class PerpetualsVault extends Caller {
 	 * @returns `true` if `value` is can be used as a valid LP coin type, otherwise `false`.
 	 */
 	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
-		return /^[A-Z][A-Z0-9]*$/i.test(value);
+		return /^[A-Z_]+$/.test(value);
 	};
 
 	// =========================================================================
