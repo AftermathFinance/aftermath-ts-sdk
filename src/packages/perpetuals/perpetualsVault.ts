@@ -41,6 +41,8 @@ import {
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
+	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
+	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -102,12 +104,13 @@ export class PerpetualsVault extends Caller {
 		walletAddress: SuiAddress;
 		// TODO: change to arr ?
 		sizesToClose: Record<PerpetualsMarketId, Balance>;
+		recipientAddress?: SuiAddress;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
-			ApiTransactionResponse
+			ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse
 		>(
 			"vault/transactions/process-force-withdraw-request",
 			{
@@ -302,7 +305,7 @@ export class PerpetualsVault extends Caller {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
-			ApiTransactionResponse
+			ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse
 		>(
 			"vault/transactions/owner/withdraw-collateral",
 			{

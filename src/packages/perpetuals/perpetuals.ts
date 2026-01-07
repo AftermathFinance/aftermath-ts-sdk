@@ -162,7 +162,8 @@ export class Perpetuals extends Caller {
 			}
 		>("all-markets", inputs);
 		return marketDatas.map(
-			(marketData) => new PerpetualsMarket(marketData, this.config)
+			(marketData) =>
+				new PerpetualsMarket(marketData, this.config, this.Provider)
 		);
 	}
 
@@ -226,7 +227,11 @@ export class Perpetuals extends Caller {
 		return marketDatas.map(
 			(marketData) =>
 				// TODO: make orderbook as input ?
-				new PerpetualsMarket(marketData.market, this.config)
+				new PerpetualsMarket(
+					marketData.market,
+					this.config,
+					this.Provider
+				)
 		);
 	}
 
@@ -246,7 +251,8 @@ export class Perpetuals extends Caller {
 			{}
 		);
 		return vaultObjects.map(
-			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
+			(vaultObject) =>
+				new PerpetualsVault(vaultObject, this.config, this.Provider)
 		);
 	}
 
@@ -295,7 +301,8 @@ export class Perpetuals extends Caller {
 			}
 		>("vaults", inputs);
 		return vaultObjects.map(
-			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
+			(vaultObject) =>
+				new PerpetualsVault(vaultObject, this.config, this.Provider)
 		);
 	}
 

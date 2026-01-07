@@ -114,8 +114,8 @@ export class PerpetualsMarket extends Caller {
 	 */
 	constructor(
 		public marketData: PerpetualsMarketData,
-		config?: CallerConfig
-		// public readonly Provider?: AftermathApi
+		config?: CallerConfig,
+		public readonly Provider?: AftermathApi
 	) {
 		super(config, "perpetuals");
 		this.marketId = marketData.objectId;
