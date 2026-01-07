@@ -173,14 +173,19 @@ export class Perpetuals extends Caller {
 	 */
 	public async getAllMarkets(inputs: {
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarket[]> {
+	}): Promise<{
+		markets: PerpetualsMarket[];
+	}> {
 		const res = await this.fetchApi<
 			ApiPerpetualsAllMarketsResponse,
 			ApiPerpetualsAllMarketsBody
 		>("all-markets", inputs);
-		return res.markets.map(
-			(marketData) => new PerpetualsMarket(marketData, this.config)
-		);
+		return {
+			markets: res.markets.map(
+				(marketData) =>
+					new PerpetualsMarket(marketData, this.config, this.Provider)
+			),
+		};
 	}
 
 	/**
@@ -199,11 +204,13 @@ export class Perpetuals extends Caller {
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
 		// withOrderbook: boolean;
-	}): Promise<PerpetualsMarket> {
-		const markets = await this.getMarkets({
+	}): Promise<{ market: PerpetualsMarket }> {
+		const { markets } = await this.getMarkets({
 			marketIds: [inputs.marketId],
 		});
-		return markets[0];
+		return {
+			market: markets[0],
+		};
 	}
 
 	/**
@@ -226,7 +233,9 @@ export class Perpetuals extends Caller {
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
 		// withOrderbook: boolean;
-	}): Promise<PerpetualsMarket[]> {
+	}): Promise<{
+		markets: PerpetualsMarket[];
+	}> {
 		const res = await this.fetchApi<
 			ApiPerpetualsMarketsResponse,
 			ApiPerpetualsMarketsBody
@@ -234,11 +243,17 @@ export class Perpetuals extends Caller {
 			...inputs,
 			withOrderbook: false,
 		});
-		return res.marketDatas.map(
-			(marketData) =>
-				// TODO: make orderbook as input ?
-				new PerpetualsMarket(marketData.market, this.config)
-		);
+		return {
+			markets: res.marketDatas.map(
+				(marketData) =>
+					// TODO: make orderbook as input ?
+					new PerpetualsMarket(
+						marketData.market,
+						this.config,
+						this.Provider
+					)
+			),
+		};
 	}
 
 	/**
@@ -251,14 +266,19 @@ export class Perpetuals extends Caller {
 	 * const vaults = await perps.getAllVaults();
 	 * ```
 	 */
-	public async getAllVaults(): Promise<PerpetualsVault[]> {
+	public async getAllVaults(): Promise<{
+		vaults: PerpetualsVault[];
+	}> {
 		const res = await this.fetchApi<
 			ApiPerpetualsVaultsResponse,
 			ApiPerpetualsVaultsBody
 		>("vaults", {});
-		return res.vaults.map(
-			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
-		);
+		return {
+			vaults: res.vaults.map(
+				(vaultObject) =>
+					new PerpetualsVault(vaultObject, this.config, this.Provider)
+			),
+		};
 	}
 
 	/**
@@ -274,13 +294,15 @@ export class Perpetuals extends Caller {
 	 * const vault = await perps.getVault({ marketId: "0x..." });
 	 * ```
 	 */
-	public async getVault(inputs: {
-		marketId: ObjectId;
-	}): Promise<PerpetualsVault> {
-		const vaults = await this.getVaults({
+	public async getVault(inputs: { marketId: ObjectId }): Promise<{
+		vault: PerpetualsVault;
+	}> {
+		const { vaults } = await this.getVaults({
 			vaultIds: [inputs.marketId],
 		});
-		return vaults[0];
+		return {
+			vault: vaults[0],
+		};
 	}
 
 	/**
@@ -296,16 +318,19 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getVaults(inputs: {
-		vaultIds: ObjectId[];
-	}): Promise<PerpetualsVault[]> {
+	public async getVaults(inputs: { vaultIds: ObjectId[] }): Promise<{
+		vaults: PerpetualsVault[];
+	}> {
 		const res = await this.fetchApi<
 			ApiPerpetualsVaultsResponse,
 			ApiPerpetualsVaultsBody
 		>("vaults", inputs);
-		return res.vaults.map(
-			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
-		);
+		return {
+			vaults: res.vaults.map(
+				(vaultObject) =>
+					new PerpetualsVault(vaultObject, this.config, this.Provider)
+			),
+		};
 	}
 
 	/**
@@ -327,14 +352,18 @@ export class Perpetuals extends Caller {
 	public async getAccount(inputs: {
 		accountCap: PerpetualsAccountCap | PerpetualsPartialVaultCap;
 		marketIds?: PerpetualsMarketId[];
-	}): Promise<PerpetualsAccount> {
+	}): Promise<{
+		account: PerpetualsAccount;
+	}> {
 		const { accountCap, marketIds } = inputs;
-		return (
-			await this.getAccounts({
-				accountCaps: [accountCap],
-				marketIds,
-			})
-		)[0];
+		return {
+			account: (
+				await this.getAccounts({
+					accountCaps: [accountCap],
+					marketIds,
+				})
+			).accounts[0],
+		};
 	}
 
 	/**
@@ -361,9 +390,14 @@ export class Perpetuals extends Caller {
 	public async getAccounts(inputs: {
 		accountCaps: (PerpetualsAccountCap | PerpetualsPartialVaultCap)[];
 		marketIds?: PerpetualsMarketId[];
-	}): Promise<PerpetualsAccount[]> {
+	}): Promise<{
+		accounts: PerpetualsAccount[];
+	}> {
 		const { accountCaps, marketIds } = inputs;
-		if (accountCaps.length <= 0) return [];
+		if (accountCaps.length <= 0)
+			return {
+				accounts: [],
+			};
 
 		const accountObjects = (
 			await this.getAccountObjects({
@@ -374,15 +408,17 @@ export class Perpetuals extends Caller {
 			})
 		).accounts;
 
-		return accountObjects.map(
-			(account, index) =>
-				new PerpetualsAccount(
-					account,
-					accountCaps[index],
-					this.config,
-					this.Provider
-				)
-		);
+		return {
+			accounts: accountObjects.map(
+				(account, index) =>
+					new PerpetualsAccount(
+						account,
+						accountCaps[index],
+						this.config,
+						this.Provider
+					)
+			),
+		};
 	}
 
 	/**

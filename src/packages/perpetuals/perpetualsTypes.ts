@@ -775,29 +775,37 @@ export interface PerpetualsAccountMarginHistoryData {
 }
 
 /**
- * Individual trade affecting an account.
+ * Individual order affecting an account.
  */
 export type PerpetualsAccountOrderHistoryData = {
-	/** Timestamp of the trade. */
+	/** Timestamp of the order. */
 	timestamp: Timestamp;
 	/** Sui transaction digest. */
 	txDigest: TransactionDigest;
-	/** Market in which this trade occurred. */
+	/** Market in which this order occurred. */
 	marketId: PerpetualsMarketId;
 	/** Concrete event type. */
 	eventType: AnyObjectType;
-	/** Side of the trade relative to the account (Bid/Ask). */
+	/** Side of the order relative to the account (Bid/Ask). */
 	side: PerpetualsOrderSide;
-
-	// /** Execution price. */
-	// price: number;
-	// /** Trade size in base units. */
-	// size: number;
-
-	/** Filled size in base units. */
-	sizeFilled: number;
-	/** Order price (limit price) used for the trade. */
-	orderPrice: number;
+	/** Price for this order. */
+	price: number;
+	/** Size in base units. */
+	size: number;
+	/** Optional stop-loss / take-profit data. */
+	slTp?: {
+		/** Optional stop-loss trigger price based on the index price. */
+		stopLossIndexPrice?: number;
+		/** Optional take-profit trigger price based on the index price. */
+		takeProfitIndexPrice?: number;
+	};
+	/** Stop order data that is not a stop-loss / take-profit order
+	 * (e.g. generic trigger orders).
+	 */
+	stopOrder?: {
+		/** Index price at which the stop order should trigger. */
+		stopIndexPrice: number;
+	};
 };
 
 /**
@@ -2391,7 +2399,14 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
 	vaultId: ObjectId;
 	/** Per-market sizes to close as part of force withdraw. */
 	sizesToClose: Record<PerpetualsMarketId, Balance>;
+	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
+}
+
+// TODO: docs
+export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse {
+	txKind: SerializedTransaction;
+	coinOutArg: TransactionObjectArgument | undefined;
 }
 
 /**

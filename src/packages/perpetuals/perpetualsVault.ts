@@ -42,6 +42,9 @@ import {
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
 	ApiPerpetualsVaultsWithdrawRequestsResponse,
+	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
+	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
+	PerpetualsAccountObject,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -103,12 +106,13 @@ export class PerpetualsVault extends Caller {
 		walletAddress: SuiAddress;
 		// TODO: change to arr ?
 		sizesToClose: Record<PerpetualsMarketId, Balance>;
+		recipientAddress?: SuiAddress;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
-			ApiTransactionResponse
+			ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse
 		>(
 			"vault/transactions/process-force-withdraw-request",
 			{
@@ -303,7 +307,7 @@ export class PerpetualsVault extends Caller {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
-			ApiTransactionResponse
+			ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse
 		>(
 			"vault/transactions/owner/withdraw-collateral",
 			{
@@ -561,15 +565,24 @@ export class PerpetualsVault extends Caller {
 		};
 	}
 
-	public async getAccountObject() {
-		return (
-			await new Perpetuals(this.config, this.Provider).getAccountObjects({
-				accountIds: [this.vaultObject.accountId],
-			})
-		).accounts[0];
+	public async getAccountObject(): Promise<{
+		account: PerpetualsAccountObject;
+	}> {
+		return {
+			account: (
+				await new Perpetuals(
+					this.config,
+					this.Provider
+				).getAccountObjects({
+					accountIds: [this.vaultObject.accountId],
+				})
+			).accounts[0],
+		};
 	}
 
-	public async getAccount() {
+	public async getAccount(): Promise<{
+		account: PerpetualsAccount;
+	}> {
 		return new Perpetuals(this.config, this.Provider).getAccount({
 			accountCap: this.partialVaultCap(),
 		});
