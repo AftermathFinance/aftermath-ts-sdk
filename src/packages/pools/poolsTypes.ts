@@ -8,10 +8,10 @@ import {
 	SuiAddress,
 	Timestamp,
 	Url,
-} from "../../general/types/generalTypes";
+} from "../../general/types/generalTypes.ts";
 import { ManipulateType } from "dayjs";
-import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { UniqueId } from "../router/routerTypes";
+import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes.ts";
+import { UniqueId } from "../router/routerTypes.ts";
 
 /**
  * Name or label used to identify a pool. e.g., "My Stable Pool" or "SUI-COIN LP".

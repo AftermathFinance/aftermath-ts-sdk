@@ -1,5 +1,5 @@
-import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
+import { ObjectId, SuiAddress } from "../../types.ts";
+import { CoinType } from "../coin/coinTypes.ts";
 import {
 	Balance,
 	Timestamp,
@@ -7,7 +7,7 @@ import {
 	TransactionDigest,
 	SerializedTransaction,
 	BigIntAsString,
-} from "../../general/types/generalTypes";
+} from "../../general/types/generalTypes.ts";
 
 // =========================================================================
 //  Common Types

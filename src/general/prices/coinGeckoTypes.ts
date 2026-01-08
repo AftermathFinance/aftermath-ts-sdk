@@ -1,4 +1,4 @@
-import { CoinSymbol, CoinType } from "../../types";
+import { CoinSymbol, CoinType } from "../../types.ts";
 
 // =========================================================================
 //  Coin Gecko

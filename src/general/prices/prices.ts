@@ -1,4 +1,4 @@
-import { SuiNetwork } from "../types/suiTypes";
+import { SuiNetwork } from "../types/suiTypes.ts";
 import {
 	CoinPriceInfo,
 	CoinSymbol,
@@ -6,9 +6,9 @@ import {
 	CoinType,
 	CoinsToPrice,
 	CoinsToPriceInfo,
-} from "../../packages/coin/coinTypes";
-import { Caller } from "../utils/caller";
-import { CallerConfig, Url } from "../types";
+} from "../../packages/coin/coinTypes.ts";
+import { Caller } from "../utils/caller.ts";
+import { CallerConfig, Url } from "../types/index.ts";
 
 /**
  * The `Prices` class provides methods for fetching price information for various

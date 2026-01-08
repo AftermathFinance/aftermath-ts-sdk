@@ -1,9 +1,9 @@
-import { SuiNetwork } from "../types/suiTypes";
-import { CallerConfig, SuiAddress, Url } from "../types/generalTypes";
-import { CoinType } from "../../packages/coin/coinTypes";
-import { Caller } from "../utils/caller";
+import { SuiNetwork } from "../types/suiTypes.ts";
+import { CallerConfig, SuiAddress, Url } from "../types/generalTypes.ts";
+import { CoinType } from "../../packages/coin/coinTypes.ts";
+import { Caller } from "../utils/caller.ts";
 import { Transaction } from "@mysten/sui/transactions";
-import { ApiDynamicGasBody, ApiDynamicGasResponse } from "./dynamicGasTypes";
+import { ApiDynamicGasBody, ApiDynamicGasResponse } from "./dynamicGasTypes.ts";
 
 /**
  * The `DynamicGas` class provides functionality for dynamically determining

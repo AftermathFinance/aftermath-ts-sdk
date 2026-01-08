@@ -1,2 +1,2 @@
-export * from "./aftermath";
-export * from "./aftermathApi";
+export * from "./aftermath.ts";
+export * from "./aftermathApi.ts";

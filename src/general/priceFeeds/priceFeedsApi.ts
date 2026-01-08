@@ -1,6 +1,6 @@
-// import { Url } from "../../types";
+// import { Url } from "../../types.ts";
 // import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
-// import { PythPriceFeedId } from "./priceFeedsTypes";
+// import { PythPriceFeedId } from "./priceFeedsTypes.ts";
 
 // export class PriceFeedsApi {
 // 	// =========================================================================

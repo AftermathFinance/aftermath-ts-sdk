@@ -1,17 +1,17 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Faucet } from "../faucet";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
+import { Faucet } from "../faucet.ts";
 import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
-import { FaucetApiCasting } from "./faucetApiCasting";
-import { CoinDecimal, CoinType } from "../../coin/coinTypes";
+import { FaucetApiCasting } from "./faucetApiCasting.ts";
+import { CoinDecimal, CoinType } from "../../coin/coinTypes.ts";
 import {
 	FaucetAddCoinEventOnChain,
 	FaucetMintCoinEventOnChain,
-} from "./faucetApiCastingTypes";
+} from "./faucetApiCastingTypes.ts";
 import {
 	ApiFaucetMintSuiFrenBody,
 	FaucetAddCoinEvent,
 	FaucetMintCoinEvent,
-} from "../faucetTypes";
+} from "../faucetTypes.ts";
 import {
 	AnyObjectType,
 	Balance,
@@ -20,11 +20,11 @@ import {
 	SerializedTransaction,
 	ObjectId,
 	SuiAddress,
-} from "../../../types";
-import { Coin } from "../../coin";
-import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Sui } from "../../sui";
+} from "../../../types.ts";
+import { Coin } from "../../coin/index.ts";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Sui } from "../../sui/index.ts";
 
 export class FaucetApi {
 	// =========================================================================

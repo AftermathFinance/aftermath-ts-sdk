@@ -1,3 +1,3 @@
-export * from "./farms";
-export * from "./farmsStakingPool";
-export * from "./farmsStakedPosition";
+export * from "./farms.ts";
+export * from "./farmsStakingPool.ts";
+export * from "./farmsStakedPosition.ts";

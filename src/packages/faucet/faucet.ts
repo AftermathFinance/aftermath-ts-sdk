@@ -5,9 +5,9 @@ import {
 	CoinType,
 	SuiNetwork,
 	Url,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class Faucet extends Caller {

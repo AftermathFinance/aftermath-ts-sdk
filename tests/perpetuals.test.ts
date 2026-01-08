@@ -1,6 +1,6 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../src/general/providers";
+import { AftermathApi } from "../src/general/providers/index.ts";
 import {
 	ASK,
 	BID,
@@ -27,18 +27,18 @@ import {
 	printAccountMetrics,
 	getPerpetualsMarket,
 	MARKET_ID1,
-} from "./utils";
+} from "./utils.ts";
 
-import { getConfigs } from "./testConfig";
+import { getConfigs } from "./testConfig.ts";
 import {
 	Perpetuals,
 	PerpetualsAccount,
 	PerpetualsMarket,
 	Sui,
-} from "../src/packages";
-import { IFixedUtils } from "../src/general/utils/iFixedUtils";
-import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
-import { Helpers, IndexerCaller } from "../src/general/utils";
+} from "../src/packages/index.ts";
+import { IFixedUtils } from "../src/general/utils/iFixedUtils.ts";
+import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types.ts";
+import { Helpers, IndexerCaller } from "../src/general/utils/index.ts";
 
 // =========================================================================
 //

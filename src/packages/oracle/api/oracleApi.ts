@@ -1,9 +1,9 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../../../general/providers";
-import { Casting, Helpers } from "../../../general/utils";
-import { AnyObjectType, ObjectId, OracleAddresses } from "../../../types";
-import { Sui } from "../../sui";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { AftermathApi } from "../../../general/providers/index.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { AnyObjectType, ObjectId, OracleAddresses } from "../../../types.ts";
+import { Sui } from "../../sui/index.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
 
 export class OracleApi {
 	// =========================================================================

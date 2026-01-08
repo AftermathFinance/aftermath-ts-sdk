@@ -6,7 +6,7 @@ import {
 	ObjectId,
 	OracleAddresses,
 	PerpetualsAddresses,
-} from "../src/types";
+} from "../src/types.ts";
 
 export function getConfigs(): [
 	PerpetualsAddresses,

@@ -1,4 +1,4 @@
-import { Caller } from "../../general/utils/caller";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiPerpetualsCancelOrderBody,
 	ApiPerpetualsDepositCollateralBody,
@@ -54,13 +54,13 @@ import {
 	ApiPerpetualsDeallocateCollateralBody,
 	ApiPerpetualsReduceOrdersBody,
 	CallerConfig,
-} from "../../types";
-import { PerpetualsMarket } from "./perpetualsMarket";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import { Casting, Helpers } from "../../general/utils";
-import { Perpetuals } from "./perpetuals";
-import { Coin } from "..";
-import { FixedUtils } from "../../general/utils/fixedUtils";
+} from "../../types.ts";
+import { PerpetualsMarket } from "./perpetualsMarket.ts";
+import { IFixedUtils } from "../../general/utils/iFixedUtils.ts";
+import { Casting, Helpers } from "../../general/utils/index.ts";
+import { Perpetuals } from "./perpetuals.ts";
+import { Coin } from "../index.ts";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class PerpetualsAccount extends Caller {
@@ -342,8 +342,7 @@ export class PerpetualsAccount extends Caller {
 		marketIds: PerpetualsMarketId[];
 	}): Promise<number[]> {
 		return this.fetchApi(
-			`${this.accountCap.collateralCoinType}/accounts/${
-				this.accountCap.accountId
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId
 			}/position-leverages/${JSON.stringify(inputs.marketIds)}`
 		);
 	}
@@ -371,19 +370,19 @@ export class PerpetualsAccount extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
-				error: string;
-		  }
+			error: string;
+		}
 		| {
-				positionAfterOrder: PerpetualsPosition;
-				priceSlippage: number;
-				percentSlippage: Percentage;
-				filledSize: number;
-				filledSizeUsd: number;
-				postedSize: number;
-				postedSizeUsd: number;
-				collateralChange: Balance;
-				executionPrice: number;
-		  }
+			positionAfterOrder: PerpetualsPosition;
+			priceSlippage: number;
+			percentSlippage: Percentage;
+			filledSize: number;
+			filledSizeUsd: number;
+			postedSize: number;
+			postedSizeUsd: number;
+			collateralChange: Balance;
+			executionPrice: number;
+		}
 	> {
 		const response = await this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
@@ -417,15 +416,15 @@ export class PerpetualsAccount extends Caller {
 		>
 	): Promise<
 		| {
-				marketIdsToPositionAfterCancelOrders: Record<
-					PerpetualsMarketId,
-					PerpetualsPosition
-				>;
-				collateralChange: Balance;
-		  }
+			marketIdsToPositionAfterCancelOrders: Record<
+				PerpetualsMarketId,
+				PerpetualsPosition
+			>;
+			collateralChange: Balance;
+		}
 		| {
-				error: string;
-		  }
+			error: string;
+		}
 	> {
 		// NOTE: should this case return an error instead ?
 		if (Object.keys(inputs.marketIdsToData).length <= 0)
@@ -466,12 +465,12 @@ export class PerpetualsAccount extends Caller {
 		}
 	): Promise<
 		| {
-				positionAfterReduceOrders: PerpetualsPosition;
-				collateralChange: Balance;
-		  }
+			positionAfterReduceOrders: PerpetualsPosition;
+			collateralChange: Balance;
+		}
 		| {
-				error: string;
-		  }
+			error: string;
+		}
 	> {
 		// NOTE: should this case not throw an error instead ?
 		if (Object.keys(inputs.orderDatas).length <= 0)
@@ -609,7 +608,7 @@ export class PerpetualsAccount extends Caller {
 		});
 		const collateralUsd =
 			IFixedUtils.numberFromIFixed(position?.collateral) *
-				collateralPrice +
+			collateralPrice +
 			funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
@@ -740,7 +739,7 @@ export class PerpetualsAccount extends Caller {
 
 		const collateralUsd =
 			IFixedUtils.numberFromIFixed(position?.collateral) *
-				inputs.collateralPrice +
+			inputs.collateralPrice +
 			funding;
 
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(
@@ -915,13 +914,13 @@ export class PerpetualsAccount extends Caller {
 						Number(
 							Coin.normalizeBalance(
 								this.calcFreeMarginUsdForPosition(inputs) *
-									collateralPrice,
+								collateralPrice,
 								this.collateralDecimals()
 							) - ordersCollateral
 						) *
-							(1 -
-								PerpetualsAccount.constants
-									.closePositionMarginOfError)
+						(1 -
+							PerpetualsAccount.constants
+								.closePositionMarginOfError)
 					)
 				),
 				BigInt(0)
@@ -930,14 +929,14 @@ export class PerpetualsAccount extends Caller {
 			Math.round(
 				Math.abs(
 					Casting.IFixed.numberFromIFixed(position.baseAssetAmount) /
-						market.lotSize()
+					market.lotSize()
 				)
 			)
 		);
 		const collateralChange = BigInt(
 			Math.round(
 				Number(fullPositionCollateralChange) *
-					(Number(size) / Number(positionSize))
+				(Number(size) / Number(positionSize))
 			)
 		);
 

@@ -3,7 +3,7 @@ import {
 	TransactionObjectArgument,
 	TransactionResult,
 } from "@mysten/sui/transactions";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	AnyObjectType,
 	Balance,
@@ -27,21 +27,21 @@ import {
 	LeveragedStakingPerformanceDataBody,
 	Percentage,
 	LeveragedAfSuiPosition,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Coin } from "../../coin";
-import { Sui } from "../../sui";
-import { LeveragedStaking } from "..";
-import { EventOnChain } from "../../../general/types/castingTypes";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Coin } from "../../coin/index.ts";
+import { Sui } from "../../sui/index.ts";
+import { LeveragedStaking } from "../index.ts";
+import { EventOnChain } from "../../../general/types/castingTypes.ts";
 import {
 	LeveragedStakeChangedLeverageEventOnChain,
 	LeveragedStakedEventOnChain,
 	LeveragedUnstakedEventOnChain,
-} from "./leveragedStakingApiCastingTypes";
+} from "./leveragedStakingApiCastingTypes.ts";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { Pool, Staking } from "../..";
+import duration from "dayjs/plugin/duration.js";
+import { Pool, Staking } from "../../index.ts";
 // import BigNumber from "bignumber.js";
 // import {
 // 	BalanceSheet,
@@ -98,8 +98,8 @@ export class LeveragedStakingApi {
 		LeveragedStakingPerformanceGraphDataTimeframeKey,
 		number
 	> = {
-		"1M": 30,
-	};
+			"1M": 30,
+		};
 
 	// =========================================================================
 	//  Constructor
@@ -1428,9 +1428,9 @@ export class LeveragedStakingApi {
 
 		const [positionSuiDebt, positionBorrowIndex] = obligationAccount.debts
 			? [
-					BigInt(obligationAccount.debts[0].amount),
-					Number(obligationAccount.debts[0].borrowIndex),
-			  ]
+				BigInt(obligationAccount.debts[0].amount),
+				Number(obligationAccount.debts[0].borrowIndex),
+			]
 			: [BigInt(0), 0];
 
 		if (positionBorrowIndex === newBorrowIndex)
@@ -1441,7 +1441,7 @@ export class LeveragedStakingApi {
 			totalSuiDebt: BigInt(
 				Math.floor(
 					(Number(positionSuiDebt) * newBorrowIndex) /
-						positionBorrowIndex
+					positionBorrowIndex
 				)
 			),
 		};

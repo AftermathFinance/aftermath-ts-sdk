@@ -3,8 +3,8 @@ import {
 	Balance,
 	Event,
 	SuiAddress,
-} from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+} from "../../general/types/generalTypes.ts";
+import { CoinType } from "../coin/coinTypes.ts";
 
 // =========================================================================
 //  Events

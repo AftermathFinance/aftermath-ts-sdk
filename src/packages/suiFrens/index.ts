@@ -1,3 +1,3 @@
-export * from "./suiFren";
-export * from "./suiFrens";
-export * from "./stakedSuiFren";
+export * from "./suiFren.ts";
+export * from "./suiFrens.ts";
+export * from "./stakedSuiFren.ts";

@@ -4,11 +4,11 @@ import {
 	IFixedAsString,
 	ObjectId,
 	SuiAddress,
-} from "../../../types";
+} from "../../../types.ts";
 import {
 	EventOnChain,
 	IndexerEventOnChain,
-} from "../../../general/types/castingTypes";
+} from "../../../general/types/castingTypes.ts";
 
 // =========================================================================
 //  Objects

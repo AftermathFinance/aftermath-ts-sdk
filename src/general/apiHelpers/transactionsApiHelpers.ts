@@ -15,10 +15,10 @@ import {
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
-} from "../../types";
-import { AftermathApi } from "../providers/aftermathApi";
+} from "../../types.ts";
+import { AftermathApi } from "../providers/aftermathApi.ts";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
-import { Helpers } from "../utils";
+import { Helpers } from "../utils/index.ts";
 
 export class TransactionsApiHelpers {
 	// =========================================================================

@@ -1,9 +1,9 @@
 import { SuiObjectChange, SuiObjectChangeCreated } from "@mysten/sui/client";
 import { fromB64 } from "@mysten/bcs";
-import { AftermathApi } from "../src/general/providers";
-import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";
+import { AftermathApi } from "../src/general/providers/index.ts";
+import { PerpetualsAccount, PerpetualsMarket } from "../src/packages/index.ts";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { ObjectId, SuiAddress } from "../src/types";
+import { ObjectId, SuiAddress } from "../src/types.ts";
 import { Signer } from "@mysten/sui/cryptography";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";

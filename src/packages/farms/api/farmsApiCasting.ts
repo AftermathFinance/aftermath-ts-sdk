@@ -33,7 +33,7 @@ import {
 	FarmsDepositedPrincipalEventOnChainV2,
 	FarmsCreatedVaultEventOnChainV2,
 	FarmsAddedRewardEventOnChainV2,
-} from "./farmsApiCastingTypes";
+} from "./farmsApiCastingTypes.ts";
 import {
 	FarmsAddedRewardEvent,
 	FarmsCreatedVaultEvent,
@@ -53,9 +53,9 @@ import {
 	StakingPoolOwnerCapObject,
 	PartialFarmsStakedPositionObject,
 	StakingPoolOneTimeAdminCapObject,
-} from "../farmsTypes";
-import { Coin } from "../../coin/coin";
-import { Helpers } from "../../../general/utils";
+} from "../farmsTypes.ts";
+import { Coin } from "../../coin/coin.ts";
+import { Helpers } from "../../../general/utils/index.ts";
 import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class FarmsApiCasting {

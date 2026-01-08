@@ -1,4 +1,4 @@
-import { CoinType } from "../..";
+import { CoinType } from "../../index.ts";
 import {
 	AnyObjectType,
 	BigIntAsString,
@@ -6,7 +6,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	TransactionDigest,
-} from "./generalTypes";
+} from "./generalTypes.ts";
 
 // =========================================================================
 //  BCS

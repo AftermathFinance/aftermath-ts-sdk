@@ -1,5 +1,5 @@
-import { Byte, IFixed } from "../types";
-import { Casting } from "./casting";
+import { Byte, IFixed } from "../types/index.ts";
+import { Casting } from "./casting.ts";
 
 /**
  * The `IFixedUtils` class provides support for signed 18-decimal fixed math,

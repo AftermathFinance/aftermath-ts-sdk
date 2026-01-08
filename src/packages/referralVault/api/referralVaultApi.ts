@@ -1,13 +1,13 @@
 import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	Balance,
 	CoinType,
 	ReferralVaultAddresses,
 	SuiAddress,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
 
 export class ReferralVaultApi {
 	// =========================================================================

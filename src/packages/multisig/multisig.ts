@@ -1,7 +1,7 @@
-import { Caller } from "../../general/utils/caller";
-import { CallerConfig, SuiNetwork } from "../../types";
-import { AftermathApi } from "../../general/providers";
-import { ApiMultisigUserBody } from "./multisigTypes";
+import { Caller } from "../../general/utils/caller.ts";
+import { CallerConfig, SuiNetwork } from "../../types.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
+import { ApiMultisigUserBody } from "./multisigTypes.ts";
 
 /**
  * The `Multisig` class provides methods to interact with multisig-related functionality,

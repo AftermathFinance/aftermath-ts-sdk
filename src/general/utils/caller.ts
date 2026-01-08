@@ -9,8 +9,8 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../types";
-import { Helpers } from "./helpers";
+} from "../../types.ts";
+import { Helpers } from "./helpers.ts";
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;

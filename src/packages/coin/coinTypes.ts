@@ -3,8 +3,8 @@ import {
 	Balance,
 	ObjectId,
 	Percentage,
-} from "../../general/types/generalTypes";
-import { CoinGeckoCoinApiId } from "../../types";
+} from "../../general/types/generalTypes.ts";
+import { CoinGeckoCoinApiId } from "../../types.ts";
 
 /**
  * Represents the decimal precision of a coin (e.g., 9 or 18).

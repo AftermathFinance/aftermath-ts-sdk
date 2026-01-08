@@ -12,10 +12,10 @@ import {
 	Url,
 	ObjectId,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { Pool } from "../pools";
-import { AftermathApi } from "../../general/providers";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { Pool } from "../pools/index.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class NftAmmMarket extends Caller {

@@ -7,7 +7,7 @@ import {
 	Url,
 	ObjectId,
 	SuiAddress,
-} from "../../general/types/generalTypes";
+} from "../../general/types/generalTypes.ts";
 
 // =========================================================================
 //  Name Only

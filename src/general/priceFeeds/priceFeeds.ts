@@ -1,7 +1,7 @@
-// import { SuiNetwork } from "../types/suiTypes";
-// import { Caller } from "../utils/caller";
-// import { Url } from "../types";
-// import { PythPriceFeedId } from "./priceFeedsTypes";
+// import { SuiNetwork } from "../types/suiTypes.ts";
+// import { Caller } from "../utils/caller.ts";
+// import { Url } from "../types/index.ts";
+// import { PythPriceFeedId } from "./priceFeedsTypes.ts";
 
 // export class PriceFeeds extends Caller {
 // 	// =========================================================================

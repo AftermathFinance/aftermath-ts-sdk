@@ -1,21 +1,21 @@
 import { BcsType, bcs } from "@mysten/sui/bcs";
-import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
-import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
-import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
-import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
-import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, IFixed, Percentage, SuiAddress } from "../types";
-import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
-import { FixedUtils } from "./fixedUtils";
-import { IFixedUtils } from "./iFixedUtils";
-import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
-import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
-import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
-import { Helpers } from "../..";
-import { BcsTypeName } from "../types/castingTypes";
+import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting.ts";
+import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting.ts";
+import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting.ts";
+import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting.ts";
+import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting.ts";
+import { Byte, IFixed, Percentage, SuiAddress } from "../types/index.ts";
+import { RouterApiCasting } from "../../packages/router/api/routerApiCasting.ts";
+import { FixedUtils } from "./fixedUtils.ts";
+import { IFixedUtils } from "./iFixedUtils.ts";
+import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting.ts";
+import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting.ts";
+import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting.ts";
+import { Helpers } from "../../index.ts";
+import { BcsTypeName } from "../types/castingTypes.ts";
 import { SuiObjectResponse } from "@mysten/sui/client";
-import { NftsApiCasting } from "../nfts/nftsApiCasting";
-import { OracleApiCasting } from "../../packages/oracle/api/oracleApiCasting";
+import { NftsApiCasting } from "../nfts/nftsApiCasting.ts";
+import { OracleApiCasting } from "../../packages/oracle/api/oracleApiCasting.ts";
 
 /**
  * A central utility class for casting and conversion routines across

@@ -6,8 +6,8 @@ import {
 	NftDisplayOther,
 	NftDisplaySuggested,
 	NftInfo,
-} from "../types";
-import { Helpers } from "../utils/helpers";
+} from "../types/index.ts";
+import { Helpers } from "../utils/helpers.ts";
 
 export class NftsApiCasting {
 	// =========================================================================
