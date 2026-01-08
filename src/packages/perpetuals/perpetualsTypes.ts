@@ -107,11 +107,15 @@ export enum PerpetualsOrderType {
  *   the position, potentially requiring additional allocated collateral.
  */
 export enum PerpetualsStopOrderType {
-	/// Stop Loss / Take Profit stop order. Can to be placed to close (fully or partially)
-	/// the position.
+	/**
+	 * Stop Loss / Take Profit stop order. Can to be placed to close (fully or partially)
+	 * the position.
+	 */
 	SlTp = 0,
-	/// Stop order that can be both reduce or increase the position's size. May require
-	/// some collateral to be allocated to be able to be placed.
+	/**
+	 * Stop order that can be both reduce or increase the position's size. May require
+	 * some collateral to be allocated to be able to be placed.
+	 */
 	Standalone = 1,
 }
 
@@ -562,17 +566,29 @@ export interface PerpetualsAccountObject {
 
 // TODO: docs
 export interface PerpetualsVaultMetatada {
-	/// A human-readable name for the `Vault`.
+	/**
+	 * A human-readable name for the `Vault`.
+	 */
 	name: string;
-	/// A verbose description of the `Vault`.
+	/**
+	 * A verbose description of the `Vault`.
+	 */
 	description: string;
-	/// The `Vault` curator's name.
+	/**
+	 * The `Vault` curator's name.
+	 */
 	curatorName: string | undefined;
-	/// A url for the `Vault`'s curator. Ideally their website.
+	/**
+	 * A url for the `Vault`'s curator. Ideally their website.
+	 */
 	curatorUrl: string | undefined;
-	/// An image url for the `Vault`'s curator. Ideally their logo.
+	/**
+	 * An image url for the `Vault`'s curator. Ideally their logo.
+	 */
 	curatorLogoUrl: string | undefined;
-	/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+	/**
+	 * Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+	 */
 	extraFields: Record<string, string>;
 }
 
@@ -581,15 +597,23 @@ export interface PerpetualsVaultMetatada {
  * interacts with clearing houses on their behalf.
  */
 export interface PerpetualsVaultObject {
-	/// Unique identifier for distinct network identification.
+	/**
+	 * Unique identifier for distinct network identification.
+	 */
 	objectId: ObjectId;
-	/// Contract version number for controlled upgrades.
+	/**
+	 * Contract version number for controlled upgrades.
+	 */
 	version: bigint;
 	// TODO: docs
 	metadata: PerpetualsVaultMetatada;
-	/// Supply of LP coins from a `TreasuryCap` for liquidity integrity.
+	/**
+	 * Supply of LP coins from a `TreasuryCap` for liquidity integrity.
+	 */
 	lpSupply: Balance;
-	/// Total balance of underlying Coin (`C`), deposited by users.
+	/**
+	 * Total balance of underlying Coin (`C`), deposited by users.
+	 */
 	idleCollateral: Balance;
 	// TODO: docs
 	idleCollateralUsd: number;
@@ -599,19 +623,33 @@ export interface PerpetualsVaultObject {
 	totalCollateralUsd: number;
 	// TODO: docs
 	tvlUsd: number;
-	/// IDs of `ClearingHouse` where `Vault` has positions.
+	/**
+	 * IDs of `ClearingHouse` where `Vault` has positions.
+	 */
 	marketIds: PerpetualsMarketId[];
-	/// A linked table that keeps track of pending withdrawal requests made by users.
+	/**
+	 * A linked table that keeps track of pending withdrawal requests made by users.
+	 */
 	withdrawQueue: PerpetualsVaultWithdrawRequest[];
-	/// Vault parameters
+	/**
+	 * Vault parameters
+	 */
 	parameters: {
-		/// Lock-in duration for engaged assets in milliseconds.
+		/**
+		 * Lock-in duration for engaged assets in milliseconds.
+		 */
 		lockPeriodMs: bigint;
-		/// Fee rate for vault's owner, collected from user's profits when they withdraw
+		/**
+		 * Fee rate for vault's owner, collected from user's profits when they withdraw
+		 */
 		performanceFeePercentage: number;
-		/// Delay period to wait for eventual force withdrawing
+		/**
+		 * Delay period to wait for eventual force withdrawing
+		 */
 		forceWithdrawDelayMs: bigint;
-		/// Price feed storage id idetifying the oracle price for `C`
+		/**
+		 * Price feed storage id idetifying the oracle price for `C`
+		 */
 		collateralPriceFeedStorageId: ObjectId;
 		// TODO: docs
 		collateralPriceFeedStorageSourceId: ObjectId;
@@ -619,12 +657,20 @@ export interface PerpetualsVaultObject {
 		collateralPriceFeedStorageTolerance: bigint;
 		// TODO: docs
 		maxForceWithdrawMarginRatioTolerance: number;
-		/// Scaling factor to apply to `C` to convert a balance to ifixed.
-		/// Used to calculate user's minimum deposit value in usd
+		/**
+		 * Scaling factor to apply to `C` to convert a balance to ifixed.
+		 */
+		/**
+		 * Used to calculate user's minimum deposit value in usd
+		 */
 		scalingFactor: number;
-		/// The maximum number of distinct `ClearingHouse`.
+		/**
+		 * The maximum number of distinct `ClearingHouse`.
+		 */
 		maxMarketsInVault: bigint;
-		/// The maximum number of pending orders allowed for a single position in the `Vault`.
+		/**
+		 * The maximum number of pending orders allowed for a single position in the `Vault`.
+		 */
 		maxPendingOrdersPerPosition: bigint;
 		// TODO: docs
 		maxTotalDepositedCollateral: Balance;
@@ -651,17 +697,27 @@ export interface PerpetualsVaultObject {
  * Represents a single pending vault withdrawal request.
  */
 export interface PerpetualsVaultWithdrawRequest {
-	/// The address of the user that created the withdraw request
+	/**
+	 * The address of the user that created the withdraw request
+	 */
 	userAddress: SuiAddress;
-	/// Object id of the vault associated with the withdraw request
+	/**
+	 * Object id of the vault associated with the withdraw request
+	 */
 	vaultId: SuiAddress;
-	/// The amount of the shares requested for withdrawal.
+	/**
+	 * The amount of the shares requested for withdrawal.
+	 */
 	lpAmountIn: Balance;
 	// TODO: docs
 	lpAmountInUsd: number;
-	/// Timestamp of request's creation
+	/**
+	 * Timestamp of request's creation
+	 */
 	requestTimestamp: Timestamp;
-	/// The minimum amount of the collateral balance expected as output for this withdrawal
+	/**
+	 * The minimum amount of the collateral balance expected as output for this withdrawal
+	 */
 	minCollateralAmountOut: Balance;
 	// TODO: docs
 	minCollateralAmountOutUsd: number;
@@ -1424,19 +1480,29 @@ export interface ApiPerpetualsHistoricalDataWithCursorResponse {
 	nextBeforeTimestampCursor: Timestamp | undefined;
 }
 
-/// Request payload for fetching historical margin metrics for an account.
+/**
+ * Request payload for fetching historical margin metrics for an account.
+ */
 export interface ApiPerpetualsAccountMarginHistoryBody {
-	/// Account ID.
+	/**
+	 * Account ID.
+	 */
 	accountId: PerpetualsAccountId;
 
-	/// Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	/**
+	 * Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	 */
 	fromTimestamp: Timestamp;
 
-	/// End of the time range to query, as a Unix timestamp in **milliseconds**.
+	/**
+	 * End of the time range to query, as a Unix timestamp in **milliseconds**.
+	 */
 	toTimestamp: Timestamp;
 
-	/// Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
-	/// 300_000 for 5m).
+	/**
+	 * Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
+	 * 300_000 for 5m).
+	 */
 	intervalMs: number;
 }
 
@@ -1746,23 +1812,32 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	sizePosted: number;
 	fills: PerpetualsFilledOrderData[];
 }
-
-/// Request payload for fetching historical candle (OHLCV) data for a given
-/// perpetuals market.
+/**
+ * Request payload for fetching historical candle (OHLCV) data for a given
+ * perpetuals market.
+ */
 export interface ApiPerpetualsMarketCandleHistoryBody {
-	/// Identifier of the perpetuals market whose candles you want to fetch.
-	///
-	/// Must be a valid on-chain market ID.
+	/**
+	 * Identifier of the perpetuals market whose candles you want to fetch.
+	 *
+	 * Must be a valid on-chain market ID.
+	 */
 	marketId: PerpetualsMarketId;
 
-	/// Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	/**
+	 * Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	 */
 	fromTimestamp: Timestamp;
 
-	/// End of the time range to query, as a Unix timestamp in **milliseconds**.
+	/**
+	 * End of the time range to query, as a Unix timestamp in **milliseconds**.
+	 */
 	toTimestamp: Timestamp;
 
-	/// Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
-	/// 300_000 for 5m).
+	/**
+	 * Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
+	 * 300_000 for 5m).
+	 */
 	intervalMs: number;
 }
 
@@ -1857,17 +1932,29 @@ export interface ApiPerpetualsCreateVaultCapBody {
 export type ApiPerpetualsCreateVaultBody = {
 	walletAddress: SuiAddress;
 	metadata: {
-		/// A human-readable name for the `Vault`.
+		/**
+		 * A human-readable name for the `Vault`.
+		 */
 		name: string;
-		/// A verbose description of the `Vault`.
+		/**
+		 * A verbose description of the `Vault`.
+		 */
 		description: string;
-		/// The `Vault` curator's name.
+		/**
+		 * The `Vault` curator's name.
+		 */
 		curatorName?: string;
-		/// A url for the `Vault`'s curator. Ideally their website.
+		/**
+		 * A url for the `Vault`'s curator. Ideally their website.
+		 */
 		curatorUrl?: string;
-		/// An image url for the `Vault`'s curator. Ideally their logo.
+		/**
+		 * An image url for the `Vault`'s curator. Ideally their logo.
+		 */
 		curatorLogoUrl?: string;
-		/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+		/**
+		 * Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+		 */
 		extraFields?: Record<string, string>;
 	};
 	lpCoinType: CoinType;

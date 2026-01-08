@@ -787,17 +787,29 @@ export class Perpetuals extends Caller {
 		inputs: {
 			walletAddress: SuiAddress;
 			metadata: {
-				/// A human-readable name for the `Vault`.
+				/**
+				 * A human-readable name for the `Vault`.
+				 */
 				name: string;
-				/// A verbose description of the `Vault`.
+				/**
+				 * A verbose description of the `Vault`.
+				 */
 				description: string;
-				/// The `Vault` curator's name.
+				/**
+				 * The `Vault` curator's name.
+				 */
 				curatorName?: string;
-				/// A url for the `Vault`'s curator. Ideally their website.
+				/**
+				 * A url for the `Vault`'s curator. Ideally their website.
+				 */
 				curatorUrl?: string;
-				/// An image url for the `Vault`'s curator. Ideally their logo.
+				/**
+				 * An image url for the `Vault`'s curator. Ideally their logo.
+				 */
 				curatorLogoUrl?: string;
-				/// Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+				/**
+				 * Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+				 */
 				extraFields?: Record<string, string>;
 			};
 			lpCoinType: CoinType;
