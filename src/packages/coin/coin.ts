@@ -61,6 +61,10 @@ export class Coin extends Caller {
 		coinObjectType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
 		/**
+		 * The maximum number of decimals
+		 */
+		maxCoinDecimals: 18,
+		/**
 		 * Default decimals for various blockchains or ecosystems. For instance,
 		 * "sui" => 9, "evm" => 18, etc.
 		 */

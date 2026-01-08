@@ -4,71 +4,32 @@ import {
 } from "@mysten/sui/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	CoinDecimal,
-	CoinType,
-	CoinsToBalance,
-	CoinsToDecimals,
-	CoinsToPrice,
-} from "../../coin/coinTypes";
+import { CoinDecimal, CoinType, CoinsToBalance } from "../../coin/coinTypes";
 import {
 	Balance,
-	PoolDepositEvent,
-	PoolStats,
-	PoolTradeEvent,
-	PoolWithdrawEvent,
 	Slippage,
 	PoolCreationLpCoinMetadata,
 	PoolName,
-	PoolDataPoint,
 	PoolTradeFee,
-	PoolGraphDataTimeframeKey,
-	Percentage,
 	AnyObjectType,
 	ReferralVaultAddresses,
 	PoolsAddresses,
-	PoolGraphDataTimeframe,
-	PoolCreationCoinInfo,
 	PoolFlatness,
 	PoolWeight,
 	PoolWithdrawFee,
 	PoolDepositFee,
-	PoolCoins,
-	EventsInputs,
 	Url,
-	ApiIndexerEventsBody,
 	ObjectId,
 	SuiAddress,
-	ApiPublishLpCoinBody,
-	PoolLpInfo,
-	CoinGeckoTickerData,
-	CoinGeckoHistoricalTradeData,
-	Timestamp,
-	UniqueId,
-	PoolObject,
+	ApiPoolsPublishLpCoinTxBodyV1,
 	DaoFeePoolsAddresses,
-	ApiCreatePoolBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	DaoFeePoolOwnerCapObject,
 } from "../../../types";
-import {
-	DaoFeePoolFieldsOnChain,
-	PoolDepositEventOnChain,
-	PoolFieldsOnChain,
-	PoolTradeEventOnChain,
-	PoolTradeEventOnChainFields,
-	PoolWithdrawEventOnChain,
-} from "./poolsApiCastingTypes";
-import { Casting } from "../../../general/utils/casting";
 import { Pool } from "../pool";
 import { Pools } from "../pools";
-import { Aftermath } from "../../../general/providers";
-import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
-import dayjs, { ManipulateType } from "dayjs";
-import { PoolsApiCasting } from "./poolsApiCasting";
-import duration, { DurationUnitType } from "dayjs/plugin/duration";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+import { Casting, Helpers } from "../../../general/utils";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
@@ -118,6 +79,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		},
 		defaultLpCoinIconImageUrl:
 			"https://aftermath.finance/coins/lp/af_lp.svg",
+		minWeightDivergence: 0.0001,
 	};
 
 	// =========================================================================
@@ -218,7 +180,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					10: "Not Sorted",
 				},
 				[PoolsApi.constants.moduleNames.poolRegistry]: {
-					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
+					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins_v2` were
 					///  provided in nonlexicographical order.
 					60: "Not Sorted",
 					/// A user tries to create a Pool with exact parameters as an already active Pool.
@@ -579,6 +541,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Publishes a transaction block for creating a liquidity pool coin.
 	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
 	 * @returns A promise that resolves to the result of the transaction publishing.
+	 * @deprecated
 	 */
 	public publishLpCoinTx = (inputs: {
 		tx: Transaction;
@@ -604,11 +567,11 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	// TODO: handle bounds checks here instead of just on-chain ?
 	/**
 	 * Creates a transaction to create a new pool.
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
+	 * @deprecated
 	 */
 	public createPoolTx = (inputs: {
 		tx: Transaction;
@@ -743,6 +706,287 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.pure(bcs.option(bcs.u8()).serialize(inputs.forceLpDecimals)), // force_lp_decimals
 			],
 		});
+	};
+
+	/**
+	 * Creates a transaction to create a new pool.
+	 * @param inputs - An object containing the necessary inputs to create the pool.
+	 * @returns A transaction block to create the pool.
+	 */
+	public createPoolTxV2 = (inputs: {
+		tx: Transaction;
+		lpCoinType: CoinType;
+		coinsInfo: {
+			coinId: ObjectId | TransactionObjectArgument;
+			coinType: CoinType;
+			weight: PoolWeight;
+			decimals?: CoinDecimal;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
+		createPoolCapId: ObjectId | TransactionObjectArgument;
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		respectDecimals: boolean;
+		withTransfer?: boolean;
+	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
+		const {
+			tx,
+			lpCoinType,
+			createPoolCapId,
+			coinsInfo,
+			withTransfer,
+			poolFlatness,
+			respectDecimals,
+		} = inputs;
+
+		// Check bounds
+		PoolsApi.assertCreatePoolTxV2({
+			coinsInfo,
+			poolFlatness,
+			respectDecimals,
+		});
+
+		const poolSize = coinsInfo.length;
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const decimals = coinsInfo.map((coin) => coin.decimals);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.poolFactory,
+				`create_pool_${poolSize}_coins_v2`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				// create_pool_cap_v2
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+
+				// pool_registry
+				tx.object(this.addresses.pools.objects.poolRegistry),
+
+				// name
+				tx.pure(
+					bcs
+						.vector(bcs.u8())
+						.serialize(Casting.u8VectorFromString(inputs.poolName))
+				),
+
+				// weights
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.weight))
+				),
+
+				// flatness
+				tx.pure.u64(poolFlatness),
+
+				// fees_swap_in
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeIn))
+				),
+
+				// fees_swap_out
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeOut))
+				),
+
+				// fees_deposit
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.depositFee))
+				),
+
+				// fees_withdraw
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
+				),
+
+				// coin_n
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
+
+				// decimals
+				tx.pure(
+					bcs
+						.option(bcs.vector(bcs.u8()))
+						.serialize(
+							decimals.includes(undefined)
+								? undefined
+								: (decimals as number[])
+						)
+				),
+
+				// respect_decimals
+				tx.pure.bool(respectDecimals),
+			],
+		});
+	};
+
+	public static assertCreatePoolTxV2 = (inputs: {
+		coinsInfo: {
+			coinId: ObjectId | TransactionObjectArgument;
+			coinType: CoinType;
+			weight: PoolWeight;
+			decimals?: CoinDecimal;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
+		poolFlatness: PoolFlatness;
+		respectDecimals: boolean;
+	}) => {
+		const { coinsInfo, poolFlatness, respectDecimals } = inputs;
+
+		// i. `flatness` must be within the bounds [0, FIXED_ONE].
+		Helpers.assert(
+			BigInt(0) <= poolFlatness && poolFlatness <= FixedUtils.fixedOneB,
+			"`poolFlatness` must be within the bounds [0, 1]"
+		);
+
+		// NOTE: when we want to allow Stable Pools with varying flatness parameters, this
+		//  assert should be removed.
+		//
+		// ii. `flatness` can only be set to either extreme: 0 or 1__000_000_000_000_000_000.
+		Helpers.assert(
+			poolFlatness === BigInt(0) || poolFlatness === FixedUtils.fixedOneB,
+			"`poolFlatness` can only be set to either extreme: 0 or 1"
+		);
+
+		// iii. Each vector must have one entry for each underlying Coin type.
+		const coinsWithDecimals = coinsInfo.filter(
+			(coin) => coin.decimals !== undefined
+		).length;
+
+		Helpers.assert(
+			coinsWithDecimals === 0 || coinsWithDecimals === coinsInfo.length,
+			"Must have decimals for each underlying Coin type if decimals are specified"
+		);
+
+		// vii. stables must respect coin decimals
+		Helpers.assert(
+			poolFlatness === BigInt(0) || respectDecimals,
+			"Stables must respect coin decimals"
+		);
+
+		// vii. can only respect decimals if decimals are given
+		Helpers.assert(
+			!(
+				respectDecimals &&
+				coinsInfo.every((coin) => coin.decimals === undefined)
+			),
+			"Can only respect decimals if decimals are given"
+		);
+
+		// Validate each coin's parameters in a single pass
+		let weightsSum = 0;
+		let maxDecimal = 0;
+		let minDecimal = 255;
+
+		for (const coin of coinsInfo) {
+			const weight = Casting.bigIntToFixedNumber(coin.weight);
+			const tradeFeeIn = Casting.bigIntToFixedNumber(coin.tradeFeeIn);
+			const tradeFeeOut = Casting.bigIntToFixedNumber(coin.tradeFeeOut);
+			const depositFee = Casting.bigIntToFixedNumber(coin.depositFee);
+			const withdrawFee = Casting.bigIntToFixedNumber(coin.withdrawFee);
+
+			weightsSum += weight;
+
+			// iv. Each weight must be within the bounds [MIN_WEIGHT, MAX_WEIGHT].
+			Helpers.assert(
+				Pools.constants.bounds.minWeight <= weight /* &&
+					weight <= PoolsApi.constants.validation.MAX_WEIGHT */,
+				`Each weight must be within the bounds [${Pools.constants.bounds.minWeight}, ${Pools.constants.bounds.maxWeight}]`
+			);
+
+			// v. Each swap fee in must be within the bounds [MIN_FEE, MAX_FEE].
+			Helpers.assert(
+				Pools.constants.bounds.minSwapFee <= tradeFeeIn &&
+					tradeFeeIn <= Pools.constants.bounds.maxSwapFee,
+				`Each swap fee in must be within the bounds [${Pools.constants.bounds.minSwapFee}, ${Pools.constants.bounds.maxSwapFee}]`
+			);
+
+			/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+			// v. `fee_swap_out`, `fee_deposit` and `fee_withdraw` must be set to 0.
+
+			// NOTE: when we want to allow nonzero fees for `fees_swap_out`,
+			//  `fees_deposit` and `fees_withdraw`, the below asserts should
+			//  be replaced.
+			//
+			Helpers.assert(tradeFeeOut === 0, "tradeFeeOut !== 0");
+			Helpers.assert(depositFee === 0, "depositFee !== 0");
+			Helpers.assert(withdrawFee === 0, "withdrawFee !== 0");
+
+			// Handle decimals
+			if (coin.decimals !== undefined) {
+				if (coin.decimals > maxDecimal) maxDecimal = coin.decimals;
+				if (coin.decimals < minDecimal) minDecimal = coin.decimals;
+			}
+		}
+
+		// vii. u64 (actually i64) can only hold 18 decimals
+		Helpers.assert(
+			maxDecimal <= Coin.constants.maxCoinDecimals,
+			`Can only hold ${Coin.constants.maxCoinDecimals} decimals`
+		);
+
+		// how the pool determines lp decimals:
+		let lpDecimals: number;
+
+		if (respectDecimals) {
+			// respecting decimals sets lp to min decimals
+			lpDecimals = minDecimal;
+		} else if (coinsInfo.some((coin) => coin.decimals !== undefined)) {
+			// using coin decimals but not respecting them (this is only possible for gmmm)
+			// decimals is weighted average of coin decimals
+			let weightedSum = 0;
+			let decimalIndex = 0;
+
+			for (const coin of coinsInfo) {
+				if (coin.decimals !== undefined) {
+					const weight = Casting.bigIntToFixedNumber(coin.weight);
+
+					weightedSum += weight * coin.decimals;
+					decimalIndex++;
+				}
+			}
+
+			lpDecimals = Math.floor(weightedSum);
+		} else {
+			// not forcing decimals, not respecting decimals, not using decimals, so do default
+			lpDecimals = Pools.constants.defaults.lpCoinDecimals;
+		}
+
+		Helpers.assert(
+			lpDecimals <= Coin.constants.maxCoinDecimals,
+			`lpDecimals > ${Coin.constants.maxCoinDecimals}`
+		);
+
+		// v. Weights must be normalized.
+		Helpers.assert(
+			Math.abs(weightsSum - 1) < PoolsApi.constants.minWeightDivergence, // Allow small floating point errors
+			"Weights must sum to 1 (100%)"
+		);
 	};
 
 	/**
@@ -1360,9 +1604,10 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Builds a transaction block for publishing an LP coin.
 	 * @param inputs - The input parameters for the transaction.
 	 * @returns The built transaction block.
+	 * @deprecated
 	 */
 	public buildPublishLpCoinTx = (
-		inputs: ApiPublishLpCoinBody
+		inputs: ApiPoolsPublishLpCoinTxBodyV1
 	): Transaction => {
 		const { lpCoinDecimals } = inputs;
 

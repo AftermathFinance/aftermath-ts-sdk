@@ -379,6 +379,7 @@ export interface PoolCreationCoinInfo {
 export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
+	description?: string;
 	iconUrl?: Url;
 }
 
@@ -470,7 +471,7 @@ export interface ApiPoolAllCoinWithdrawBody {
  * Request body for publishing a new LP coin on-chain,
  * typically specifying the coin's decimals.
  */
-export interface ApiPublishLpCoinBody {
+export interface ApiPoolsPublishLpCoinTxBodyV1 {
 	walletAddress: SuiAddress;
 	lpCoinDecimals: number;
 }
@@ -479,7 +480,7 @@ export interface ApiPublishLpCoinBody {
  * Request body for creating a new pool, specifying coin information,
  * the LP coin metadata, and optional DAO fee info.
  */
-export interface ApiCreatePoolBody {
+export interface ApiCreatePoolBodyV1 {
 	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
@@ -501,6 +502,50 @@ export interface ApiCreatePoolBody {
 		feePercentage: Percentage;
 		feeRecipient: SuiAddress;
 	};
+}
+
+/**
+ * Request body for creating a new pool, specifying coin information,
+ * the LP coin metadata, and optional DAO fee info.
+ */
+export interface ApiCreatePoolBodyV2 {
+	walletAddress: SuiAddress;
+	lpCoinType: CoinType;
+	coinsInfo: {
+		coinType: CoinType;
+		weight: Percentage;
+		decimals?: number;
+		tradeFeeIn: Percentage;
+		initialDeposit: Balance;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	createPoolCapId: ObjectId;
+	respectDecimals: boolean;
+	forceLpDecimals?: CoinDecimal;
+	isSponsoredTx?: boolean;
+	burnLpCoin?: boolean;
+	daoFeeInfo?: {
+		feePercentage: Percentage;
+		feeRecipient: SuiAddress;
+	};
+}
+
+/**
+ * Request body for creating a new LP, specifying coin information
+ * and the LP coin metadata.
+ */
+export interface ApiPoolsPublishLpCoinTxBodyV2 {
+	walletAddress: SuiAddress;
+	lpCoinMetadata: PoolCreationLpCoinMetadata;
+	coinsInfo: {
+		coinType: CoinType;
+		weight: Percentage;
+		decimals: number;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	respectDecimals: boolean;
 }
 
 /**
