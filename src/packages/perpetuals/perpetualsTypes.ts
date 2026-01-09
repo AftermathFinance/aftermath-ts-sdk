@@ -764,10 +764,10 @@ export type ApiPerpetualsAccountOrderHistoryResponse =
 export interface PerpetualsAccountMarginHistoryData {
 	/** Timestamp of this snapshot. */
 	timestamp: Timestamp;
-	/** Total collateral allocated to positions, denominated in USD. */
-	allocatedCollateralUsd: number;
-	/** Total collateral within account, denominated in USD. */
-	totalCollateralUsd: number;
+	/** Available collateral in USD. */
+	availableCollateralUsd: number;
+	/** Total equity in USD. */
+	totalEquityUsd: number;
 	/** Unrealized funding PnL in USD at that time. */
 	unrealizedFundingsUsd: number;
 	/** Unrealized position PnL in USD at that time. */
