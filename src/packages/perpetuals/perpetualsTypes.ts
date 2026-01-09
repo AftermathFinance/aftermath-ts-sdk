@@ -2416,7 +2416,7 @@ export interface ApiPerpetualsMarketsBody {
 export interface ApiPerpetualsMarketsResponse {
 	marketDatas: {
 		market: PerpetualsMarketData;
-		orderbook: PerpetualsOrderbook;
+		orderbook?: PerpetualsOrderbook;
 	}[];
 }
 

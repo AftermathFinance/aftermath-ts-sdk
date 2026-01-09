@@ -40,6 +40,8 @@ import {
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	PerpetualsAccountId,
 	ApiPerpetualsMarketOrderHistoryBody,
+	ApiPerpetualsMarketsResponse,
+	ApiPerpetualsMarketsBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -200,20 +202,16 @@ export class PerpetualsMarket extends Caller {
 
 		// return this.fetchApi<PerpetualsOrderbook>("market/orderbook");
 
-		const marketDatas = await this.fetchApi<
-			{
-				market: PerpetualsMarketData;
-				orderbook: PerpetualsOrderbook;
-			}[],
-			{
-				marketIds: PerpetualsMarketId[];
-				withOrderbook: boolean | undefined;
-			}
+		const { marketDatas } = await this.fetchApi<
+			ApiPerpetualsMarketsResponse,
+			ApiPerpetualsMarketsBody
 		>("markets", {
 			marketIds: [this.marketId],
 			withOrderbook: true,
 		});
-		return marketDatas[0].orderbook;
+		return {
+			orderbook: marketDatas[0].orderbook!,
+		};
 	}
 
 	/**
