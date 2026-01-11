@@ -58,28 +58,16 @@ export class PerpetualsVault extends Caller {
 		// NOTE: what is this ?
 
 		// /// Time necessary for the next vault's params update
-		// vaultParamsUpdateFrequency: (u64 = 86400000),
+		// vaultParamsUpdateFrequency: 28800000, // 8hrs
 
 		/**
 		 * Maximum lock period in milliseconds.
 		 */
-		maxLockPeriodMs: 604800000, // 1 week
-		/**
-		 * Minimum lock period in milliseconds.
-		 */
-		minLockPeriodMs: 3600000, // 1 hour
+		maxLockPeriodMs: 5184000000, // 2 months
 		/**
 		 * Maximum period for force withdraw delay in milliseconds.
 		 */
 		maxForceWithdrawDelayMs: 86400000, // 1 day
-		/**
-		 * Minimum period for force withdraw delay in milliseconds.
-		 */
-		minForceWithdrawDelayMs: 3600000, // 1 hour
-		/**
-		 * Minimum vault fee.
-		 */
-		minPerformanceFeePercentage: 0.0, // 0%
 		/**
 		 * Maximum vault fee.
 		 */
@@ -91,7 +79,7 @@ export class PerpetualsVault extends Caller {
 		/**
 		 * Minimum USD value required to be locked by vault owner during vault creation.
 		 */
-		minOwnerLockUsd: 10,
+		minOwnerLockUsd: 1,
 		/**
 		 * The maximum number of distinct `ClearingHouse`.
 		 */
