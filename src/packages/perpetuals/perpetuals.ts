@@ -63,6 +63,7 @@ import {
 	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
 	ApiPerpetualsVaultsResponse,
 	ApiPerpetualsVaultsBody,
+	SdkTransactionResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -144,8 +145,13 @@ export class Perpetuals extends Caller {
 	 *
 	 * @param config - Optional caller configuration (network, auth token, etc.).
 	 * @param Provider - Optional shared {@link AftermathApi} provider instance. When
-	 *   provided, transaction-building helpers (e.g. `getCreateAccountTx`) can
-	 *   derive serialized `txKind` from a `Transaction` object.
+	 *   provided, transaction-building helpers can derive serialized `txKind`
+	 *   from a {@link Transaction} object via `Provider.Transactions().fetchBase64TxKindFromTx`.
+	 *
+	 * @remarks
+	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning:
+	 * - HTTP calls resolve under `/perpetuals/...`
+	 * - Websocket calls resolve under `/perpetuals/ws/...`
 	 */
 	constructor(
 		config?: CallerConfig,
@@ -155,18 +161,22 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Class Objects
+	//  Markets
 	// =========================================================================
 
 	/**
 	 * Fetch all perpetual markets for a given collateral coin type.
 	 *
+	 * This method returns *wrapped* {@link PerpetualsMarket} instances, not the raw
+	 * market structs. Each instance provides additional helpers for pricing, margin,
+	 * and order parsing.
+	 *
 	 * @param inputs.collateralCoinType - Coin type used as collateral, e.g. `"0x2::sui::SUI"`.
-	 * @returns Array of {@link PerpetualsMarket} instances, each wrapping the raw market data.
+	 * @returns Object containing `markets`.
 	 *
 	 * @example
 	 * ```ts
-	 * const markets = await perps.getAllMarkets({
+	 * const { markets } = await perps.getAllMarkets({
 	 *   collateralCoinType: "0x2::sui::SUI",
 	 * });
 	 * ```
@@ -194,11 +204,15 @@ export class Perpetuals extends Caller {
 	 * Internally calls {@link getMarkets} and returns the first entry.
 	 *
 	 * @param inputs.marketId - The market (clearing house) object ID.
-	 * @returns A {@link PerpetualsMarket} instance corresponding to the given ID.
+	 * @returns Object containing `market`.
+	 *
+	 * @throws If the backend returns an empty list for the given `marketId`,
+	 * this will still attempt to return `markets[0]` (which would be `undefined`).
+	 * Callers may want to validate the result.
 	 *
 	 * @example
 	 * ```ts
-	 * const market = await perps.getMarket({ marketId: "0x..." });
+	 * const { market } = await perps.getMarket({ marketId: "0x..." });
 	 * ```
 	 */
 	public async getMarket(inputs: {
@@ -216,16 +230,17 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch multiple markets by ID.
 	 *
-	 * NOTE: the backend currently always returns market data together with an
-	 * orderbook object, but this SDK helper ignores the orderbook and constructs
-	 * {@link PerpetualsMarket} instances from the `market` field only.
+	 * Backend note:
+	 * - The API supports returning orderbooks. This SDK currently forces
+	 *   `withOrderbook: false` and constructs {@link PerpetualsMarket} from
+	 *   the returned `marketDatas[].market`.
 	 *
 	 * @param inputs.marketIds - Array of market object IDs to fetch.
-	 * @returns Array of {@link PerpetualsMarket} objects in the same order as `marketIds`.
+	 * @returns Object containing `markets` in the same order as `marketIds`.
 	 *
 	 * @example
 	 * ```ts
-	 * const [marketA, marketB] = await perps.getMarkets({
+	 * const { markets } = await perps.getMarkets({
 	 *   marketIds: ["0x..A", "0x..B"],
 	 * });
 	 * ```
@@ -246,7 +261,6 @@ export class Perpetuals extends Caller {
 		return {
 			markets: res.marketDatas.map(
 				(marketData) =>
-					// TODO: make orderbook as input ?
 					new PerpetualsMarket(
 						marketData.market,
 						this.config,
@@ -256,14 +270,21 @@ export class Perpetuals extends Caller {
 		};
 	}
 
+	// =========================================================================
+	//  Vaults
+	// =========================================================================
+
 	/**
 	 * Fetch all vaults on the current network.
 	 *
-	 * @returns Array of {@link PerpetualsVault} objects, each wrapping a vault on-chain object.
+	 * Vaults are managed accounts that can hold positions; LPs deposit collateral
+	 * and receive an LP coin (see pricing helpers like {@link getLpCoinPrices}).
+	 *
+	 * @returns Object containing `vaults`.
 	 *
 	 * @example
 	 * ```ts
-	 * const vaults = await perps.getAllVaults();
+	 * const { vaults } = await perps.getAllVaults();
 	 * ```
 	 */
 	public async getAllVaults(): Promise<{
@@ -286,13 +307,12 @@ export class Perpetuals extends Caller {
 	 *
 	 * Internally calls {@link getVaults} and returns the first entry.
 	 *
-	 * @param inputs.marketId - The vault object ID (note: named `marketId` for historical reasons).
-	 * @returns A {@link PerpetualsVault} instance.
+	 * Naming note:
+	 * - This method’s parameter is named `marketId` for historical reasons,
+	 *   but it refers to a vault object ID.
 	 *
-	 * @example
-	 * ```ts
-	 * const vault = await perps.getVault({ marketId: "0x..." });
-	 * ```
+	 * @param inputs.marketId - Vault object ID.
+	 * @returns Object containing `vault`.
 	 */
 	public async getVault(inputs: { marketId: ObjectId }): Promise<{
 		vault: PerpetualsVault;
@@ -309,14 +329,7 @@ export class Perpetuals extends Caller {
 	 * Fetch multiple vaults by ID.
 	 *
 	 * @param inputs.vaultIds - Array of vault object IDs.
-	 * @returns Array of {@link PerpetualsVault} objects in the same order as `vaultIds`.
-	 *
-	 * @example
-	 * ```ts
-	 * const [vaultA, vaultB] = await perps.getVaults({
-	 *   vaultIds: ["0x..A", "0x..B"],
-	 * });
-	 * ```
+	 * @returns Object containing `vaults` in the same order as `vaultIds`.
 	 */
 	public async getVaults(inputs: { vaultIds: ObjectId[] }): Promise<{
 		vaults: PerpetualsVault[];
@@ -333,6 +346,10 @@ export class Perpetuals extends Caller {
 		};
 	}
 
+	// =========================================================================
+	//  Accounts
+	// =========================================================================
+
 	/**
 	 * Convenience helper to fetch a single account (positions + account object) from an account cap.
 	 *
@@ -340,12 +357,12 @@ export class Perpetuals extends Caller {
 	 *
 	 * @param inputs.accountCap - Account-cap or vault-cap-extended object to derive account metadata from.
 	 * @param inputs.marketIds - Optional list of markets to filter positions by.
-	 * @returns A {@link PerpetualsAccount} instance.
+	 * @returns Object containing `account`.
 	 *
 	 * @example
 	 * ```ts
 	 * const [accountCap] = await perps.getOwnedAccountCaps({ walletAddress: "0x..." });
-	 * const account = await perps.getAccount({ accountCap });
+	 * const { account } = await perps.getAccount({ accountCap });
 	 * ```
 	 */
 	// TODO: merge this with `getAccountObjects` as an option ?
@@ -369,24 +386,21 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch one or more accounts (positions + account objects) from account caps.
 	 *
-	 * This composes two API calls:
-	 * - `/perpetuals/accounts/positions` to fetch {@link PerpetualsAccountObject}s
-	 * - Local pairing with the provided `accountCaps`
+	 * This composes:
+	 * 1) {@link getAccountObjects} to fetch {@link PerpetualsAccountObject}s by account ID
+	 * 2) Local pairing of returned account objects with `accountCaps`
 	 *
-	 * The resulting {@link PerpetualsAccount} objects wrap both the on-chain account
-	 * data and the cap metadata in a single helper.
+	 * The returned {@link PerpetualsAccount} instances encapsulate:
+	 * - The account snapshot (positions, balances, etc.)
+	 * - The ownership/cap metadata (accountId, collateral type, vaultId, etc.)
 	 *
 	 * @param inputs.accountCaps - Array of account caps or vault-cap-extended objects.
 	 * @param inputs.marketIds - Optional list of market IDs to filter positions by.
-	 * @returns Array of {@link PerpetualsAccount} instances in the same order as `accountCaps`.
+	 * @returns Object containing `accounts` in the same order as `accountCaps`.
 	 *
-	 * @example
-	 * ```ts
-	 * const accountCaps = await perps.getOwnedAccountCaps({ walletAddress: "0x..." });
-	 * const accounts = await perps.getAccounts({ accountCaps });
-	 * ```
+	 * @remarks
+	 * If `accountCaps` is empty, this returns `{ accounts: [] }` without making an API call.
 	 */
-	// TODO: make account fetching get positions and account cap data all at once ?
 	public async getAccounts(inputs: {
 		accountCaps: (PerpetualsAccountCap | PerpetualsPartialVaultCap)[];
 		marketIds?: PerpetualsMarketId[];
@@ -424,18 +438,15 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch raw account objects (including positions) for one or more account IDs.
 	 *
-	 * NOTE: The backend response is wrapped as `{ accounts: [...] }`.
+	 * This is the lower-level primitive used by {@link getAccounts}.
 	 *
 	 * @param inputs.accountIds - List of account IDs to query.
 	 * @param inputs.marketIds - Optional list of market IDs to filter positions by.
-	 * @returns Array of {@link PerpetualsAccountObject}.
 	 *
-	 * @example
-	 * ```ts
-	 * const accountObjects = await perps.getAccountObjects({
-	 *   accountIds: [123n, 456n],
-	 * });
-	 * ```
+	 * @returns {@link ApiPerpetualsAccountPositionsResponse} containing `accounts`.
+	 *
+	 * @remarks
+	 * If `accountIds` is empty, this returns `{ accounts: [] }` without making an API call.
 	 */
 	public async getAccountObjects(
 		inputs: ApiPerpetualsAccountPositionsBody
@@ -455,19 +466,24 @@ export class Perpetuals extends Caller {
 		});
 	}
 
+	// =========================================================================
+	//  Ownership Queries
+	// =========================================================================
+
 	/**
 	 * Fetch all account caps (perpetuals accounts) owned by a wallet, optionally
 	 * filtered by collateral coin types.
 	 *
-	 * NOTE: The backend response is wrapped as `{ accounts: [...] }`.
+	 * Returned values are “caps” (ownership objects), not full account snapshots.
+	 * To fetch account positions, use {@link getAccount} or {@link getAccounts}.
 	 *
 	 * @param inputs.walletAddress - Owner wallet address.
 	 * @param inputs.collateralCoinTypes - Optional list of collateral coin types to filter by.
-	 * @returns Array of {@link PerpetualsAccountCap} objects.
+	 * @returns {@link ApiPerpetualsOwnedAccountCapsResponse} containing `accounts`.
 	 *
 	 * @example
 	 * ```ts
-	 * const caps = await perps.getOwnedAccountCaps({
+	 * const { accounts } = await perps.getOwnedAccountCaps({
 	 *   walletAddress: "0x...",
 	 *   collateralCoinTypes: ["0x2::sui::SUI"],
 	 * });
@@ -489,15 +505,10 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch all vault caps owned by a wallet.
 	 *
-	 * @param inputs.walletAddress - Owner wallet address.
-	 * @returns Array of {@link PerpetualsVaultCap} objects.
+	 * Vault caps represent ownership/administrative authority over a vault.
 	 *
-	 * @example
-	 * ```ts
-	 * const vaultCaps = await perps.getOwnedVaultCaps({
-	 *   walletAddress: "0x...",
-	 * });
-	 * ```
+	 * @param inputs.walletAddress - Owner wallet address.
+	 * @returns {@link ApiPerpetualsOwnedVaultCapsResponse} containing vault caps.
 	 */
 	public async getOwnedVaultCaps(inputs: ApiPerpetualsOwnedVaultCapsBody) {
 		return this.fetchApi<
@@ -509,15 +520,11 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch all pending vault withdrawal requests created by a given wallet.
 	 *
-	 * @param inputs.walletAddress - Wallet address that created the withdraw requests.
-	 * @returns Array of {@link PerpetualsVaultWithdrawRequest}.
+	 * Withdraw requests are typically created when LPs request to exit a vault
+	 * and may be subject to lock periods / delays depending on vault configuration.
 	 *
-	 * @example
-	 * ```ts
-	 * const withdrawRequests = await perps.getOwnedVaultWithdrawRequests({
-	 *   walletAddress: "0x...",
-	 * });
-	 * ```
+	 * @param inputs.walletAddress - Wallet address that created the withdraw requests.
+	 * @returns {@link ApiPerpetualsVaultOwnedWithdrawRequestsResponse} containing requests.
 	 */
 	public async getOwnedVaultWithdrawRequests(
 		inputs: ApiPerpetualsVaultOwnedWithdrawRequestsBody
@@ -531,7 +538,15 @@ export class Perpetuals extends Caller {
 		});
 	}
 
-	// TODO: docs
+	/**
+	 * Fetch all Perpetuals vault LP coins owned by a wallet.
+	 *
+	 * This returns coin objects (or summaries) representing LP token holdings.
+	 * Use {@link getLpCoinPrices} to value them in collateral units.
+	 *
+	 * @param inputs - {@link ApiPerpetualsVaultOwnedLpCoinsBody}.
+	 * @returns {@link ApiPerpetualsVaultOwnedLpCoinsResponse}.
+	 */
 	public async getOwnedVaultLpCoins(
 		inputs: ApiPerpetualsVaultOwnedLpCoinsBody
 	): Promise<ApiPerpetualsVaultOwnedLpCoinsResponse> {
@@ -545,14 +560,7 @@ export class Perpetuals extends Caller {
 	 * Fetch account caps by their cap object IDs.
 	 *
 	 * @param inputs.accountCapIds - List of account cap object IDs.
-	 * @returns Array of {@link PerpetualsAccountCap}.
-	 *
-	 * @example
-	 * ```ts
-	 * const caps = await perps.getAccountCaps({
-	 *   accountCapIds: ["0xcap1", "0xcap2"],
-	 * });
-	 * ```
+	 * @returns {@link ApiPerpetualsAccountCapsResponse} containing caps.
 	 */
 	public async getAccountCaps(inputs: ApiPerpetualsAccountCapsBody) {
 		return this.fetchApi<
@@ -562,7 +570,7 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Data
+	//  Historical Data & Stats
 	// =========================================================================
 
 	/**
@@ -572,19 +580,13 @@ export class Perpetuals extends Caller {
 	 * @param inputs.fromTimestamp - Start timestamp (inclusive).
 	 * @param inputs.toTimestamp - End timestamp (exclusive).
 	 * @param inputs.intervalMs - Candle interval in milliseconds.
-	 * @returns Array of {@link PerpetualsMarketCandleDataPoint}.
 	 *
-	 * @example
-	 * ```ts
-	 * const candles = await perps.getMarketCandleHistory({
-	 *   marketId: "0x...",
-	 *   fromTimestamp: Date.now() - 24 * 60 * 60 * 1000,
-	 *   toTimestamp: Date.now(),
-	 *   intervalMs: 60_000, // 1 minute
-	 * });
-	 * ```
+	 * @returns {@link ApiPerpetualsMarketCandleHistoryResponse} containing candle points.
+	 *
+	 * @remarks
+	 * This is currently implemented on the Perpetuals root client, but it may be
+	 * relocated to {@link PerpetualsMarket} in the future.
 	 */
-
 	// TODO: move to market class ?
 	public getMarketCandleHistory(
 		inputs: ApiPerpetualsMarketCandleHistoryBody
@@ -605,14 +607,7 @@ export class Perpetuals extends Caller {
 	 * Fetch 24-hour stats for multiple markets.
 	 *
 	 * @param inputs.marketIds - Market IDs to query.
-	 * @returns Array of 24hr stats aligned with `marketIds`.
-	 *
-	 * @example
-	 * ```ts
-	 * const stats = await perps.getMarkets24hrStats({
-	 *   marketIds: ["0x...", "0x..."],
-	 * });
-	 * ```
+	 * @returns {@link ApiPerpetualsMarkets24hrStatsResponse}.
 	 */
 	public getMarkets24hrStats(inputs: {
 		marketIds: PerpetualsMarketId[];
@@ -633,14 +628,10 @@ export class Perpetuals extends Caller {
 	 * Fetch the latest oracle prices (base & collateral) for one or more markets.
 	 *
 	 * @param inputs.marketIds - List of market IDs to query.
-	 * @returns Array of `{ basePrice, collateralPrice }` objects in the same order as `marketIds`.
-	 *   Returns `[]` if `marketIds` is empty.
+	 * @returns {@link ApiPerpetualsMarketsPricesResponse} containing `marketsPrices`.
 	 *
-	 * @example
-	 * ```ts
-	 * const prices = await perps.getPrices({ marketIds: ["0x..."] });
-	 * const { basePrice, collateralPrice } = prices[0];
-	 * ```
+	 * @remarks
+	 * If `marketIds` is empty, returns `{ marketsPrices: [] }` without making an API call.
 	 */
 	public async getPrices(inputs: {
 		marketIds: ObjectId[];
@@ -659,12 +650,10 @@ export class Perpetuals extends Caller {
 	 * Fetch LP coin prices (in collateral units) for a set of vaults.
 	 *
 	 * @param inputs.vaultIds - List of vault IDs to query.
-	 * @returns Array of LP prices corresponding to each vault ID; returns `[]` if none are provided.
+	 * @returns {@link ApiPerpetualsVaultLpCoinPricesResponse} containing `lpCoinPrices`.
 	 *
-	 * @example
-	 * ```ts
-	 * const [price] = await perps.getLpCoinPrices({ vaultIds: ["0x..."] });
-	 * ```
+	 * @remarks
+	 * If `vaultIds` is empty, returns `{ lpCoinPrices: [] }` without making an API call.
 	 */
 	public async getLpCoinPrices(
 		inputs: ApiPerpetualsVaultLpCoinPricesBody
@@ -686,33 +675,18 @@ export class Perpetuals extends Caller {
 	/**
 	 * Build a `create-account` transaction for Aftermath Perpetuals.
 	 *
-	 * This helper:
-	 * - Optionally converts a {@link Transaction} into a serialized `txKind`
-	 *   via the shared `Provider` (if present).
-	 * - Calls the `/perpetuals/transactions/create-account` endpoint.
-	 * - Returns a serialized transaction (`txKind`) that you can sign and execute.
+	 * @param inputs.walletAddress - Wallet address that will own the new account.
+	 * @param inputs.collateralCoinType - Collateral coin type used by the account.
+	 * @param inputs.tx - Optional {@link Transaction} to extend; if provided, the
+	 *   create-account commands are appended to this transaction.
 	 *
-	 * @param inputs.walletAddress - The wallet address that will own the new account.
-	 * @param inputs.collateralCoinType - Collateral coin type to be used with this account.
-	 * @param inputs.tx - Optional {@link Transaction} to extend; if provided,
-	 *   the create-account commands are appended to this transaction.
-	 *
-	 * @returns API transaction response containing `txKind`.
-	 *
-	 * @example
-	 * ```ts
-	 * const { txKind } = await perps.getCreateAccountTx({
-	 *   walletAddress: "0x...",
-	 *   collateralCoinType: "0x2::sui::SUI",
-	 * });
-	 * // sign + execute txKind with your wallet adapter
-	 * ```
+	 * @returns {@link SdkTransactionResponse} with `tx`.
 	 */
 	public async getCreateAccountTx(inputs: {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
 		tx?: Transaction;
-	}) {
+	}): Promise<SdkTransactionResponse> {
 		const { walletAddress, collateralCoinType, tx } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateAccountBody,
@@ -733,7 +707,15 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	// TODO: docs
+	/**
+	 * Build a `create-vault-cap` transaction.
+	 *
+	 * A vault cap is an ownership/admin object for interacting with vault management
+	 * flows. This method returns a transaction kind that mints/creates that cap.
+	 *
+	 * @param inputs - {@link ApiPerpetualsCreateVaultCapBody}.
+	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 */
 	public async getCreateVaultCapTx(inputs: ApiPerpetualsCreateVaultCapBody) {
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateVaultCapBody,
@@ -743,72 +725,51 @@ export class Perpetuals extends Caller {
 		});
 	}
 
-	// TODO: docs (for metadata)
-
 	/**
 	 * Build a `create-vault` transaction.
 	 *
-	 * This helper:
-	 * - Optionally converts a {@link Transaction} into a serialized `txKind`
-	 *   via the shared `Provider` (if present).
-	 * - Calls `/perpetuals/vault/transactions/create-vault`.
-	 * - Returns a serialized transaction (`txKind`) that you can sign and execute.
+	 * This creates a new vault plus its on-chain metadata and initial LP supply
+	 * seeded by the initial deposit.
 	 *
-	 * You can specify the initial deposit either as an explicit amount or as a
-	 * `depositCoinArg` referring to an existing transaction argument.
+	 * Deposit input:
+	 * - Use `initialDepositAmount` to have the API select/merge coins as needed, OR
+	 * - Use `initialDepositCoinArg` if you already have a coin argument in a larger tx.
 	 *
-	 * @param inputs.walletAddress - Address of vault owner.
-	 * @param inputs.lpCoinType - Coin type for the LP token.
-	 * @param inputs.collateralCoinType - Collateral coin type for the vault.
+	 * Metadata:
+	 * - Stored on-chain (or in a referenced object) as part of vault creation.
+	 * - `extraFields` allows forward-compatible additions (e.g. social links).
+	 *
+	 * @param inputs.walletAddress - Address of vault owner/curator.
+	 * @param inputs.metadata - Vault display metadata (name, description, curator info).
+	 * @param inputs.lpCoinType - Coin type for the LP token minted for this vault.
+	 * @param inputs.collateralCoinType - Collateral coin type for deposits.
 	 * @param inputs.lockPeriodMs - Lock-in period for deposits in milliseconds.
-	 * @param inputs.performanceFeePercentage - Percentage of user profits taken as owner fee.
-	 * @param inputs.forceWithdrawDelayMs - Delay before forced withdrawals are processed.
-	 * @param inputs.isSponsoredTx - Whether this transaction is sponsored (fees paid by another party).
+	 * @param inputs.performanceFeePercentage - Fraction of profits taken as curator fee.
+	 * @param inputs.forceWithdrawDelayMs - Delay before forced withdrawals can be processed.
+	 * @param inputs.isSponsoredTx - Whether this tx is sponsored (gas paid by another party).
 	 * @param inputs.initialDepositAmount - Initial deposit amount (mutually exclusive with `initialDepositCoinArg`).
 	 * @param inputs.initialDepositCoinArg - Transaction object argument referencing the deposit coin.
 	 * @param inputs.tx - Optional {@link Transaction} to extend.
 	 *
-	 * @returns API transaction response containing `txKind`.
-	 *
-	 * @example
-	 * ```ts
-	 * const { txKind } = await perps.getCreateVaultTx({
-	 *   walletAddress: "0x...",
-	 *   lpCoinType: "0x...::lp::LP",
-	 *   collateralCoinType: "0x2::sui::SUI",
-	 *   lockPeriodMs: BigInt(7 * 24 * 60 * 60 * 1000),
-	 *   performanceFeePercentage: 0.2,
-	 *   forceWithdrawDelayMs: BigInt(24 * 60 * 60 * 1000),
-	 *   initialDepositAmount: BigInt("1000000000"),
-	 * });
-	 * ```
+	 * @returns {@link SdkTransactionResponse} with `tx`.
 	 */
 	public async getCreateVaultTx(
 		inputs: {
 			walletAddress: SuiAddress;
 			metadata: {
-				/**
-				 * A human-readable name for the `Vault`.
-				 */
+				/** A human-readable name for the `Vault`. */
 				name: string;
-				/**
-				 * A verbose description of the `Vault`.
-				 */
+				/** A verbose description of the `Vault`. */
 				description: string;
-				/**
-				 * The `Vault` curator's name.
-				 */
+				/** The `Vault` curator's name. */
 				curatorName?: string;
-				/**
-				 * A url for the `Vault`'s curator. Ideally their website.
-				 */
+				/** A url for the `Vault`'s curator. Ideally their website. */
 				curatorUrl?: string;
-				/**
-				 * An image url for the `Vault`'s curator. Ideally their logo.
-				 */
+				/** An image url for the `Vault`'s curator. Ideally their logo. */
 				curatorLogoUrl?: string;
 				/**
-				 * Extra / optional fields for future extensibility. Recommended keys include: twitter_url.
+				 * Extra / optional fields for future extensibility.
+				 * Recommended keys include: `twitter_url`.
 				 */
 				extraFields?: Record<string, string>;
 			};
@@ -848,24 +809,14 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Public Static Functions
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
+	//  Public Static Helpers
 	// =========================================================================
 
 	/**
 	 * Determine the logical order side (Bid/Ask) from a signed base asset amount.
 	 *
-	 * @param inputs.baseAssetAmount - Position base size. Positive => Bid (long), negative => Ask (short).
-	 * @returns Corresponding {@link PerpetualsOrderSide}.
-	 *
-	 * @example
-	 * ```ts
-	 * const side = Perpetuals.positionSide({ baseAssetAmount: -1 });
-	 * // side === PerpetualsOrderSide.Ask
-	 * ```
+	 * @param inputs.baseAssetAmount - Position base size. Positive/zero => Bid (long), negative => Ask (short).
+	 * @returns {@link PerpetualsOrderSide}.
 	 */
 	public static positionSide(inputs: {
 		baseAssetAmount: number;
@@ -878,12 +829,12 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Compute the effective price from a {@link FilledTakerOrderEvent}.
+	 * Compute the effective trade price from a {@link FilledTakerOrderEvent}.
 	 *
-	 * Uses `quoteAssetDelta / baseAssetDelta`.
+	 * Uses the ratio: `quoteAssetDelta / baseAssetDelta`.
 	 *
 	 * @param inputs.orderEvent - Filled taker order event.
-	 * @returns Trade price as a `number`.
+	 * @returns Trade price.
 	 */
 	public static orderPriceFromEvent(inputs: {
 		orderEvent: FilledTakerOrderEvent;
@@ -893,13 +844,13 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Extract the price (as floating-point) from an encoded order ID.
+	 * Extract the floating-point price from an encoded order ID.
 	 *
-	 * Internally uses {@link PerpetualsOrderUtils.price} and converts the
-	 * fixed-point `PerpetualsOrderPrice` into a `number`.
+	 * Internally uses {@link PerpetualsOrderUtils.price} and converts the fixed-point
+	 * {@link PerpetualsOrderPrice} into a `number`.
 	 *
 	 * @param inputs.orderId - Encoded order ID.
-	 * @returns Floating-point price.
+	 * @returns Price as a `number`.
 	 */
 	public static orderPriceFromOrderId(inputs: {
 		orderId: PerpetualsOrderId;
@@ -913,8 +864,8 @@ export class Perpetuals extends Caller {
 	 * Convert a floating-point price into a fixed-point {@link PerpetualsOrderPrice}
 	 * using 9 decimal places of precision.
 	 *
-	 * @param inputs.price - Floating-point price.
-	 * @returns Encoded {@link PerpetualsOrderPrice} as `bigint`.
+	 * @param inputs.price - Price as a float.
+	 * @returns Fixed-point order price.
 	 */
 	public static priceToOrderPrice = (inputs: {
 		price: number;
@@ -924,10 +875,10 @@ export class Perpetuals extends Caller {
 	};
 
 	/**
-	 * Convert a fixed-point {@link PerpetualsOrderPrice} to a human-friendly price.
+	 * Convert a fixed-point {@link PerpetualsOrderPrice} to a float price.
 	 *
-	 * @param inputs.orderPrice - Encoded order price as `bigint`.
-	 * @returns Floating-point price value.
+	 * @param inputs.orderPrice - Fixed-point order price.
+	 * @returns Price as a float.
 	 */
 	public static orderPriceToPrice = (inputs: {
 		orderPrice: PerpetualsOrderPrice;
@@ -937,32 +888,30 @@ export class Perpetuals extends Caller {
 	};
 
 	/**
-	 * Convert a fixed-point lot or tick size (9 decimals) to a `number`.
+	 * Convert a fixed-point lot/tick size (9 decimals) to a `number`.
 	 *
 	 * @param lotOrTickSize - Fixed-point size as `bigint`.
-	 * @returns Floating-point representation.
+	 * @returns Floating-point size.
 	 */
 	public static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {
 		return Number(lotOrTickSize) / FixedUtils.fixedOneN9;
 	}
 
 	/**
-	 * Convert a floating-point lot or tick size to its fixed-point representation (9 decimals).
+	 * Convert a floating-point lot/tick size to its fixed-point representation (9 decimals).
 	 *
 	 * @param lotOrTickSize - Floating-point size.
-	 * @returns Fixed-point representation as `bigint`.
+	 * @returns Fixed-point size as `bigint`.
 	 */
 	public static lotOrTickSizeToBigInt(lotOrTickSize: number): bigint {
 		return BigInt(Math.round(lotOrTickSize * FixedUtils.fixedOneN9));
 	}
 
 	/**
-	 * Infer the order side from an order ID.
-	 *
-	 * Uses {@link PerpetualsOrderUtils.isAsk} under the hood.
+	 * Infer the order side from an encoded order ID.
 	 *
 	 * @param orderId - Encoded order ID.
-	 * @returns {@link PerpetualsOrderSide.Ask} if ask, otherwise {@link PerpetualsOrderSide.Bid}.
+	 * @returns {@link PerpetualsOrderSide}.
 	 */
 	public static orderIdToSide = (
 		orderId: PerpetualsOrderId
@@ -973,23 +922,14 @@ export class Perpetuals extends Caller {
 	};
 
 	/**
-	 * Construct a full event type string for a collateral-specific event.
+	 * Construct a collateral-specialized Move event type string.
 	 *
-	 * Many Move events are generic over a collateral coin type. This helper
-	 * appends `<collateralCoinType>` to a base `eventType`.
+	 * Many Move events are generic over a collateral coin type. This helper appends
+	 * `<collateralCoinType>` to a base `eventType`.
 	 *
 	 * @param inputs.eventType - Base event type without type parameters.
-	 * @param inputs.collateralCoinType - Collateral coin type, e.g. `"0x2::sui::SUI"`.
+	 * @param inputs.collateralCoinType - Collateral coin type (e.g. `"0x2::sui::SUI"`).
 	 * @returns Fully-qualified event type string.
-	 *
-	 * @example
-	 * ```ts
-	 * const fullType = Perpetuals.eventTypeForCollateral({
-	 *   eventType: "0x1::perps::DepositedCollateral",
-	 *   collateralCoinType: "0x2::sui::SUI",
-	 * });
-	 * // "0x1::perps::DepositedCollateral<0x2::sui::SUI>"
-	 * ```
 	 */
 	public static eventTypeForCollateral = (inputs: {
 		eventType: string;
@@ -1005,48 +945,28 @@ export class Perpetuals extends Caller {
 	/**
 	 * Open the main updates websocket: `/perpetuals/ws/updates`.
 	 *
-	 * This stream can deliver:
-	 * - Market updates
-	 * - User account + stop order updates
-	 * - Oracle price updates
-	 * - Orderbook deltas
-	 * - Market trades
-	 * - User trades
-	 * - User collateral changes
+	 * The stream emits {@link PerpetualsWsUpdatesResponseMessage} envelopes and supports
+	 * multiple subscription types. This method returns a small controller with
+	 * convenience subscribe/unsubscribe functions.
 	 *
-	 * The returned controller object includes a set of convenient subscribe /
-	 * unsubscribe helpers for each stream type.
+	 * Subscription types supported by the controller:
+	 * - `market`: market state updates
+	 * - `user`: user account updates (optionally including stop orders)
+	 * - `oracle`: oracle price updates
+	 * - `orderbook`: orderbook deltas
+	 * - `marketOrders`: public market trades/orders
+	 * - `userOrders`: user trade/order events
+	 * - `userCollateralChanges`: user collateral change events
 	 *
-	 * @param args.onMessage - Handler for incoming messages from the ws.
-	 * @param args.onOpen - Optional hook called when the websocket is opened.
-	 * @param args.onError - Optional hook called on websocket error.
-	 * @param args.onClose - Optional hook called when the websocket closes.
+	 * @param args.onMessage - Handler for parsed messages from the websocket.
+	 * @param args.onOpen - Optional handler for the `open` event.
+	 * @param args.onError - Optional handler for the `error` event.
+	 * @param args.onClose - Optional handler for the `close` event.
 	 *
-	 * @returns An object containing:
-	 * - `ws`: the underlying `WebSocket` instance
-	 * - subscribe/unsubscribe helpers:
-	 *   - `subscribeMarket` / `unsubscribeMarket`
-	 *   - `subscribeUser` / `unsubscribeUser`
-	 *   - `subscribeOracle` / `unsubscribeOracle`
-	 *   - `subscribeOrderbook` / `unsubscribeOrderbook`
-	 *   - `subscribeMarketOrders` / `unsubscribeMarketOrders`
-	 *   - `subscribeUserOrders` / `unsubscribeUserOrders`
-	 *   - `subscribeUserCollateralChanges` / `unsubscribeUserCollateralChanges`
-	 * - `close`: function to close the websocket
-	 *
-	 * @example
-	 * ```ts
-	 * const stream = perps.openUpdatesWebsocketStream({
-	 *   onMessage: (msg) => {
-	 *     if ("market" in msg) {
-	 *       console.log("Market update", msg.market);
-	 *     }
-	 *   },
-	 * });
-	 *
-	 * stream.subscribeMarket({ marketId: "0x..." });
-	 * stream.subscribeUser({ accountId: 123n, withStopOrders: undefined });
-	 * ```
+	 * @returns A controller object containing:
+	 * - `ws`: underlying {@link WebSocket}
+	 * - subscribe/unsubscribe helpers for each subscription type
+	 * - `close()`: closes the websocket
 	 */
 	public openUpdatesWebsocketStream(args: {
 		onMessage: (env: PerpetualsWsUpdatesResponseMessage) => void;
@@ -1067,7 +987,12 @@ export class Perpetuals extends Caller {
 			onClose,
 		});
 
-		// ---- subscribe/unsubscribe helpers ----
+		/**
+		 * Subscription helpers
+		 *
+		 * Each helper sends a structured subscription message of the form:
+		 * `{ action: "subscribe" | "unsubscribe", subscriptionType: { ... } }`
+		 */
 		const subscribeMarket = ({
 			marketId,
 		}: {
@@ -1258,18 +1183,14 @@ export class Perpetuals extends Caller {
 	 * @param args.onError - Optional hook called on websocket error.
 	 * @param args.onClose - Optional hook called when the websocket closes.
 	 *
-	 * @returns An object containing:
-	 * - `ws`: the underlying `WebSocket` instance
-	 * - `close`: function to close the websocket
+	 * @returns A controller containing the raw websocket and a `close()` helper.
 	 *
 	 * @example
 	 * ```ts
 	 * const stream = perps.openMarketCandlesWebsocketStream({
 	 *   marketId: "0x...",
 	 *   intervalMs: 60_000,
-	 *   onMessage: ({ lastCandle }) => {
-	 *     console.log("New candle:", lastCandle);
-	 *   },
+	 *   onMessage: ({ lastCandle }) => console.log(lastCandle),
 	 * });
 	 * ```
 	 */
@@ -1288,7 +1209,6 @@ export class Perpetuals extends Caller {
 			marketId
 		)}/${intervalMs}`;
 
-		// Generic handler already BigInt-parses any "123n" in payloads
 		const ctl = this.openWsStream<
 			undefined,
 			PerpetualsWsCandleResponseMessage

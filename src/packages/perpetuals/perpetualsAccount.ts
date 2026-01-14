@@ -72,7 +72,20 @@ import {
 } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 
-// TODO: create refresh account positions function ?
+/**
+ * Note on “refreshing” account state:
+ *
+ * This class is a thin wrapper around a snapshot of {@link PerpetualsAccountObject}
+ * that is typically fetched via {@link Perpetuals.getAccount}. The transaction builders
+ * use the current snapshot to derive fields like `hasPosition` and to construct
+ * SL/TP helpers that depend on the position side.
+ *
+ * If your app is long-lived, you may want to periodically re-fetch the account
+ * (and recreate this wrapper) to avoid stale local position/order state. For example:
+ * - After placing/canceling orders
+ * - After fills/liquidations/funding settlements
+ * - After switching markets or wallets
+ */
 
 /**
  * High-level wrapper around a single Perpetuals account or vault account.
@@ -119,6 +132,10 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * If this account is backed by a vault, this holds the vault object ID.
 	 * Otherwise, `undefined` for "direct" user accounts.
+	 *
+	 * This is used primarily to route requests to either:
+	 * - `/perpetuals/account/...` endpoints, or
+	 * - `/perpetuals/vault/...` endpoints.
 	 */
 	private readonly vaultId: ObjectId | undefined;
 
@@ -177,11 +194,11 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.depositCoinArg - Transaction object argument referencing a
 	 *   coin to deposit (mutually exclusive with `depositAmount`).
 	 *
-	 * @returns Transaction response containing a serialized `txKind`.
+	 * @returns Transaction response containing a `tx`.
 	 *
 	 * @example
 	 * ```ts
-	 * const { txKind } = await account.getDepositCollateralTx({
+	 * const { tx } = await account.getDepositCollateralTx({
 	 *   depositAmount: BigInt("1000000000"),
 	 * });
 	 * ```
@@ -244,12 +261,12 @@ export class PerpetualsAccount extends Caller {
 	 *   coins directly.
 	 * @param inputs.tx - Optional transaction to extend (defaults to new `Transaction()`).
 	 *
-	 * @returns A response containing `txKind` and the `coinOutArg` where the
+	 * @returns A response containing `tx` and the `coinOutArg` where the
 	 *   withdrawn coins end up if `recipientAddress` is not used.
 	 *
 	 * @example
 	 * ```ts
-	 * const { txKind, coinOutArg } = await account.getWithdrawCollateralTx({
+	 * const { tx, coinOutArg } = await account.getWithdrawCollateralTx({
 	 *   withdrawAmount: BigInt("1000000000"),
 	 * });
 	 * ```
@@ -299,7 +316,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.allocateAmount - Amount of collateral to allocate.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
-	 * @returns Transaction response containing a serialized `txKind`.
+	 * @returns Transaction response containing a `tx`.
 	 */
 	public async getAllocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
@@ -347,7 +364,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.deallocateAmount - Amount of collateral to deallocate.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
-	 * @returns Transaction response containing a serialized `txKind`.
+	 * @returns Transaction response containing a `tx`.
 	 */
 	public async getDeallocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
@@ -394,7 +411,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.toAccountId - Destination account ID.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
-	 * @returns Transaction response containing a serialized `txKind`.
+	 * @returns Transaction response containing a `tx`.
 	 */
 	public async getTransferCollateralTx(inputs: {
 		transferAmount: Balance;
@@ -443,6 +460,12 @@ export class PerpetualsAccount extends Caller {
 	 * - Derives `hasPosition` based on the current account state for the given market.
 	 * - Optionally attaches SL/TP stop orders via the `slTp` input.
 	 *
+	 * Important behavioral notes:
+	 * - `hasPosition` is derived from the local {@link PerpetualsAccountObject} snapshot.
+	 *   If the snapshot is stale, consider re-fetching the account first.
+	 * - For vault-backed accounts, the API routes to `/perpetuals/vault/...` and uses
+	 *   `vaultId` as the identity discriminator. For direct accounts, it uses `accountId`.
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceMarketOrderInputs} for details.
 	 *   Notably:
 	 *   - `marketId`, `side`, `size`, `collateralChange`, `reduceOnly`
@@ -450,11 +473,11 @@ export class PerpetualsAccount extends Caller {
 	 *   - Optional `slTp` params
 	 *   - Optional `tx` to extend
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 *
 	 * @example
 	 * ```ts
-	 * const { txKind } = await account.getPlaceMarketOrderTx({
+	 * const { tx } = await account.getPlaceMarketOrderTx({
 	 *   marketId: "0x...",
 	 *   side: PerpetualsOrderSide.Bid,
 	 *   size: BigInt("1000000000"),
@@ -515,9 +538,14 @@ export class PerpetualsAccount extends Caller {
 	 * - Requires `price` and `orderType`.
 	 * - Supports reduce-only flags, expiry, optional leverage, and SL/TP stop orders.
 	 *
+	 * Notes:
+	 * - `hasPosition` is derived from local account state; refresh the account if needed.
+	 * - This method does not validate tick/lot sizing locally; the API/on-chain
+	 *   will enforce market constraints.
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceLimitOrderInputs}.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getPlaceLimitOrderTx(
 		inputs: SdkPerpetualsPlaceLimitOrderInputs
@@ -567,13 +595,21 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Build a `cancel-orders` transaction for this account.
 	 *
-	 * @param inputs.tx - Optional transaction to extend.
-	 * @param inputs.marketIdsToData - Mapping from market IDs to:
-	 *   - `orderIds`: order IDs to cancel
-	 *   - `collateralChange`: net collateral impact (if any)
-	 *   - `leverage`: current leverage used for estimating effects
+	 * Each market in `marketIdsToData` supplies:
+	 * - `orderIds`: the orders to cancel in that market
+	 * - `collateralChange`: collateral adjustment to apply alongside cancellation
+	 * - `leverage`: leverage context used for estimating/validating constraints server-side
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * Notes:
+	 * - Cancels are applied per market; some markets may succeed while others fail
+	 *   depending on API/on-chain validation (returned as a transaction failure at execution).
+	 * - If you need to understand the effect prior to building a tx, use
+	 *   {@link getCancelOrdersPreview}.
+	 *
+	 * @param inputs.tx - Optional transaction to extend.
+	 * @param inputs.marketIdsToData - Mapping from market IDs to cancel payloads.
+	 *
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getCancelOrdersTx(inputs: {
 		tx?: Transaction;
@@ -619,10 +655,13 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Build a `cancel-stop-orders` transaction for this account.
 	 *
+	 * This cancels stop-order *objects/tickets* by their object IDs. These IDs are
+	 * returned by stop-order query endpoints (see {@link getStopOrderDatas}).
+	 *
 	 * @param inputs.tx - Optional transaction to extend.
 	 * @param inputs.stopOrderIds - Array of stop-order ticket IDs to cancel.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
@@ -664,9 +703,14 @@ export class PerpetualsAccount extends Caller {
 	 * This allows placing one or more stop orders in a single transaction,
 	 * optionally with a dedicated gas coin and a sponsored gas flag.
 	 *
+	 * Typical usage:
+	 * - Construct stop order payload(s) client-side
+	 * - Call this method to build a transaction kind
+	 * - Sign/execute the transaction via Sui
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceStopOrdersInputs}.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getPlaceStopOrdersTx(
 		inputs: SdkPerpetualsPlaceStopOrdersInputs
@@ -719,9 +763,14 @@ export class PerpetualsAccount extends Caller {
 	 * in a given market. If the account has no position for `marketId`, this
 	 * throws an error.
 	 *
+	 * Implementation details:
+	 * - Determines the current position side from the account snapshot.
+	 * - Sets `positionSide` for the API so SL/TP orders are bound to closing logic
+	 *   (i.e. they should trigger on the opposite side of the open position).
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceSlTpOrdersInputs}.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getPlaceSlTpOrdersTx(
 		inputs: SdkPerpetualsPlaceSlTpOrdersInputs
@@ -777,10 +826,15 @@ export class PerpetualsAccount extends Caller {
 	 *
 	 * This endpoint lets you update existing stop orders in batch.
 	 *
+	 * Notes:
+	 * - You must provide the full updated stop-order objects (including object IDs).
+	 * - This is typically used to adjust trigger prices, sizes, expiries, or the
+	 *   embedded limit-order parameters.
+	 *
 	 * @param inputs.stopOrders - Full updated stop-order payloads to apply.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getEditStopOrdersTx(
 		inputs: Omit<
@@ -868,13 +922,18 @@ export class PerpetualsAccount extends Caller {
 	 * This updates the effective leverage for the position (or potential position)
 	 * in `marketId`, and optionally adjusts collateral in tandem.
 	 *
+	 * Notes:
+	 * - Leverage changes may be constrained by protocol risk limits and current
+	 *   position state.
+	 * - If you want to understand the effect first, use {@link getSetLeveragePreview}.
+	 *
 	 * @param inputs.tx - Optional transaction to extend.
 	 * @param inputs.leverage - Target leverage value.
 	 * @param inputs.collateralChange - Net collateral change to apply alongside
 	 *   the leverage update.
 	 * @param inputs.marketId - Market whose leverage to adjust.
 	 *
-	 * @returns Transaction response containing `txKind`.
+	 * @returns Transaction response containing `tx`.
 	 */
 	public async getSetLeverageTx(inputs: {
 		tx?: Transaction;
@@ -942,6 +1001,12 @@ export class PerpetualsAccount extends Caller {
 	 * This payload is intended to be signed off-chain and then submitted to
 	 * `getStopOrderDatas` as a proof of account ownership.
 	 *
+	 * Important:
+	 * - The returned payload is *not* a Sui transaction; it is an off-chain
+	 *   “authentication” message.
+	 * - The backend expects `account_id` to be a decimal string. This code
+	 *   normalizes the bigint `accountId` by stripping the trailing `n`.
+	 *
 	 * @param inputs.marketIds - Optional list of market IDs to scope the query.
 	 *
 	 * @returns An object describing the action and account/market IDs, suitable
@@ -1007,6 +1072,9 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Preview the effects of placing a market order (without building a tx).
 	 *
+	 * This is a read-only API call that runs the protocol’s pricing / margin /
+	 * slippage logic against the current market state and your account/vault context.
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceMarketOrderPreviewInputs}.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
@@ -1062,6 +1130,11 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Preview the effects of placing a limit order (without building a tx).
 	 *
+	 * The preview simulates:
+	 * - How much size would execute immediately vs post to the book
+	 * - Expected slippage and execution price
+	 * - Resulting position and margin impact
+	 *
 	 * @param inputs - See {@link SdkPerpetualsPlaceLimitOrderPreviewInputs}.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
@@ -1112,15 +1185,19 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Preview the effects of canceling orders across one or more markets.
 	 *
+	 * This is commonly used to:
+	 * - Validate that cancels are allowed under current margin constraints
+	 * - Estimate how collateral/margin would change after canceling (and applying
+	 *   the associated `collateralChange` values)
+	 *
 	 * If `marketIdsToData` is empty, this returns a trivial preview with:
-	 * - `collateralChange: 0`
-	 * - `updatedPositions: []`
+	 * - `marketIdsToData: {}`
 	 *
 	 * @param inputs - See {@link SdkPerpetualsCancelOrdersPreviewInputs}.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
 	 * @returns Either:
-	 * - `{ updatedPositions, collateralChange }`, or
+	 * - `{ marketIdsToData }`, or
 	 * - `{ error }`.
 	 */
 	public async getCancelOrdersPreview(
@@ -1195,6 +1272,10 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Preview the effects of setting leverage for a given market.
 	 *
+	 * The preview returns:
+	 * - The position after the leverage change (`updatedPosition`)
+	 * - The collateral delta required/produced (`collateralChange`)
+	 *
 	 * @param inputs.marketId - Market whose leverage you want to adjust.
 	 * @param inputs.leverage - Target leverage value.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
@@ -1245,6 +1326,10 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Preview the effects of allocating/deallocating collateral for the position in
 	 * a given market.
+	 *
+	 * Semantics:
+	 * - Positive `collateralChange` previews allocation (moving collateral into the market).
+	 * - Negative `collateralChange` previews deallocation (moving collateral out of the market).
 	 *
 	 * @param inputs.marketId - Market of whose position you want to allocate/deallocate
 	 * collateral to/from.
@@ -1339,8 +1424,12 @@ export class PerpetualsAccount extends Caller {
 	 * This is especially useful after a long-running session where on-chain
 	 * pending orders may have changed relative to the local `account` state.
 	 *
-	 * @returns Array of {@link PerpetualsOrderData} describing each pending order.
-	 *   Returns `[]` if there are no pending orders.
+	 * The request payload is derived from this instance’s current snapshot:
+	 * - It enumerates `account.positions[].pendingOrders`
+	 * - Sends each `{ orderId, currentSize }` to the API to resolve canonical order data
+	 *
+	 * @returns {@link ApiPerpetualsAccountOrderDatasResponse} containing an `orderDatas`
+	 * array. Returns `{ orderDatas: [] }` if there are no pending orders.
 	 */
 	public async getOrderDatas(): Promise<ApiPerpetualsAccountOrderDatasResponse> {
 		const orderDatas = this.account.positions.reduce(
@@ -1374,12 +1463,16 @@ export class PerpetualsAccount extends Caller {
 	 * Fetch stop-order ticket data for this account, using an off-chain signed
 	 * payload.
 	 *
-	 * @param inputs.bytes - Serialized message that was signed (e.g. from
-	 *   {@link getStopOrdersMessageToSign}).
+	 * Typical flow:
+	 * 1) Call {@link getStopOrdersMessageToSign} to construct a deterministic payload
+	 * 2) Sign the payload with the wallet
+	 * 3) Provide the signed payload to this method to fetch stop order data
+	 *
+	 * @param inputs.bytes - Serialized message that was signed (e.g. JSON string).
 	 * @param inputs.signature - Signature over `bytes`.
 	 * @param inputs.marketIds - Optional subset of markets to filter results by.
 	 *
-	 * @returns Array of {@link PerpetualsStopOrderData}.
+	 * @returns {@link ApiPerpetualsStopOrderDatasResponse} containing `stopOrderDatas`.
 	 */
 	public async getStopOrderDatas(inputs: {
 		bytes: string;
@@ -1412,11 +1505,15 @@ export class PerpetualsAccount extends Caller {
 	 * Fetch paginated collateral-change history for this account, including
 	 * deposits, withdrawals, funding settlements, liquidations, etc.
 	 *
+	 * Pagination:
+	 * - Use `beforeTimestampCursor` to fetch older entries.
+	 * - The API returns a `nextBeforeTimestampCursor` to continue pagination.
+	 *
 	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
 	 * @returns {@link ApiPerpetualsAccountCollateralHistoryResponse} containing
-	 *   an array of changes and a `nextBeforeTimestampCursor`.
+	 * an array of changes and a `nextBeforeTimestampCursor`.
 	 */
 	public async getCollateralHistory(
 		inputs: Omit<ApiPerpetualsAccountCollateralHistoryBody, "accountId">
@@ -1433,11 +1530,16 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Fetch paginated order history for this account.
 	 *
+	 * This endpoint is distinct from {@link getOrderDatas}:
+	 * - `getOrderDatas` resolves current/pending orders based on the snapshot.
+	 * - `getOrderHistory` returns historical order events (fills, cancels, etc.)
+	 *   over time with cursor-based pagination.
+	 *
 	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
 	 * @returns {@link ApiPerpetualsAccountOrderHistoryResponse} containing a list of
-	 *   orders and a `nextBeforeTimestampCursor`.
+	 * orders and a `nextBeforeTimestampCursor`.
 	 */
 	public async getOrderHistory(
 		inputs: Omit<ApiPerpetualsAccountOrderHistoryBody, "accountId">
@@ -1451,7 +1553,23 @@ export class PerpetualsAccount extends Caller {
 		});
 	}
 
-	// TODO: docs
+	/**
+	 * Fetch historical margin snapshots for this account over a time range.
+	 *
+	 * This endpoint returns time-series margin data suitable for charting UI
+	 * such as equity and available collateral over time.
+	 *
+	 * Inputs:
+	 * - `fromTimestamp` / `toTimestamp` are Unix timestamps in **milliseconds**.
+	 * - `intervalMs` controls the resolution (e.g. 60_000 for 1-minute points).
+	 *
+	 * Notes:
+	 * - Returned points are typically aligned to the requested interval.
+	 * - This is an account-level view (aggregated across markets).
+	 *
+	 * @param inputs - {@link ApiPerpetualsAccountMarginHistoryBody} without `accountId`.
+	 * @returns {@link ApiPerpetualsAccountMarginHistoryResponse} containing `marginHistoryDatas`.
+	 */
 	public async getMarginHistory(
 		inputs: Omit<ApiPerpetualsAccountMarginHistoryBody, "accountId">
 	) {
@@ -1501,6 +1619,10 @@ export class PerpetualsAccount extends Caller {
 	 * A stop order is considered SL/TP if it appears in the combined set of
 	 * SL/TP orders across **all** markets (see {@link slTpStopOrderDatas}).
 	 *
+	 * Note:
+	 * - This implementation uses JSON string equality to compare objects.
+	 *   This is pragmatic but assumes stable field ordering and identical shapes.
+	 *
 	 * @param inputs.stopOrderDatas - Full array of stop-order ticket data.
 	 * @returns An array of non-SL/TP stop orders, or `undefined` if none exist.
 	 */
@@ -1531,6 +1653,9 @@ export class PerpetualsAccount extends Caller {
 	 * This combines:
 	 * - "Full" SL/TP orders (size >= `i64MaxBigInt`)
 	 * - "Partial" SL/TP orders (size < `i64MaxBigInt`)
+	 *
+	 * The "full vs partial" distinction is a protocol convention: some systems
+	 * encode “close entire position” using a sentinel max size.
 	 *
 	 * @param inputs.stopOrderDatas - Full list of stop-order tickets.
 	 * @returns Array of SL/TP stop orders, or `undefined` if none exist.
@@ -1601,6 +1726,10 @@ export class PerpetualsAccount extends Caller {
 	 * - Order side is opposite of the position side.
 	 * - At least a `stopLossIndexPrice` or `takeProfitIndexPrice` is set.
 	 *
+	 * Notes on matching:
+	 * - The side comparison uses the current position side derived from the account snapshot.
+	 * - If `baseAssetAmount === 0` (no effective position), the method returns no SL/TP orders.
+	 *
 	 * @param inputs.marketId - Market to categorize stop orders for.
 	 * @param inputs.stopOrderDatas - Full list of stop orders.
 	 *
@@ -1627,7 +1756,14 @@ export class PerpetualsAccount extends Caller {
 
 		const side = !position ? undefined : Perpetuals.positionSide(position);
 
-		// TODO: clean this up
+		/**
+		 * Implementation note:
+		 *
+		 * This method uses a pair of predicates that differ only by the `size` threshold
+		 * to split “full close” SL/TP from “partial close” SL/TP. The sentinel threshold
+		 * is {@link Casting.i64MaxBigInt}. Keeping the logic explicit (rather than
+		 * abstracting into helpers) makes it easier to reason about protocol conventions.
+		 */
 		const fullSlTpOrder: PerpetualsStopOrderData | undefined =
 			stopOrderDatas.find(
 				(order) =>
@@ -1660,6 +1796,9 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Convenience accessor for the account's available collateral (in coin units).
 	 *
+	 * This is the amount of collateral not currently locked/allocated across markets,
+	 * as represented by the backend response.
+	 *
 	 * @returns Available collateral as a `number`.
 	 */
 	public collateral(): number {
@@ -1689,20 +1828,26 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Resolve the owner wallet address of this account or vault.
 	 *
-	 * - For direct accounts, returns the `walletAddress` field.
-	 * - For vault-backed accounts, returns `ownerAddress`.
+	 * - For direct accounts, returns the cap's `walletAddress` field.
+	 * - For vault-backed accounts, returns the vault cap's `ownerAddress`.
+	 *
+	 * Naming note:
+	 * - Some types use `walletAddress` for direct ownership. For vault-backed accounts
+	 *   the analogous field is `ownerAddress`.
 	 *
 	 * @returns Owner wallet {@link SuiAddress}.
 	 */
 	public ownerAddress(): SuiAddress {
 		return "walletAddress" in this.accountCap
-			? // TODO: change to ownerAddress ?
+			? // NOTE: direct accounts expose `walletAddress`; vault accounts expose `ownerAddress`.
 			  this.accountCap.walletAddress
 			: this.accountCap.ownerAddress;
 	}
 
 	/**
 	 * Get the underlying account object ID.
+	 *
+	 * This is the on-chain object that holds the account's state and positions.
 	 *
 	 * @returns {@link ObjectId} of the account object.
 	 */
@@ -1713,6 +1858,8 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Get the numeric perpetuals account ID.
 	 *
+	 * This is the protocol-level identifier (bigint-derived) used across API calls.
+	 *
 	 * @returns {@link PerpetualsAccountId} for this account.
 	 */
 	public accountId(): PerpetualsAccountId {
@@ -1722,12 +1869,13 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Get the account cap object ID, if this is a direct account.
 	 *
-	 * **Note:** This is **not** available for vault-backed accounts and will
-	 * throw an error if called on one.
+	 * Direct accounts are controlled via an on-chain “cap” object. Vault-backed
+	 * accounts are controlled via vault caps and do not expose a direct account-cap ID.
+	 *
+	 * @throws If called for a vault-backed account.
 	 *
 	 * @returns {@link ObjectId} of the account cap.
 	 */
-	// TODO: make this work with vaults
 	public accountCapId(): ObjectId {
 		if ("vaultId" in this.accountCap)
 			throw new Error(

@@ -195,11 +195,25 @@ export interface PerpetualsVaultCap {
 
 export type PerpetualsPartialVaultCap = Omit<PerpetualsVaultCap, "objectId">;
 
-// TODO: docs
+/**
+ * Representation of an LP (share) coin position for a specific vault.
+ *
+ * This is typically returned by API endpoints that enumerate a wallet's vault
+ * positions. `lpAmount` is the raw on-chain balance for the vault's LP coin type.
+ *
+ * Notes:
+ * - `lpAmountUsd` is a convenience valuation derived from current vault TVL and LP supply.
+ * - The LP coin itself is an on-chain `Coin<T>` object, but here we expose the derived,
+ *   aggregated view needed by UIs.
+ */
 export interface PerpetualsVaultLpCoin {
+	/** Vault identifier that minted the LP coin. */
 	vaultId: ObjectId;
+	/** Object ID of the specific LP coin object held by the user. */
 	objectId: ObjectId;
+	/** Raw LP token amount (native units; not human-decimal adjusted). */
 	lpAmount: Balance;
+	/** Estimated USD value of `lpAmount` at query time. */
 	lpAmountUsd: number;
 }
 
@@ -564,7 +578,15 @@ export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
 }
 
-// TODO: docs
+/**
+ * Human-facing metadata for vault discovery / browsing.
+ *
+ * This is intended for UI display and is not used for any on-chain risk or
+ * accounting logic.
+ *
+ * Note: The type name contains a historical misspelling ("Metatada") and is
+ * preserved for backward compatibility.
+ */
 export interface PerpetualsVaultMetatada {
 	/**
 	 * A human-readable name for the `Vault`.
@@ -605,23 +627,57 @@ export interface PerpetualsVaultObject {
 	 * Contract version number for controlled upgrades.
 	 */
 	version: bigint;
-	// TODO: docs
+	/**
+	 * Curator-provided metadata used for vault discovery and display.
+	 *
+	 * This data is expected to be relatively stable and is typically set at
+	 * creation time (though it may be updatable depending on protocol rules).
+	 */
 	metadata: PerpetualsVaultMetatada;
 	/**
 	 * Supply of LP coins from a `TreasuryCap` for liquidity integrity.
+	 *
+	 * This is the total minted supply of the vault's LP token. Together with
+	 * `tvlUsd` and `totalCollateral`, this is used to derive LP share price.
 	 */
 	lpSupply: Balance;
 	/**
 	 * Total balance of underlying Coin (`C`), deposited by users.
+	 *
+	 * "Idle" collateral is not currently allocated to any clearing house
+	 * position. It remains held by the vault and can be used for new allocations
+	 * or withdrawals (subject to lock/queue rules).
 	 */
 	idleCollateral: Balance;
-	// TODO: docs
+	/**
+	 * USD valuation of `idleCollateral` at query time.
+	 *
+	 * This is derived using the vault's collateral oracle price and is provided
+	 * for UI convenience.
+	 */
 	idleCollateralUsd: number;
-	// TODO: docs
+	/**
+	 * Total collateral owned by the vault in native units.
+	 *
+	 * This is the sum of:
+	 * - idle collateral held directly by the vault, and
+	 * - collateral currently allocated across clearing houses/positions.
+	 */
 	totalCollateral: Balance;
-	// TODO: docs
+	/**
+	 * USD valuation of `totalCollateral` at query time.
+	 *
+	 * This is typically derived from `totalCollateral` and the collateral oracle
+	 * price used by the vault.
+	 */
 	totalCollateralUsd: number;
-	// TODO: docs
+	/**
+	 * Total value locked in USD for this vault.
+	 *
+	 * Depending on protocol accounting, this may match `totalCollateralUsd`, or
+	 * may incorporate additional adjustments. It is the primary headline number
+	 * used for ranking and display.
+	 */
 	tvlUsd: number;
 	/**
 	 * IDs of `ClearingHouse` where `Vault` has positions.
@@ -629,6 +685,9 @@ export interface PerpetualsVaultObject {
 	marketIds: PerpetualsMarketId[];
 	/**
 	 * A linked table that keeps track of pending withdrawal requests made by users.
+	 *
+	 * Withdrawals are typically queued to enforce lock periods and to allow the
+	 * vault to unwind positions as needed.
 	 */
 	withdrawQueue: PerpetualsVaultWithdrawRequest[];
 	/**
@@ -645,17 +704,38 @@ export interface PerpetualsVaultObject {
 		performanceFeePercentage: number;
 		/**
 		 * Delay period to wait for eventual force withdrawing
+		 *
+		 * Force-withdrawal is an emergency/escape hatch path; this delay gives the
+		 * vault time to unwind positions before executing the withdrawal.
 		 */
 		forceWithdrawDelayMs: bigint;
 		/**
 		 * Price feed storage id idetifying the oracle price for `C`
 		 */
 		collateralPriceFeedStorageId: ObjectId;
-		// TODO: docs
+		/**
+		 * Source object ID for the collateral price feed storage.
+		 *
+		 * Some oracle integrations separate the "storage object" from the "source"
+		 * (e.g., an aggregator or publisher object). This field identifies the
+		 * upstream source used to populate `collateralPriceFeedStorageId`.
+		 */
 		collateralPriceFeedStorageSourceId: ObjectId;
-		// TODO: docs
+		/**
+		 * Maximum tolerated deviation for the collateral oracle price.
+		 *
+		 * Used as a safety bound when valuing deposits/withdrawals and computing
+		 * USD conversions. This is typically a fixed-point or scaled bigint value,
+		 * consistent with the on-chain oracle representation.
+		 */
 		collateralPriceFeedStorageTolerance: bigint;
-		// TODO: docs
+		/**
+		 * Maximum margin ratio tolerance for force-withdraw processing.
+		 *
+		 * Force-withdraw generally requires closing positions. This tolerance
+		 * controls how much worse (or better) the resulting margin ratio is allowed
+		 * to be, compared to a target/expected value, before rejecting the action.
+		 */
 		maxForceWithdrawMarginRatioTolerance: number;
 		/**
 		 * Scaling factor to apply to `C` to convert a balance to ifixed.
@@ -672,7 +752,12 @@ export interface PerpetualsVaultObject {
 		 * The maximum number of pending orders allowed for a single position in the `Vault`.
 		 */
 		maxPendingOrdersPerPosition: bigint;
-		// TODO: docs
+		/**
+		 * Maximum total collateral (native units) that can be deposited into the vault.
+		 *
+		 * This is a capacity/risk control parameter. Deposits that would cause the
+		 * vault to exceed this limit should be rejected by the protocol/backend.
+		 */
 		maxTotalDepositedCollateral: Balance;
 	};
 	/** Owner address of the vault. */
@@ -685,11 +770,22 @@ export interface PerpetualsVaultObject {
 	accountObjectId: ObjectId;
 	/** Collateral coin type accepted by this vault. */
 	collateralCoinType: CoinType;
-	// TODO: docs
+	/**
+	 * LP coin type minted by this vault.
+	 *
+	 * This is the `Coin<T>` type used to represent shares in the vault. Users
+	 * receive LP coins on deposit and burn/return them on withdrawal.
+	 */
 	lpCoinType: CoinType;
 	/** Decimals for the LP token minted by this vault. */
 	lpCoinDecimals: CoinDecimal;
-	// TODO: docs
+	/**
+	 * Estimated monthly APR for this vault, expressed as a percentage.
+	 *
+	 * This is typically computed off-chain from historical performance and/or
+	 * accounting state. It is a display metric and should not be treated as a
+	 * guaranteed rate.
+	 */
 	monthlyAprPercentage: Percentage;
 }
 
@@ -709,7 +805,12 @@ export interface PerpetualsVaultWithdrawRequest {
 	 * The amount of the shares requested for withdrawal.
 	 */
 	lpAmountIn: Balance;
-	// TODO: docs
+	/**
+	 * USD valuation of `lpAmountIn` at request time (or at query time, depending on backend).
+	 *
+	 * This field is provided for UI convenience and may be computed using the
+	 * vault's LP share price.
+	 */
 	lpAmountInUsd: number;
 	/**
 	 * Timestamp of request's creation
@@ -717,9 +818,16 @@ export interface PerpetualsVaultWithdrawRequest {
 	requestTimestamp: Timestamp;
 	/**
 	 * The minimum amount of the collateral balance expected as output for this withdrawal
+	 *
+	 * This acts as a slippage/price-protection bound for the user.
 	 */
 	minCollateralAmountOut: Balance;
-	// TODO: docs
+	/**
+	 * USD valuation of `minCollateralAmountOut`, using the vault's collateral oracle.
+	 *
+	 * Provided for display; the on-chain constraint is enforced by
+	 * `minCollateralAmountOut` (native units).
+	 */
 	minCollateralAmountOutUsd: number;
 }
 
@@ -1423,13 +1531,21 @@ export interface ApiPerpetualsAccountCapsBody {
 }
 
 /**
- * TODO: docs
+ * Response payload for fetching positions for one or more accounts.
+ *
+ * The backend returns a list of {@link PerpetualsAccountObject} snapshots.
+ * Each snapshot includes per-market {@link PerpetualsPosition} data.
  */
 export interface ApiPerpetualsAccountPositionsResponse {
 	accounts: PerpetualsAccountObject[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching positions for a set of accounts.
+ *
+ * `marketIds` can be supplied as an optimization hint to limit the markets
+ * included in each account's returned `positions` array.
+ */
 export interface ApiPerpetualsAccountPositionsBody {
 	accountIds: PerpetualsAccountId[];
 	// TODO: remove eventually ?
@@ -1437,14 +1553,17 @@ export interface ApiPerpetualsAccountPositionsBody {
 }
 
 /**
- * TODO: docs
+ * Response payload for fetching account caps by explicit object IDs.
  */
 export interface ApiPerpetualsAccountCapsResponse {
 	accountCaps: PerpetualsAccountCap[];
 }
 
 /**
- * TODO: docs
+ * Response payload for fetching all account caps owned by a wallet.
+ *
+ * This is typically used during onboarding / wallet connect to discover
+ * existing accounts.
  */
 export interface ApiPerpetualsOwnedAccountCapsResponse {
 	accountCaps: PerpetualsAccountCap[];
@@ -1506,7 +1625,12 @@ export interface ApiPerpetualsAccountMarginHistoryBody {
 	intervalMs: number;
 }
 
-// TODO: docs
+/**
+ * Response payload for historical margin metrics.
+ *
+ * The returned array is ordered chronologically by `timestamp` (oldest -> newest)
+ * unless the backend specifies otherwise.
+ */
 export interface ApiPerpetualsAccountMarginHistoryResponse {
 	marginHistoryDatas: PerpetualsAccountMarginHistoryData[];
 }
@@ -1872,7 +1996,11 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 }
 
 /**
- * TODO: docs
+ * Response payload for fetching canonical order metadata.
+ *
+ * The API may return fewer fields than on-chain order objects; this type
+ * captures the stable subset used across SDK features such as order displays
+ * and cancellation flows.
  */
 export interface ApiPerpetualsAccountOrderDatasResponse {
 	orderDatas: PerpetualsOrderData[];
@@ -1896,7 +2024,13 @@ export type ApiPerpetualsStopOrderDatasBody = {
 	  }
 );
 
-// TODO: docs
+/**
+ * Response payload for stop-order queries.
+ *
+ * Stop orders are returned in their normalized on-chain shape
+ * ({@link PerpetualsStopOrderData}). Clients should interpret `slTp` vs `nonSlTp`
+ * to determine the stop semantics.
+ */
 export interface ApiPerpetualsStopOrderDatasResponse {
 	stopOrderDatas: PerpetualsStopOrderData[];
 }
@@ -2396,23 +2530,40 @@ export interface ApiPerpetualsMarkets24hrStatsResponse {
 	marketsStats: PerpetualsMarket24hrStats[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching all markets for a given collateral type.
+ *
+ * This endpoint is commonly used to populate a "Markets" list filtered by
+ * the user's selected collateral (e.g., USDC-margined markets).
+ */
 export interface ApiPerpetualsAllMarketsBody {
 	collateralCoinType: CoinType;
 }
 
-// TODO: docs
+/**
+ * Response payload for {@link ApiPerpetualsAllMarketsBody}.
+ *
+ * Returns enriched market data including parameters, state, and current prices.
+ */
 export interface ApiPerpetualsAllMarketsResponse {
 	markets: PerpetualsMarketData[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching a specific set of markets by ID.
+ *
+ * Set `withOrderbook` to include an aggregated orderbook snapshot per market.
+ */
 export interface ApiPerpetualsMarketsBody {
 	marketIds: PerpetualsMarketId[];
 	withOrderbook?: boolean;
 }
 
-// TODO: docs
+/**
+ * Response payload for {@link ApiPerpetualsMarketsBody}.
+ *
+ * Each item includes the market data and, if requested, the current orderbook snapshot.
+ */
 export interface ApiPerpetualsMarketsResponse {
 	marketDatas: {
 		market: PerpetualsMarketData;
@@ -2420,23 +2571,39 @@ export interface ApiPerpetualsMarketsResponse {
 	}[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching vault objects.
+ *
+ * If `vaultIds` is omitted, the API may return all vaults (potentially paginated
+ * at the transport layer).
+ */
 export interface ApiPerpetualsVaultsBody {
 	vaultIds?: ObjectId[];
 }
 
-// TODO: docs
+/**
+ * Response payload for vault queries.
+ */
 export interface ApiPerpetualsVaultsResponse {
 	vaults: PerpetualsVaultObject[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching current prices for a list of markets.
+ *
+ * This is a lightweight alternative to fetching full {@link PerpetualsMarketData}
+ * when only base/collateral prices are needed.
+ */
 export interface ApiPerpetualsMarketsPricesBody {
 	marketIds: PerpetualsMarketId[];
 	withOrderbook?: boolean;
 }
 
-// TODO: docs
+/**
+ * Response payload for {@link ApiPerpetualsMarketsPricesBody}.
+ *
+ * Returns base (index/oracle) and collateral prices used for valuation.
+ */
 export interface ApiPerpetualsMarketsPricesResponse {
 	marketsPrices: {
 		basePrice: number;
@@ -2448,32 +2615,52 @@ export interface ApiPerpetualsMarketsPricesResponse {
 //  Vaults
 // =========================================================================
 
-// TODO: docs
+/**
+ * Request body for fetching LP coin prices for a set of vaults.
+ *
+ * LP coin price is typically expressed in USD per 1 LP token (native units adjusted
+ * using `lpCoinDecimals` on the vault object).
+ */
 export interface ApiPerpetualsVaultLpCoinPricesBody {
 	vaultIds: ObjectId[];
 }
 
-// TODO: docs
+/**
+ * Response payload for {@link ApiPerpetualsVaultLpCoinPricesBody}.
+ *
+ * The response is index-aligned with the request `vaultIds` array.
+ */
 export interface ApiPerpetualsVaultLpCoinPricesResponse {
 	lpCoinPrices: number[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching a wallet's owned LP coin objects across vaults.
+ */
 export interface ApiPerpetualsVaultOwnedLpCoinsBody {
 	walletAddress: SuiAddress;
 }
 
-// TODO: docs
+/**
+ * Response payload listing owned LP coin objects (per vault).
+ */
 export interface ApiPerpetualsVaultOwnedLpCoinsResponse {
 	ownedLpCoins: PerpetualsVaultLpCoin[];
 }
 
-// TODO: docs
+/**
+ * Request body for fetching vault capability objects owned by a wallet.
+ *
+ * Vault caps are typically owned by the vault creator/owner and are required
+ * for privileged vault actions (processing withdrawals, updating parameters, etc.).
+ */
 export interface ApiPerpetualsOwnedVaultCapsBody {
 	walletAddress: SuiAddress;
 }
 
-// TODO: docs
+/**
+ * Response payload listing all vault caps owned by the wallet.
+ */
 export interface ApiPerpetualsOwnedVaultCapsResponse {
 	ownedVaultCaps: PerpetualsVaultCap[];
 }
@@ -2490,7 +2677,13 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
 	txKind?: SerializedTransaction;
 }
 
-// TODO: docs
+/**
+ * Response body for force-withdraw processing transactions.
+ *
+ * - `txKind` is a serialized transaction kind the client can sign/submit.
+ * - `coinOutArg` (if present) is the transaction argument referencing the
+ *   withdrawn collateral coin output.
+ */
 export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse {
 	txKind: SerializedTransaction;
 	coinOutArg: TransactionObjectArgument | undefined;
@@ -2567,7 +2760,12 @@ export interface ApiPerpetualsVaultsWithdrawRequestsBody {
 	vaultIds: ObjectId[];
 }
 
-// TODO: docs
+/**
+ * Response payload listing withdrawal requests for the requested vaults.
+ *
+ * Depending on backend behavior, this may include all queued requests across
+ * all specified vaults.
+ */
 export interface ApiPerpetualsVaultsWithdrawRequestsResponse {
 	withdrawRequests: PerpetualsVaultWithdrawRequest[];
 }
@@ -2581,7 +2779,9 @@ export interface ApiPerpetualsVaultOwnedWithdrawRequestsBody {
 	// vaultIds: ObjectId[] | undefined;
 }
 
-// TODO: docs
+/**
+ * Response payload listing withdrawal requests created by `walletAddress`.
+ */
 export interface ApiPerpetualsVaultOwnedWithdrawRequestsResponse {
 	ownedWithdrawRequests: PerpetualsVaultWithdrawRequest[];
 }

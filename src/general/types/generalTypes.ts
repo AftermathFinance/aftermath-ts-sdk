@@ -4,6 +4,7 @@ import {
 	SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
 import { SuiNetwork } from "./suiTypes";
+import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * Represents a token or currency balance in the system, defined as a bigint.
@@ -397,4 +398,8 @@ export interface CallerConfig {
 
 export interface ApiTransactionResponse {
 	txKind: SerializedTransaction;
+}
+
+export interface SdkTransactionResponse {
+	tx: Transaction;
 }

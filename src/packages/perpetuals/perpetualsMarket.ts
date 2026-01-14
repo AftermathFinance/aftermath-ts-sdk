@@ -67,12 +67,12 @@ import { PerpetualsOrderUtils } from "./utils";
  *
  * ```ts
  * const perps = new Perpetuals(config);
- * const markets = await perps.getMarkets({ marketIds: ["0x..."] });
- * const btcPerp = new PerpetualsMarket(markets[0], config);
+ * const { markets } = await perps.getMarkets({ marketIds: ["0x..."] });
+ * const market = markets[0];
  *
- * const ob = await btcPerp.getOrderbook();
- * const stats = await btcPerp.get24hrStats();
- * const prices = await btcPerp.getPrices();
+ * const { orderbook } = await market.getOrderbook();
+ * const stats = await market.get24hrStats();
+ * const { basePrice, collateralPrice } = await market.getPrices();
  * ```
  */
 export class PerpetualsMarket extends Caller {
@@ -113,6 +113,11 @@ export class PerpetualsMarket extends Caller {
 	 *
 	 * @param marketData - Snapshot of market configuration and state.
 	 * @param config - Optional {@link CallerConfig} (network, base URL, etc.).
+	 * @param Provider - Optional shared {@link AftermathApi} provider instance.
+	 *
+	 * @remarks
+	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning
+	 * all HTTP requests resolve under `/perpetuals/...`.
 	 */
 	constructor(
 		public marketData: PerpetualsMarketData,
@@ -136,11 +141,10 @@ export class PerpetualsMarket extends Caller {
 	 * Fetch the mid price for this market’s orderbook.
 	 *
 	 * This is a convenience endpoint that returns only:
+	 * - `midPrice`: midpoint between best bid and best ask, or `undefined`
+	 *   if the orderbook is empty or unavailable.
 	 *
-	 * - `midPrice`: The midpoint between best bid and best ask, or `undefined`
-	 *   if the orderbook is empty or malformed.
-	 *
-	 * @returns A promise resolving to `{ midPrice }`.
+	 * @returns `{ midPrice }`.
 	 *
 	 * @example
 	 * ```ts
@@ -165,15 +169,14 @@ export class PerpetualsMarket extends Caller {
 	 * Fetch the 24-hour statistics for this specific market.
 	 *
 	 * Under the hood, this calls {@link Perpetuals.getMarkets24hrStats} and
-	 * returns the first (and only) entry for this market.
+	 * returns the first (and only) entry.
 	 *
-	 * @returns {@link PerpetualsMarket24hrStats} with volume, high/low, and other metrics.
+	 * @returns {@link PerpetualsMarket24hrStats}.
 	 *
-	 * @example
-	 * ```ts
-	 * const stats = await market.get24hrStats();
-	 * console.log(stats.volumeUsd, stats.priceChangePct);
-	 * ```
+	 * @remarks
+	 * This method creates a new {@link Perpetuals} instance using `this.config`.
+	 * If you need shared Provider behavior, prefer calling `perps.getMarkets24hrStats`
+	 * directly with the same Provider you initialized.
 	 */
 	public async get24hrStats(): Promise<PerpetualsMarket24hrStats> {
 		const res = await new Perpetuals(this.config).getMarkets24hrStats({
@@ -185,23 +188,19 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Fetch the full orderbook snapshot for this market.
 	 *
-	 * Currently implemented via the generic `markets` endpoint with:
-	 * - `marketIds: [this.marketId]`
-	 * - `withOrderbook: true`
+	 * Implementation note:
+	 * - Currently implemented via the generic `markets` endpoint with `withOrderbook: true`
+	 * - The backend returns `marketDatas[]` which include both `market` and `orderbook`
 	 *
-	 * @returns {@link PerpetualsOrderbook} for this market.
+	 * @returns Object containing `orderbook`.
 	 *
 	 * @example
 	 * ```ts
-	 * const ob = await market.getOrderbook();
-	 * console.log(ob.bids[0], ob.asks[0]);
+	 * const { orderbook } = await market.getOrderbook();
+	 * console.log(orderbook.bids[0], orderbook.asks[0]);
 	 * ```
 	 */
 	public async getOrderbook() {
-		// TODO: create own endpoint for just orderbook
-
-		// return this.fetchApi<PerpetualsOrderbook>("market/orderbook");
-
 		const { marketDatas } = await this.fetchApi<
 			ApiPerpetualsMarketsResponse,
 			ApiPerpetualsMarketsBody
@@ -218,25 +217,24 @@ export class PerpetualsMarket extends Caller {
 	 * Compute the maximum order size that can be placed by a given account
 	 * in this market, under optional leverage and price assumptions.
 	 *
-	 * This is useful for frontends to:
-	 * - Drive "max" buttons.
-	 * - Validate order inputs against risk limits.
+	 * This is a common frontend helper for:
+	 * - "max size" buttons
+	 * - input validation against risk limits
 	 *
-	 * **Note:** This lives on the `account` namespace since it depends on
-	 * account state.
+	 * **Note:** This is routed through the `account` namespace because it depends on
+	 * the account's collateral and positions.
 	 *
 	 * @param inputs.accountId - Perpetuals account ID.
 	 * @param inputs.side - Order side (Bid/Ask).
-	 * @param inputs.leverage - Optional leverage to assume (defaults to account-level).
-	 * @param inputs.price - Optional limit price; if omitted, a default or index-based
-	 *   assumption may be used by the backend.
+	 * @param inputs.leverage - Optional assumed leverage.
+	 * @param inputs.price - Optional assumed price (e.g. for limit orders).
 	 *
-	 * @returns An object containing `maxOrderSize` (as `bigint` in base units).
+	 * @returns `{ maxOrderSize }` in base units (scaled integer as `bigint`).
 	 *
 	 * @example
 	 * ```ts
 	 * const { maxOrderSize } = await market.getMaxOrderSize({
-	 *   accountId,
+	 *   accountId: 123n,
 	 *   side: PerpetualsOrderSide.Bid,
 	 *   leverage: 5,
 	 * });
@@ -267,32 +265,22 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Market-level preview of placing a market order.
 	 *
-	 * Unlike the account-specific preview on {@link PerpetualsAccount},
-	 * this version:
-	 * - Calls `account/previews/place-market-order`.
-	 * - Explicitly sets `accountId: undefined`, allowing the backend to use
-	 *   generic or hypothetical assumptions about account state.
+	 * Unlike {@link PerpetualsAccount.getPlaceMarketOrderPreview}, this version:
+	 * - Calls `account/previews/place-market-order`
+	 * - Explicitly sets `accountId: undefined`, allowing a “generic” preview that
+	 *   doesn’t rely on a specific account’s on-chain positions/collateral.
 	 *
-	 * @param inputs - See {@link SdkPerpetualsPlaceMarketOrderPreviewInputs}.
-	 * @param abortSignal - Optional `AbortSignal` to cancel the HTTP request.
+	 * @param inputs - {@link SdkPerpetualsPlaceMarketOrderPreviewInputs}.
+	 * @param abortSignal - Optional abort signal to cancel the request.
 	 *
-	 * @returns Either:
-	 * - `{ error }`, or
-	 * - A preview with:
-	 *   - `updatedPosition`
-	 *   - `priceSlippage` / `percentSlippage`
-	 *   - `filledSize` / `filledSizeUsd`
-	 *   - `postedSize` / `postedSizeUsd`
-	 *   - `collateralChange`
-	 *   - `executionPrice`
+	 * @returns Either `{ error }` or a preview containing the simulated updated position,
+	 * slippage, filled/posted sizes, collateral change, and execution price.
 	 */
 	public async getPlaceMarketOrderPreview(
 		inputs: SdkPerpetualsPlaceMarketOrderPreviewInputs,
 		abortSignal?: AbortSignal
 	): Promise<
-		| {
-				error: string;
-		  }
+		| { error: string }
 		| {
 				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
@@ -325,20 +313,16 @@ export class PerpetualsMarket extends Caller {
 	 * - `account/previews/place-limit-order`
 	 * - `accountId: undefined`
 	 *
-	 * @param inputs - See {@link SdkPerpetualsPlaceLimitOrderPreviewInputs}.
-	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
+	 * @param inputs - {@link SdkPerpetualsPlaceLimitOrderPreviewInputs}.
+	 * @param abortSignal - Optional abort signal to cancel the request.
 	 *
-	 * @returns Either:
-	 * - `{ error }`, or
-	 * - A preview object with post-order position, slippage, and collateral changes.
+	 * @returns Either `{ error }` or a preview describing the simulated post-order state.
 	 */
 	public async getPlaceLimitOrderPreview(
 		inputs: SdkPerpetualsPlaceLimitOrderPreviewInputs,
 		abortSignal?: AbortSignal
 	): Promise<
-		| {
-				error: string;
-		  }
+		| { error: string }
 		| {
 				updatedPosition: PerpetualsPosition;
 				priceSlippage: number;
@@ -371,20 +355,14 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Fetch paginated order history for this market.
 	 *
-	 * This returns *market-level* order history (not account-specific), useful
-	 * for charting, recent orders lists, etc.
+	 * This is market-wide (public) history, not scoped to any account.
 	 *
-	 * @param inputs.cursor - Optional pagination cursor.
-	 * @param inputs.limit - Optional number of orders per page.
+	 * @param inputs.beforeTimestampCursor - Optional pagination cursor.
+	 * @param inputs.limit - Optional page size.
 	 *
-	 * @returns {@link ApiPerpetualsMarketOrderHistoryResponse} including a list of
-	 *   orders and a `nextBeforeTimestampCursor`.
-	 *
-	 * @example
-	 * ```ts
-	 * const result = await market.getOrderHistory({ limit: 100 });
-	 * console.log(result.orders.length, result.nextBeforeTimestampCursor);
-	 * ```
+	 * @returns {@link ApiPerpetualsMarketOrderHistoryResponse} containing:
+	 * - `orders`
+	 * - `nextBeforeTimestampCursor`
 	 */
 	public async getOrderHistory(
 		inputs: Omit<ApiPerpetualsMarketOrderHistoryBody, "marketId">
@@ -405,41 +383,38 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Fetch the current base and collateral prices for this market.
 	 *
-	 * Internally calls {@link Perpetuals.getPrices} and returns the first
-	 * element corresponding to `this.marketId`.
+	 * Internally calls {@link Perpetuals.getPrices} and returns the first result.
 	 *
-	 * @returns `{ basePrice, collateralPrice }` for this market.
+	 * @returns `{ basePrice, collateralPrice }`.
 	 *
-	 * @example
-	 * ```ts
-	 * const { basePrice, collateralPrice } = await market.getPrices();
-	 * ```
+	 * @remarks
+	 * This method instantiates a new {@link Perpetuals} client using `this.config`.
+	 * If you rely on a shared Provider, call `perps.getPrices(...)` directly instead.
 	 */
 	public async getPrices(): Promise<{
 		basePrice: number;
 		collateralPrice: number;
 	}> {
 		return (
-			await new Perpetuals(
-				this.config
-				// this.Provider
-			).getPrices({
+			await new Perpetuals(this.config).getPrices({
 				marketIds: [this.marketId],
 			})
 		).marketsPrices[0];
 	}
 
 	// =========================================================================
-	//  Calculations
-	// =========================================================================`
+	//  Funding / Timing
+	// =========================================================================
 
 	/**
 	 * Compute the remaining time until the next funding event, in milliseconds.
 	 *
-	 * - If the on-chain `nextFundingTimestampMs` exceeds `Number.MAX_SAFE_INTEGER`,
-	 *   this uses `Number.MAX_SAFE_INTEGER` as a cap via {@link nextFundingTimeMs}.
-	 *
 	 * @returns `nextFundingTimeMs() - Date.now()`.
+	 *
+	 * @remarks
+	 * If the next funding timestamp does not fit safely into a JS `number`,
+	 * {@link nextFundingTimeMs} returns `Number.MAX_SAFE_INTEGER`, and the
+	 * difference may be very large.
 	 */
 	public timeUntilNextFundingMs = (): Timestamp => {
 		return this.nextFundingTimeMs() - Date.now();
@@ -448,9 +423,9 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Get the scheduled timestamp for the next funding event, in milliseconds.
 	 *
-	 * - If `nextFundingTimestampMs` doesn't fit in JS `number` safely
-	 *   (i.e. `> Number.MAX_SAFE_INTEGER`), this method returns
-	 *   `Number.MAX_SAFE_INTEGER` as a safeguard.
+	 * Safety behavior:
+	 * - If `marketData.nextFundingTimestampMs` exceeds `Number.MAX_SAFE_INTEGER`,
+	 *   this returns `Number.MAX_SAFE_INTEGER`.
 	 *
 	 * @returns Next funding timestamp (ms) as a JS `number`.
 	 */
@@ -464,45 +439,38 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Estimated funding rate per period for this market.
 	 *
-	 * Conceptually defined as:
+	 * This is read directly from `marketData.estimatedFundingRate`.
 	 *
-	 * ```text
-	 * (bookTwap - indexTwap) / indexPrice * (fundingFrequency / fundingPeriod)
-	 * ```
-	 *
-	 * but here it's read directly from `marketData.estimatedFundingRate`.
-	 *
-	 * @returns Estimated funding rate as a fraction (e.g. 0.01 = 1%).
+	 * @returns Estimated funding rate as a fraction (e.g. `0.01` = 1%).
 	 */
-	// The funding rate as the difference between book and index TWAPs relative to the index price,
-	// scaled by the funding period adjustment:
-	// (bookTwap - indexTwap) / indexPrice * (fundingFrequency / fundingPeriod)
 	public estimatedFundingRate = (): Percentage => {
 		return this.marketData.estimatedFundingRate;
 	};
 
+	// =========================================================================
+	//  Margin / Collateral Calculations
+	// =========================================================================
+
 	/**
-	 * Calculate the collateral required to support an order given leverage
-	 * and prices.
+	 * Calculate the collateral required to support an order given leverage and prices.
 	 *
-	 * The formula is (in USD):
+	 * The computed collateral is based on the *remaining* unfilled size:
+	 * `remaining = initialSize - filledSize`.
 	 *
+	 * USD requirement:
 	 * ```text
-	 * remainingSizeBase * indexPrice * initialMarginRatio
+	 * remainingBase * indexPrice * initialMarginRatio
 	 * ```
+	 * where `initialMarginRatio = 1 / leverage` (or 1 if leverage is falsy).
 	 *
-	 * where:
-	 * - `remainingSizeBase` = `(initialSize - filledSize) / fixedOneN9`
-	 * - `initialMarginRatio` = `1 / leverage` (or 1 if leverage is falsy).
-	 *
-	 * @param inputs.leverage - Target leverage for the order.
+	 * @param inputs.leverage - Target leverage for the order (>= 1).
 	 * @param inputs.orderData - Order data containing `initialSize` and `filledSize`.
-	 * @param inputs.indexPrice - Current index price of the underlying.
-	 * @param inputs.collateralPrice - Price of the collateral asset in USD.
+	 * @param inputs.indexPrice - Index/oracle price of the base asset.
+	 * @param inputs.collateralPrice - Price of the collateral asset.
 	 *
 	 * @returns Object with:
-	 * - `collateralUsd`: required collateral in USD.
-	 * - `collateral`: required collateral in collateral coins.
+	 * - `collateralUsd`: required collateral in USD
+	 * - `collateral`: required collateral in collateral coin units
 	 */
 	public calcCollateralUsedForOrder = (inputs: {
 		leverage: number;
@@ -516,14 +484,13 @@ export class PerpetualsMarket extends Caller {
 		const { leverage, orderData, indexPrice, collateralPrice } = inputs;
 
 		const imr = 1 / (leverage || 1);
-		// const imr = this.initialMarginRatio();
 
 		const collateralUsd =
-			// NOTE: is this safe ?
 			(Number(orderData.initialSize - orderData.filledSize) /
 				Casting.Fixed.fixedOneN9) *
 			indexPrice *
 			imr;
+
 		const collateral = collateralUsd / collateralPrice;
 
 		return {
@@ -537,9 +504,9 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	/**
-	 * Get the base asset lot size for this market as a `number`.
+	 * Get the base-asset lot size for this market as a `number`.
 	 *
-	 * Order sizes must be a multiple of this lot size.
+	 * Order sizes must be multiples of this lot size.
 	 *
 	 * @returns Lot size in base asset units.
 	 */
@@ -548,9 +515,9 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	/**
-	 * Get the minimal price tick for this market as a `number`.
+	 * Get the minimal price tick size for this market as a `number`.
 	 *
-	 * Limit prices must be a multiple of this tick size.
+	 * Limit prices must be multiples of this tick size.
 	 *
 	 * @returns Tick size in quote units (e.g. USD).
 	 */
@@ -559,13 +526,14 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	/**
-	 * Get the maximum theoretical leverage for this market, computed as:
+	 * Get the maximum theoretical leverage for this market.
 	 *
+	 * Computed as:
 	 * ```ts
 	 * 1 / marginRatioInitial
 	 * ```
 	 *
-	 * @returns Maximum leverage value for opening positions.
+	 * @returns Maximum leverage.
 	 */
 	public maxLeverage() {
 		return 1 / this.marketParams.marginRatioInitial;
@@ -585,7 +553,7 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Get the maintenance margin ratio for this market.
 	 *
-	 * Falling below this ratio may result in liquidation.
+	 * Falling below this ratio may trigger liquidation.
 	 *
 	 * @returns Maintenance margin ratio as a fraction.
 	 */
@@ -600,18 +568,15 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Round a price to the nearest valid tick for this market.
 	 *
+	 * Rounding mode:
+	 * - `floor: true` => round down
+	 * - `ceil: true`  => round up
+	 * - neither       => nearest tick (`Math.round`)
+	 *
 	 * @param inputs.price - Raw price to round.
-	 * @param inputs.floor - If `true`, always round down to the previous tick.
-	 * @param inputs.ceil - If `true`, always round up to the next tick.
-	 *
-	 * If neither `floor` nor `ceil` are set, this uses `Math.round`.
-	 *
-	 * @returns Price snapped to a valid tick.
-	 *
-	 * @example
-	 * ```ts
-	 * const validPrice = market.roundToValidPrice({ price: 27123.45 });
-	 * ```
+	 * @param inputs.floor - Force floor rounding.
+	 * @param inputs.ceil - Force ceil rounding.
+	 * @returns Price snapped to the market tick size.
 	 */
 	public roundToValidPrice = (inputs: {
 		price: number;
@@ -629,16 +594,15 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	/**
-	 * Round a price to the nearest valid tick for this market, expressed as
-	 * a `bigint` scaled by `Fixed.fixedOneN9`.
+	 * Round a price to the nearest valid tick as a fixed-point `bigint` (1e9 precision).
 	 *
-	 * This is useful when you need the on-chain representation directly.
+	 * This is helpful when you need the on-chain representation directly
+	 * (e.g. order price fields stored in 9-decimal fixed).
 	 *
 	 * @param inputs.price - Raw price as a JS number.
-	 * @param inputs.floor - If `true`, always round down.
-	 * @param inputs.ceil - If `true`, always round up.
-	 *
-	 * @returns Price scaled by `1e9` and snapped to a valid tick as a `bigint`.
+	 * @param inputs.floor - Force floor rounding.
+	 * @param inputs.ceil - Force ceil rounding.
+	 * @returns Tick-snapped price scaled by `1e9`.
 	 */
 	public roundToValidPriceBigInt = (inputs: {
 		price: number;
@@ -646,7 +610,6 @@ export class PerpetualsMarket extends Caller {
 		ceil?: boolean;
 	}) => {
 		const scaledPrice = Number(inputs.price * Casting.Fixed.fixedOneN9);
-		// TODO: make sure this calc is safe
 		return (
 			(BigInt(
 				inputs.floor
@@ -663,11 +626,15 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Round a base-asset size to the nearest valid lot size for this market.
 	 *
-	 * @param inputs.size - Raw size in base asset units.
-	 * @param inputs.floor - If `true`, always round down.
-	 * @param inputs.ceil - If `true`, always round up.
+	 * Rounding mode:
+	 * - `floor: true` => round down
+	 * - `ceil: true`  => round up
+	 * - neither       => nearest lot (`Math.round`)
 	 *
-	 * @returns Size snapped to a valid lot boundary.
+	 * @param inputs.size - Raw size in base asset units.
+	 * @param inputs.floor - Force floor rounding.
+	 * @param inputs.ceil - Force ceil rounding.
+	 * @returns Size snapped to the market lot size.
 	 */
 	public roundToValidSize = (inputs: {
 		size: number;
@@ -685,14 +652,12 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	/**
-	 * Round a base-asset size to the nearest valid lot size for this market,
-	 * as a scaled `bigint` (`Fixed.fixedOneN9`).
+	 * Round a base-asset size to the nearest valid lot as a fixed-point `bigint` (1e9 precision).
 	 *
-	 * @param inputs.size - Raw size in base units.
-	 * @param inputs.floor - If `true`, always round down.
-	 * @param inputs.ceil - If `true`, always round up.
-	 *
-	 * @returns Size scaled by `1e9` and snapped to valid lot as a `bigint`.
+	 * @param inputs.size - Raw base size as a JS number.
+	 * @param inputs.floor - Force floor rounding.
+	 * @param inputs.ceil - Force ceil rounding.
+	 * @returns Lot-snapped size scaled by `1e9`.
 	 */
 	public roundToValidSizeBigInt = (inputs: {
 		size: number;
@@ -700,7 +665,6 @@ export class PerpetualsMarket extends Caller {
 		ceil?: boolean;
 	}) => {
 		const scaledSize = Number(inputs.size * Casting.Fixed.fixedOneN9);
-		// TODO: make sure this calc is safe
 		return (
 			(BigInt(
 				inputs.floor
@@ -717,16 +681,14 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Construct an "empty" position object for this market.
 	 *
-	 * This is useful for UI and calculations when an account has no open
-	 * position but you still want a full {@link PerpetualsPosition}-shaped
-	 * object with defaulted values.
+	 * Useful when an account has no open position but downstream UI/calculations
+	 * expect a {@link PerpetualsPosition}-shaped object.
 	 *
 	 * @returns A zeroed-out {@link PerpetualsPosition} for `this.marketId`.
 	 */
 	public emptyPosition = (): PerpetualsPosition => {
 		return {
 			marketId: this.marketId,
-			// collateralCoinType: this.marketData.collateralCoinType,
 			collateral: 0,
 			collateralUsd: 0,
 			baseAssetAmount: 0,
@@ -737,8 +699,8 @@ export class PerpetualsMarket extends Caller {
 			asksQuantity: 0,
 			bidsQuantity: 0,
 			pendingOrders: [],
-			makerFee: 1, // 100%
-			takerFee: 1, // 100%
+			makerFee: 1, // 100% (placeholder default)
+			takerFee: 1, // 100% (placeholder default)
 			leverage: 1,
 			entryPrice: 0,
 			freeCollateral: 0,
