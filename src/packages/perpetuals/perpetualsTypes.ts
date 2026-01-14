@@ -2091,7 +2091,8 @@ export type ApiPerpetualsCreateVaultBody = {
 		 */
 		extraFields?: Record<string, string>;
 	};
-	lpCoinType: CoinType;
+	coinMetadataId: ObjectId;
+	treasuryCapId: ObjectId;
 	collateralCoinType: CoinType;
 	lockPeriodMs: bigint;
 	performanceFeePercentage: Percentage;

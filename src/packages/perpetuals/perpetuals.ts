@@ -741,7 +741,9 @@ export class Perpetuals extends Caller {
 	 *
 	 * @param inputs.walletAddress - Address of vault owner/curator.
 	 * @param inputs.metadata - Vault display metadata (name, description, curator info).
-	 * @param inputs.lpCoinType - Coin type for the LP token minted for this vault.
+	 * @param inputs.metadata - Vault display metadata (name, description, curator info).
+	 * @param inputs.coinMetadataId - Coin metadata object id obtained from create vault cap tx
+	 * @param inputs.treasuryCapId - Treasury cap object id obtained from create vault cap tx
 	 * @param inputs.collateralCoinType - Collateral coin type for deposits.
 	 * @param inputs.lockPeriodMs - Lock-in period for deposits in milliseconds.
 	 * @param inputs.performanceFeePercentage - Fraction of profits taken as curator fee.
@@ -773,7 +775,8 @@ export class Perpetuals extends Caller {
 				 */
 				extraFields?: Record<string, string>;
 			};
-			lpCoinType: CoinType;
+			coinMetadataId: ObjectId;
+			treasuryCapId: ObjectId;
 			collateralCoinType: CoinType;
 			lockPeriodMs: bigint;
 			performanceFeePercentage: Percentage;
