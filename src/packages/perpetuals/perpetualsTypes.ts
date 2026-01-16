@@ -763,7 +763,7 @@ export interface PerpetualsVaultObject {
 	/** Owner address of the vault. */
 	ownerAddress: SuiAddress;
 	/** Creation timestamp of the vault. */
-	creationTimestamp: Timestamp;
+	creationTimestamp: Timestamp | undefined;
 	/** Underlying perpetuals account ID that the vault uses. */
 	accountId: PerpetualsAccountId;
 	/** Account object ID used by the vault. */
@@ -2932,6 +2932,10 @@ export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
 			collateralPrice: number;
 			// TODO: change to arr ?
 			sizesToClose: Record<PerpetualsMarketId, bigint>;
+			priceImpact: Percentage;
+			performanceFeesChargedUsd: number;
+			isWithinWithdrawRequestSlippage: boolean;
+			minCollateralAmountOut: Balance;
 	  };
 
 /**
