@@ -45,6 +45,9 @@ import {
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
 	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
 	PerpetualsAccountObject,
+	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody,
+	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse,
+	ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -189,6 +192,29 @@ export class PerpetualsVault extends Caller {
 			"vault/transactions/process-force-withdraw-request",
 			{
 				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
+
+	// TODO: docs
+	public async getPauseVaultForForceWithdrawRequestTx(inputs: {
+		tx?: Transaction;
+	}) {
+		const { tx } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/pause-vault-for-force-withdraw-request",
+			{
 				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -730,6 +756,19 @@ export class PerpetualsVault extends Caller {
 		});
 	}
 
+	// TODO: docs
+	public async getPreviewPauseVaultForForceWithdrawRequest(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse,
+			ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody
+		>("vault/previews/pause-vault-for-force-withdraw-request", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
@@ -798,6 +837,18 @@ export class PerpetualsVault extends Caller {
 		return new Perpetuals(this.config, this.Provider).getAccount({
 			accountCap: this.partialVaultCap(),
 		});
+	}
+
+	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	// TODO: docs
+	public isPaused(): boolean {
+		return !!(
+			this.vaultObject.pausedUntilTimestamp &&
+			this.vaultObject.pausedUntilTimestamp > BigInt(Date.now())
+		);
 	}
 
 	// =========================================================================

@@ -684,13 +684,6 @@ export interface PerpetualsVaultObject {
 	 */
 	marketIds: PerpetualsMarketId[];
 	/**
-	 * A linked table that keeps track of pending withdrawal requests made by users.
-	 *
-	 * Withdrawals are typically queued to enforce lock periods and to allow the
-	 * vault to unwind positions as needed.
-	 */
-	withdrawQueue: PerpetualsVaultWithdrawRequest[];
-	/**
 	 * Vault parameters
 	 */
 	parameters: {
@@ -759,6 +752,8 @@ export interface PerpetualsVaultObject {
 		 * vault to exceed this limit should be rejected by the protocol/backend.
 		 */
 		maxTotalDepositedCollateral: Balance;
+		/** Minimum position margin (USD) to trigger full close during force withdraw. */
+		minForceWithdrawValueUsd: number;
 	};
 	/** Owner address of the vault. */
 	ownerAddress: SuiAddress;
@@ -787,6 +782,12 @@ export interface PerpetualsVaultObject {
 	 * guaranteed rate.
 	 */
 	monthlyAprPercentage: Percentage;
+	/** The annualized percentage return from incentives (added yields) */
+	monthlyBoostedAprPercentage: Percentage;
+	/** Indicates the vault is temporarily paused until the timestamp (if present). */
+	pausedUntilTimestamp: bigint | undefined;
+	/** Timestamp at which `pause_vault_for_force_withdraw` was last called. */
+	lastPausedTimestamp: Timestamp;
 }
 
 /**
@@ -2690,6 +2691,12 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse {
 	coinOutArg: TransactionObjectArgument | undefined;
 }
 
+// TODO: docs
+export interface ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody {
+	vaultId: ObjectId;
+	txKind?: SerializedTransaction;
+}
+
 /**
  * API body to process regular withdraw requests for a vault.
  */
@@ -2937,6 +2944,23 @@ export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
 			isWithinWithdrawRequestSlippage: boolean;
 			minCollateralAmountOut: Balance;
 	  };
+
+// TODO: docs
+export interface ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody {
+	vaultId: ObjectId;
+	walletAddress: SuiAddress;
+}
+
+// TODO: docs
+export type ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse =
+
+		| {
+				error: string;
+		  }
+		| {
+				isPausable: boolean;
+				minNextPauseTimestamp: bigint;
+		  };
 
 /**
  * Request body for previewing normal withdraw requests processing for a vault.
