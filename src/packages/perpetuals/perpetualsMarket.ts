@@ -279,20 +279,7 @@ export class PerpetualsMarket extends Caller {
 	public async getPlaceMarketOrderPreview(
 		inputs: SdkPerpetualsPlaceMarketOrderPreviewInputs,
 		abortSignal?: AbortSignal
-	): Promise<
-		| { error: string }
-		| {
-				updatedPosition: PerpetualsPosition;
-				priceSlippage: number;
-				percentSlippage: Percentage;
-				filledSize: number;
-				filledSizeUsd: number;
-				postedSize: number;
-				postedSizeUsd: number;
-				collateralChange: number;
-				executionPrice: number;
-		  }
-	> {
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
 		return this.fetchApi<
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceMarketOrderBody
@@ -321,20 +308,7 @@ export class PerpetualsMarket extends Caller {
 	public async getPlaceLimitOrderPreview(
 		inputs: SdkPerpetualsPlaceLimitOrderPreviewInputs,
 		abortSignal?: AbortSignal
-	): Promise<
-		| { error: string }
-		| {
-				updatedPosition: PerpetualsPosition;
-				priceSlippage: number;
-				percentSlippage: Percentage;
-				filledSize: number;
-				filledSizeUsd: number;
-				postedSize: number;
-				postedSizeUsd: number;
-				collateralChange: number;
-				executionPrice: number;
-		  }
-	> {
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
 		return this.fetchApi<
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceLimitOrderBody

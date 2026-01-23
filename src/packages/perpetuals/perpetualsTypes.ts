@@ -515,7 +515,8 @@ export interface PerpetualsStopOrderData {
 		stopLossIndexPrice?: number;
 		/** Index price at which to take profit. */
 		takeProfitIndexPrice?: number;
-		// forPositionSide: PerpetualsOrderSide;
+		/** Unique order identifier for limit order sl/tp is tied to. */
+		limitOrderId?: PerpetualsOrderId;
 	};
 	/** Non-SL/TP standalone stop configuration. */
 	nonSlTp?: {
@@ -963,6 +964,8 @@ export type PerpetualsAccountOrderHistoryData = {
 		stopLossIndexPrice?: number;
 		/** Optional take-profit trigger price based on the index price. */
 		takeProfitIndexPrice?: number;
+		/** Unique order identifier for limit order sl/tp is tied to. */
+		limitOrderId?: PerpetualsOrderId;
 	};
 	/** Stop order data that is not a stop-loss / take-profit order
 	 * (e.g. generic trigger orders).
@@ -1710,6 +1713,7 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	| "collateralChange"
 	| "walletAddress"
 	| "hasPosition"
+	| "cancelSlTp"
 	| "txKind"
 	| "accountId"
 	| "slTp"
@@ -1740,6 +1744,7 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	| "collateralChange"
 	| "walletAddress"
 	| "hasPosition"
+	| "cancelSlTp"
 	| "txKind"
 	| "accountId"
 	| "slTp"
@@ -1874,15 +1879,31 @@ export type ApiPerpetualsPreviewPlaceOrderResponse =
 			error: string;
 	  }
 	| {
+			/** Simulated position after the market order. */
 			updatedPosition: PerpetualsPosition;
+			/** Absolute price slippage between reference price and execution price. */
 			priceSlippage: number;
-			percentSlippage: Percentage;
+			/** Relative price slippage expressed as a fraction
+			 * (e.g. `0.01` == 1% slippage). */
+			percentSlippage: number;
+			/** Size that is expected to be filled immediately (in base units). */
 			filledSize: number;
+			/** Notional value in USD of the `filledSize`. */
 			filledSizeUsd: number;
+			/** Any size that remains posted as liquidity (for market orders this is
+			 * usually zero unless partially resting is supported). */
 			postedSize: number;
+			/** Notional value in USD of the `postedSize`. For pure market orders this
+			 * is typically `0`. */
 			postedSizeUsd: number;
+			/** Net collateral change in USD (e.g. fees, margin changes). */
 			collateralChange: number;
+			/** Effective execution price for the filled portion of the order. */
 			executionPrice: number;
+			/** Whether there is an existing position in this market. */
+			hasPosition: boolean;
+			/** True is position is closed. */
+			cancelSlTp: boolean;
 	  };
 
 /**
@@ -2250,6 +2271,8 @@ export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 	stopLossIndexPrice?: number;
 	/** Index price at which to trigger take profit. */
 	takeProfitIndexPrice?: number;
+	/** Unique order identifier for limit order sl/tp is tied to. */
+	limitOrderId?: PerpetualsOrderId;
 	/** Optional transaction to embed in. */
 	tx?: Transaction;
 	/** Optional gas coin argument. */
@@ -2280,6 +2303,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	size?: bigint;
 	stopLossIndexPrice?: number;
 	takeProfitIndexPrice?: number;
+	limitOrderId?: PerpetualsOrderId;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
 	leverage?: number;
@@ -2328,6 +2352,7 @@ export type ApiPerpetualsEditStopOrdersBody = {
  * like `accountId` or `vaultId`.
  */
 export type ApiPerpetualsMarketOrderBody = {
+	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	/** Order size in scaled base units. */
@@ -2336,13 +2361,14 @@ export type ApiPerpetualsMarketOrderBody = {
 	collateralChange: number;
 	/** Whether the account already has a position in this market. */
 	hasPosition: boolean;
+	/** True is position is closed. */
+	cancelSlTp: boolean;
 	/** If true, order can only reduce an existing position. */
 	reduceOnly: boolean;
 	/** Optional leverage override. */
 	leverage?: number;
 	/** Optional SL/TP instructions to be placed along with the market order. */
 	slTp?: {
-		walletAddress: SuiAddress;
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
@@ -2377,6 +2403,7 @@ export type ApiPerpetualsMarketOrderBody = {
  */
 export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
+	walletAddress: SuiAddress;
 	side: PerpetualsOrderSide;
 	/** Order size in scaled base units. */
 	size: bigint;
@@ -2388,6 +2415,8 @@ export type ApiPerpetualsLimitOrderBody = {
 	collateralChange: number;
 	/** Whether the account already has a position in this market. */
 	hasPosition: boolean;
+	/** True is position is closed. */
+	cancelSlTp: boolean;
 	/** If true, order can only reduce an existing position. */
 	reduceOnly: boolean;
 	/** Optional expiration for the order. */
@@ -2396,7 +2425,6 @@ export type ApiPerpetualsLimitOrderBody = {
 	leverage?: number;
 	/** Optional SL/TP instructions to be placed along with the limit order. */
 	slTp?: {
-		walletAddress: SuiAddress;
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
@@ -2431,6 +2459,7 @@ export type ApiPerpetualsLimitOrderBody = {
  * account or vault, per market.
  */
 export type ApiPerpetualsCancelOrdersBody = {
+	walletAddress: SuiAddress;
 	marketIdsToData: Record<
 		PerpetualsMarketId,
 		{
@@ -3017,7 +3046,7 @@ export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
  */
 export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountId" | "hasPosition" | "txKind" | "slTp"
+	"accountId" | "txKind" | "slTp" | "walletAddress"
 > & {
 	tx?: Transaction;
 	slTp?: {
@@ -3046,7 +3075,7 @@ export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
  */
 export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountId" | "hasPosition" | "txKind" | "slTp"
+	"accountId" | "txKind" | "slTp" | "walletAddress"
 > & {
 	tx?: Transaction;
 	slTp?: {

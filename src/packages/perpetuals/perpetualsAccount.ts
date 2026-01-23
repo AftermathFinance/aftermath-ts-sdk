@@ -64,7 +64,7 @@ import {
 	ApiPerpetualsAccountMarginHistoryResponse,
 	ApiPerpetualsStopOrderDatasResponse,
 } from "../../types";
-import { Casting } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import {
 	Transaction,
@@ -489,7 +489,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceMarketOrderTx(
 		inputs: SdkPerpetualsPlaceMarketOrderInputs
 	) {
-		const { tx: txFromInputs, slTp, ...otherInputs } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -502,12 +502,6 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-market-order",
 			{
 				...otherInputs,
-				slTp: slTp
-					? {
-							walletAddress: this.ownerAddress(),
-							...slTp,
-					  }
-					: undefined,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -521,8 +515,8 @@ export class PerpetualsAccount extends Caller {
 							accountId: this.accountCap.accountId,
 							vaultId: undefined,
 					  }),
-				hasPosition:
-					this.positionForMarketId(otherInputs) !== undefined,
+				// hasPosition:
+				// 	this.positionForMarketId(otherInputs) !== undefined,
 			},
 			undefined,
 			{
@@ -550,7 +544,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceLimitOrderTx(
 		inputs: SdkPerpetualsPlaceLimitOrderInputs
 	) {
-		const { tx: txFromInputs, slTp, ...otherInputs } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -563,12 +557,6 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-limit-order",
 			{
 				...otherInputs,
-				slTp: slTp
-					? {
-							walletAddress: this.ownerAddress(),
-							...slTp,
-					  }
-					: undefined,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -582,8 +570,8 @@ export class PerpetualsAccount extends Caller {
 							accountId: this.accountCap.accountId,
 							vaultId: undefined,
 					  }),
-				hasPosition:
-					this.positionForMarketId(otherInputs) !== undefined,
+				// hasPosition:
+				// 	this.positionForMarketId(otherInputs) !== undefined,
 			},
 			undefined,
 			{
@@ -1089,22 +1077,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceMarketOrderPreview(
 		inputs: SdkPerpetualsPlaceMarketOrderPreviewInputs,
 		abortSignal?: AbortSignal
-	): Promise<
-		| {
-				error: string;
-		  }
-		| {
-				updatedPosition: PerpetualsPosition;
-				priceSlippage: number;
-				percentSlippage: Percentage;
-				filledSize: number;
-				filledSizeUsd: number;
-				postedSize: number;
-				postedSizeUsd: number;
-				collateralChange: number;
-				executionPrice: number;
-		  }
-	> {
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
 		return this.fetchApi<
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceMarketOrderBody
@@ -1144,22 +1117,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceLimitOrderPreview(
 		inputs: SdkPerpetualsPlaceLimitOrderPreviewInputs,
 		abortSignal?: AbortSignal
-	): Promise<
-		| {
-				error: string;
-		  }
-		| {
-				updatedPosition: PerpetualsPosition;
-				priceSlippage: number;
-				percentSlippage: Percentage;
-				filledSize: number;
-				filledSizeUsd: number;
-				postedSize: number;
-				postedSizeUsd: number;
-				collateralChange: number;
-				executionPrice: number;
-		  }
-	> {
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
 		return this.fetchApi<
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceLimitOrderBody
@@ -1669,8 +1627,24 @@ export class PerpetualsAccount extends Caller {
 
 		for (const { marketId } of this.account.positions) {
 			const { fullSlTpOrder, partialSlTpOrders } =
-				this.slTpStopOrderDatasForMarketId({
+				this.slTpStopOrderDatasForPosition({
 					marketId,
+					stopOrderDatas,
+				});
+			slTpOrders = [
+				...slTpOrders,
+				...(fullSlTpOrder ? [fullSlTpOrder] : []),
+				...(partialSlTpOrders ?? []),
+			];
+		}
+		for (const limitOrderId of Helpers.uniqueArray(
+			stopOrderDatas.map((stopOrder) => stopOrder.slTp?.limitOrderId)
+		)) {
+			if (limitOrderId === undefined) continue;
+
+			const { fullSlTpOrder, partialSlTpOrders } =
+				this.slTpStopOrderDatasForLimitOrder({
+					limitOrderId,
 					stopOrderDatas,
 				});
 			slTpOrders = [
@@ -1685,13 +1659,13 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Filter stop orders for a single market to only include non-SL/TP orders.
 	 *
-	 * Uses {@link slTpStopOrderDatasForMarketId} under the hood.
+	 * Uses {@link slTpStopOrderDatasForPosition} under the hood.
 	 *
 	 * @param inputs.marketId - Market ID to filter for.
 	 * @param inputs.stopOrderDatas - Full list of stop orders.
 	 * @returns Non-SL/TP stop orders for the given market, or `undefined` if none exist.
 	 */
-	public nonSlTpStopOrderDatasForMarketId(inputs: {
+	public nonSlTpStopOrderDatasForPosition(inputs: {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
 	}): PerpetualsStopOrderData[] | undefined {
@@ -1701,7 +1675,7 @@ export class PerpetualsAccount extends Caller {
 		if (!position) return undefined;
 
 		const { fullSlTpOrder, partialSlTpOrders } =
-			this.slTpStopOrderDatasForMarketId(inputs);
+			this.slTpStopOrderDatasForPosition(inputs);
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
@@ -1737,7 +1711,7 @@ export class PerpetualsAccount extends Caller {
 	 * - `fullSlTpOrder` (if any)
 	 * - `partialSlTpOrders` (if any, otherwise `undefined`)
 	 */
-	public slTpStopOrderDatasForMarketId(inputs: {
+	public slTpStopOrderDatasForPosition(inputs: {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
 	}): {
@@ -1781,6 +1755,50 @@ export class PerpetualsAccount extends Caller {
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
+					(order.slTp.stopLossIndexPrice ||
+						order.slTp.takeProfitIndexPrice) &&
+					order.size < Casting.i64MaxBigInt
+			);
+
+		return {
+			fullSlTpOrder,
+			partialSlTpOrders:
+				partialSlTpOrders.length <= 0 ? undefined : partialSlTpOrders,
+		};
+	}
+
+	public slTpStopOrderDatasForLimitOrder(inputs: {
+		stopOrderDatas: PerpetualsStopOrderData[];
+		limitOrderId: PerpetualsOrderId;
+	}): {
+		fullSlTpOrder: PerpetualsStopOrderData | undefined;
+		partialSlTpOrders: PerpetualsStopOrderData[] | undefined;
+	} {
+		const { stopOrderDatas, limitOrderId } = inputs;
+
+		/**
+		 * Implementation note:
+		 *
+		 * This method uses a pair of predicates that differ only by the `size` threshold
+		 * to split “full close” SL/TP from “partial close” SL/TP. The sentinel threshold
+		 * is {@link Casting.i64MaxBigInt}. Keeping the logic explicit (rather than
+		 * abstracting into helpers) makes it easier to reason about protocol conventions.
+		 */
+		const fullSlTpOrder: PerpetualsStopOrderData | undefined =
+			stopOrderDatas.find(
+				(order) =>
+					order.slTp &&
+					order.slTp.limitOrderId === limitOrderId &&
+					(order.slTp.stopLossIndexPrice ||
+						order.slTp.takeProfitIndexPrice) &&
+					order.size >= Casting.i64MaxBigInt
+			);
+
+		const partialSlTpOrders: PerpetualsStopOrderData[] =
+			stopOrderDatas.filter(
+				(order) =>
+					order.slTp &&
+					order.slTp.limitOrderId === limitOrderId &&
 					(order.slTp.stopLossIndexPrice ||
 						order.slTp.takeProfitIndexPrice) &&
 					order.size < Casting.i64MaxBigInt
