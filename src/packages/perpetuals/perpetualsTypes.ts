@@ -15,6 +15,7 @@ import {
 	PackageId,
 	Percentage,
 	SerializedTransaction,
+	Slippage,
 	SuiAddress,
 	SuiCheckpoint,
 	Timestamp,
@@ -1717,6 +1718,7 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	| "txKind"
 	| "accountId"
 	| "slTp"
+	| "slippage"
 > & {
 	// collateralCoinType: CoinType;
 	/** Optional leverage override for the preview. */
@@ -2365,6 +2367,8 @@ export type ApiPerpetualsMarketOrderBody = {
 	cancelSlTp: boolean;
 	/** If true, order can only reduce an existing position. */
 	reduceOnly: boolean;
+	/** Allowable max slippage for trade execution. */
+	slippage: Slippage;
 	/** Optional leverage override. */
 	leverage?: number;
 	/** Optional SL/TP instructions to be placed along with the market order. */

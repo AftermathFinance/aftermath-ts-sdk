@@ -79,6 +79,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		filledTakerOrderLiquidator: AnyObjectType;
 		performedLiquidation: AnyObjectType;
 		reducedOrder: AnyObjectType;
+		performedAdl: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
 
@@ -139,6 +140,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				"EditedStopOrderTicketDetails"
 			),
 			executedStopOrderTicket: this.eventType("ExecutedStopOrderTicket"),
+			// ADL
+			performedAdl: this.eventType("PerformedADL"),
 		};
 		this.moveErrors = {
 			// TODO: add support for this back in some way ?
