@@ -1605,6 +1605,16 @@ export interface ApiPerpetualsHistoricalDataWithCursorResponse {
 }
 
 /**
+ * Enumerates the timeframes available for retrieving historical account margin data,
+ * such as `"1D"`, `"1W"`, `"1M"`, etc.
+ */
+export type PerpetualsAccountMarginHistoryTimeframeKey =
+	| "1D"
+	| "1W"
+	| "1M"
+	| "ALL";
+
+/**
  * Request payload for fetching historical margin metrics for an account.
  */
 export interface ApiPerpetualsAccountMarginHistoryBody {
@@ -1614,20 +1624,9 @@ export interface ApiPerpetualsAccountMarginHistoryBody {
 	accountId: PerpetualsAccountId;
 
 	/**
-	 * Start of the time range to query, as a Unix timestamp in **milliseconds**.
+	 * Timeframe from which to obtain historical data from.
 	 */
-	fromTimestamp: Timestamp;
-
-	/**
-	 * End of the time range to query, as a Unix timestamp in **milliseconds**.
-	 */
-	toTimestamp: Timestamp;
-
-	/**
-	 * Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
-	 * 300_000 for 5m).
-	 */
-	intervalMs: number;
+	timeframe: PerpetualsAccountMarginHistoryTimeframeKey;
 }
 
 /**

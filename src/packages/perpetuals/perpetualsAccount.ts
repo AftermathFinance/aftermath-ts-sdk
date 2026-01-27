@@ -1517,12 +1517,7 @@ export class PerpetualsAccount extends Caller {
 	 * This endpoint returns time-series margin data suitable for charting UI
 	 * such as equity and available collateral over time.
 	 *
-	 * Inputs:
-	 * - `fromTimestamp` / `toTimestamp` are Unix timestamps in **milliseconds**.
-	 * - `intervalMs` controls the resolution (e.g. 60_000 for 1-minute points).
-	 *
 	 * Notes:
-	 * - Returned points are typically aligned to the requested interval.
 	 * - This is an account-level view (aggregated across markets).
 	 *
 	 * @param inputs - {@link ApiPerpetualsAccountMarginHistoryBody} without `accountId`.
