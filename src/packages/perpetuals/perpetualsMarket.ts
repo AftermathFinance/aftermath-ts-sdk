@@ -42,6 +42,8 @@ import {
 	ApiPerpetualsMarketOrderHistoryBody,
 	ApiPerpetualsMarketsResponse,
 	ApiPerpetualsMarketsBody,
+	ApiPerpetualsOrderbooksResponse,
+	ApiPerpetualsOrderbooksBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -188,10 +190,6 @@ export class PerpetualsMarket extends Caller {
 	/**
 	 * Fetch the full orderbook snapshot for this market.
 	 *
-	 * Implementation note:
-	 * - Currently implemented via the generic `markets` endpoint with `withOrderbook: true`
-	 * - The backend returns `marketDatas[]` which include both `market` and `orderbook`
-	 *
 	 * @returns Object containing `orderbook`.
 	 *
 	 * @example
@@ -200,16 +198,17 @@ export class PerpetualsMarket extends Caller {
 	 * console.log(orderbook.bids[0], orderbook.asks[0]);
 	 * ```
 	 */
-	public async getOrderbook() {
-		const { marketDatas } = await this.fetchApi<
-			ApiPerpetualsMarketsResponse,
-			ApiPerpetualsMarketsBody
-		>("markets", {
+	public async getOrderbook(): Promise<{
+		orderbook: PerpetualsOrderbook;
+	}> {
+		const { orderbooks } = await this.fetchApi<
+			ApiPerpetualsOrderbooksResponse,
+			ApiPerpetualsOrderbooksBody
+		>("markets/orderbooks", {
 			marketIds: [this.marketId],
-			withOrderbook: true,
 		});
 		return {
-			orderbook: marketDatas[0].orderbook!,
+			orderbook: orderbooks[0].orderbook,
 		};
 	}
 

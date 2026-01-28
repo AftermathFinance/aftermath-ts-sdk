@@ -2585,23 +2585,37 @@ export interface ApiPerpetualsAllMarketsResponse {
 
 /**
  * Request body for fetching a specific set of markets by ID.
- *
- * Set `withOrderbook` to include an aggregated orderbook snapshot per market.
  */
 export interface ApiPerpetualsMarketsBody {
 	marketIds: PerpetualsMarketId[];
-	withOrderbook?: boolean;
 }
 
 /**
  * Response payload for {@link ApiPerpetualsMarketsBody}.
  *
- * Each item includes the market data and, if requested, the current orderbook snapshot.
+ * Each item includes the market data.
  */
 export interface ApiPerpetualsMarketsResponse {
 	marketDatas: {
 		market: PerpetualsMarketData;
-		orderbook?: PerpetualsOrderbook;
+	}[];
+}
+
+/**
+ * Request body for fetching a specific set of orderbooks by market ID.
+ */
+export interface ApiPerpetualsOrderbooksBody {
+	marketIds: PerpetualsMarketId[];
+}
+
+/**
+ * Response payload for {@link ApiPerpetualsOrderbooksBody}.
+ *
+ * Each item includes the current orderbook snapshot.
+ */
+export interface ApiPerpetualsOrderbooksResponse {
+	orderbooks: {
+		orderbook: PerpetualsOrderbook;
 	}[];
 }
 
@@ -2630,7 +2644,6 @@ export interface ApiPerpetualsVaultsResponse {
  */
 export interface ApiPerpetualsMarketsPricesBody {
 	marketIds: PerpetualsMarketId[];
-	withOrderbook?: boolean;
 }
 
 /**

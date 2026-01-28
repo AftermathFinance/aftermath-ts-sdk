@@ -217,7 +217,6 @@ export class Perpetuals extends Caller {
 	 */
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
-		// withOrderbook: boolean;
 	}): Promise<{ market: PerpetualsMarket }> {
 		const { markets } = await this.getMarkets({
 			marketIds: [inputs.marketId],
@@ -231,9 +230,8 @@ export class Perpetuals extends Caller {
 	 * Fetch multiple markets by ID.
 	 *
 	 * Backend note:
-	 * - The API supports returning orderbooks. This SDK currently forces
-	 *   `withOrderbook: false` and constructs {@link PerpetualsMarket} from
-	 *   the returned `marketDatas[].market`.
+	 * - The API supports returning orderbooks. This SDK currently constructs
+	 *  {@link PerpetualsMarket} from the returned `marketDatas[].market`.
 	 *
 	 * @param inputs.marketIds - Array of market object IDs to fetch.
 	 * @returns Object containing `markets` in the same order as `marketIds`.
@@ -247,17 +245,13 @@ export class Perpetuals extends Caller {
 	 */
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
-		// withOrderbook: boolean;
 	}): Promise<{
 		markets: PerpetualsMarket[];
 	}> {
 		const res = await this.fetchApi<
 			ApiPerpetualsMarketsResponse,
 			ApiPerpetualsMarketsBody
-		>("markets", {
-			...inputs,
-			withOrderbook: false,
-		});
+		>("markets", inputs);
 		return {
 			markets: res.marketDatas.map(
 				(marketData) =>
