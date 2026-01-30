@@ -198,6 +198,7 @@ export class PerpetualsMarket extends Caller {
 	 * console.log(orderbook.bids[0], orderbook.asks[0]);
 	 * ```
 	 */
+	// TODO: move to `Perpetuals` class ?
 	public async getOrderbook(): Promise<{
 		orderbook: PerpetualsOrderbook;
 	}> {
