@@ -18,10 +18,6 @@ type ResponseWithTxKind = { txKind: SerializedTransaction } & (
 	| {}
 );
 
-function hasTxKind(x: unknown): x is ResponseWithTxKind {
-	return !!x && typeof x === "object" && "txKind" in x;
-}
-
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
 	protected readonly apiEndpoint: Url;

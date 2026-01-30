@@ -64,6 +64,15 @@ import {
 	ApiPerpetualsVaultsResponse,
 	ApiPerpetualsVaultsBody,
 	SdkTransactionResponse,
+	ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+	ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse,
+	ApiPerpetualsBuilderCodesIntegratorConfigBody,
+	ApiPerpetualsBuilderCodesIntegratorConfigResponse,
+	ApiPerpetualsBuilderCodesIntegratorVaultsBody,
+	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
+	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -803,6 +812,259 @@ export class Perpetuals extends Caller {
 				txKind: true,
 			}
 		);
+	}
+
+	// =========================================================================
+	//  Builder Codes Transactions
+	// =========================================================================
+
+	/**
+	 * Build a transaction to create an integrator configuration.
+	 *
+	 * This endpoint creates a transaction that allows a user to grant permission to an
+	 * integrator to receive fees on orders placed on their behalf. The user specifies
+	 * a maximum taker fee that the integrator can charge. The integrator can then
+	 * include their address and fee (up to the maximum) when placing orders for the user.
+	 *
+	 * The resulting transaction must be signed by the account owner and executed on-chain.
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody}.
+	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 *
+	 * @example
+	 * ```ts
+	 * const tx = await perps.getCreateBuilderCodeIntegratorConfigTx({
+	 *   accountId: 123n,
+	 *   integratorAddress: "0x...",
+	 *   maxTakerFee: 0.001, // 0.1% max fee
+	 * });
+	 * ```
+	 */
+	public async getCreateBuilderCodeIntegratorConfigTx(
+		inputs: ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody
+	) {
+		return this.fetchApiTxObject<
+			ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+			ApiTransactionResponse
+		>(
+			"builder-codes/transactions/create-integrator-config",
+			inputs,
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a transaction to remove an integrator configuration.
+	 *
+	 * This endpoint creates a transaction that removes an integrator's approval to
+	 * collect fees on orders placed on behalf of the user. Once revoked, the integrator
+	 * will no longer be able to submit orders with integrator fees for this account.
+	 * The user can re-approve the integrator at any time by calling
+	 * {@link getCreateIntegratorConfigTx} again.
+	 *
+	 * The resulting transaction must be signed by the account owner and executed on-chain.
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody}.
+	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 *
+	 * @example
+	 * ```ts
+	 * const tx = await perps.getRemoveBuilderCodeIntegratorConfigTx({
+	 *   accountId: 123n,
+	 *   integratorAddress: "0x...",
+	 * });
+	 * ```
+	 */
+	public async getRemoveBuilderCodeIntegratorConfigTx(
+		inputs: ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody
+	) {
+		return this.fetchApiTxObject<
+			ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+			ApiTransactionResponse
+		>(
+			"builder-codes/transactions/remove-integrator-config",
+			inputs,
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a transaction to initialize an integrator fee vault for a specific market.
+	 *
+	 * This endpoint creates a transaction that initializes a vault where an integrator's
+	 * fees will accumulate for a specific market (clearing house). This is a one-time
+	 * setup operation that must be performed before the integrator can claim fees from
+	 * that market. Once created, the vault will automatically collect fees as the
+	 * integrator submits orders on behalf of users in that market.
+	 *
+	 * The resulting transaction must be signed by the integrator and executed on-chain.
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody}.
+	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 *
+	 * @example
+	 * ```ts
+	 * const tx = await perps.getCreateBuilderCodeIntegratorVaultTx({
+	 *   marketId: "0x...",
+	 *   integratorAddress: "0x...",
+	 * });
+	 * ```
+	 */
+	public async getCreateBuilderCodeIntegratorVaultTx(
+		inputs: ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody
+	) {
+		return this.fetchApiTxObject<
+			ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+			ApiTransactionResponse
+		>(
+			"builder-codes/transactions/create-integrator-vault",
+			inputs,
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a transaction to claim accumulated integrator fees from a vault.
+	 *
+	 * This endpoint creates a transaction that allows an integrator to claim the fees
+	 * they have earned from orders placed on behalf of users. Fees accumulate in a vault
+	 * specific to each market (clearing house) and can be claimed at any moment by the
+	 * integrator. The fees are proportional to the taker volume generated by the users'
+	 * orders that the integrator submitted.
+	 *
+	 * If a `recipientAddress` is provided, the claimed fees will be automatically
+	 * transferred to that address. Otherwise, the coin output is exposed as a transaction
+	 * argument for further use in the transaction.
+	 *
+	 * The resulting transaction must be signed by the integrator and executed on-chain.
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody}.
+	 * @returns {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse} containing
+	 *   `txKind` and optionally `coinOutArg`.
+	 *
+	 * @example
+	 * ```ts
+	 * // Claim with automatic transfer to recipient
+	 * const response = await perps.getClaimBuilderCodeIntegratorVaultFeesTx({
+	 *   marketId: "0x...",
+	 *   integratorAddress: "0x...",
+	 *   recipientAddress: "0x...",
+	 * });
+	 *
+	 * // Claim with coin output for further use
+	 * const response = await perps.getClaimBuilderCodeIntegratorVaultFeesTx({
+	 *   marketId: "0x...",
+	 *   integratorAddress: "0x...",
+	 * });
+	 * // response.coinOutArg can be used in subsequent transaction commands
+	 * ```
+	 */
+	public async getClaimBuilderCodeIntegratorVaultFeesTx(
+		inputs: ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody
+	) {
+		return this.fetchApiTxObject<
+			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse
+		>(
+			"builder-codes/transactions/claim-integrator-vault-fees",
+			inputs,
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	// =========================================================================
+	//  Builder Codes Inspections
+	// =========================================================================
+
+	/**
+	 * Fetch integrator configuration for a specific account and integrator.
+	 *
+	 * This endpoint queries whether an integrator has been approved by an account to collect
+	 * fees on orders placed on behalf of the account. If approved, it returns the maximum
+	 * taker fee the integrator is authorized to charge. This information is useful for:
+	 * - Verifying integrator permissions before placing orders
+	 * - Displaying authorized integrators and their fee limits in UIs
+	 * - Validating that an integrator's requested fee doesn't exceed the approved maximum
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorConfigBody}.
+	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorConfigResponse} containing
+	 *   `maxTakerFee` and `exists` flag.
+	 *
+	 * @example
+	 * ```ts
+	 * const config = await perps.getBuilderCodeIntegratorConfig({
+	 *   accountId: 123n,
+	 *   integratorAddress: "0x...",
+	 * });
+	 *
+	 * if (config.exists) {
+	 *   console.log(`Integrator is approved with max fee: ${config.maxTakerFee}`);
+	 * } else {
+	 *   console.log("Integrator is not approved for this account");
+	 * }
+	 * ```
+	 */
+	public async getBuilderCodeIntegratorConfig(
+		inputs: ApiPerpetualsBuilderCodesIntegratorConfigBody
+	): Promise<ApiPerpetualsBuilderCodesIntegratorConfigResponse> {
+		return this.fetchApi<
+			ApiPerpetualsBuilderCodesIntegratorConfigResponse,
+			ApiPerpetualsBuilderCodesIntegratorConfigBody
+		>("builder-codes/integrator-config", inputs);
+	}
+
+	/**
+	 * Fetch accumulated integrator vault fees across multiple markets.
+	 *
+	 * This endpoint queries the total fees an integrator has earned and accumulated in their
+	 * vaults across one or more markets (clearing houses). Integrators earn fees proportional
+	 * to the taker volume generated by orders they submit on behalf of users. These fees
+	 * accumulate in per-market vaults and can be claimed at any time using
+	 * {@link getClaimIntegratorVaultFeesTx}.
+	 *
+	 * This information is useful for:
+	 * - Displaying total claimable fees to integrators in dashboards
+	 * - Monitoring fee accrual across different markets
+	 * - Determining which markets have fees ready to be claimed
+	 *
+	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorVaultsBody}.
+	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorVaultsResponse} containing
+	 *   a vector of market vault data with accumulated fees.
+	 *
+	 * @example
+	 * ```ts
+	 * const vaultFees = await perps.getBuilderCodeIntegratorVaults({
+	 *   marketIds: ["0x...BTCUSD", "0x...SUIUSD"],
+	 *   integratorAddress: "0x...",
+	 * });
+	 *
+	 * for (const vault of vaultFees.integratorVaults) {
+	 *   console.log(`Market ${vault.marketId}: ${vault.fees} collateral units claimable`);
+	 * }
+	 *
+	 * const totalFees = vaultFees.integratorVaults.reduce((sum, vault) => sum + vault.fees, 0);
+	 * console.log(`Total claimable: ${totalFees}`);
+	 * ```
+	 */
+	public async getBuilderCodeIntegratorVaults(
+		inputs: ApiPerpetualsBuilderCodesIntegratorVaultsBody
+	): Promise<ApiPerpetualsBuilderCodesIntegratorVaultsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
+			ApiPerpetualsBuilderCodesIntegratorVaultsBody
+		>("builder-codes/integrator-vaults", inputs);
 	}
 
 	// =========================================================================
