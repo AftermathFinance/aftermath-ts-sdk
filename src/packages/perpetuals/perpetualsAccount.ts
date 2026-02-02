@@ -147,7 +147,7 @@ export class PerpetualsAccount extends Caller {
 	 * Create a new {@link PerpetualsAccount} wrapper.
 	 *
 	 * @param account - Raw account object with positions and equity data.
-	 * @param accountCap - Account cap or vault-cap-extended object containing
+	 * @param accountCap - Account cap or partial vault cap object containing
 	 *   ownership and collateral metadata.
 	 * @param config - Optional {@link CallerConfig} (network, auth, etc.).
 	 * @param Provider - Optional shared {@link AftermathApi} provider instance

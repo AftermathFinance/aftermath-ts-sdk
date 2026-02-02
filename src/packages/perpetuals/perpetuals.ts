@@ -310,18 +310,14 @@ export class Perpetuals extends Caller {
 	 *
 	 * Internally calls {@link getVaults} and returns the first entry.
 	 *
-	 * Naming note:
-	 * - This method’s parameter is named `marketId` for historical reasons,
-	 *   but it refers to a vault object ID.
-	 *
-	 * @param inputs.marketId - Vault object ID.
+	 * @param inputs.vaultId - Vault object ID.
 	 * @returns Object containing `vault`.
 	 */
-	public async getVault(inputs: { marketId: ObjectId }): Promise<{
+	public async getVault(inputs: { vaultId: ObjectId }): Promise<{
 		vault: PerpetualsVault;
 	}> {
 		const { vaults } = await this.getVaults({
-			vaultIds: [inputs.marketId],
+			vaultIds: [inputs.vaultId],
 		});
 		return {
 			vault: vaults[0],
@@ -358,7 +354,7 @@ export class Perpetuals extends Caller {
 	 *
 	 * Internally calls {@link getAccounts} and returns the first entry.
 	 *
-	 * @param inputs.accountCap - Account-cap or vault-cap-extended object to derive account metadata from.
+	 * @param inputs.accountCap - Account cap or partial vault cap object to derive account metadata from.
 	 * @param inputs.marketIds - Optional list of markets to filter positions by.
 	 * @returns Object containing `account`.
 	 *
@@ -397,7 +393,7 @@ export class Perpetuals extends Caller {
 	 * - The account snapshot (positions, balances, etc.)
 	 * - The ownership/cap metadata (accountId, collateral type, vaultId, etc.)
 	 *
-	 * @param inputs.accountCaps - Array of account caps or vault-cap-extended objects.
+	 * @param inputs.accountCaps - Array of account caps or partial vault cap objects.
 	 * @param inputs.marketIds - Optional list of market IDs to filter positions by.
 	 * @returns Object containing `accounts` in the same order as `accountCaps`.
 	 *
