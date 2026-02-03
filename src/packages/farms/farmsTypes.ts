@@ -143,6 +143,12 @@ export interface FarmsStakingPoolObject extends Object {
 	 */
 	isUnlocked: boolean;
 	/**
+	 * The lock enforcement policy for this pool.
+	 * - "Strict": positions must be unlocked before any principal can be withdrawn
+	 * - "Relaxed": positions can withdraw principal while locked, forfeiting pro-rata locked rewards
+	 */
+	lockEnforcement: FarmsLockEnforcement;
+	/**
 	 * Indicates whether this is version 1 or version 2 of the farm system.
 	 */
 	version: FarmsVersion;

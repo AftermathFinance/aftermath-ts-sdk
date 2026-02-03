@@ -90,6 +90,38 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
+	 * Checks if the position is strictly locked, meaning it is currently locked and the pool uses strict lock enforcement.
+	 *
+	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
+	 * @returns `true` if locked with strict enforcement; otherwise, `false`.
+	 */
+	public isStrictlyLocked = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+		return (
+			this.isLocked({ stakingPool }) &&
+			stakingPool.isStrictLockEnforcement()
+		);
+	};
+
+	/**
+	 * Checks if the position is relaxed locked, meaning it is currently locked and the pool uses relaxed lock enforcement.
+	 *
+	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
+	 * @returns `true` if locked with relaxed enforcement; otherwise, `false`.
+	 */
+	public isRelaxedLocked = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+		return (
+			this.isLocked({ stakingPool }) &&
+			stakingPool.isRelaxedLockEnforcement()
+		);
+	};
+
+	/**
 	 * Checks whether the position has a non-zero lock duration.
 	 *
 	 * @returns `true` if the position was created with a lock duration > 0.
@@ -423,6 +455,29 @@ export class FarmsStakedPosition extends Caller {
 		return this.version() === 1
 			? this.useProvider().buildUnstakeTxV1(args)
 			: this.useProvider().buildUnstakeTxV2(args);
+	}
+
+	/**
+	 * Builds a transaction to withdraw a partial amount of principal from this staked position.
+	 * Unlike `getUnstakeTransaction`, this does NOT destroy the position.
+	 *
+	 * @param inputs - Contains `walletAddress`, `withdrawAmount`, and the `FarmsStakingPool` reference.
+	 * @returns A transaction that can be signed and executed to withdraw principal without destroying the position.
+	 */
+	public async getWithdrawPrincipalTransaction(inputs: {
+		walletAddress: SuiAddress;
+		withdrawAmount: Balance;
+		stakingPool: FarmsStakingPool;
+	}) {
+		const args = {
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		};
+		return this.version() === 1
+			? this.useProvider().buildWithdrawPrincipalTxV1(args)
+			: this.useProvider().buildWithdrawPrincipalTxV2(args);
 	}
 
 	// =========================================================================
