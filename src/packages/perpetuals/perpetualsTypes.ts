@@ -1556,10 +1556,10 @@ export interface ApiPerpetualsOwnedAccountCapsBody {
 }
 
 /**
- * Request body for fetching specific account caps by their object IDs.
+ * Request body for fetching specific admin account caps by their account IDs.
  */
-export interface ApiPerpetualsAccountCapsBody {
-	accountCapIds: ObjectId[];
+export interface ApiPerpetualsAdminAccountCapsBody {
+	accountIds: PerpetualsAccountId[];
 }
 
 /**
@@ -1585,9 +1585,9 @@ export interface ApiPerpetualsAccountPositionsBody {
 }
 
 /**
- * Response payload for fetching account caps by explicit object IDs.
+ * Response payload for fetching admin account caps by explicit account IDs.
  */
-export interface ApiPerpetualsAccountCapsResponse {
+export interface ApiPerpetualsAdminAccountCapsResponse {
 	accountCaps: PerpetualsAccountCap[];
 }
 
@@ -1809,6 +1809,7 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1841,6 +1842,7 @@ export type ApiPerpetualsPreviewSetLeverageBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1856,6 +1858,7 @@ export type ApiPerpetualsPreviewEditCollateralBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2077,6 +2080,7 @@ export type ApiPerpetualsStopOrderDatasBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2361,7 +2365,7 @@ export interface ApiPerpetualsBuilderCodesIntegratorConfigResponse {
 	 * For example, 0.001 represents a 0.1% maximum fee. This value is only meaningful
 	 * if `exists` is true.
 	 */
-	maxTakerFee: Percentage;
+	maxTakerFee: Percentage | undefined;
 
 	/**
 	 * Whether an integrator configuration exists for this account-integrator pair.
@@ -2450,6 +2454,7 @@ export interface ApiPerpetualsCreateAccountBody {
 export type ApiPerpetualsDepositCollateralBody = {
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
+	accountCapId?: ObjectId;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
@@ -2488,7 +2493,9 @@ export interface ApiPerpetualsWithdrawCollateralResponse {
 export interface ApiPerpetualsTransferCollateralBody {
 	walletAddress: SuiAddress;
 	fromAccountId: PerpetualsAccountId;
+	fromAccountCapId?: ObjectId;
 	toAccountId: PerpetualsAccountId;
+	toAccountCapId?: ObjectId;
 	transferAmount: Balance;
 	txKind?: SerializedTransaction;
 }
@@ -2503,6 +2510,7 @@ export type ApiPerpetualsAllocateCollateralBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2519,6 +2527,7 @@ export type ApiPerpetualsDeallocateCollateralBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2553,6 +2562,7 @@ export type ApiPerpetualsPlaceStopOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2611,6 +2621,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2639,6 +2650,7 @@ export type ApiPerpetualsEditStopOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2704,6 +2716,7 @@ export type ApiPerpetualsMarketOrderBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2770,6 +2783,7 @@ export type ApiPerpetualsLimitOrderBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2794,6 +2808,7 @@ export type ApiPerpetualsCancelOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2809,6 +2824,7 @@ export type ApiPerpetualsCancelStopOrdersBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2842,6 +2858,7 @@ export type ApiPerpetualsSetLeverageTxBody = {
 } & (
 	| {
 			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -2976,6 +2993,18 @@ export interface ApiPerpetualsMarketsPricesResponse {
 		collateralPrice: number;
 	}[];
 }
+
+export type ApiPerpetualsGrantAgentWalletTxBody = {
+	recipientAddress: SuiAddress;
+	accountId: PerpetualsAccountId;
+	txKind?: SerializedTransaction;
+};
+
+export type ApiPerpetualsRevokeAgentWalletTxBody = {
+	accountId: PerpetualsAccountId;
+	accountCapId: ObjectId;
+	txKind?: SerializedTransaction;
+};
 
 // =========================================================================
 //  Vaults

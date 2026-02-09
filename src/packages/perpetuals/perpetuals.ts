@@ -26,7 +26,7 @@ import {
 	SuiAddress,
 	ObjectId,
 	ApiPerpetualsMarkets24hrStatsResponse,
-	ApiPerpetualsAccountCapsBody,
+	ApiPerpetualsAdminAccountCapsBody,
 	PerpetualsVaultObject,
 	Percentage,
 	Balance,
@@ -44,7 +44,7 @@ import {
 	PerpetualsPartialVaultCap,
 	PerpetualsVaultMetatada,
 	ApiPerpetualsMarketCandleHistoryBody,
-	ApiPerpetualsAccountCapsResponse,
+	ApiPerpetualsAdminAccountCapsResponse,
 	ApiPerpetualsOwnedAccountCapsResponse,
 	ApiPerpetualsAccountPositionsResponse,
 	ApiPerpetualsAccountPositionsBody,
@@ -556,15 +556,17 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Fetch account caps by their cap object IDs.
+	 * Fetch account caps by their account IDs.
 	 *
-	 * @param inputs.accountCapIds - List of account cap object IDs.
+	 * @param inputs.accountCapIds - List of account IDs.
 	 * @returns {@link ApiPerpetualsAccountCapsResponse} containing caps.
 	 */
-	public async getAccountCaps(inputs: ApiPerpetualsAccountCapsBody) {
+	public async getAdminAccountCaps(
+		inputs: ApiPerpetualsAdminAccountCapsBody
+	) {
 		return this.fetchApi<
-			ApiPerpetualsAccountCapsResponse,
-			ApiPerpetualsAccountCapsBody
+			ApiPerpetualsAdminAccountCapsResponse,
+			ApiPerpetualsAdminAccountCapsBody
 		>("accounts", inputs);
 	}
 

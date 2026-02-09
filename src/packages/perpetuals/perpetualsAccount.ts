@@ -63,6 +63,8 @@ import {
 	ApiPerpetualsAccountOrderDatasResponse,
 	ApiPerpetualsAccountMarginHistoryResponse,
 	ApiPerpetualsStopOrderDatasResponse,
+	ApiPerpetualsGrantAgentWalletTxBody,
+	ApiPerpetualsRevokeAgentWalletTxBody,
 } from "../../types";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -218,9 +220,9 @@ export class PerpetualsAccount extends Caller {
 	) {
 		const { tx, ...otherInputs } = inputs;
 
-		if (this.vaultId)
+		if ("vaultId" in this.accountCap)
 			throw new Error(
-				"this method is not supported for vaults, please use method `getAdminDepositTx` on class `PerpetualsVault` instead"
+				"`getDepositCollateralTx` not supported by vault accounts, please use method `getAdminDepositTx` on class `PerpetualsVault` instead"
 			);
 
 		return this.fetchApiTxObject<
@@ -233,6 +235,7 @@ export class PerpetualsAccount extends Caller {
 				walletAddress: this.ownerAddress(),
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountId: this.accountCap.accountId,
+				accountCapId: this.accountCap.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -340,6 +343,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 				walletAddress: this.ownerAddress(),
@@ -388,6 +392,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 				walletAddress: this.ownerAddress(),
@@ -416,9 +421,10 @@ export class PerpetualsAccount extends Caller {
 	public async getTransferCollateralTx(inputs: {
 		transferAmount: Balance;
 		toAccountId: PerpetualsAccountId;
+		toAccountCapId?: ObjectId;
 		tx?: Transaction;
 	}) {
-		const { transferAmount, toAccountId, tx } = inputs;
+		const { transferAmount, toAccountId, toAccountCapId, tx } = inputs;
 
 		if ("vaultId" in this.accountCap)
 			throw new Error(
@@ -434,8 +440,10 @@ export class PerpetualsAccount extends Caller {
 			{
 				transferAmount,
 				toAccountId,
+				toAccountCapId,
 				walletAddress: this.ownerAddress(),
 				fromAccountId: this.accountCap.accountId,
+				fromAccountCapId: this.accountCap.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
 				),
@@ -513,6 +521,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 				// hasPosition:
@@ -568,6 +577,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 				// hasPosition:
@@ -606,7 +616,6 @@ export class PerpetualsAccount extends Caller {
 			{
 				orderIds: PerpetualsOrderId[];
 				collateralChange: number;
-				leverage: number;
 			}
 		>;
 	}) {
@@ -630,6 +639,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -675,6 +685,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -734,6 +745,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -796,6 +808,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 				positionSide: Perpetuals.positionSide({
@@ -856,6 +869,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -951,6 +965,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1093,6 +1108,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1133,6 +1149,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1182,6 +1199,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1274,6 +1292,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1332,6 +1351,7 @@ export class PerpetualsAccount extends Caller {
 					  }
 					: {
 							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
 					  }),
 			},
@@ -1454,6 +1474,7 @@ export class PerpetualsAccount extends Caller {
 				  }
 				: {
 						accountId: this.accountCap.accountId,
+						accountCapId: this.accountCap.objectId,
 						vaultId: undefined,
 				  }),
 		});
@@ -1543,6 +1564,70 @@ export class PerpetualsAccount extends Caller {
 	// 		walletAddress: this.ownerAddress(),
 	// 	});
 	// }
+
+	public async getGrantAgentWalletTx(inputs: {
+		recipientAddress: SuiAddress;
+		tx?: Transaction;
+	}) {
+		const { tx, recipientAddress } = inputs;
+
+		if ("vaultId" in this.accountCap)
+			throw new Error(
+				"`getGrantAgentWalletTx` not supported by vault accounts"
+			);
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsGrantAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"account/transactions/grant-agent-wallet",
+			{
+				recipientAddress,
+				accountId: this.accountCap.accountId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getRevokeAgentWalletTx(inputs: {
+		accountCapId: ObjectId;
+		tx?: Transaction;
+	}) {
+		const { tx, accountCapId } = inputs;
+
+		if ("vaultId" in this.accountCap)
+			throw new Error(
+				"`getRevokeAgentWalletTx` not supported by vault accounts"
+			);
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsRevokeAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"account/transactions/revoke-agent-wallet",
+			{
+				accountCapId,
+				accountId: this.accountCap.accountId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
 
 	// =========================================================================
 	//  Helpers
