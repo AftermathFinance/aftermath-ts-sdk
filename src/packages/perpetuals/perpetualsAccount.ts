@@ -1565,6 +1565,20 @@ export class PerpetualsAccount extends Caller {
 	// 	});
 	// }
 
+	/**
+	 * Build a transaction that grants an Agent Wallet (assistant permissions) for this perpetuals account.
+	 *
+	 * The returned transaction must be signed and submitted by the **account admin** wallet.
+	 * After execution, `recipientAddress` can execute supported trading actions on behalf of this account.
+	 *
+	 * Agent wallets can perform all supported actions **except**:
+	 * - withdrawing collateral, and
+	 * - granting or revoking other agent wallets.
+	 *
+	 * @param inputs.recipientAddress Wallet address to receive agent permissions.
+	 * @param inputs.tx Optional existing {@link Transaction} to append to. If omitted, a new Transaction is used.
+	 * @throws If this instance represents a vault account (agent wallets are account-only).
+	 */
 	public async getGrantAgentWalletTx(inputs: {
 		recipientAddress: SuiAddress;
 		tx?: Transaction;
@@ -1597,6 +1611,16 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	/**
+	 * Build a transaction that revokes an Agent Wallet (assistant capability) from this perpetuals account.
+	 *
+	 * The returned transaction must be signed and submitted by the **account admin** wallet.
+	 * After execution, the revoked wallet immediately loses its delegated permissions.
+	 *
+	 * @param inputs.accountCapId Object ID of the assistant capability to revoke.
+	 * @param inputs.tx Optional existing {@link Transaction} to append to. If omitted, a new Transaction is used.
+	 * @throws If this instance represents a vault account (agent wallets are account-only).
+	 */
 	public async getRevokeAgentWalletTx(inputs: {
 		accountCapId: ObjectId;
 		tx?: Transaction;

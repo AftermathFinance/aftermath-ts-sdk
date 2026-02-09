@@ -73,6 +73,7 @@ import {
 	ApiPerpetualsBuilderCodesIntegratorVaultsBody,
 	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
 	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+	ApiPerpetualsTransferCapTxBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -672,6 +673,49 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
+
+	/**
+	 * Build a `transfer-cap` transaction that transfers a Perpetuals capability object (cap)
+	 * to another wallet.
+	 *
+	 * Provide the `capObjectId` of the capability you want to transfer (e.g., an account cap
+	 * or vault cap) and the `recipientAddress` that should receive it.
+	 *
+	 * This endpoint builds a transaction only; it does not submit it on-chain.
+	 *
+	 * @param inputs.recipientAddress - Recipient wallet address that should receive the cap.
+	 * @param inputs.capObjectId - Object ID of the capability to transfer.
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Transaction response containing a `tx`.
+	 */
+	public async getTransferCapTx(inputs: {
+		recipientAddress: SuiAddress;
+		capObjectId: ObjectId;
+		tx?: Transaction;
+	}) {
+		const { tx, recipientAddress, capObjectId } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsTransferCapTxBody,
+			ApiTransactionResponse
+		>(
+			"transactions/transfer-cap",
+			{
+				recipientAddress,
+				capObjectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
 
 	/**
 	 * Build a `create-account` transaction for Aftermath Perpetuals.

@@ -174,6 +174,8 @@ export interface PerpetualsAccountCap {
 	/** On-chain object digest. */
 	objectDigest: ObjectDigest;
 	// subAccount: PerpetualsSubAccount;
+	/** True if this account cap was allocated to an agent wallet from the admin account cap owner. */
+	isAgent: boolean;
 }
 
 /**
@@ -2994,15 +2996,55 @@ export interface ApiPerpetualsMarketsPricesResponse {
 	}[];
 }
 
+/**
+ * Request body for granting an Agent Wallet on a perpetuals account.
+ *
+ * This corresponds to `POST /api/perpetuals/account/transactions/grant-agent-wallet`.
+ *
+ * The resulting on-chain transaction must be signed by the **account admin** wallet.
+ * After execution, `recipientAddress` receives assistant-level permissions for `accountId`
+ * (trading actions are allowed, but **withdrawing collateral** and managing other agent wallets are not).
+ */
 export type ApiPerpetualsGrantAgentWalletTxBody = {
 	recipientAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
 	txKind?: SerializedTransaction;
 };
 
+/**
+ * Request body for revoking an Agent Wallet from a perpetuals account.
+ *
+ * This corresponds to `POST /api/perpetuals/account/transactions/revoke-agent-wallet`.
+ *
+ * The resulting on-chain transaction must be signed by the **account admin** wallet.
+ * `accountCapId` is the object ID of the assistant capability to revoke.
+ */
 export type ApiPerpetualsRevokeAgentWalletTxBody = {
 	accountId: PerpetualsAccountId;
 	accountCapId: ObjectId;
+	txKind?: SerializedTransaction;
+};
+
+export type ApiPerpetualsTransferCapTxBody = {
+	/**
+	 * Recipient wallet address that should receive the capability object.
+	 *
+	 * Must be a valid Sui address string.
+	 */
+	recipientAddress: SuiAddress;
+
+	/**
+	 * Object ID of the capability to transfer.
+	 *
+	 * This should be the object ID of the cap being transferred (e.g., an account cap or vault cap).
+	 */
+	capObjectId: ObjectId;
+
+	/**
+	 * Optional serialized (base64) Sui `TransactionKind` to extend.
+	 *
+	 * When provided, the transfer operation is appended to the existing transaction.
+	 */
 	txKind?: SerializedTransaction;
 };
 
