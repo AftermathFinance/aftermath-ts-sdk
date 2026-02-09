@@ -11,6 +11,7 @@ export * from "./packages/farms/farmsTypes";
 export * from "./packages/perpetuals/perpetualsTypes";
 export * from "./packages/oracle/oracleTypes";
 export * from "./packages/referrals/referralsTypes";
+export * from "./packages/rewards/rewardsTypes";
 
 // TODO: make it so that casting types are not exported ?
 export * from "./general/types";

@@ -34,6 +34,7 @@ import { Multisig } from "../../packages/multisig/multisig";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { UserData } from "../../packages/userData/userData";
 import { Referrals } from "../../packages/referrals/referrals";
+import { Rewards } from "../../packages/rewards/rewards";
 
 /**
  * The `Aftermath` class serves as the primary entry point for interacting with
@@ -237,6 +238,11 @@ export class Aftermath extends Caller {
 	 * Returns an instance of `UserData` for creating and managing user-specific data or key storage.
 	 */
 	public UserData = () => new UserData(this.config);
+
+	/**
+	 * Returns an instance of `Rewards` for querying user reward points.
+	 */
+	public Rewards = () => new Rewards(this.config);
 
 	// =========================================================================
 	//  General

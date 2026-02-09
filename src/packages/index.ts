@@ -12,3 +12,4 @@ export * from "./auth";
 
 export * from "./sui";
 export * from "./coin";
+export * from "./rewards";
