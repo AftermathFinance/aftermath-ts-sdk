@@ -252,8 +252,10 @@ export interface PerpetualsPosition {
 		orderId: PerpetualsOrderId;
 		/** Side of the order (Bid/Ask). */
 		side: PerpetualsOrderSide;
-		/** Size of the order in base units (scaled as bigint). */
-		size: bigint;
+		/** Current size remaining of the order in base units (scaled as bigint). */
+		currentSize: bigint;
+		/** Initial size of the order in base units (scaled as bigint). */
+		initialSize: bigint;
 	}[];
 	/** Maker fee rate applied to this position (as a fraction). */
 	makerFee: Percentage;
@@ -472,8 +474,8 @@ export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
 	/** Initial order size in scaled base units. */
 	initialSize: bigint;
-	/** Already-filled size in scaled base units. */
-	filledSize: bigint;
+	/** Current size remaining in scaled base units. */
+	currentSize: bigint;
 	/** Order side (Bid or Ask). */
 	side: PerpetualsOrderSide;
 	/** Market this order belongs to. */
@@ -2046,28 +2048,6 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 	 * maximum fee the user approved for that integrator.
 	 */
 	builderCode?: PerpetualsBuilderCodeParamaters;
-}
-
-/**
- * Request body for fetching enriched order data for an account.
- */
-export interface ApiPerpetualsAccountOrderDatasBody {
-	accountId: PerpetualsAccountId;
-	orderDatas: {
-		orderId: PerpetualsOrderId;
-		currentSize: bigint;
-	}[];
-}
-
-/**
- * Response payload for fetching canonical order metadata.
- *
- * The API may return fewer fields than on-chain order objects; this type
- * captures the stable subset used across SDK features such as order displays
- * and cancellation flows.
- */
-export interface ApiPerpetualsAccountOrderDatasResponse {
-	orderDatas: PerpetualsOrderData[];
 }
 
 /**

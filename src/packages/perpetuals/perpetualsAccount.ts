@@ -17,9 +17,7 @@ import {
 	ApiPerpetualsTransferCollateralBody,
 	ObjectId,
 	ApiPerpetualsCancelOrdersBody,
-	PerpetualsOrderData,
 	Percentage,
-	ApiPerpetualsAccountOrderDatasBody,
 	ApiDataWithCursorBody,
 	Timestamp,
 	ApiPerpetualsAccountCollateralHistoryResponse,
@@ -60,11 +58,11 @@ import {
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsVaultCap,
 	PerpetualsPartialVaultCap,
-	ApiPerpetualsAccountOrderDatasResponse,
 	ApiPerpetualsAccountMarginHistoryResponse,
 	ApiPerpetualsStopOrderDatasResponse,
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsRevokeAgentWalletTxBody,
+	PerpetualsOrderData,
 } from "../../types";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -1397,47 +1395,6 @@ export class PerpetualsAccount extends Caller {
 	// };
 
 	/**
-	 * Fetch the latest order metadata (sizes, IDs) for this account.
-	 *
-	 * This is especially useful after a long-running session where on-chain
-	 * pending orders may have changed relative to the local `account` state.
-	 *
-	 * The request payload is derived from this instance’s current snapshot:
-	 * - It enumerates `account.positions[].pendingOrders`
-	 * - Sends each `{ orderId, currentSize }` to the API to resolve canonical order data
-	 *
-	 * @returns {@link ApiPerpetualsAccountOrderDatasResponse} containing an `orderDatas`
-	 * array. Returns `{ orderDatas: [] }` if there are no pending orders.
-	 */
-	public async getOrderDatas(): Promise<ApiPerpetualsAccountOrderDatasResponse> {
-		const orderDatas = this.account.positions.reduce(
-			(acc, position) => [
-				...acc,
-				...position.pendingOrders.map((order) => ({
-					orderId: order.orderId,
-					currentSize: order.size,
-				})),
-			],
-			[] as {
-				orderId: PerpetualsOrderId;
-				currentSize: bigint;
-			}[]
-		);
-		if (orderDatas.length <= 0)
-			return {
-				orderDatas: [],
-			};
-
-		return this.fetchApi<
-			ApiPerpetualsAccountOrderDatasResponse,
-			ApiPerpetualsAccountOrderDatasBody
-		>("account/order-datas", {
-			accountId: this.accountCap.accountId,
-			orderDatas,
-		});
-	}
-
-	/**
 	 * Fetch stop-order ticket data for this account, using an off-chain signed
 	 * payload.
 	 *
@@ -1913,6 +1870,22 @@ export class PerpetualsAccount extends Caller {
 			partialSlTpOrders:
 				partialSlTpOrders.length <= 0 ? undefined : partialSlTpOrders,
 		};
+	}
+
+	public orderDatas(): PerpetualsOrderData[] {
+		return this.account.positions.reduce(
+			(acc, position) => [
+				...acc,
+				...position.pendingOrders.map((order) => ({
+					orderId: order.orderId,
+					currentSize: order.currentSize,
+					initialSize: order.initialSize,
+					side: Perpetuals.orderIdToSide(order.orderId),
+					marketId: position.marketId,
+				})),
+			],
+			[] as PerpetualsOrderData[]
+		);
 	}
 
 	/**

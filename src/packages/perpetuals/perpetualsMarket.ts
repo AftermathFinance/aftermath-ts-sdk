@@ -453,8 +453,7 @@ export class PerpetualsMarket extends Caller {
 		const imr = 1 / (leverage || 1);
 
 		const collateralUsd =
-			(Number(orderData.initialSize - orderData.filledSize) /
-				Casting.Fixed.fixedOneN9) *
+			(Number(orderData.currentSize) / Casting.Fixed.fixedOneN9) *
 			indexPrice *
 			imr;
 
