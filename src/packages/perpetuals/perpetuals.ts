@@ -1258,6 +1258,7 @@ export class Perpetuals extends Caller {
 	 * - `marketOrders`: public market trades/orders
 	 * - `userOrders`: user trade/order events
 	 * - `userCollateralChanges`: user collateral change events
+	 * - `topOfOrderbook`: bucketed orderbook snapshots (top of orderbook)
 	 *
 	 * @param args.onMessage - Handler for parsed messages from the websocket.
 	 * @param args.onOpen - Optional handler for the `open` event.
@@ -1450,6 +1451,46 @@ export class Perpetuals extends Caller {
 				subscriptionType: { userCollateralChanges: { accountId } },
 			});
 
+		const subscribeTopOfOrderbook = ({
+			marketId,
+			priceBucketSize,
+			bucketsNumber,
+		}: {
+			marketId: PerpetualsMarketId;
+			priceBucketSize: number;
+			bucketsNumber: number;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: {
+					topOfOrderbook: {
+						marketId,
+						priceBucketSize,
+						bucketsNumber,
+					},
+				},
+			});
+
+		const unsubscribeTopOfOrderbook = ({
+			marketId,
+			priceBucketSize,
+			bucketsNumber,
+		}: {
+			marketId: PerpetualsMarketId;
+			priceBucketSize: number;
+			bucketsNumber: number;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: {
+					topOfOrderbook: {
+						marketId,
+						priceBucketSize,
+						bucketsNumber,
+					},
+				},
+			});
+
 		return {
 			ws: ctl.ws,
 			subscribeMarket,
@@ -1466,6 +1507,8 @@ export class Perpetuals extends Caller {
 			unsubscribeUserOrders,
 			subscribeUserCollateralChanges,
 			unsubscribeUserCollateralChanges,
+			subscribeTopOfOrderbook,
+			unsubscribeTopOfOrderbook,
 			close: ctl.close,
 		};
 	}

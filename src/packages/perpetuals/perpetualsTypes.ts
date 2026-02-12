@@ -3598,6 +3598,18 @@ export interface PerpetualsWsUpdatesUserCollateralChangesSubscriptionType {
 }
 
 /**
+ * Websocket subscription payload for bucketed orderbook snapshots
+ * (top of orderbook) for a specific market.
+ */
+export interface PerpetualsWsUpdatesTopOfOrderbookSubscriptionType {
+	topOfOrderbook: {
+		marketId: PerpetualsMarketId;
+		priceBucketSize: number;
+		bucketsNumber: number;
+	};
+}
+
+/**
  * Union of all websocket subscription types for perpetuals updates.
  */
 export type PerpetualsWsUpdatesSubscriptionType =
@@ -3607,7 +3619,8 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesOrderbookSubscriptionType
 	| PerpetualsWsUpdatesMarketOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserOrdersSubscriptionType
-	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType;
+	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType
+	| PerpetualsWsUpdatesTopOfOrderbookSubscriptionType;
 
 /**
  * Websocket payload for oracle price updates.
@@ -3651,6 +3664,38 @@ export interface PerpetualsWsUpdatesOrderbookPayload {
 }
 
 /**
+ * A single data point in the bucketed (top of) orderbook.
+ */
+export interface PerpetualsTopOfOrderbookDataPoint {
+	price: number;
+	size: number;
+	totalSize: number;
+	sizeUsd: number;
+	totalSizeUsd: number;
+}
+
+/**
+ * Bucketed orderbook state for top-of-orderbook updates.
+ */
+export interface PerpetualsTopOfOrderbook {
+	bids: PerpetualsTopOfOrderbookDataPoint[];
+	asks: PerpetualsTopOfOrderbookDataPoint[];
+	minAskPrice: number | undefined;
+	maxBidPrice: number | undefined;
+}
+
+/**
+ * Websocket payload for bucketed orderbook (top of orderbook) updates.
+ */
+export interface PerpetualsWsUpdatesTopOfOrderbookPayload {
+	marketId: PerpetualsMarketId;
+	bids: PerpetualsTopOfOrderbookDataPoint[];
+	asks: PerpetualsTopOfOrderbookDataPoint[];
+	minAskPrice: number | undefined;
+	maxBidPrice: number | undefined;
+}
+
+/**
  * Websocket payload for user account and stop-order updates.
  */
 export interface PerpetualsWsUpdatesUserPayload {
@@ -3681,7 +3726,8 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| { userOrders: PerpetualsWsUpdatesUserOrdersPayload }
 	| {
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
-	  };
+	  }
+	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 
