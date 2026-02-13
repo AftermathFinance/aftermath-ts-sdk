@@ -1,4 +1,4 @@
-import { CoinType } from "../..";
+import { CoinType } from "../../index.ts";
 import {
 	ApiEventsBody,
 	Balance,
@@ -10,7 +10,7 @@ import {
 	SuiAddress,
 	TransactionDigest,
 	ExternalFee,
-} from "../../general/types/generalTypes";
+} from "../../general/types/generalTypes.ts";
 
 /**
  * Represents a validator's configuration object, including its Sui address,

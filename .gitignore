@@ -1,6 +1,7 @@
 node_modules/
 tsconfigtsbuildinfo
 dist/
+cjs/
 lib/
 .vscode/
 .idea/

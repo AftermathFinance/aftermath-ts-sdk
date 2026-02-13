@@ -11,10 +11,10 @@ import {
 	ObjectId,
 	SuiAddress,
 	CallerConfig,
-} from "../../types";
-import { SuiFren } from "./suiFren";
-import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
+} from "../../types.ts";
+import { SuiFren } from "./suiFren.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 export class StakedSuiFren extends Caller {
 	// =========================================================================

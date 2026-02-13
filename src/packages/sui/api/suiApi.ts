@@ -1,6 +1,6 @@
 import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui/client";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Helpers } from "../../../general/utils";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
+import { Helpers } from "../../../general/utils/index.ts";
 
 export class SuiApi {
 	// =========================================================================

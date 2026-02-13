@@ -1,4 +1,4 @@
-import { AnyObjectType, Object, ObjectId, Url } from "../types/generalTypes";
+import { AnyObjectType, Object, ObjectId, Url } from "../types/generalTypes.ts";
 
 // =========================================================================
 //  Objects

@@ -6,7 +6,7 @@ import {
 	PoolObject,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
-} from "../poolsTypes";
+} from "../poolsTypes.ts";
 import {
 	PoolCreateEventOnChain,
 	PoolFieldsOnChain,
@@ -18,11 +18,11 @@ import {
 	PoolWithdrawEventOnChain,
 	DaoFeePoolFieldsOnChain,
 	DaoFeePoolOwnerCapFieldsOnChain,
-} from "./poolsApiCastingTypes";
-import { Coin } from "../../coin";
-import { Helpers } from "../../../general/utils";
-import { AnyObjectType, ObjectId } from "../../../types";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+} from "./poolsApiCastingTypes.ts";
+import { Coin } from "../../coin/index.ts";
+import { Helpers } from "../../../general/utils/index.ts";
+import { AnyObjectType, ObjectId } from "../../../types.ts";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes.ts";
 import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class PoolsApiCasting {

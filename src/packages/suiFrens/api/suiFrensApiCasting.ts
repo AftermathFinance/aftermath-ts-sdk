@@ -11,7 +11,7 @@ import {
 	HarvestSuiFrenFeesEvent,
 	PartialSuiFrenObject,
 	StakedSuiFrenPositionObject,
-} from "../suiFrensTypes";
+} from "../suiFrensTypes.ts";
 import {
 	MixSuiFrensEventOnChain,
 	StakeSuiFrenEventOnChain,
@@ -25,8 +25,8 @@ import {
 	SuiFrenVaultStateV1FieldsOnChain,
 	HarvestSuiFrenFeesEventOnChain,
 	StakedSuiFrenPositionFieldsOnChain,
-} from "./suiFrensApiCastingTypes";
-import { Helpers } from "../../../general/utils";
+} from "./suiFrensApiCastingTypes.ts";
+import { Helpers } from "../../../general/utils/index.ts";
 export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects

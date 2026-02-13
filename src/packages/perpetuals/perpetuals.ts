@@ -1,4 +1,4 @@
-import { Caller } from "../../general/utils/caller";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiPerpetualsCreateAccountBody,
 	SuiNetwork,
@@ -24,13 +24,13 @@ import {
 	IFixed,
 	MoveErrorCode,
 	CallerConfig,
-} from "../../types";
-import { PerpetualsMarket } from "./perpetualsMarket";
-import { PerpetualsAccount } from "./perpetualsAccount";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Casting, Helpers } from "../../general/utils";
-import { PerpetualsOrderUtils } from "./utils";
+} from "../../types.ts";
+import { PerpetualsMarket } from "./perpetualsMarket.ts";
+import { PerpetualsAccount } from "./perpetualsAccount.ts";
+import { IFixedUtils } from "../../general/utils/iFixedUtils.ts";
+import { FixedUtils } from "../../general/utils/fixedUtils.ts";
+import { Casting, Helpers } from "../../general/utils/index.ts";
+import { PerpetualsOrderUtils } from "./utils/index.ts";
 
 export class Perpetuals extends Caller {
 	// =========================================================================

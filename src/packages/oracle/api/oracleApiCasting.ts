@@ -1,7 +1,7 @@
-import { Helpers } from "../../../general/utils";
-import { IFixedUtils } from "../../../general/utils/iFixedUtils";
-import { UpdatedPriceFeedEventOnChain } from "../oracleCastingTypes";
-import { UpdatedPriceFeedEvent } from "../oracleTypes";
+import { Helpers } from "../../../general/utils/index.ts";
+import { IFixedUtils } from "../../../general/utils/iFixedUtils.ts";
+import { UpdatedPriceFeedEventOnChain } from "../oracleCastingTypes.ts";
+import { UpdatedPriceFeedEvent } from "../oracleTypes.ts";
 
 export class OracleApiCasting {
 	// =========================================================================

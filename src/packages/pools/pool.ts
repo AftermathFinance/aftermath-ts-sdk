@@ -22,14 +22,14 @@ import {
 	ObjectId,
 	PoolCoin,
 	CallerConfig,
-} from "../../types";
-import { CmmmCalculations } from "./utils/cmmmCalculations";
-import { Caller } from "../../general/utils/caller";
-import { Pools } from ".";
-import { Casting, Helpers } from "../../general/utils";
+} from "../../types.ts";
+import { CmmmCalculations } from "./utils/cmmmCalculations.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { Pools } from "./index.ts";
+import { Casting, Helpers } from "../../general/utils/index.ts";
 import { Transaction } from "@mysten/sui/transactions";
-import { Coin } from "..";
-import { AftermathApi } from "../../general/providers";
+import { Coin } from "../index.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 /**
  * The `Pool` class encapsulates all the functionality needed to interact
@@ -452,7 +452,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
+			Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
 				"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
@@ -470,7 +470,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
+			Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
 				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
@@ -509,7 +509,7 @@ export class Pool extends Caller {
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
+			Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
 				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
@@ -527,7 +527,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
+			Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
 				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"

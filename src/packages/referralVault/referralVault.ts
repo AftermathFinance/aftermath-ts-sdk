@@ -1,6 +1,6 @@
-import { AftermathApi } from "../../general/providers";
-import { Caller } from "../../general/utils/caller";
-import { CallerConfig, SuiAddress, SuiNetwork, Url } from "../../types";
+import { AftermathApi } from "../../general/providers/index.ts";
+import { Caller } from "../../general/utils/caller.ts";
+import { CallerConfig, SuiAddress, SuiNetwork, Url } from "../../types.ts";
 
 /**
  * The `ReferralVault` class provides functionality for querying and managing

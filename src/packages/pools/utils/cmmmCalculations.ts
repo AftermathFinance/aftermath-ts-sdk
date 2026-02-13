@@ -1,10 +1,10 @@
-import { Balance, CoinType, CoinsToBalance, PoolObject } from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
+import { Balance, CoinType, CoinsToBalance, PoolObject } from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
 import {
 	FixedUtils,
 	LocalNumber,
 	OnChainScalar,
-} from "../../../general/utils/fixedUtils";
+} from "../../../general/utils/fixedUtils.ts";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
 // These calculations are useful for estimating values on-chain but the JS number format is LESS PRECISE!

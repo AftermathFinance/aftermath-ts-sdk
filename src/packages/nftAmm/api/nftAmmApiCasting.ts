@@ -1,8 +1,8 @@
-import { NftAmmMarketObject } from "../nftAmmTypes";
-import { Helpers } from "../../../general/utils";
-import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
-import { Coin } from "../../coin";
-import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
+import { NftAmmMarketObject } from "../nftAmmTypes.ts";
+import { Helpers } from "../../../general/utils/index.ts";
+import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes.ts";
+import { Coin } from "../../coin/index.ts";
+import { PoolsApiCasting } from "../../pools/api/poolsApiCasting.ts";
 import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class NftAmmApiCasting {

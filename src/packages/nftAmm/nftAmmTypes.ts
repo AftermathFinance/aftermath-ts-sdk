@@ -8,7 +8,7 @@ import {
 	Url,
 	ObjectId,
 	SuiAddress,
-} from "../../types";
+} from "../../types.ts";
 
 // =========================================================================
 //  Objects

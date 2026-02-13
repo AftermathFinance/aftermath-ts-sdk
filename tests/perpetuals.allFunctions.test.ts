@@ -1,5 +1,5 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../src/general/providers";
+import { AftermathApi } from "../src/general/providers/index.ts";
 import {
 	adminPrivateKey,
 	user1PrivateKey,
@@ -20,19 +20,19 @@ import {
 	getSigner,
 	ONE_B9,
 	createAndFetchAccountCap,
-} from "./utils";
-import { getConfigs } from "./testConfig";
+} from "./utils.ts";
+import { getConfigs } from "./testConfig.ts";
 import {
 	Perpetuals,
 	PerpetualsAccount,
 	PerpetualsMarket,
 	Sui,
-} from "../src/packages";
-import { IFixedUtils } from "../src/general/utils/iFixedUtils";
-import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
-import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
+} from "../src/packages/index.ts";
+import { IFixedUtils } from "../src/general/utils/iFixedUtils.ts";
+import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils/index.ts";
+import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types.ts";
 import { SuiClient } from "@mysten/sui/client";
-import { Helpers, IndexerCaller } from "../src/general/utils";
+import { Helpers, IndexerCaller } from "../src/general/utils/index.ts";
 
 // =========================================================================
 //

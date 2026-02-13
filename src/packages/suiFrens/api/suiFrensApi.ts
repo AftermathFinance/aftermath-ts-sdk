@@ -1,6 +1,6 @@
 import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	MixSuiFrensEvent,
 	SuiFrenObject,
@@ -19,16 +19,16 @@ import {
 	HarvestSuiFrenFeesEvent,
 	StakedSuiFrenMetadataV1Object,
 	PartialSuiFrenObject,
-} from "../suiFrensTypes";
+} from "../suiFrensTypes.ts";
 import {
 	HarvestSuiFrenFeesEventOnChain,
 	MixSuiFrensEventOnChain,
 	StakeSuiFrenEventOnChain,
 	UnstakeSuiFrenEventOnChain,
-} from "./suiFrensApiCastingTypes";
-import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
-import { Coin } from "../../coin/coin";
-import { Helpers } from "../../../general/utils/helpers";
+} from "./suiFrensApiCastingTypes.ts";
+import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes.ts";
+import { Coin } from "../../coin/coin.ts";
+import { Helpers } from "../../../general/utils/helpers.ts";
 import {
 	AnyObjectType,
 	Balance,
@@ -38,11 +38,11 @@ import {
 	EventsInputs,
 	ObjectId,
 	SuiAddress,
-} from "../../../types";
-import { Casting } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Sui } from "../../sui/sui";
-import { SuiFrens } from "../suiFrens";
+} from "../../../types.ts";
+import { Casting } from "../../../general/utils/index.ts";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers.ts";
+import { Sui } from "../../sui/sui.ts";
+import { SuiFrens } from "../suiFrens.ts";
 
 export class SuiFrensApi {
 	// =========================================================================

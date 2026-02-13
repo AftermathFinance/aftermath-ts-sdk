@@ -1,10 +1,10 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
 import {
 	NftAmmInterfaceGenericTypes,
 	NftAmmMarketObject,
-} from "../nftAmmTypes";
-import { NftAmmApiCasting } from "./nftAmmApiCasting";
-import { NftAmmMarket } from "../nftAmmMarket";
+} from "../nftAmmTypes.ts";
+import { NftAmmApiCasting } from "./nftAmmApiCasting.ts";
+import { NftAmmMarket } from "../nftAmmMarket.ts";
 import {
 	Balance,
 	CoinType,
@@ -14,10 +14,10 @@ import {
 	ObjectId,
 	Slippage,
 	SuiAddress,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { Coin } from "../../coin/coin";
-import { Pools } from "../../pools/pools";
+} from "../../../types.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
+import { Coin } from "../../coin/coin.ts";
+import { Pools } from "../../pools/pools.ts";
 import {
 	TransactionArgument,
 	Transaction,

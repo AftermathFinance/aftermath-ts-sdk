@@ -4,10 +4,10 @@ import {
 	CallerConfig,
 	SuiAddress,
 	TransactionsWithCursor,
-} from "../types/generalTypes";
-import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
-import { Caller } from "../utils/caller";
-import { AftermathApi } from "../providers";
+} from "../types/generalTypes.ts";
+import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes.ts";
+import { Caller } from "../utils/caller.ts";
+import { AftermathApi } from "../providers/index.ts";
 
 /**
  * The `Wallet` class allows querying a user's balances and transactions.

@@ -15,8 +15,8 @@ import {
 	SuiAddress,
 	Timestamp,
 	TransactionDigest,
-} from "../../general/types/generalTypes";
-import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
+} from "../../general/types/generalTypes.ts";
+import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes.ts";
 
 // =========================================================================
 //  Name Only

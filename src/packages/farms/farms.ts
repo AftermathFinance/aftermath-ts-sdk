@@ -6,8 +6,8 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
-} from "../../types";
-import { Caller } from "../../general/utils/caller";
+} from "../../types.ts";
+import { Caller } from "../../general/utils/caller.ts";
 import {
 	ApiFarmsCreateStakingPoolBody,
 	ApiFarmsCreateStakingPoolBodyV1,
@@ -26,10 +26,10 @@ import {
 	FarmUserEvent,
 	StakingPoolOneTimeAdminCapObject,
 	StakingPoolOwnerCapObject,
-} from "./farmsTypes";
-import { FarmsStakingPool } from "./farmsStakingPool";
-import { FarmsStakedPosition } from "./farmsStakedPosition";
-import { AftermathApi } from "../../general/providers";
+} from "./farmsTypes.ts";
+import { FarmsStakingPool } from "./farmsStakingPool.ts";
+import { FarmsStakedPosition } from "./farmsStakedPosition.ts";
+import { AftermathApi } from "../../general/providers/index.ts";
 
 /**
  * The `Farms` class provides high-level methods for interacting with

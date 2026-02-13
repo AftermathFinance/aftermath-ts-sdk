@@ -1,4 +1,4 @@
-import { SuiAddress, Timestamp } from "../../types";
+import { SuiAddress, Timestamp } from "../../types.ts";
 
 // =========================================================================
 //  Data

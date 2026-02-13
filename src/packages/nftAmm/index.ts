@@ -1,1 +1,1 @@
-export * from "./nftAmm";
+export * from "./nftAmm.ts";

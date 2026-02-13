@@ -1,4 +1,4 @@
-import { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
+import { Balance, DecimalsScalar, NormalizedBalance } from "../../types.ts";
 
 /**
  * The `FixedUtils` class provides utilities for fixed-point arithmetic

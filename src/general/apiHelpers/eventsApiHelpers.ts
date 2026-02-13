@@ -4,9 +4,9 @@ import {
 	AnyObjectType,
 	EventsInputs,
 	SuiAddress,
-} from "../../types";
+} from "../../types.ts";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
-import { AftermathApi } from "../providers/aftermathApi";
+import { AftermathApi } from "../providers/aftermathApi.ts";
 import {
 	EventId,
 	SuiEvent,

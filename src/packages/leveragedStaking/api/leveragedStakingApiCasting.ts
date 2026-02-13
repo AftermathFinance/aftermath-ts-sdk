@@ -4,16 +4,16 @@ import {
 	LeveragedStakeChangedLeverageEvent,
 	LeveragedStakedEvent,
 	LeveragedUnstakedEvent,
-} from "../../../types";
-import { LeveragedAfSuiState } from "../../../types";
+} from "../../../types.ts";
+import { LeveragedAfSuiState } from "../../../types.ts";
 import {
 	LeveragedAfSuiPositionFieldsOnChain,
 	LeveragedAfSuiStateFieldsOnChain,
 	LeveragedStakeChangedLeverageEventOnChain,
 	LeveragedStakedEventOnChain,
 	LeveragedUnstakedEventOnChain,
-} from "./leveragedStakingApiCastingTypes";
-import { Casting, Helpers } from "../../../general/utils";
+} from "./leveragedStakingApiCastingTypes.ts";
+import { Casting, Helpers } from "../../../general/utils/index.ts";
 
 export class LeveragedStakingApiCasting {
 	// =========================================================================

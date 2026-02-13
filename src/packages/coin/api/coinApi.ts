@@ -2,12 +2,12 @@ import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { Coin } from "../coin";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
-import { Helpers } from "../../../general/utils/helpers";
+import { Coin } from "../coin.ts";
+import { AftermathApi } from "../../../general/providers/aftermathApi.ts";
+import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types.ts";
+import { Helpers } from "../../../general/utils/helpers.ts";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
-import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers.ts";
 // import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
