@@ -59,7 +59,8 @@ export type RouterProtocolName =
 	// | "AftermathLsd"
 	| "Bluefin"
 	| "TurbosFun"
-	| "BlastFun";
+	| "BlastFun"
+	| "Bolt";
 
 /**
  * Represents a complete trade route object. Includes all relevant information
