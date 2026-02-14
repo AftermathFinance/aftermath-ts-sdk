@@ -1,11 +1,11 @@
-import {
-	BigIntAsString,
+import type { Transaction } from "@mysten/sui/transactions";
+import type {
+	Balance,
 	CoinType,
 	ObjectId,
 	SuiAddress,
 	Timestamp,
 	TransactionDigest,
-	TxBytes,
 } from "../../types";
 
 // =========================================================================
@@ -98,7 +98,7 @@ export interface RewardsHistoryEntry {
 	/**
 	 * Reward amount in base units.
 	 */
-	amount: BigIntAsString;
+	amount: Balance;
 	/**
 	 * Domain identifier (e.g., "referrals", "perpetuals").
 	 */
@@ -167,7 +167,7 @@ export interface RewardsClaimableReward {
 	/**
 	 * Claimable amount in base units.
 	 */
-	amount: BigIntAsString;
+	amount: Balance;
 }
 
 // =========================================================================
@@ -193,8 +193,8 @@ export interface ApiRewardsClaimBody {
 	 */
 	recipientAddress?: SuiAddress;
 	/**
-	 * Optional existing transaction kind (base64-encoded) to extend.
-	 * Useful for composing with other operations.
+	 * Optional existing transaction to extend with the claim commands.
+	 * If omitted, a new transaction is created.
 	 */
-	txKind?: TxBytes;
+	tx?: Transaction;
 }
