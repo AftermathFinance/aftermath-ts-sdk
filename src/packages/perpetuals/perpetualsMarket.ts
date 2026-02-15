@@ -140,35 +140,7 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetch the mid price for this market’s orderbook.
-	 *
-	 * This is a convenience endpoint that returns only:
-	 * - `midPrice`: midpoint between best bid and best ask, or `undefined`
-	 *   if the orderbook is empty or unavailable.
-	 *
-	 * @returns `{ midPrice }`.
-	 *
-	 * @example
-	 * ```ts
-	 * const { midPrice } = await market.getOrderbookMidPrice();
-	 * ```
-	 */
-	// NOTE: should this be entirely removed since data already in orderbook function ?
-	public getOrderbookMidPrice() {
-		return this.fetchApi<
-			{
-				midPrice: number | undefined;
-			},
-			{
-				marketId: PerpetualsMarketId;
-			}
-		>("market/orderbook-price", {
-			marketId: this.marketId,
-		});
-	}
-
-	/**
-	 * Fetch the 24-hour statistics for this specific market.
+	 * Fetch the 24-hour volume and price change statistics for this market.
 	 *
 	 * Under the hood, this calls {@link Perpetuals.getMarkets24hrStats} and
 	 * returns the first (and only) entry.
@@ -348,19 +320,22 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetch the current base and collateral prices for this market.
+	 * Fetch the current prices for this market.
 	 *
 	 * Internally calls {@link Perpetuals.getPrices} and returns the first result.
 	 *
-	 * @returns `{ basePrice, collateralPrice }`.
+	 * @returns `{ marketId, basePrice, collateralPrice, midPrice, markPrice }`.
 	 *
 	 * @remarks
 	 * This method instantiates a new {@link Perpetuals} client using `this.config`.
 	 * If you rely on a shared Provider, call `perps.getPrices(...)` directly instead.
 	 */
 	public async getPrices(): Promise<{
+		marketId: PerpetualsMarketId;
 		basePrice: number;
 		collateralPrice: number;
+		midPrice: number | undefined;
+		markPrice: number;
 	}> {
 		return (
 			await new Perpetuals(this.config).getPrices({

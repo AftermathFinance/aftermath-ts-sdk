@@ -2862,17 +2862,39 @@ export type ApiPerpetualsSetLeverageTxBody = {
 // }
 
 /**
- * 24 hour statistics for a single perpetuals market.
+ * 24-hour volume and price change statistics for a single market.
  */
 export interface PerpetualsMarket24hrStats {
-	/** 24h volume in USD. */
+	/** The total 24h volume in USD. */
 	volumeUsd: number;
-	/** 24h volume in base asset units. */
+	/** The total 24h volume measured in the base asset. */
 	volumeBaseAssetAmount: number;
-	/** Absolute price change over 24 hours. */
+	/**
+	 * Absolute price change over the last 24h, denominated in the
+	 * base asset's quote units.
+	 */
 	priceChange: number;
-	/** Relative price change percentage over 24 hours. */
+	/** Relative price change over the last 24h (e.g. +5% => `0.05`). */
 	priceChangePercentage: number;
+	/** Latest base asset price for this market. */
+	basePrice: number;
+	/** Latest collateral asset price used in this market. */
+	collateralPrice: number;
+	/**
+	 * Mid price derived from the current order book.
+	 *
+	 * Calculated as the average of the best bid and best ask.
+	 * `undefined` if either side of the book is empty.
+	 */
+	midPrice: number | undefined;
+	/**
+	 * Mark price used for liquidations and risk calculations.
+	 *
+	 * Computed as the median of the index TWAP, the current
+	 * book-derived price, and the index price adjusted for
+	 * funding contributions.
+	 */
+	markPrice: number;
 }
 
 /**
@@ -2958,7 +2980,7 @@ export interface ApiPerpetualsVaultsResponse {
  * Request body for fetching current prices for a list of markets.
  *
  * This is a lightweight alternative to fetching full {@link PerpetualsMarketData}
- * when only base/collateral prices are needed.
+ * when only prices are needed.
  */
 export interface ApiPerpetualsMarketsPricesBody {
 	marketIds: PerpetualsMarketId[];
@@ -2967,12 +2989,32 @@ export interface ApiPerpetualsMarketsPricesBody {
 /**
  * Response payload for {@link ApiPerpetualsMarketsPricesBody}.
  *
- * Returns base (index/oracle) and collateral prices used for valuation.
+ * Returns base (index/oracle) and collateral prices, the order book mid price,
+ * and the mark price used for liquidations and risk calculations.
  */
 export interface ApiPerpetualsMarketsPricesResponse {
 	marketsPrices: {
+		/** Identifier of the market. */
+		marketId: PerpetualsMarketId;
+		/** Latest base asset price for this market. */
 		basePrice: number;
+		/** Latest collateral asset price used in this market. */
 		collateralPrice: number;
+		/**
+		 * Mid price derived from the current order book.
+		 *
+		 * Calculated as the average of the best bid and best ask.
+		 * `undefined` if either side of the book is empty.
+		 */
+		midPrice: number | undefined;
+		/**
+		 * Mark price used for liquidations and risk calculations.
+		 *
+		 * Computed as the median of the index TWAP, the current
+		 * book-derived price, and the index price adjusted for
+		 * funding contributions.
+		 */
+		markPrice: number;
 	}[];
 }
 

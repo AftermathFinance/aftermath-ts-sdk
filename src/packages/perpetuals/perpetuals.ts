@@ -606,7 +606,10 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Fetch 24-hour stats for multiple markets.
+	 * Fetch 24-hour volume and price change stats for multiple markets.
+	 *
+	 * Returns volume, price change, and the latest base, collateral,
+	 * mid, and mark prices for each requested market.
 	 *
 	 * @param inputs.marketIds - Market IDs to query.
 	 * @returns {@link ApiPerpetualsMarkets24hrStatsResponse}.
@@ -627,7 +630,10 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetch the latest oracle prices (base & collateral) for one or more markets.
+	 * Fetch the latest prices for one or more markets.
+	 *
+	 * Returns base, collateral, order book mid, and mark prices for each
+	 * requested market.
 	 *
 	 * @param inputs.marketIds - List of market IDs to query.
 	 * @returns {@link ApiPerpetualsMarketsPricesResponse} containing `marketsPrices`.
