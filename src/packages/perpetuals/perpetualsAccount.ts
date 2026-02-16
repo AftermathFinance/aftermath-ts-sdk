@@ -1740,6 +1740,7 @@ export class PerpetualsAccount extends Caller {
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
+				!stopOrder.limitOrder &&
 				![
 					...(fullSlTpOrder ? [fullSlTpOrder] : []),
 					...(partialSlTpOrders ?? []),
@@ -1807,7 +1808,8 @@ export class PerpetualsAccount extends Caller {
 					order.side !== side &&
 					(order.slTp.stopLossIndexPrice ||
 						order.slTp.takeProfitIndexPrice) &&
-					order.size >= Casting.i64MaxBigInt
+					order.size >= Casting.i64MaxBigInt &&
+					!order.limitOrder
 			);
 
 		const partialSlTpOrders: PerpetualsStopOrderData[] =
@@ -1818,7 +1820,8 @@ export class PerpetualsAccount extends Caller {
 					order.side !== side &&
 					(order.slTp.stopLossIndexPrice ||
 						order.slTp.takeProfitIndexPrice) &&
-					order.size < Casting.i64MaxBigInt
+					order.size < Casting.i64MaxBigInt &&
+					!order.limitOrder
 			);
 
 		return {
