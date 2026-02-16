@@ -1,20 +1,4 @@
-import { Pools } from "../../packages/pools/pools";
-import {
-	CoinType,
-	ConfigAddresses,
-	SuiAddress,
-	SuiNetwork,
-	Url,
-} from "../../types";
-import { Wallet } from "../wallet/wallet";
-import { SuiFrens } from "../../packages/suiFrens/suiFrens";
-import { Coin } from "../../packages/coin/coin";
-import { Faucet } from "../../packages/faucet/faucet";
-import { Staking } from "../../packages/staking/staking";
-import { Helpers } from "../utils/helpers";
-import { Casting } from "../utils/casting";
-import { Caller } from "../utils/caller";
-import { Prices } from "../prices/prices";
+import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 import {
 	Auth,
 	LeveragedStaking,
@@ -23,16 +7,33 @@ import {
 	Router,
 	Sui,
 } from "../../packages";
-import { Perpetuals } from "../../packages/perpetuals";
-import { Farms } from "../../packages/farms/farms";
-import { DynamicGas } from "../dynamicGas/dynamicGas";
-import { AftermathApi } from "./aftermathApi";
-import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
+import { Coin } from "../../packages/coin/coin";
 import { Dca } from "../../packages/dca/dca";
-import { Multisig } from "../../packages/multisig/multisig";
+import { Farms } from "../../packages/farms/farms";
+import { Faucet } from "../../packages/faucet/faucet";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
-import { UserData } from "../../packages/userData/userData";
+import { Multisig } from "../../packages/multisig/multisig";
+import { Perpetuals } from "../../packages/perpetuals";
+import { Pools } from "../../packages/pools/pools";
 import { Referrals } from "../../packages/referrals/referrals";
+import { Rewards } from "../../packages/rewards/rewards";
+import { Staking } from "../../packages/staking/staking";
+import { SuiFrens } from "../../packages/suiFrens/suiFrens";
+import { UserData } from "../../packages/userData/userData";
+import type {
+	CoinType,
+	ConfigAddresses,
+	SuiAddress,
+	SuiNetwork,
+	Url,
+} from "../../types";
+import { DynamicGas } from "../dynamicGas/dynamicGas";
+import { Prices } from "../prices/prices";
+import { Caller } from "../utils/caller";
+import { Casting } from "../utils/casting";
+import { Helpers } from "../utils/helpers";
+import { Wallet } from "../wallet/wallet";
+import { AftermathApi } from "./aftermathApi";
 
 /**
  * The `Aftermath` class serves as the primary entry point for interacting with
@@ -205,6 +206,11 @@ export class Aftermath extends Caller {
 	 * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.
 	 */
 	public Perpetuals = () => new Perpetuals(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Rewards` for querying user reward points.
+	 */
+	public Rewards = () => new Rewards(this.config, this.Provider);
 
 	/**
 	 * Returns an instance of `Farms` for yield farming or liquidity mining functionalities.
