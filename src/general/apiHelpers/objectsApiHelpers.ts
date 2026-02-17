@@ -1,6 +1,6 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Casting, Helpers } from "../utils";
+import { Helpers } from "../utils/helpers";
 import {
 	SuiObjectDataFilter,
 	SuiObjectDataOptions,
@@ -287,6 +287,7 @@ export class ObjectsApiHelpers {
 		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
 			objectId
 		);
+		const { Casting } = await import("../utils/casting.js");
 		return Casting.castObjectBcs({
 			...inputs,
 			suiObjectResponse: suiObjectResponse,

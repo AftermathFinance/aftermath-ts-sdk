@@ -18,7 +18,7 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
-import { Helpers } from "../utils";
+import { Helpers } from "../utils/helpers";
 
 export class TransactionsApiHelpers {
 	// =========================================================================

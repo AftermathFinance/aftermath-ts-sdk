@@ -23,7 +23,6 @@ import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import { Casting } from "./casting";
 import {
 	Transaction,
 	TransactionObjectArgument,
@@ -505,7 +504,7 @@ export class Helpers {
 			amount -
 			BigInt(
 				Math.floor(
-					Casting.normalizeSlippageTolerance(slippage) *
+					(slippage / 100) *
 						Number(amount)
 				)
 			)
@@ -521,7 +520,7 @@ export class Helpers {
 	 * @returns The float after applying slippage.
 	 */
 	public static applySlippage = (amount: number, slippage: Slippage) => {
-		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
+		return amount - (slippage / 100) * amount;
 	};
 
 	/**
