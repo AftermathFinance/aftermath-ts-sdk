@@ -176,6 +176,10 @@ export interface PerpetualsAccountCap {
 	// subAccount: PerpetualsSubAccount;
 	/** True if this account cap was allocated to an agent wallet from the admin account cap owner. */
 	isAgent: boolean;
+	/** Initial shared version of the underlying perpetuals `Account` object. Required when constructing transactions that reference the shared account object. */
+	accountObjectInitialSharedVersion: ObjectVersion;
+	/** Sui object IDs of agent account caps that have been whitelisted to operate on behalf of this account. */
+	whitelistedAgentCapIds: ObjectId[];
 }
 
 /**
