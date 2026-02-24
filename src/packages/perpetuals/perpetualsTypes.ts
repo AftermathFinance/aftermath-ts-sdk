@@ -4,6 +4,7 @@ import {
 	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
+	BigIntAsString,
 	Byte,
 	Event,
 	IFixed,
@@ -2374,11 +2375,21 @@ export interface PerpetualsIntegratorVaultData {
 	marketId: PerpetualsMarketId;
 
 	/**
+	 * The collateral coin type used by this market.
+	 */
+	collateralCoinType: CoinType;
+
+	/**
 	 * Total accumulated fees in the market's collateral currency that are available to claim.
 	 *
 	 * Fees are denominated in the collateral coin type used by the market.
 	 */
 	fees: number;
+
+	/**
+	 * Total accumulated fees converted to USD.
+	 */
+	feesUsd: number;
 }
 
 /**
