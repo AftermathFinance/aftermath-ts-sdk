@@ -2389,7 +2389,7 @@ export interface PerpetualsIntegratorVaultData {
 	/**
 	 * Total accumulated fees converted to USD.
 	 */
-	feesUsd: BigIntAsString;
+	feesUsd: number;
 }
 
 /**
