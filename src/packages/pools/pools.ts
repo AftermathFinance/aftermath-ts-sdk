@@ -1,18 +1,13 @@
 import {
-	ApiCreatePoolBody,
-	ApiEventsBody,
+	ApiCreatePoolBodyV2,
 	ApiPoolObjectIdForLpCoinTypeBody,
-	ApiPublishLpCoinBody,
+	ApiPoolsPublishLpCoinTxBodyV1,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
 	PoolObject,
-	PoolTradeEvent,
-	PoolTradeFee,
 	PoolWithdrawEvent,
 	Slippage,
-	SuiNetwork,
-	Url,
 	ObjectId,
 	PoolStats,
 	ApiPoolsStatsBody,
@@ -21,6 +16,8 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
+	ApiPoolsPublishLpCoinTxBodyV2,
+	ApiCreatePoolBodyV1,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -28,7 +25,6 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { AftermathApi } from "../../general/providers";
-import { PoolsApi } from "./api/poolsApi";
 
 /**
  * The `Pools` class provides a high-level interface for interacting with
@@ -102,6 +98,10 @@ export class Pools extends Caller {
 		 * Various bounds used to prevent extreme trades or invalid pool configurations.
 		 */
 		bounds: {
+			/**
+			 * Maximum decimals for LP coins.
+			 */
+			maxLpCoinDecimals: 18,
 			/**
 			 * Maximum number of distinct coins allowed in a single pool.
 			 */
@@ -252,17 +252,58 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
 	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 * @deprecated Use getPublishLpCoinTransactionV2
 	 *
 	 * @example
 	 * ```typescript
-	 * const publishTx = await pools.getPublishLpCoinTransaction({
+	 * const publishTx = await pools.getPublishLpCoinTransactionV1({
 	 *   walletAddress: "0x<address>",
 	 *   lpCoinDecimals: 9
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
+	public async getPublishLpCoinTransactionV1(
+		inputs: ApiPoolsPublishLpCoinTxBodyV1
+	) {
 		return this.useProvider().buildPublishLpCoinTx(inputs);
+	}
+
+	/**
+	 * Constructs a transaction to create a new LP coin on-chain,
+	 * typically used by advanced users or devs establishing new liquidity pools.
+	 *
+	 * @param inputs - The body describing how to form the new LP coin.
+	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @example
+	 * ```typescript
+	 * const createLpTx = await pools.getCreateLpTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinMetadata: {
+	 *     name: "MyPool LP",
+	 *     symbol: "MYPLP"
+	 *   },
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *       decimals: 9
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   poolFlatness: 1,
+	 *   respectDecimals: true,
+	 * });
+	 * ```
+	 */
+	public async getPublishLpCoinTransactionV2(
+		inputs: ApiPoolsPublishLpCoinTxBodyV2
+	) {
+		return this.fetchApiTransaction(
+			"transactions/publish-lp-coin-v2",
+			inputs
+		);
 	}
 
 	/**
@@ -271,6 +312,8 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - The body describing how to form the new pool.
 	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @deprecated use getCreatePoolTransactionV2 instead
 	 *
 	 * @example
 	 * ```typescript
@@ -297,8 +340,40 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
+	public async getCreatePoolTransactionV1(inputs: ApiCreatePoolBodyV1) {
 		return this.fetchApiTransaction("transactions/create-pool", inputs);
+	}
+
+	/**
+	 * Constructs a transaction to create a brand new pool on-chain, given coin types,
+	 * initial weights, fees, and possible DAO fee info.
+	 *
+	 * @param inputs - The body describing how to form the new pool.
+	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @example
+	 * ```typescript
+	 * const createPoolTx = await pools.getCreatePoolTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinType: "0x<lpCoin>",
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *       decimals: 9,
+	 *       tradeFeeIn: 0.003,
+	 *       initialDeposit: 1_000_000_000n
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   createPoolCapId: "0x<capId>",
+	 *   respectDecimals: true,
+	 * });
+	 * ```
+	 */
+	public async getCreatePoolTransactionV2(inputs: ApiCreatePoolBodyV2) {
+		return this.fetchApiTransaction("transactions/create-pool-v2", inputs);
 	}
 
 	// =========================================================================
@@ -583,6 +658,26 @@ export class Pools extends Caller {
 			lpCoinType.split("::")[1].includes("af_lp") &&
 			lpCoinType.split("::")[2].includes("AF_LP")
 		);
+	};
+
+	/**
+	 * Checks if a string is a valid LP coin name.
+	 *
+	 * @param value - The string to check.
+	 * @returns `true` if `value` is can be used as a valid LP coin name, otherwise `false`.
+	 */
+	public static isValidLpCoinName = (value: string): boolean => {
+		return /^[A-Z][_a-zA-Z0-9]*$/.test(value);
+	};
+
+	/**
+	 * Checks if a string is a valid LP coin type.
+	 *
+	 * @param value - The string to check.
+	 * @returns `true` if `value` is can be used as a valid LP coin type, otherwise `false`.
+	 */
+	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
+		return /^[A-Z][A-Z0-9]*$/i.test(value);
 	};
 
 	// =========================================================================
