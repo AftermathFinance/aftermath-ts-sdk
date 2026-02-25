@@ -19,7 +19,7 @@ import {
 	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/client";
+import type { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/jsonRpc";
 import { Casting } from "../../general/utils";
 import { AftermathApi } from "../../general/providers";
 

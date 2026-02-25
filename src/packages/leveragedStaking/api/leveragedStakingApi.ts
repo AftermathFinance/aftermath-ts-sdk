@@ -1,7 +1,7 @@
 import {
 	Transaction,
-	TransactionObjectArgument,
-	TransactionResult,
+	type TransactionObjectArgument,
+	type TransactionResult,
 } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {

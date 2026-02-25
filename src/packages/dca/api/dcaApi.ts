@@ -7,7 +7,10 @@ import {
 } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Helpers } from "../../../general/utils";
-import { Transaction, TransactionArgument } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
 
 export class DcaApi {
 	// =========================================================================

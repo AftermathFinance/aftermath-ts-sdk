@@ -57,9 +57,10 @@ export class ReferralVaultApi {
 		try {
 			const { tx, referrer } = inputs;
 
+			const txData = tx.getData();
 			if (
-				tx.blockData.sender &&
-				Helpers.addLeadingZeroesToType(tx.blockData.sender) ===
+				txData.sender &&
+				Helpers.addLeadingZeroesToType(txData.sender) ===
 					Helpers.addLeadingZeroesToType(referrer)
 			)
 				return;

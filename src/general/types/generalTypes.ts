@@ -1,10 +1,10 @@
-import {
+import type { Transaction } from "@mysten/sui/transactions";
+import type {
 	DynamicFieldInfo,
 	EventId,
 	SuiTransactionBlockResponse,
-} from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
 import { SuiNetwork } from "./suiTypes";
-import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * Represents a token or currency balance in the system, defined as a bigint.

@@ -85,7 +85,7 @@ import { AftermathApi } from "../../general/providers";
 import { Coin } from "../coin";
 import {
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { PerpetualsVault } from "./perpetualsVault";
 

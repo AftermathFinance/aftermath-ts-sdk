@@ -1,6 +1,9 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Faucet } from "../faucet";
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {

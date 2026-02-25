@@ -7,13 +7,13 @@ import {
 } from "../../types";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { AftermathApi } from "../providers/aftermathApi";
-import {
+import type {
 	EventId,
 	SuiEvent,
 	SuiEventFilter,
 	SuiTransactionBlockResponse,
 	Unsubscribe,
-} from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
 
 export class EventsApiHelpers {
 	// =========================================================================
@@ -41,19 +41,19 @@ export class EventsApiHelpers {
 
 	// TODO: make this filter by looking ONLY at all relevant AF packages
 	// TODO: move to wallet package ?
-	public fetchSubscribeToUserEvents = async (inputs: {
+	/**
+	 * @deprecated `subscribeEvent` was removed from `SuiJsonRpcClient` in
+	 * `@mysten/sui` v2. Poll `queryEvents` instead or use a WebSocket transport.
+	 */
+	public fetchSubscribeToUserEvents = async (_inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
 	}): Promise<Unsubscribe> => {
-		const { address, onEvent } = inputs;
-
-		const unsubscribe = await this.Provider.provider.subscribeEvent({
-			filter: {
-				Sender: address,
-			},
-			onMessage: onEvent,
-		});
-		return unsubscribe;
+		throw new Error(
+			"fetchSubscribeToUserEvents is not supported in @mysten/sui v2. " +
+				"subscribeEvent was removed from SuiJsonRpcClient. " +
+				"Poll queryEvents instead or use a WebSocket transport."
+		);
 	};
 
 	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(

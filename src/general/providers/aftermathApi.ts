@@ -17,7 +17,7 @@ import { ReferralVaultApi } from "../../packages/referralVault/api/referralVault
 import { ModuleName, MoveErrorCode, ObjectId, UniqueId } from "../../types";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
-import { SuiClient } from "@mysten/sui/client";
+import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { DcaApi } from "../../packages/dca/api/dcaApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
@@ -35,16 +35,15 @@ import { LimitOrdersApi } from "../../packages/limitOrders/api/limitOrdersApi";
  * @example
  * ```typescript
  * import { AftermathApi } from "aftermath-ts-sdk";
- * import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
+ * import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
  *
  * const addresses = { ... }; // from aftermath.getAddresses()
- * const suiClient = new SuiClient({
- *   transport: new SuiHTTPTransport({
- *     url: "https://fullnode.mainnet.sui.io",
- *   }),
+ * const client = new SuiJsonRpcClient({
+ *   url: "https://fullnode.mainnet.sui.io",
+ *   network: "mainnet",
  * });
  *
- * const afApi = new AftermathApi(suiClient, addresses);
+ * const afApi = new AftermathApi(client, addresses);
  * // access protocol APIs
  * const poolsApi = afApi.Pools();
  * ```
@@ -98,11 +97,11 @@ export class AftermathApi {
 	 * Constructs a new instance of the `AftermathApi`, binding the given Sui client
 	 * to the known `addresses`.
 	 *
-	 * @param provider - The `SuiClient` for on-chain queries and transactions.
+	 * @param provider - A `SuiJsonRpcClient` for on-chain queries and transactions.
 	 * @param addresses - The config addresses (object IDs, package IDs, etc.) for the Aftermath protocol.
 	 */
 	public constructor(
-		public readonly provider: SuiClient,
+		public readonly provider: SuiJsonRpcClient,
 		public readonly addresses: ConfigAddresses
 	) {}
 

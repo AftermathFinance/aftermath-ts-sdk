@@ -1,4 +1,4 @@
-import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import {
 	Auth,
 	LeveragedStaking,
@@ -106,15 +106,14 @@ export class Aftermath extends Caller {
 				? "https://fullnode.testnet.sui.io:443"
 				: "https://fullnode.mainnet.sui.io:443");
 
+		// Create the Sui JSON-RPC client
+		const client = new SuiJsonRpcClient({
+			url: fullnodeUrl,
+			network: this.network?.toLowerCase() ?? "mainnet",
+		});
+
 		// Create a new AftermathApi provider
-		this.Provider = new AftermathApi(
-			new SuiClient({
-				transport: new SuiHTTPTransport({
-					url: fullnodeUrl,
-				}),
-			}),
-			addresses
-		);
+		this.Provider = new AftermathApi(client, addresses);
 	}
 
 	/**

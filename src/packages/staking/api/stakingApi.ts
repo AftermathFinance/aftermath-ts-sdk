@@ -1,4 +1,7 @@
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	StakeEvent,

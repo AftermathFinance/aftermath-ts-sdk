@@ -1,8 +1,9 @@
 import {
-	TransactionArgument,
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
@@ -29,7 +30,6 @@ import {
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { bcs } from "@mysten/sui/bcs";
 import {
 	MoveErrors,
 	MoveErrorsInterface,

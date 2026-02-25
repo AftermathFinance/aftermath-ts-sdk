@@ -1,4 +1,7 @@
-import { DisplayFieldsResponse, SuiObjectResponse } from "@mysten/sui/client";
+import type {
+	DisplayFieldsResponse,
+	SuiObjectResponse,
+} from "@mysten/sui/jsonRpc";
 import {
 	KioskOwnerCapObject,
 	Nft,

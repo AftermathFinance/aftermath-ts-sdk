@@ -16,7 +16,7 @@ import {
 	ApiIndexerEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
-import { TransactionObjectArgument } from "@mysten/sui/transactions";
+import type { TransactionObjectArgument } from "@mysten/sui/transactions";
 
 /**
  * A unique identifier, typically used to track items or route segments.

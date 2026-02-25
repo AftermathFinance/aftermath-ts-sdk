@@ -1,4 +1,4 @@
-import { SuiObjectResponse } from "@mysten/sui/client";
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
 import {
 	MixSuiFrensEvent,
 	StakeSuiFrenEvent,

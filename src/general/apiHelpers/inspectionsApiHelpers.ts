@@ -1,7 +1,7 @@
 import { Transaction } from "@mysten/sui/transactions";
+import type { SuiEvent, TransactionEffects } from "@mysten/sui/jsonRpc";
 import { AftermathApi } from "../providers/aftermathApi";
 import { Byte, SuiAddress } from "../../types";
-import { SuiEvent, TransactionEffects } from "@mysten/sui/client";
 
 export class InspectionsApiHelpers {
 	public static constants = {
@@ -65,7 +65,12 @@ export class InspectionsApiHelpers {
 			throw Error("dev inspect move call returned no results");
 
 		const resultBytes = response.results.map(
-			(result) => result.returnValues?.map((val) => val[0]) ?? []
+			(result: {
+				returnValues?: [number[], string][];
+				[key: string]: any;
+			}) =>
+				result.returnValues?.map((val: [number[], string]) => val[0]) ??
+				[]
 		);
 		return {
 			events: response.events,

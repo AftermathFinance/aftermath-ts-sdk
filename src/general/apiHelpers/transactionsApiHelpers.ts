@@ -1,10 +1,11 @@
 import {
-	TransactionArgument,
 	Transaction,
-	TransactionObjectArgument,
-	Argument,
 	isTransaction,
+	type TransactionArgument,
+	type TransactionObjectArgument,
+	type Argument,
 } from "@mysten/sui/transactions";
+import type { SuiTransactionBlockResponseQuery } from "@mysten/sui/jsonRpc";
 import {
 	Balance,
 	CoinType,
@@ -17,7 +18,6 @@ import {
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
 import { Helpers } from "../utils/helpers";
 
 export class TransactionsApiHelpers {
@@ -84,7 +84,7 @@ export class TransactionsApiHelpers {
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
 		tx.setGasBudget(safeGasBudget);
-		tx.setGasPrice(referenceGasPrice);
+		tx.setGasPrice(BigInt(referenceGasPrice));
 		return tx;
 	};
 
@@ -109,10 +109,7 @@ export class TransactionsApiHelpers {
 		if (!tx) return;
 
 		const txBytes = await tx.build({
-			// NOTE: is this safe ?
-
 			client: this.Provider?.provider,
-
 			onlyTransactionKind: true,
 		});
 
@@ -213,8 +210,9 @@ export class TransactionsApiHelpers {
 				"unable to convert gas coin arg to service coin data"
 			);
 
-		// Input
-		return { [coinTxArg.$kind]: coinTxArg.Input };
+		if (coinTxArg.$kind === "Input") return { Input: coinTxArg.Input };
+
+		throw new Error(`unexpected coinTxArg.$kind: ${coinTxArg.$kind}`);
 	};
 
 	public static serviceCoinDataV2FromCoinTxArg = (inputs: {
@@ -245,8 +243,9 @@ export class TransactionsApiHelpers {
 
 		if (coinTxArg.$kind === "GasCoin") return "Gas";
 
-		// Input
-		return { Input: coinTxArg.Input };
+		if (coinTxArg.$kind === "Input") return { Input: coinTxArg.Input };
+
+		throw new Error(`unexpected coinTxArg.$kind: ${coinTxArg.$kind}`);
 	};
 
 	public static coinTxArgFromServiceCoinData = (inputs: {

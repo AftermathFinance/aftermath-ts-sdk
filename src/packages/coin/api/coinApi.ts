@@ -1,12 +1,12 @@
 import {
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
+import type { CoinStruct, PaginatedCoins } from "@mysten/sui/jsonRpc";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 // import { ethers, Networkish } from "ethers";
 

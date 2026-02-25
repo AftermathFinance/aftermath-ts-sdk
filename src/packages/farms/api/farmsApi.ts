@@ -51,9 +51,9 @@ import {
 	FarmsWithdrewPrincipalEventOnChainV1,
 } from "./farmsApiCastingTypes";
 import {
-	TransactionArgument,
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
 import { Coin } from "../..";

@@ -1,8 +1,8 @@
 import {
-	TransactionObjectArgument,
 	Transaction,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { fromBase64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinDecimal,
@@ -596,7 +596,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.publish({
 			modules: compiledModulesAndDeps.modules.map((m: any) =>
-				Array.from(fromB64(m))
+				Array.from(fromBase64(m))
 			),
 			dependencies: compiledModulesAndDeps.dependencies.map(
 				(addr: string) => normalizeSuiObjectId(addr)

@@ -18,7 +18,7 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
 import { AftermathApi } from "../../general/providers";
-import { CoinMetadata } from "@mysten/sui/client";
+import type { CoinMetadata } from "@mysten/sui/jsonRpc";
 
 /**
  * The `Coin` class provides functionality to manage and inspect coin types,

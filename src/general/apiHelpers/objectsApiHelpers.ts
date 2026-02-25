@@ -2,16 +2,16 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
 import { Helpers } from "../utils/helpers";
 import {
+	Transaction,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type {
 	SuiObjectDataFilter,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-} from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
+import type { BcsType } from "@mysten/sui/bcs";
 import { BcsTypeName } from "../types/castingTypes";
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { BcsType } from "@mysten/sui/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================

@@ -1,7 +1,7 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { SharedCustodyAddresses } from "../../../types";
-import { MultiSigPublicKey } from "@mysten/sui/multisig";
 import { Ed25519PublicKey } from "@mysten/sui/keypairs/ed25519";
+import { MultiSigPublicKey } from "@mysten/sui/multisig";
 import { ApiMultisigUserBody, MultisigData } from "../multisigTypes";
 
 export class MultisigApi {

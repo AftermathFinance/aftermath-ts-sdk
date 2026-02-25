@@ -1,4 +1,4 @@
-import { BcsType, bcs } from "@mysten/sui/bcs";
+import { bcs, type BcsType } from "@mysten/sui/bcs";
 import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
@@ -13,7 +13,7 @@ import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
 import { Helpers } from "../..";
 import { BcsTypeName } from "../types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui/client";
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
 
 /**

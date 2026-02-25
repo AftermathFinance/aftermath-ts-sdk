@@ -1,4 +1,4 @@
-import { SuiSystemStateSummary } from "@mysten/sui/client";
+import type { SuiSystemStateSummary } from "@mysten/sui/jsonRpc";
 import { Caller } from "../../general/utils/caller";
 import { CallerConfig, CoinType, SuiNetwork, Url } from "../../types";
 import { AftermathApi } from "../../general/providers";

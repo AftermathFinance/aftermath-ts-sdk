@@ -1,4 +1,7 @@
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {

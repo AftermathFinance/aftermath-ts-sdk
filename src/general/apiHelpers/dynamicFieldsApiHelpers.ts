@@ -1,4 +1,4 @@
-import { DynamicFieldInfo, DynamicFieldName } from "@mysten/sui/client";
+import type { DynamicFieldInfo, DynamicFieldName } from "@mysten/sui/jsonRpc";
 import {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
@@ -172,10 +172,11 @@ export class DynamicFieldsApiHelpers {
 		const dynamicFields =
 			dynamicFieldType === undefined
 				? dynamicFieldsResponse.data
-				: dynamicFieldsResponse.data.filter((dynamicField) =>
-						typeof dynamicFieldType === "string"
-							? dynamicField.objectType === dynamicFieldType
-							: dynamicFieldType(dynamicField.objectType)
+				: dynamicFieldsResponse.data.filter(
+						(dynamicField: DynamicFieldInfo) =>
+							typeof dynamicFieldType === "string"
+								? dynamicField.objectType === dynamicFieldType
+								: dynamicFieldType(dynamicField.objectType)
 				  );
 
 		const nextCursor = dynamicFieldsResponse.nextCursor;

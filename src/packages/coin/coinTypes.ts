@@ -1,4 +1,4 @@
-import { CoinMetadata } from "@mysten/sui/client";
+import type { CoinMetadata } from "@mysten/sui/jsonRpc";
 import {
 	Balance,
 	ObjectId,

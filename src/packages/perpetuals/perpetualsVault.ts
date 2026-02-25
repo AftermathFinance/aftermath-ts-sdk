@@ -1,6 +1,6 @@
 import {
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";

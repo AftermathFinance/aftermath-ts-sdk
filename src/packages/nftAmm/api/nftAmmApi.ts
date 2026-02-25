@@ -19,9 +19,9 @@ import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../../pools/pools";
 import {
-	TransactionArgument,
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 
 export class NftAmmApi {

@@ -1,8 +1,17 @@
 import {
+	Transaction,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type {
 	DisplayFieldsResponse,
 	SuiMoveObject,
 	SuiObjectResponse,
-} from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
+import { isValidSuiAddress } from "@mysten/sui/utils";
+import { decodeSuiPrivateKey, type Keypair } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import {
 	AnyObjectType,
 	Balance,
@@ -23,16 +32,7 @@ import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
 import { MoveErrors } from "../types/moveErrorsInterface";
-import { isValidSuiAddress } from "@mysten/sui/utils";
-import { decodeSuiPrivateKey, Keypair } from "@mysten/sui/cryptography";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
-import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 
 /**
  * A utility class containing various helper functions for general use across
@@ -500,15 +500,7 @@ export class Helpers {
 		amount: Balance,
 		slippage: Slippage
 	) => {
-		return (
-			amount -
-			BigInt(
-				Math.floor(
-					(slippage / 100) *
-						Number(amount)
-				)
-			)
-		);
+		return amount - BigInt(Math.floor((slippage / 100) * Number(amount)));
 	};
 
 	/**
@@ -893,7 +885,7 @@ export class Helpers {
 	 */
 	public static keypairFromPrivateKey = (privateKey: string): Keypair => {
 		const parsedKeypair = decodeSuiPrivateKey(privateKey);
-		switch (parsedKeypair.schema) {
+		switch (parsedKeypair.scheme) {
 			case "ED25519":
 				return Ed25519Keypair.fromSecretKey(parsedKeypair.secretKey);
 			case "Secp256k1":
@@ -902,7 +894,7 @@ export class Helpers {
 				return Secp256r1Keypair.fromSecretKey(parsedKeypair.secretKey);
 			default:
 				throw new Error(
-					`unsupported schema \`${parsedKeypair.schema}\``
+					`unsupported scheme \`${parsedKeypair.scheme}\``
 				);
 		}
 	};

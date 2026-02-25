@@ -68,7 +68,7 @@ import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import {
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 

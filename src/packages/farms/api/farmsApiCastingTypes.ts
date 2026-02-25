@@ -4,7 +4,7 @@ import {
 	TableOnChain,
 	WrappedEventOnChain,
 } from "../../../general/types/castingTypes";
-import { SuiObjectData } from "@mysten/sui/client";
+import type { SuiObjectData } from "@mysten/sui/jsonRpc";
 
 // =========================================================================
 //  Objects

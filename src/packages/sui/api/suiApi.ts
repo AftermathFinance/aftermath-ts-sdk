@@ -1,4 +1,4 @@
-import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui/client";
+import type { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui/jsonRpc";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Helpers } from "../../../general/utils";
 
@@ -46,6 +46,6 @@ export class SuiApi {
 		return {
 			...systemState,
 			activeValidators,
-		};
+		} as SuiSystemStateSummary;
 	};
 }
