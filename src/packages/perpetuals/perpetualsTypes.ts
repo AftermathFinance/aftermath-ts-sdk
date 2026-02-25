@@ -3637,6 +3637,99 @@ export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 	  };
 
 // =========================================================================
+//  Rebates
+// =========================================================================
+
+/**
+ * Request body for calculating fee-tier rebates for perpetuals accounts.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/calculate-fee-tiers-rebates`.
+ *
+ * When `accountIds` is omitted or empty, all eligible accounts are included.
+ *
+ * **Note:** All data returned is for the current epoch only.
+ */
+export interface ApiPerpetualsCalculateFeeTiersRebatesBody {
+	accountIds?: PerpetualsAccountId[];
+}
+
+/**
+ * Per-account fee rebate data returned by the fee-tier rebates endpoint.
+ */
+export interface PerpetualsFeeTierRebateAccountData {
+	accountId: PerpetualsAccountId;
+	totalMakerVolume: number;
+	totalTakerVolume: number;
+	feesPaid: number;
+	rebateAmount: number;
+}
+
+/**
+ * Response body for the fee-tier rebates calculation.
+ */
+export interface ApiPerpetualsCalculateFeeTiersRebatesResponse {
+	accountIds: PerpetualsFeeTierRebateAccountData[];
+}
+
+/**
+ * Request body for calculating market-maker rewards for perpetuals accounts.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/calculate-mm-rewards`.
+ *
+ * Distributes `totalMakerRewards` proportionally based on each account's quality
+ * score (`qScore`). When `accountIds` is omitted or empty, all eligible accounts
+ * are included.
+ *
+ * **Note:** All data returned is for the current epoch only.
+ */
+export interface ApiPerpetualsCalculateMmRewardsBody {
+	accountIds?: PerpetualsAccountId[];
+	totalMakerRewards: number;
+}
+
+/**
+ * Per-account maker reward data returned by the MM rewards endpoint.
+ */
+export interface PerpetualsMakerRewardData {
+	accountId: PerpetualsAccountId;
+	qScore: number;
+	qScoreShare: number;
+	rewards: number;
+}
+
+/**
+ * Response body for the market-maker rewards calculation.
+ */
+export interface ApiPerpetualsCalculateMmRewardsResponse {
+	totalQScore: number;
+	rewards: PerpetualsMakerRewardData[];
+}
+
+/**
+ * Request body for generating a CSV rebate report.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/create-csv-rebates`.
+ *
+ * Computes per-account reward allocations and optionally applies fee-tier
+ * rebate adjustments. When `accountIds` is omitted or empty, all eligible
+ * accounts are included.
+ *
+ * **Note:** All data returned is for the current epoch only.
+ */
+export interface ApiPerpetualsCreateCsvRebatesBody {
+	accountIds?: PerpetualsAccountId[];
+	totalMakerRewards: number;
+	applyFeeTiers: boolean;
+}
+
+/**
+ * Response body for the CSV rebate generation endpoint.
+ */
+export interface ApiPerpetualsCreateCsvRebatesResponse {
+	csv: string;
+}
+
+// =========================================================================
 //  SDK
 // =========================================================================
 
