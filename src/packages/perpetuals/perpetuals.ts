@@ -78,8 +78,6 @@ import {
 	ApiPerpetualsCalculateFeeTiersRebatesResponse,
 	ApiPerpetualsCalculateMmRewardsBody,
 	ApiPerpetualsCalculateMmRewardsResponse,
-	ApiPerpetualsCreateCsvRebatesBody,
-	ApiPerpetualsCreateCsvRebatesResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -928,37 +926,6 @@ export class Perpetuals extends Caller {
 			ApiPerpetualsCalculateMmRewardsResponse,
 			ApiPerpetualsCalculateMmRewardsBody
 		>("rebates/calculate-mm-rewards", inputs);
-	}
-
-	/**
-	 * Generate a CSV-formatted rebate report.
-	 *
-	 * Computes per-account reward allocations and optionally applies fee-tier
-	 * rebate adjustments. When `accountIds` is omitted or empty, all eligible
-	 * accounts are included.
-	 *
-	 * **Note:** All data returned is for the current epoch only.
-	 *
-	 * @param inputs.accountIds - Optional list of account IDs.
-	 * @param inputs.totalMakerRewards - Total reward pool to distribute.
-	 * @param inputs.applyFeeTiers - Whether to apply fee-tier rebate adjustments.
-	 * @returns {@link ApiPerpetualsCreateCsvRebatesResponse} with the CSV string.
-	 *
-	 * @example
-	 * ```ts
-	 * const { csv } = await perps.getCsvRebates({
-	 *   totalMakerRewards: 10000,
-	 *   applyFeeTiers: true,
-	 * });
-	 * ```
-	 */
-	public async getCsvRebates(
-		inputs: ApiPerpetualsCreateCsvRebatesBody
-	): Promise<ApiPerpetualsCreateCsvRebatesResponse> {
-		return this.fetchApi<
-			ApiPerpetualsCreateCsvRebatesResponse,
-			ApiPerpetualsCreateCsvRebatesBody
-		>("rebates/create-csv-rebates", inputs);
 	}
 
 	// =========================================================================

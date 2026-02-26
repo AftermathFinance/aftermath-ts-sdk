@@ -3705,30 +3705,6 @@ export interface ApiPerpetualsCalculateMmRewardsResponse {
 	rewards: PerpetualsMakerRewardData[];
 }
 
-/**
- * Request body for generating a CSV rebate report.
- *
- * This corresponds to `POST /api/perpetuals/rebates/create-csv-rebates`.
- *
- * Computes per-account reward allocations and optionally applies fee-tier
- * rebate adjustments. When `accountIds` is omitted or empty, all eligible
- * accounts are included.
- *
- * **Note:** All data returned is for the current epoch only.
- */
-export interface ApiPerpetualsCreateCsvRebatesBody {
-	accountIds?: PerpetualsAccountId[];
-	totalMakerRewards: number;
-	applyFeeTiers: boolean;
-}
-
-/**
- * Response body for the CSV rebate generation endpoint.
- */
-export interface ApiPerpetualsCreateCsvRebatesResponse {
-	csv: string;
-}
-
 // =========================================================================
 //  SDK
 // =========================================================================
