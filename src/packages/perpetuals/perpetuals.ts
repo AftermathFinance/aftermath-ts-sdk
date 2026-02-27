@@ -884,7 +884,7 @@ export class Perpetuals extends Caller {
 	 *
 	 * @example
 	 * ```ts
-	 * const { accountIds } = await perps.getFeeTiersRebates({
+	 * const { rebates } = await perps.getFeeTiersRebates({
 	 *   accountIds: [123n, 456n],
 	 * });
 	 * ```

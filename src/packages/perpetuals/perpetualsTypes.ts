@@ -3668,7 +3668,7 @@ export interface PerpetualsFeeTierRebateAccountData {
  * Response body for the fee-tier rebates calculation.
  */
 export interface ApiPerpetualsCalculateFeeTiersRebatesResponse {
-	accountIds: PerpetualsFeeTierRebateAccountData[];
+	rebates: PerpetualsFeeTierRebateAccountData[];
 }
 
 /**
@@ -3692,7 +3692,15 @@ export interface ApiPerpetualsCalculateMmRewardsBody {
  */
 export interface PerpetualsMakerRewardData {
 	accountId: PerpetualsAccountId;
+	/** Normalized quality score (average per snapshot, cross-market). */
+	normalizedQScore: number;
+	/** Cross-market uptime count (number of snapshots where the maker was active). */
+	uptime: number;
+	/** Cross-market trading volume in USD. */
+	mmVolume: number;
+	/** Final quality score for this maker, used for reward distribution. */
 	qScore: number;
+	/** This maker's share of the total quality score (between 0 and 1). */
 	qScoreShare: number;
 	rewards: number;
 }
