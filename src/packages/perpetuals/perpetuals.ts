@@ -74,10 +74,8 @@ import {
 	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
 	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	ApiPerpetualsTransferCapTxBody,
-	ApiPerpetualsCalculateFeeTiersRebatesBody,
-	ApiPerpetualsCalculateFeeTiersRebatesResponse,
-	ApiPerpetualsCalculateMmRewardsBody,
-	ApiPerpetualsCalculateMmRewardsResponse,
+	ApiPerpetualsCurrentRebateRewardsBody,
+	ApiPerpetualsCurrentRebateRewardsResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -871,61 +869,34 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	/**
-	 * Calculate fee-tier rebates for one or more perpetuals accounts.
+	 * Calculate rewards and rebates for one or more perpetuals accounts.
 	 *
-	 * Computes maker/taker volumes, fees paid, and rebate amounts based on
-	 * the fee-tier schedule. When `accountIds` is omitted or empty, all eligible
+	 * Computes per-account maker and taker reward allocations, fee-tier rebates,
+	 * and volume-based metrics. When `accountIds` is omitted or empty, all eligible
 	 * accounts are included.
 	 *
 	 * **Note:** All data returned is for the current epoch only.
 	 *
-	 * @param inputs.accountIds - Optional list of account IDs to calculate for.
-	 * @returns {@link ApiPerpetualsCalculateFeeTiersRebatesResponse} with per-account rebate data.
-	 *
-	 * @example
-	 * ```ts
-	 * const { rebates } = await perps.getFeeTiersRebates({
-	 *   accountIds: [123n, 456n],
-	 * });
-	 * ```
-	 */
-	public async getFeeTiersRebates(
-		inputs: ApiPerpetualsCalculateFeeTiersRebatesBody = {}
-	): Promise<ApiPerpetualsCalculateFeeTiersRebatesResponse> {
-		return this.fetchApi<
-			ApiPerpetualsCalculateFeeTiersRebatesResponse,
-			ApiPerpetualsCalculateFeeTiersRebatesBody
-		>("rebates/calculate-fee-tiers-rebates", inputs);
-	}
-
-	/**
-	 * Calculate market-maker rewards for one or more perpetuals accounts.
-	 *
-	 * Distributes `totalMakerRewards` proportionally based on each account's
-	 * quality score (`qScore`), reflecting maker activity, spread tightness,
-	 * and uptime. When `accountIds` is omitted or empty, all eligible accounts
-	 * are included.
-	 *
-	 * **Note:** All data returned is for the current epoch only.
-	 *
+	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
+	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
 	 * @param inputs.accountIds - Optional list of account IDs.
-	 * @param inputs.totalMakerRewards - Total reward pool to distribute.
-	 * @returns {@link ApiPerpetualsCalculateMmRewardsResponse} with per-account reward data.
+	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
 	 *
 	 * @example
 	 * ```ts
-	 * const { totalQScore, rewards } = await perps.getMmRewards({
+	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
 	 *   totalMakerRewards: 10000,
+	 *   totalTakerRewards: 5000,
 	 * });
 	 * ```
 	 */
-	public async getMmRewards(
-		inputs: ApiPerpetualsCalculateMmRewardsBody
-	): Promise<ApiPerpetualsCalculateMmRewardsResponse> {
+	public async getCurrentRebateRewards(
+		inputs: ApiPerpetualsCurrentRebateRewardsBody
+	): Promise<ApiPerpetualsCurrentRebateRewardsResponse> {
 		return this.fetchApi<
-			ApiPerpetualsCalculateMmRewardsResponse,
-			ApiPerpetualsCalculateMmRewardsBody
-		>("rebates/calculate-mm-rewards", inputs);
+			ApiPerpetualsCurrentRebateRewardsResponse,
+			ApiPerpetualsCurrentRebateRewardsBody
+		>("rebates/rewards", inputs);
 	}
 
 	// =========================================================================
