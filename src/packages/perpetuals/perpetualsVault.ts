@@ -48,6 +48,7 @@ import {
 	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody,
 	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse,
 	ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
+	PerpetualsSponsorConfig,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -182,6 +183,7 @@ export class PerpetualsVault extends Caller {
 		// TODO: change to arr ?
 		sizesToClose: Record<PerpetualsMarketId, Balance>;
 		recipientAddress?: SuiAddress;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -206,15 +208,17 @@ export class PerpetualsVault extends Caller {
 
 	// TODO: docs
 	public async getPauseVaultForForceWithdrawRequestTx(inputs: {
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
 			ApiTransactionResponse
 		>(
 			"vault/transactions/pause-vault-for-force-withdraw-request",
 			{
+				...otherInputs,
 				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -240,6 +244,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getUpdateWithdrawRequestSlippageTx(inputs: {
 		minCollateralAmountOut: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -276,6 +281,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getOwnerUpdateForceWithdrawDelayTx(inputs: {
 		forceWithdrawDelayMs: bigint;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -308,6 +314,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getOwnerUpdateLockPeriodTx(inputs: {
 		lockPeriodMs: bigint;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -341,6 +348,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getOwnerUpdatePerformanceFeeTx(inputs: {
 		performanceFeePercentage: number;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -380,6 +388,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getOwnerProcessWithdrawRequestsTx(inputs: {
 		userAddresses: SuiAddress[];
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -495,6 +504,7 @@ export class PerpetualsVault extends Caller {
 		walletAddress: SuiAddress;
 		lpWithdrawAmount: Balance;
 		minCollateralAmountOut: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -527,6 +537,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getCancelWithdrawRequestTx(inputs: {
 		walletAddress: SuiAddress;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -579,6 +590,7 @@ export class PerpetualsVault extends Caller {
 		inputs: {
 			walletAddress: SuiAddress;
 			minLpAmountOut: Balance;
+			sponsor?: PerpetualsSponsorConfig;
 			tx?: Transaction;
 			isSponsoredTx?: boolean;
 		} & (

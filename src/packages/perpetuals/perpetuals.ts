@@ -74,6 +74,7 @@ import {
 	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
 	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	ApiPerpetualsTransferCapTxBody,
+	PerpetualsSponsorConfig,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -698,9 +699,10 @@ export class Perpetuals extends Caller {
 	public async getTransferCapTx(inputs: {
 		recipientAddress: SuiAddress;
 		capObjectId: ObjectId;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx, recipientAddress, capObjectId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsTransferCapTxBody,
@@ -708,8 +710,7 @@ export class Perpetuals extends Caller {
 		>(
 			"transactions/transfer-cap",
 			{
-				recipientAddress,
-				capObjectId,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -736,17 +737,17 @@ export class Perpetuals extends Caller {
 	public async getCreateAccountTx(inputs: {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}): Promise<SdkTransactionResponse> {
-		const { walletAddress, collateralCoinType, tx } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateAccountBody,
 			ApiTransactionResponse
 		>(
 			"transactions/create-account",
 			{
-				walletAddress,
-				collateralCoinType,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -832,6 +833,7 @@ export class Perpetuals extends Caller {
 			lockPeriodMs: bigint;
 			performanceFeePercentage: Percentage;
 			forceWithdrawDelayMs: bigint;
+			sponsor?: PerpetualsSponsorConfig;
 			tx?: Transaction;
 			isSponsoredTx?: boolean;
 		} & (

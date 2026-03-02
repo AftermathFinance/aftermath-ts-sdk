@@ -34,6 +34,21 @@ import {
 } from "@mysten/sui/transactions";
 
 // =========================================================================
+//  Sponsor Config
+// =========================================================================
+
+/**
+ * Configuration for gas pool sponsorship on perpetuals transactions.
+ *
+ * When provided, the transaction will include a gas pool sponsor rebate step
+ * that debits the specified wallet's gas pool.
+ */
+export interface PerpetualsSponsorConfig {
+	/** Wallet address to use for gas pool sponsorship. */
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
 //  Name Only
 // =========================================================================
 
@@ -2094,6 +2109,7 @@ export interface ApiPerpetualsStopOrderDatasResponse {
  */
 export interface ApiPerpetualsCreateVaultCapBody {
 	walletAddress: SuiAddress;
+	sponsor?: PerpetualsSponsorConfig;
 	lpCoinMetadata: {
 		/** Name for the token */
 		name: string;
@@ -2149,6 +2165,7 @@ export type ApiPerpetualsCreateVaultBody = {
 	forceWithdrawDelayMs: bigint;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			initialDepositAmount: Balance;
@@ -2194,6 +2211,7 @@ export interface ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody {
 	 * If provided, the new integrator approval will be added to this transaction.
 	 */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2224,6 +2242,7 @@ export interface ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody {
 	 * If provided, the integrator removal will be added to this transaction.
 	 */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2254,6 +2273,7 @@ export interface ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody {
 	 * If provided, the vault creation will be added to this transaction.
 	 */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2439,6 +2459,7 @@ export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2455,6 +2476,7 @@ export type ApiPerpetualsDepositCollateralBody = {
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			depositAmount: Balance;
@@ -2472,6 +2494,7 @@ export type ApiPerpetualsWithdrawCollateralBody = {
 	withdrawAmount: Balance;
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 };
 
 /**
@@ -2495,6 +2518,7 @@ export interface ApiPerpetualsTransferCollateralBody {
 	toAccountCapId?: ObjectId;
 	transferAmount: Balance;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2504,6 +2528,7 @@ export type ApiPerpetualsAllocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	allocateAmount: Balance;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2521,6 +2546,7 @@ export type ApiPerpetualsDeallocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	deallocateAmount: Balance;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2545,6 +2571,8 @@ export interface SdkPerpetualsPlaceStopOrdersInputs {
 	gasCoinArg?: TransactionObjectArgument;
 	/** Whether the transaction is expected to be sponsored by the API. */
 	isSponsoredTx?: boolean;
+	/** Optional gas pool sponsorship configuration. */
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -2555,6 +2583,7 @@ export type ApiPerpetualsPlaceStopOrdersBody = {
 	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
 	txKind?: SerializedTransaction;
 } & (
 	| {
@@ -2586,6 +2615,8 @@ export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 	gasCoinArg?: TransactionObjectArgument;
 	/** Whether to treat the transaction as sponsored. */
 	isSponsoredTx?: boolean;
+	/** Optional gas pool sponsorship configuration. */
+	sponsor?: PerpetualsSponsorConfig;
 };
 // & (
 // 	| {
@@ -2613,6 +2644,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	limitOrderId?: PerpetualsOrderId;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
 	leverage?: number;
 	txKind?: SerializedTransaction;
 } & (
@@ -2644,6 +2676,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 export type ApiPerpetualsEditStopOrdersBody = {
 	stopOrders: PerpetualsStopOrderData[];
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2710,6 +2743,7 @@ export type ApiPerpetualsMarketOrderBody = {
 	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Optional serialized transaction kind if assembled by the API. */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2777,6 +2811,7 @@ export type ApiPerpetualsLimitOrderBody = {
 	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2802,6 +2837,7 @@ export type ApiPerpetualsCancelOrdersBody = {
 		}
 	>;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2818,6 +2854,7 @@ export type ApiPerpetualsCancelOrdersBody = {
 export type ApiPerpetualsCancelStopOrdersBody = {
 	stopOrderIds: ObjectId[];
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2852,6 +2889,7 @@ export type ApiPerpetualsSetLeverageTxBody = {
 	collateralChange: number;
 	leverage: number;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -3083,6 +3121,7 @@ export type ApiPerpetualsTransferCapTxBody = {
 	 * When provided, the transfer operation is appended to the existing transaction.
 	 */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 };
 
 // =========================================================================
@@ -3149,6 +3188,7 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
 	sizesToClose: Record<PerpetualsMarketId, Balance>;
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3167,6 +3207,7 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse {
 export interface ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody {
 	vaultId: ObjectId;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3176,6 +3217,7 @@ export interface ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody {
 	vaultId: ObjectId;
 	userAddresses: SuiAddress[];
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3186,6 +3228,7 @@ export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody {
 	vaultId: ObjectId;
 	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3195,6 +3238,7 @@ export interface ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody {
 	vaultId: ObjectId;
 	forceWithdrawDelayMs: bigint;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3204,6 +3248,7 @@ export interface ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody {
 	vaultId: ObjectId;
 	lockPeriodMs: bigint;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3213,6 +3258,7 @@ export interface ApiPerpetualsVaultOwnerUpdatePerformanceFeeTxBody {
 	vaultId: ObjectId;
 	performanceFeePercentage: number;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3275,6 +3321,7 @@ export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 	lpWithdrawAmount: Balance;
 	minCollateralAmountOut: Balance;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3305,6 +3352,7 @@ export interface ApiPerpetualsVaultCancelWithdrawRequestTxBody {
 	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 }
 
 /**
@@ -3318,6 +3366,7 @@ export type ApiPerpetualsVaultDepositTxBody = {
 	minLpAmountOut: Balance;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			depositAmount: Balance;
