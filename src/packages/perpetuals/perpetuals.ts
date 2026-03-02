@@ -889,14 +889,24 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getCreateBuilderCodeIntegratorConfigTx(
-		inputs: ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/create-integrator-config",
-			inputs,
+			{
+				...otherInputs,
+				txKind:
+					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+						{ tx }
+					),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -927,14 +937,24 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getRemoveBuilderCodeIntegratorConfigTx(
-		inputs: ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/remove-integrator-config",
-			inputs,
+			{
+				...otherInputs,
+				txKind:
+					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+						{ tx }
+					),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -965,14 +985,24 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getCreateBuilderCodeIntegratorVaultTx(
-		inputs: ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/create-integrator-vault",
-			inputs,
+			{
+				...otherInputs,
+				txKind:
+					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+						{ tx }
+					),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -1017,14 +1047,24 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getClaimBuilderCodeIntegratorVaultFeesTx(
-		inputs: ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
 			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse
 		>(
 			"builder-codes/transactions/claim-integrator-vault-fees",
-			inputs,
+			{
+				...otherInputs,
+				txKind:
+					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+						{ tx }
+					),
+			},
 			undefined,
 			{
 				txKind: true,
