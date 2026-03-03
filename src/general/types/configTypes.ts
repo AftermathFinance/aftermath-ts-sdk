@@ -1,7 +1,5 @@
-import { Sui } from "../../packages";
-import { CoinType } from "../../types";
-import { CoinDecimal } from "../../types";
-import { ObjectId, SuiAddress } from "./generalTypes";
+import type { CoinDecimal } from "../../types";
+import type { ObjectId, SuiAddress } from "./generalTypes";
 
 // =========================================================================
 //  Name Only
@@ -14,24 +12,24 @@ export type RpcEndpoint = string;
 // =========================================================================
 
 export interface ConfigAddresses {
-	faucet?: FaucetAddresses;
-	staking?: StakingAddresses;
-	pools?: PoolsAddresses;
-	daoFeePools?: DaoFeePoolsAddresses;
-	suiFrens?: SuiFrensAddresses;
-	nftAmm?: NftAmmAddresses;
-	router?: RouterAddresses;
-	referralVault?: ReferralVaultAddresses;
-	perpetuals?: PerpetualsAddresses;
-	perpetualsVaults?: PerpetualsVaultsAddresses;
-	farms?: FarmsAddresses;
-	dynamicGas?: DynamicGasAddresses;
-	scallop?: ScallopAddresses;
-	leveragedStaking?: LeveragedStakingAddresses;
-	dca?: DcaAddresses;
-	limitOrders?: LimitAddresses;
-	sharedCustody?: SharedCustodyAddresses;
-	nfts?: NftsAddresses;
+  faucet?: FaucetAddresses;
+  staking?: StakingAddresses;
+  pools?: PoolsAddresses;
+  daoFeePools?: DaoFeePoolsAddresses;
+  suiFrens?: SuiFrensAddresses;
+  nftAmm?: NftAmmAddresses;
+  router?: RouterAddresses;
+  referralVault?: ReferralVaultAddresses;
+  perpetuals?: PerpetualsAddresses;
+  perpetualsVaults?: PerpetualsVaultsAddresses;
+  farms?: FarmsAddresses;
+  dynamicGas?: DynamicGasAddresses;
+  scallop?: ScallopAddresses;
+
+  dca?: DcaAddresses;
+  limitOrders?: LimitAddresses;
+  sharedCustody?: SharedCustodyAddresses;
+  nfts?: NftsAddresses;
 }
 
 // =========================================================================
@@ -39,183 +37,172 @@ export interface ConfigAddresses {
 // =========================================================================
 
 export interface FaucetAddresses {
-	packages: {
-		faucet: SuiAddress;
-		suiFrensGenesisWrapper: SuiAddress;
-	};
-	objects: {
-		faucet: ObjectId;
-		suiFrensMint: ObjectId;
-	};
+  packages: {
+    faucet: SuiAddress;
+    suiFrensGenesisWrapper: SuiAddress;
+  };
+  objects: {
+    faucet: ObjectId;
+    suiFrensMint: ObjectId;
+  };
 }
 
 export interface StakingAddresses {
-	packages: {
-		lsd: SuiAddress;
-		afsui: SuiAddress;
-		events: SuiAddress;
-	};
-	objects: {
-		stakedSuiVault: ObjectId;
-		stakedSuiVaultState: ObjectId;
-		safe: ObjectId;
-		treasury: ObjectId;
-		referralVault: ObjectId;
-		validatorConfigsTable: ObjectId;
-		aftermathValidator: ObjectId;
-	};
-}
-
-export interface LeveragedStakingAddresses {
-	packages: {
-		leveragedAfSui: SuiAddress;
-		leveragedAfSuiInitial: SuiAddress;
-	};
-	objects: {
-		leveragedAfSuiState: ObjectId;
-		afSuiSuiPoolId: ObjectId;
-	};
+  packages: {
+    lsd: SuiAddress;
+    afsui: SuiAddress;
+    events: SuiAddress;
+  };
+  objects: {
+    stakedSuiVault: ObjectId;
+    stakedSuiVaultState: ObjectId;
+    safe: ObjectId;
+    treasury: ObjectId;
+    referralVault: ObjectId;
+    validatorConfigsTable: ObjectId;
+    aftermathValidator: ObjectId;
+  };
 }
 
 export interface PoolsAddresses {
-	packages: {
-		amm: SuiAddress;
-		ammInterface: SuiAddress;
-		events: SuiAddress;
-		eventsV2: SuiAddress;
-	};
-	objects: {
-		poolRegistry: ObjectId;
-		protocolFeeVault: ObjectId;
-		treasury: ObjectId;
-		insuranceFund: ObjectId;
-		lpCoinsTable: ObjectId;
-	};
-	other?: {
-		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
-	};
+  packages: {
+    amm: SuiAddress;
+    ammInterface: SuiAddress;
+    events: SuiAddress;
+    eventsV2: SuiAddress;
+  };
+  objects: {
+    poolRegistry: ObjectId;
+    protocolFeeVault: ObjectId;
+    treasury: ObjectId;
+    insuranceFund: ObjectId;
+    lpCoinsTable: ObjectId;
+  };
+  other?: {
+    createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+  };
 }
 
 export interface DaoFeePoolsAddresses {
-	packages: {
-		amm: SuiAddress;
-		events: SuiAddress;
-	};
-	objects: {
-		version: ObjectId;
-	};
+  packages: {
+    amm: SuiAddress;
+    events: SuiAddress;
+  };
+  objects: {
+    version: ObjectId;
+  };
 }
 
 export interface SuiFrensAddresses {
-	packages: {
-		suiFrens: SuiAddress;
-		suiFrensBullshark: SuiAddress;
-		accessories: SuiAddress;
-		suiFrensVault: SuiAddress;
-		suiFrensVaultCapyLabsExtension: SuiAddress;
-	};
-	objects: {
-		capyLabsApp: ObjectId;
-		suiFrensVault: ObjectId;
-		suiFrensVaultStateV1: ObjectId;
-		suiFrensVaultStateV1MetadataTable: ObjectId;
-		suiFrensVaultCapyLabsExtension: ObjectId;
-	};
+  packages: {
+    suiFrens: SuiAddress;
+    suiFrensBullshark: SuiAddress;
+    accessories: SuiAddress;
+    suiFrensVault: SuiAddress;
+    suiFrensVaultCapyLabsExtension: SuiAddress;
+  };
+  objects: {
+    capyLabsApp: ObjectId;
+    suiFrensVault: ObjectId;
+    suiFrensVaultStateV1: ObjectId;
+    suiFrensVaultStateV1MetadataTable: ObjectId;
+    suiFrensVaultCapyLabsExtension: ObjectId;
+  };
 }
 
 export interface NftAmmAddresses {
-	packages: {
-		nftAmm: SuiAddress;
-	};
-	objects: {
-		protocolFeeVault: ObjectId;
-		treasury: ObjectId;
-		insuranceFund: ObjectId;
-		referralVault: ObjectId;
-	};
+  packages: {
+    nftAmm: SuiAddress;
+  };
+  objects: {
+    protocolFeeVault: ObjectId;
+    treasury: ObjectId;
+    insuranceFund: ObjectId;
+    referralVault: ObjectId;
+  };
 }
 
 export interface RouterAddresses {
-	packages: {
-		utils: SuiAddress;
-	};
+  packages: {
+    utils: SuiAddress;
+  };
 }
 
 export interface ReferralVaultAddresses {
-	packages: {
-		referralVault: SuiAddress;
-	};
-	objects: {
-		referralVault: ObjectId;
-	};
+  packages: {
+    referralVault: SuiAddress;
+  };
+  objects: {
+    referralVault: ObjectId;
+  };
 }
 
 export interface PerpetualsAddresses {
-	packages: {
-		// perpetuals: SuiAddress;
-		events: SuiAddress;
-	};
-	objects: {
-		registry: ObjectId;
-	};
+  packages: {
+    // perpetuals: SuiAddress;
+    events: SuiAddress;
+  };
+  objects: {
+    registry: ObjectId;
+  };
 }
 
 export interface PerpetualsVaultsAddresses {
-	other: {
-		createLpCoinPackageCompilation: string;
-	};
+  other: {
+    createLpCoinPackageCompilation: string;
+  };
 }
 
 export interface FarmsAddresses {
-	packages: {
-		vaults: SuiAddress;
-		vaultsInitial: SuiAddress;
-		vaultsV2: SuiAddress;
-		eventsV2: SuiAddress;
-	};
-	objects: {
-		version: ObjectId;
-	};
+  packages: {
+    vaults: SuiAddress;
+    vaultsInitial: SuiAddress;
+    vaultsV2: SuiAddress;
+    eventsV2: SuiAddress;
+  };
+  objects: {
+    version: ObjectId;
+  };
 }
 
 export interface DynamicGasAddresses {
-	sponsorAddress: SuiAddress;
+  sponsorAddress: SuiAddress;
 }
 
 export interface ScallopAddresses {
-	objects: {
-		version: ObjectId;
-		afSuiMarket: ObjectId;
-		coinDecimalsRegistry: ObjectId;
-		xOracle: ObjectId;
-	};
+  objects: {
+    version: ObjectId;
+    afSuiMarket: ObjectId;
+    coinDecimalsRegistry: ObjectId;
+    xOracle: ObjectId;
+  };
 }
 
 export interface DcaAddresses {
-	packages: {
-		dca: SuiAddress;
-		events: SuiAddress;
-		eventsV2: SuiAddress;
-	};
-	objects: {
-		readonly config: ObjectId;
-	};
+  packages: {
+    dca: SuiAddress;
+    events: SuiAddress;
+    eventsV2: SuiAddress;
+  };
+  objects: {
+    readonly config: ObjectId;
+  };
 }
 
 export interface LimitAddresses {
-	packages: {
-		limitOrders: SuiAddress;
-		events: SuiAddress;
-	};
+  packages: {
+    limitOrders: SuiAddress;
+    events: SuiAddress;
+  };
 }
 
 export interface SharedCustodyAddresses {
-	address: ObjectId;
-	publicKey: ObjectId;
+  address: ObjectId;
+  publicKey: ObjectId;
 }
 
 export interface NftsAddresses {
-	packages: {
-		mystenTransferPolicy: SuiAddress;
-	};
+  packages: {
+    mystenTransferPolicy: SuiAddress;
+  };
 }

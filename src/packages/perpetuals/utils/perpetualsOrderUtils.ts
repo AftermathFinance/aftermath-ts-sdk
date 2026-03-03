@@ -1,70 +1,65 @@
+import { type PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
 import { Perpetuals } from "..";
-import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
-import BN from "bn.js";
+
+const MASK_64 = (BigInt(1) << BigInt(64)) - BigInt(1);
+const MASK_128 = (BigInt(1) << BigInt(128)) - BigInt(1);
+const ASK_THRESHOLD = BigInt(1) << BigInt(127);
 
 export class PerpetualsOrderUtils {
-	// Return order_id given price, counter and side
-	public static orderId = (
-		price: bigint,
-		counter: bigint,
-		side: PerpetualsOrderSide
-	): PerpetualsOrderId => {
-		if (Boolean(side)) return this.orderIdAsk(price, counter);
-		else return this.orderIdBid(price, counter);
-	};
+  // Return order_id given price, counter and side
+  public static orderId = (
+    price: bigint,
+    counter: bigint,
+    side: PerpetualsOrderSide
+  ): PerpetualsOrderId => {
+    if (side) {
+      return this.orderIdAsk(price, counter);
+    }
+    return this.orderIdBid(price, counter);
+  };
 
-	// Return order_id for ask order, given price, counter
-	// (price << 64) | counter
-	private static orderIdAsk = (
-		price: bigint,
-		counter: bigint
-	): PerpetualsOrderId => {
-		let priceBn = new BN(price, 10);
-		let counterBn = new BN(counter, 10);
-		return BigInt(priceBn.shln(64).or(counterBn).toString());
-	};
+  // Return order_id for ask order, given price, counter
+  // (price << 64) | counter
+  private static orderIdAsk = (
+    price: bigint,
+    counter: bigint
+  ): PerpetualsOrderId => {
+    return (price << BigInt(64)) | counter;
+  };
 
-	// Return order_id for bid order, given price, counter and side
-	// ((price ^ 0xffff_ffff_ffff_ffff) << 64) | counter
-	private static orderIdBid = (
-		price: bigint,
-		counter: bigint
-	): PerpetualsOrderId => {
-		let priceBn = new BN(price, 10);
-		let counterBn = new BN(counter, 10);
-		let mask_bn = new BN(`ffffffffffffffff`, 16);
-		return BigInt(priceBn.xor(mask_bn).shln(64).or(counterBn).toString());
-	};
+  // Return order_id for bid order, given price, counter and side
+  // ((price ^ 0xffff_ffff_ffff_ffff) << 64) | counter
+  private static orderIdBid = (
+    price: bigint,
+    counter: bigint
+  ): PerpetualsOrderId => {
+    return ((price ^ MASK_64) << BigInt(64)) | counter;
+  };
 
-	// Return price of given `order_id`, (works for ask or bid)
-	public static price = (orderId: PerpetualsOrderId): bigint => {
-		const side = Perpetuals.orderIdToSide(orderId);
-		if (side === PerpetualsOrderSide.Ask) return this.priceAsk(orderId);
-		else return this.priceBid(orderId);
-	};
+  // Return price of given `order_id`, (works for ask or bid)
+  public static price = (orderId: PerpetualsOrderId): bigint => {
+    const side = Perpetuals.orderIdToSide(orderId);
+    if (side === PerpetualsOrderSide.Ask) {
+      return this.priceAsk(orderId);
+    }
+    return this.priceBid(orderId);
+  };
 
-	// Returns price of a given ask `order_id`.
-	private static priceAsk = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		return BigInt(orderIdBn.shrn(64).toString());
-	};
+  // Returns price of a given ask `order_id`.
+  private static priceAsk = (orderId: PerpetualsOrderId): bigint => {
+    return orderId >> BigInt(64);
+  };
 
-	// Returns price of a given bid `order_id`.
-	private static priceBid = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		let mask_bn = new BN(`ffffffffffffffff`, 16);
-		return BigInt(orderIdBn.shrn(64).xor(mask_bn).toString());
-	};
+  // Returns price of a given bid `order_id`.
+  private static priceBid = (orderId: PerpetualsOrderId): bigint => {
+    return (orderId >> BigInt(64)) ^ MASK_64;
+  };
 
-	public static counter = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		let mask_bn = new BN(`0000000000000000ffffffffffffffff`, 16);
-		return BigInt(orderIdBn.and(mask_bn).toString());
-	};
+  public static counter = (orderId: PerpetualsOrderId): bigint => {
+    return orderId & MASK_128;
+  };
 
-	public static isAsk = (orderId: PerpetualsOrderId): boolean => {
-		return new BN(orderId, 10).lt(
-			new BN(`80000000000000000000000000000000`, 16)
-		);
-	};
+  public static isAsk = (orderId: PerpetualsOrderId): boolean => {
+    return orderId < ASK_THRESHOLD;
+  };
 }
