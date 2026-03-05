@@ -4,7 +4,6 @@ import {
 	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
-	BigIntAsString,
 	Byte,
 	Event,
 	IFixed,
@@ -120,6 +119,44 @@ export enum PerpetualsStopOrderType {
 	 */
 	Standalone = 1,
 }
+
+/**
+ * Execution details for a stop order that has been executed.
+ */
+export type PerpetualsExecutionInfo =
+	| { notSpecified: {} }
+	| {
+			standaloneExecuted: {
+				executionPrice: number;
+			};
+	  }
+	| {
+			stopLossExecuted: {
+				executionPrice: number;
+			};
+	  }
+	| {
+			takeProfitExecuted: {
+				executionPrice: number;
+			};
+	  };
+
+/**
+ * Current state of a stop order in its lifecycle.
+ */
+export type PerpetualsOrderState =
+	| { unknown: {} }
+	| {
+			invalid: {
+				error: string;
+			};
+	  }
+	| { pending: {} }
+	| { active: {} }
+	| { executed: PerpetualsExecutionInfo }
+	| { cancelled: {} }
+	| { inExecution: {} }
+	| { toCancel: {} };
 
 // =========================================================================
 //  Market
@@ -531,6 +568,8 @@ export interface PerpetualsBuilderCodeParamaters {
 export interface PerpetualsStopOrderData {
 	/** ID of the stop order object on-chain. */
 	objectId: ObjectId;
+	/** Current state of the stop order in its lifecycle. */
+	orderState: PerpetualsOrderState;
 	/** Market the stop order is tied to. */
 	marketId: PerpetualsMarketId;
 	/** Size to execute when triggered (scaled base units). */
@@ -971,10 +1010,10 @@ export interface PerpetualsAccountMarginHistoryData {
 	availableCollateralUsd: number;
 	/** Total equity in USD. */
 	totalEquityUsd: number;
-	/** Unrealized funding PnL in USD at that time. */
-	unrealizedFundingsUsd: number;
-	/** Unrealized position PnL in USD at that time. */
-	unrealizedPnlUsd: number;
+	/** Realized funding PnL in USD at that time. */
+	realizedFundingsUsd: number;
+	/** Realized position PnL in USD at that time. */
+	realizedPnlUsd: number;
 }
 
 /**
@@ -1801,6 +1840,43 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 				vaultId: ObjectId | undefined;
 		  }
 	);
+
+/**
+ * Request body for previewing a scale order placement (before sending a tx).
+ */
+export type ApiPerpetualsPreviewPlaceScaleOrderBody = {
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
+	/** Total size distributed across all orders (scaled bigint). */
+	totalSize: bigint;
+	/** Starting price of the scale range (inclusive, scaled bigint). */
+	startPrice: bigint;
+	/** Ending price of the scale range (inclusive, scaled bigint). */
+	endPrice: bigint;
+	/** Number of limit orders to place across the range. */
+	numberOfOrders: number;
+	/** Order type (e.g. GTC, IOC). */
+	orderType: PerpetualsOrderType;
+	/** If true, orders can only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Optional leverage override. */
+	leverage?: number;
+	/** Size ratio between last and first order. `1.0` = uniform, `2.0` = last is 2x first. */
+	sizeSkew?: number;
+	/** Optional integrator fee configuration. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+	/** Optional expiration timestamp in milliseconds since epoch. */
+	expiryTimestamp?: bigint;
+} & (
+	| {
+			// TODO: remove eventually ?
+			accountId: PerpetualsAccountId | undefined;
+	  }
+	| {
+			// TODO: remove eventually ?
+			vaultId: ObjectId | undefined;
+	  }
+);
 
 /**
  * Request body for previewing cancel-order operations.
@@ -2788,6 +2864,99 @@ export type ApiPerpetualsLimitOrderBody = {
 );
 
 /**
+ * API request body for placing a scale order (multiple limit orders
+ * distributed across a price range) in a given market.
+ */
+export type ApiPerpetualsScaleOrderBody = {
+	walletAddress: SuiAddress;
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
+	/** Total size distributed across all orders (base asset amount, scaled bigint). */
+	totalSize: bigint;
+	/** Starting price of the scale range (inclusive, scaled bigint). */
+	startPrice: bigint;
+	/** Ending price of the scale range (inclusive, scaled bigint). */
+	endPrice: bigint;
+	/** Number of limit orders to place across the range. */
+	numberOfOrders: number;
+	/** Order type (e.g. GTC, IOC). */
+	orderType: PerpetualsOrderType;
+	/** Collateral change associated with this order. */
+	collateralChange: number;
+	/** Whether the account already has a position in this market. */
+	hasPosition: boolean;
+	/** If true, orders can only reduce an existing position. */
+	reduceOnly: boolean;
+	/** True if position is closed. */
+	cancelSlTp: boolean;
+	/** Optional expiration timestamp in milliseconds since epoch. */
+	expiryTimestamp?: bigint;
+	/** Optional leverage override. */
+	leverage?: number;
+	/** Size ratio between last and first order. `1.0` = uniform, `2.0` = last is 2x first. */
+	sizeSkew?: number;
+	/** Optional integrator fee configuration. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+	/** Optionally pre-built transaction payload. */
+	txKind?: SerializedTransaction;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * A single order to place as part of a cancel-and-place batch.
+ */
+export type ApiPerpetualsOrderToPlace = {
+	/** Order side: `0` = bid (long), `1` = ask (short). */
+	side: PerpetualsOrderSide;
+	/** Limit price (scaled bigint). */
+	price: bigint;
+	/** Order size in scaled base units. */
+	size: bigint;
+};
+
+/**
+ * API request body for atomically canceling existing orders and placing
+ * new ones in a single transaction.
+ */
+export type ApiPerpetualsCancelAndPlaceOrdersBody = {
+	walletAddress: SuiAddress;
+	marketId: PerpetualsMarketId;
+	/** Order IDs to cancel. */
+	orderIdsToCancel: PerpetualsOrderId[];
+	/** New orders to place after the cancellation. */
+	ordersToPlace: ApiPerpetualsOrderToPlace[];
+	/** Order type (e.g. GTC, IOC). */
+	orderType: PerpetualsOrderType;
+	/** If true, placed orders can only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Optional expiration timestamp in milliseconds since epoch. */
+	expiryTimestamp?: bigint;
+	/** Optional leverage override. */
+	leverage?: number;
+	/** Whether the account already has a position in this market. */
+	hasPosition: boolean;
+	/** Optional integrator fee configuration. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+	/** Optionally pre-built transaction payload. */
+	txKind?: SerializedTransaction;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
  * API request body for canceling one or more orders for an
  * account or vault, per market.
  */
@@ -3478,6 +3647,92 @@ export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 	  };
 
 // =========================================================================
+//  Rebates
+// =========================================================================
+
+/**
+ * Request body for calculating rewards and rebates for perpetuals accounts.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/rewards`.
+ *
+ * Given maker and taker reward pools and a list of accounts, computes
+ * per-account reward allocations and fee-tier rebates.
+ * When `accountIds` is omitted or empty, all eligible accounts are included.
+ *
+ * **Note:** All data returned is for the current epoch only.
+ */
+export interface ApiPerpetualsCurrentRebateRewardsBody {
+	accountIds?: PerpetualsAccountId[];
+	/** Total maker reward pool to distribute among eligible market makers. */
+	totalMakerRewards: number;
+	/** Total taker reward pool to distribute among eligible takers. */
+	totalTakerRewards: number;
+}
+
+/**
+ * Maker reward and rebate breakdown for a single account.
+ */
+export interface PerpetualsMakerData {
+	/** Normalized Q-score: raw cross-market sum averaged over snapshot count. */
+	qScore: number;
+	/** Final score: `qScore^coeff * uptime^coeff * volume^coeff`. */
+	qScoreFinal: number;
+	/** Share of total `qScoreFinal` across all eligible accounts (between 0 and 1). */
+	qScoreFinalShare: number;
+	/** Cross-market uptime count (number of snapshots with qualifying orders). */
+	uptime: number;
+	/** Q-score-based rewards from the maker reward pool. */
+	rewards: number;
+	/** Cross-market maker volume in USD. */
+	volume: number;
+	/** Share of total maker volume across all eligible accounts (between 0 and 1). */
+	volumeShare: number;
+	/** Volume-share tier rebate: `tierRate * volume`. */
+	volumeRebate: number;
+	/** Total maker fees paid across all markets. */
+	feesPaid: number;
+	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
+	feeRebate: number;
+}
+
+/**
+ * Taker reward and rebate breakdown for a single account.
+ */
+export interface PerpetualsTakerData {
+	/** Volume-share-based rewards from the taker reward pool. */
+	rewards: number;
+	/** Cross-market taker volume in USD. */
+	volume: number;
+	/** Share of total taker volume across all eligible accounts (between 0 and 1). */
+	volumeShare: number;
+	/** Total taker fees paid across all markets. */
+	feesPaid: number;
+	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
+	feeRebate: number;
+}
+
+/**
+ * Combined reward and rebate data for a single account.
+ */
+export interface PerpetualsRewardData {
+	accountId: PerpetualsAccountId;
+	/** Maker-side reward and rebate metrics. */
+	maker: PerpetualsMakerData;
+	/** Taker-side reward and rebate metrics. */
+	taker: PerpetualsTakerData;
+}
+
+/**
+ * Response body for the rewards and rebates calculation.
+ */
+export interface ApiPerpetualsCurrentRebateRewardsResponse {
+	/** Sum of all final quality scores across eligible makers. */
+	totalQScoreFinal: number;
+	/** Per-account reward and rebate breakdown. */
+	rewards: PerpetualsRewardData[];
+}
+
+// =========================================================================
 //  SDK
 // =========================================================================
 
@@ -3562,6 +3817,34 @@ export type SdkPerpetualsPlaceLimitOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
 	"collateralCoinType" | "accountId"
 >;
+
+/**
+ * SDK-level inputs for placing a scale order from a client.
+ */
+export type SdkPerpetualsPlaceScaleOrderInputs = Omit<
+	ApiPerpetualsScaleOrderBody,
+	"accountId" | "txKind" | "walletAddress"
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * SDK-level inputs for previewing a scale order.
+ */
+export type SdkPerpetualsPlaceScaleOrderPreviewInputs = Omit<
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
+	"collateralCoinType" | "accountId"
+>;
+
+/**
+ * SDK-level inputs for building a cancel-and-place-orders transaction.
+ */
+export type SdkPerpetualsCancelAndPlaceOrdersInputs = Omit<
+	ApiPerpetualsCancelAndPlaceOrdersBody,
+	"accountId" | "txKind" | "walletAddress"
+> & {
+	tx?: Transaction;
+};
 
 /**
  * SDK-level inputs for previewing order cancellations.
