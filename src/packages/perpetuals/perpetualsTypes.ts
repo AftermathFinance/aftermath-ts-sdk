@@ -4,7 +4,6 @@ import {
 	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
-	BigIntAsString,
 	Byte,
 	Event,
 	IFixed,
@@ -2930,7 +2929,7 @@ export type ApiPerpetualsCancelAndPlaceOrdersBody = {
 	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	/** Order IDs to cancel. */
-	orderIdsToCancle: PerpetualsOrderId[];
+	orderIdsToCancel: PerpetualsOrderId[];
 	/** New orders to place after the cancellation. */
 	ordersToPlace: ApiPerpetualsOrderToPlace[];
 	/** Order type (e.g. GTC, IOC). */
