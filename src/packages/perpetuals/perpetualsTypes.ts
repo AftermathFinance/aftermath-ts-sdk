@@ -2935,6 +2935,7 @@ export type ApiPerpetualsScaleOrderBody = {
 	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
