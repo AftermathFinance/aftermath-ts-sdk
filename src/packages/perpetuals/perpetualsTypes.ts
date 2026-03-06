@@ -2504,6 +2504,7 @@ export type ApiPerpetualsWithdrawCollateralBody = {
  */
 export interface ApiPerpetualsWithdrawCollateralResponse {
 	txKind: SerializedTransaction;
+	sponsorSignature?: string;
 	coinOutArg: TransactionObjectArgument | undefined;
 }
 
@@ -3200,6 +3201,7 @@ export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxBody {
  */
 export interface ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse {
 	txKind: SerializedTransaction;
+	sponsorSignature?: string;
 	coinOutArg: TransactionObjectArgument | undefined;
 }
 
@@ -3276,6 +3278,7 @@ export interface ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody {
  */
 export interface ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse {
 	txKind: SerializedTransaction;
+	sponsorSignature?: string;
 	coinOutArg: TransactionObjectArgument | undefined;
 }
 
@@ -3342,6 +3345,7 @@ export interface ApiPerpetualsVaultOwnerWithdrawCollateralTxBody {
  */
 export interface ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse {
 	txKind: SerializedTransaction;
+	sponsorSignature?: string;
 	coinOutArg: TransactionObjectArgument | undefined;
 }
 

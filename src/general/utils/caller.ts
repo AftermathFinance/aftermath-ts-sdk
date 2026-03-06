@@ -13,10 +13,10 @@ import {
 } from "../../types";
 import { Helpers } from "./helpers";
 
-type ResponseWithTxKind = { txKind: SerializedTransaction } & (
-	| Record<string, unknown>
-	| {}
-);
+type ResponseWithTxKind = {
+	txKind: SerializedTransaction;
+	sponsorSignature?: string;
+} & (Record<string, unknown> | {});
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
