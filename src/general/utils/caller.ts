@@ -193,7 +193,9 @@ export class Caller {
 			options
 		);
 
-		const tx = Transaction.fromKind(response.txKind);
+		const tx = response.sponsorSignature
+			? Transaction.from(response.txKind)
+			: Transaction.fromKind(response.txKind);
 
 		if (body?.walletAddress) {
 			tx.setSender(body.walletAddress);
