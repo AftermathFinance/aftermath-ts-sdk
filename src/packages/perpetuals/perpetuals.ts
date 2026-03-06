@@ -75,6 +75,8 @@ import {
 	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	ApiPerpetualsTransferCapTxBody,
 	PerpetualsSponsorConfig,
+	ApiPerpetualsCurrentRebateRewardsBody,
+	ApiPerpetualsCurrentRebateRewardsResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -865,6 +867,41 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
+	//  Rebates
+	// =========================================================================
+
+	/**
+	 * Calculate rewards and rebates for one or more perpetuals accounts.
+	 *
+	 * Computes per-account maker and taker reward allocations, fee-tier rebates,
+	 * and volume-based metrics. When `accountIds` is omitted or empty, all eligible
+	 * accounts are included.
+	 *
+	 * **Note:** All data returned is for the current epoch only.
+	 *
+	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
+	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
+	 * @param inputs.accountIds - Optional list of account IDs.
+	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
+	 *
+	 * @example
+	 * ```ts
+	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
+	 *   totalMakerRewards: 10000,
+	 *   totalTakerRewards: 5000,
+	 * });
+	 * ```
+	 */
+	public async getCurrentRebateRewards(
+		inputs: ApiPerpetualsCurrentRebateRewardsBody
+	): Promise<ApiPerpetualsCurrentRebateRewardsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCurrentRebateRewardsResponse,
+			ApiPerpetualsCurrentRebateRewardsBody
+		>("rebates/rewards", inputs);
+	}
+
+	// =========================================================================
 	//  Builder Codes Transactions
 	// =========================================================================
 
@@ -904,10 +941,9 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-config",
 			{
 				...otherInputs,
-				txKind:
-					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-						{ tx }
-					),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 			},
 			undefined,
 			{
@@ -952,10 +988,9 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/remove-integrator-config",
 			{
 				...otherInputs,
-				txKind:
-					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-						{ tx }
-					),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 			},
 			undefined,
 			{
@@ -1000,10 +1035,9 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-vault",
 			{
 				...otherInputs,
-				txKind:
-					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-						{ tx }
-					),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 			},
 			undefined,
 			{
@@ -1062,10 +1096,9 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/claim-integrator-vault-fees",
 			{
 				...otherInputs,
-				txKind:
-					await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-						{ tx }
-					),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 			},
 			undefined,
 			{

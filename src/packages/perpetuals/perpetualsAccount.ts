@@ -3,6 +3,7 @@ import {
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsScaleOrderBody,
 	ApiPerpetualsPreviewPlaceOrderResponse,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
@@ -49,12 +50,16 @@ import {
 	ApiPerpetualsWithdrawCollateralResponse,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	SdkPerpetualsPlaceScaleOrderInputs,
+	SdkPerpetualsPlaceScaleOrderPreviewInputs,
+	SdkPerpetualsCancelAndPlaceOrdersInputs,
+	ApiPerpetualsCancelAndPlaceOrdersBody,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
 	ApiTransactionResponse,
 	ApiPerpetualsPreviewEditCollateralResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
-	PerpetualsAccountMarginHistoryData,
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsVaultCap,
 	PerpetualsPartialVaultCap,
@@ -581,6 +586,102 @@ export class PerpetualsAccount extends Caller {
 					  }),
 				// hasPosition:
 				// 	this.positionForMarketId(otherInputs) !== undefined,
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `place-scale-order` transaction for this account.
+	 *
+	 * A scale order distributes a total size across multiple limit orders
+	 * evenly spaced between a start and end price. An optional `sizeSkew`
+	 * parameter controls whether the distribution is uniform or weighted.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsPlaceScaleOrderInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getPlaceScaleOrderTx(
+		inputs: SdkPerpetualsPlaceScaleOrderInputs
+	) {
+		const { tx: txFromInputs, ...otherInputs } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsScaleOrderBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/place-scale-order",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `cancel-and-place-orders` transaction for this account.
+	 *
+	 * Atomically cancels existing orders and places new ones in a single
+	 * transaction. Useful for rebalancing order grids or replacing stale
+	 * orders without intermediate exposure.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsCancelAndPlaceOrdersInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCancelAndPlaceOrdersTx(
+		inputs: SdkPerpetualsCancelAndPlaceOrdersInputs
+	) {
+		const { tx: txFromInputs, ...otherInputs } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCancelAndPlaceOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-and-place-orders",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
 			},
 			undefined,
 			{
@@ -1128,6 +1229,48 @@ export class PerpetualsAccount extends Caller {
 		>(
 			`${this.vaultId ? "vault" : "account"}/` +
 				"previews/place-limit-order",
+			{
+				...inputs,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
+			},
+			abortSignal
+		);
+	}
+
+	/**
+	 * Preview the effects of placing a scale order (without building a tx).
+	 *
+	 * A scale order distributes total size across multiple limit orders
+	 * spaced between a start and end price. The preview simulates:
+	 * - How much size would execute immediately vs post to the book
+	 * - Expected slippage and execution price
+	 * - Resulting position and margin impact
+	 *
+	 * @param inputs - See {@link SdkPerpetualsPlaceScaleOrderPreviewInputs}.
+	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
+	 *
+	 * @returns Either an error message or a preview object similar to
+	 *   {@link getPlaceMarketOrderPreview}.
+	 */
+	public async getPlaceScaleOrderPreview(
+		inputs: SdkPerpetualsPlaceScaleOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceScaleOrderBody
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"previews/place-scale-order",
 			{
 				...inputs,
 				...("vaultId" in this.accountCap
