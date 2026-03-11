@@ -1029,6 +1029,16 @@ export interface PerpetualsAccountMarginHistoryData {
 	realizedFundingsUsd: number;
 	/** Realized position PnL in USD at that time. */
 	realizedPnlUsd: number;
+	/** Taker volume in USD at that time. */
+	takerVolumeUsd: number;
+	/** Maker volume in USD at that time. */
+	makerVolumeUsd: number;
+	/** Taker fees in USD at that time. */
+	takerFeesUsd: number;
+	/** Maker fees in USD at that time. */
+	makerFeesUsd: number;
+	/** Liquidation fees in USD at that time. */
+	liquidationFeesUsd: number;
 }
 
 /**
