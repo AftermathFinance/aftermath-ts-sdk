@@ -14,10 +14,12 @@ import {
 import type {
 	ApiGasPoolBody,
 	ApiGasPoolCreateBody,
+	ApiGasPoolCreateResponse,
 	ApiGasPoolDepositBody,
 	ApiGasPoolGrantBody,
 	ApiGasPoolResponse,
 	ApiGasPoolRevokeBody,
+	ApiGasPoolShareBody,
 	ApiGasPoolSponsorBody,
 	ApiGasPoolWithdrawBody,
 } from "./gasPoolsTypes";
@@ -80,17 +82,23 @@ export class GasPools extends Caller {
 	/**
 	 * Builds a transaction to create a new gas pool for the given wallet.
 	 *
+	 * When `deferShare` is `true`, the response includes `gasPoolArg` and
+	 * `sharePolicyArg` so you can compose additional commands (e.g. deposit,
+	 * grant) before calling {@link getShareTx} to finalize.
+	 *
 	 * @param inputs.walletAddress - Wallet address to create the gas pool for.
+	 * @param inputs.initialDepositAmount - Optional initial deposit amount in MIST.
+	 * @param inputs.deferShare - When true, returns args without sharing yet.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `tx` plus optional `gasPoolArg` and `sharePolicyArg` when deferred.
 	 */
 	public async getCreateTx(
 		inputs: Omit<ApiGasPoolCreateBody, "txKind"> & { tx?: Transaction }
-	): Promise<SdkTransactionResponse> {
+	) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiGasPoolCreateBody,
-			ApiTransactionResponse
+			ApiGasPoolCreateResponse
 		>(
 			"transactions/create",
 			{
@@ -113,12 +121,14 @@ export class GasPools extends Caller {
 	 * @param inputs.walletAddress - Wallet address submitting the deposit.
 	 * @param inputs.depositAmount - Amount to deposit (mutually exclusive with `depositCoinArg`).
 	 * @param inputs.depositCoinArg - Existing transaction argument for the coin (mutually exclusive with `depositAmount`).
+	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
 	 * @returns {@link SdkTransactionResponse} with `tx`.
 	 */
 	public async getDepositTx(
 		inputs: {
 			walletAddress: SuiAddress;
+			gasPoolArg?: TransactionObjectArgument;
 			tx?: Transaction;
 		} & (
 			| {
@@ -209,6 +219,7 @@ export class GasPools extends Caller {
 	 *
 	 * @param inputs.walletAddress - Owner wallet address.
 	 * @param inputs.targetWalletAddress - Wallet address to grant access to.
+	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
 	 * @returns {@link SdkTransactionResponse} with `tx`.
 	 */
@@ -249,6 +260,37 @@ export class GasPools extends Caller {
 			ApiTransactionResponse
 		>(
 			"transactions/revoke",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
+
+	/**
+	 * Builds a transaction to share a gas pool that was created with `deferShare: true`.
+	 *
+	 * Use this after composing additional commands (deposit, grant, etc.) with
+	 * the `gasPoolArg` returned by {@link getCreateTx}.
+	 *
+	 * @param inputs.gasPoolArg - Gas pool argument from a deferred create.
+	 * @param inputs.sharePolicyArg - Share policy argument from a deferred create.
+	 * @param inputs.tx - Optional transaction to extend.
+	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 */
+	public async getShareTx(
+		inputs: Omit<ApiGasPoolShareBody, "txKind"> & { tx?: Transaction }
+	): Promise<SdkTransactionResponse> {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiGasPoolShareBody,
+			ApiTransactionResponse
+		>(
+			"transactions/share",
 			{
 				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(

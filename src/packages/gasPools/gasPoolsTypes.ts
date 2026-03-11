@@ -35,7 +35,15 @@ export interface ApiGasPoolResponse {
 
 export interface ApiGasPoolCreateBody {
 	walletAddress: SuiAddress;
+	initialDepositAmount?: Balance;
 	txKind?: SerializedTransaction;
+	deferShare?: boolean;
+}
+
+export interface ApiGasPoolCreateResponse {
+	txKind: SerializedTransaction;
+	gasPoolArg?: TransactionObjectArgument;
+	sharePolicyArg?: TransactionObjectArgument;
 }
 
 // =========================================================================
@@ -45,6 +53,7 @@ export interface ApiGasPoolCreateBody {
 export type ApiGasPoolDepositBody = {
 	walletAddress: SuiAddress;
 	txKind?: SerializedTransaction;
+	gasPoolArg?: TransactionObjectArgument;
 } & (
 	| {
 			depositCoinArg: TransactionObjectArgument;
@@ -83,6 +92,7 @@ export interface ApiGasPoolGrantBody {
 	walletAddress: SuiAddress;
 	targetWalletAddress: SuiAddress;
 	txKind?: SerializedTransaction;
+	gasPoolArg?: TransactionObjectArgument;
 }
 
 // =========================================================================
@@ -92,5 +102,15 @@ export interface ApiGasPoolGrantBody {
 export interface ApiGasPoolRevokeBody {
 	walletAddress: SuiAddress;
 	targetWalletAddress: SuiAddress;
+	txKind?: SerializedTransaction;
+}
+
+// =========================================================================
+//  Share
+// =========================================================================
+
+export interface ApiGasPoolShareBody {
+	gasPoolArg: TransactionObjectArgument;
+	sharePolicyArg: TransactionObjectArgument;
 	txKind?: SerializedTransaction;
 }
