@@ -47,6 +47,18 @@ export interface PerpetualsSponsorConfig {
 	walletAddress: SuiAddress;
 }
 
+/**
+ * Semantic capability type for composed-flow transfers.
+ *
+ * Used by `getTransferCapTx` (Method 2) to specify which kind of capability
+ * is being transferred without exposing Move type tags.
+ */
+export type PerpetualsCapType =
+	| "accountAdmin"
+	| "accountAgent"
+	| "vaultAdmin"
+	| "vaultAgent";
+
 // =========================================================================
 //  Name Only
 // =========================================================================
@@ -2545,7 +2557,23 @@ export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
+	deferShare?: boolean;
 	sponsor?: PerpetualsSponsorConfig;
+}
+
+/**
+ * Response from the create-account endpoint.
+ *
+ * When `deferShare` is false (default), returns `txKind` and optionally `sponsorSignature`.
+ * When `deferShare` is true, additionally returns argument references for PTB composition.
+ */
+export interface ApiPerpetualsCreateAccountResponse {
+	txKind: SerializedTransaction;
+	sponsorSignature?: string;
+	accountArg?: TransactionObjectArgument;
+	sharePolicyArg?: TransactionObjectArgument;
+	adminCapArg?: TransactionObjectArgument;
+	collateralCoinType?: CoinType;
 }
 
 /**
@@ -3263,7 +3291,10 @@ export interface ApiPerpetualsMarketsPricesResponse {
  */
 export type ApiPerpetualsGrantAgentWalletTxBody = {
 	recipientAddress: SuiAddress;
-	accountId: PerpetualsAccountId;
+	accountId?: PerpetualsAccountId;
+	accountArg?: TransactionObjectArgument;
+	adminCapArg?: TransactionObjectArgument;
+	collateralCoinType?: CoinType;
 	txKind?: SerializedTransaction;
 };
 
@@ -3292,9 +3323,23 @@ export type ApiPerpetualsTransferCapTxBody = {
 	/**
 	 * Object ID of the capability to transfer.
 	 *
-	 * This should be the object ID of the cap being transferred (e.g., an account cap or vault cap).
+	 * Required for Method 1 (on-chain object); omit for Method 2 (composed flow).
 	 */
-	capObjectId: ObjectId;
+	capObjectId?: ObjectId;
+
+	/**
+	 * PTB argument reference for the capability from a deferred create-account call.
+	 *
+	 * Required for Method 2 (composed flow); omit for Method 1.
+	 */
+	capArg?: TransactionObjectArgument;
+
+	/**
+	 * Semantic capability type. Required for Method 2 (composed flow); omit for Method 1.
+	 *
+	 * Accepted values: `"accountAdmin"`, `"accountAgent"`, `"vaultAdmin"`, `"vaultAgent"`.
+	 */
+	capType?: PerpetualsCapType;
 
 	/**
 	 * Optional serialized (base64) Sui `TransactionKind` to extend.
@@ -3304,6 +3349,26 @@ export type ApiPerpetualsTransferCapTxBody = {
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 };
+
+/**
+ * Request body for sharing a Perpetuals account that was created with deferred sharing.
+ *
+ * This finalizes the account creation flow by consuming the `AccountSharePolicy`
+ * and sharing the `Account` object.
+ *
+ * ### Example flow
+ * 1. `create-account` with `deferShare=true` → returns `accountArg`, `sharePolicyArg`, `adminCapArg`
+ * 2. `grant-agent-wallet` with `accountArg`, `adminCapArg` → mints assistant cap
+ * 3. `transfer-cap` with `adminCapArg` → transfers admin cap to primary wallet
+ * 4. `share` with `accountArg`, `sharePolicyArg` → finalizes account sharing
+ */
+export interface ApiPerpetualsShareAccountBody {
+	accountArg: TransactionObjectArgument;
+	sharePolicyArg: TransactionObjectArgument;
+	collateralCoinType: CoinType;
+	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
+}
 
 // =========================================================================
 //  Vaults
