@@ -6,7 +6,6 @@ import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiTransactionResponse,
-	Balance,
 	CallerConfig,
 	SdkTransactionResponse,
 	SuiAddress,
@@ -22,6 +21,7 @@ import type {
 	ApiGasPoolShareBody,
 	ApiGasPoolSponsorBody,
 	ApiGasPoolWithdrawBody,
+	ApiGasPoolWithdrawResponse,
 } from "./gasPoolsTypes";
 
 /**
@@ -113,31 +113,22 @@ export class GasPools extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to deposit SUI into the gas pool.
+	 * Builds a transaction to deposit into the gas pool.
 	 *
-	 * Accepts either a `depositAmount` (the backend selects coins) or a
-	 * `depositCoinArg` (an existing transaction argument pointing to a coin).
+	 * Supports SUI and non-SUI deposits. For non-SUI deposits, the input coin
+	 * is swapped into SUI via the Aftermath router before depositing.
 	 *
 	 * @param inputs.walletAddress - Wallet address submitting the deposit.
-	 * @param inputs.depositAmount - Amount to deposit (mutually exclusive with `depositCoinArg`).
-	 * @param inputs.depositCoinArg - Existing transaction argument for the coin (mutually exclusive with `depositAmount`).
+	 * @param inputs.coinType - Coin type to deposit. Defaults to SUI.
+	 * @param inputs.amount - Amount to deposit (required when sourcing from wallet or for non-SUI).
+	 * @param inputs.coinArg - PTB coin argument to use as input (if omitted, sourced from wallet).
+	 * @param inputs.slippage - Slippage tolerance for non-SUI swaps (defaults to 0.01).
 	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
 	 * @returns {@link SdkTransactionResponse} with `tx`.
 	 */
 	public async getDepositTx(
-		inputs: {
-			walletAddress: SuiAddress;
-			gasPoolArg?: TransactionObjectArgument;
-			tx?: Transaction;
-		} & (
-			| {
-					depositCoinArg: TransactionObjectArgument;
-			  }
-			| {
-					depositAmount: Balance;
-			  }
-		)
+		inputs: Omit<ApiGasPoolDepositBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
@@ -159,19 +150,24 @@ export class GasPools extends Caller {
 	/**
 	 * Builds a transaction to withdraw SUI from the gas pool.
 	 *
+	 * When `deferTransfer` is `true`, the withdrawn coin is not transferred.
+	 * Instead, `withdrawnCoinArg` is returned for further PTB composition.
+	 *
 	 * @param inputs.walletAddress - Wallet address submitting the withdrawal.
 	 * @param inputs.amount - Amount of SUI to withdraw in MIST.
 	 * @param inputs.recipientAddress - Optional recipient (defaults to `walletAddress`).
+	 * @param inputs.deferTransfer - When true, returns the withdrawn coin arg instead of transferring.
+	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `tx` plus optional `withdrawnCoinArg` when deferred.
 	 */
 	public async getWithdrawTx(
 		inputs: Omit<ApiGasPoolWithdrawBody, "txKind"> & { tx?: Transaction }
-	): Promise<SdkTransactionResponse> {
+	) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiGasPoolWithdrawBody,
-			ApiTransactionResponse
+			ApiGasPoolWithdrawResponse
 		>(
 			"transactions/withdraw",
 			{

@@ -2,8 +2,10 @@ import {
 	Balance,
 	ObjectId,
 	SerializedTransaction,
+	Slippage,
 	SuiAddress,
 } from "../../general/types/generalTypes";
+import { CoinType } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
 
 // =========================================================================
@@ -50,18 +52,20 @@ export interface ApiGasPoolCreateResponse {
 //  Deposit
 // =========================================================================
 
-export type ApiGasPoolDepositBody = {
+export interface ApiGasPoolDepositBody {
 	walletAddress: SuiAddress;
+	/** Coin type of the deposit token. Defaults to SUI if omitted.
+	 * When set to a non-SUI type, the endpoint swaps to SUI before depositing. */
+	coinType?: CoinType;
+	/** Amount of the input coin to deposit (or swap, for non-SUI). */
+	amount?: Balance;
+	/** PTB coin argument to use as the input coin. If omitted, sourced from wallet. */
+	coinArg?: TransactionObjectArgument;
+	/** Slippage tolerance for non-SUI swaps (0.0–1.0). Defaults to 0.01. */
+	slippage?: Slippage;
 	txKind?: SerializedTransaction;
 	gasPoolArg?: TransactionObjectArgument;
-} & (
-	| {
-			depositCoinArg: TransactionObjectArgument;
-	  }
-	| {
-			depositAmount: Balance;
-	  }
-);
+}
 
 // =========================================================================
 //  Withdraw
@@ -71,7 +75,16 @@ export interface ApiGasPoolWithdrawBody {
 	walletAddress: SuiAddress;
 	amount: Balance;
 	recipientAddress?: SuiAddress;
+	/** When true, the withdrawn coin is not transferred; its arg is returned instead. */
+	deferTransfer?: boolean;
 	txKind?: SerializedTransaction;
+	gasPoolArg?: TransactionObjectArgument;
+}
+
+export interface ApiGasPoolWithdrawResponse {
+	txKind: SerializedTransaction;
+	/** PTB argument for the withdrawn coin (only set when `deferTransfer = true`). */
+	withdrawnCoinArg?: TransactionObjectArgument;
 }
 
 // =========================================================================
