@@ -92,7 +92,10 @@ export interface PoolsAddresses {
 		lpCoinsTable: ObjectId;
 	};
 	other?: {
-		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+		createLpCoinPackageCompilations: Record<
+			CoinDecimal | "template",
+			string
+		>;
 	};
 }
 
