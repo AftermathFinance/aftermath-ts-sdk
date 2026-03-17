@@ -40,7 +40,11 @@ import {
 	PerpetualsPartialVaultCap,
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
 	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
+	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
+	ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxBody,
+	ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse,
 	ApiPerpetualsVaultsWithdrawRequestsResponse,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
 	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
@@ -474,6 +478,48 @@ export class PerpetualsVault extends Caller {
 		);
 	}
 
+	/**
+	 * Build an owner transaction to withdraw locked liquidity from the vault.
+	 *
+	 * Owner-locked liquidity is LP that was locked at vault creation time.
+	 * This flow allows the owner to withdraw a portion without going through
+	 * the standard withdraw-request lifecycle. Owner-locked withdrawals are
+	 * exempt from performance fees.
+	 *
+	 * @param inputs.amount - Amount of locked LP to withdraw (native units).
+	 * @param inputs.minCollateralAmountOut - Minimum collateral out to protect from slippage.
+	 * @param inputs.recipientAddress - Optional recipient address for withdrawn collateral.
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Response containing `tx` and any extra outputs described by
+	 * {@link ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse}.
+	 */
+	public async getOwnerWithdrawLockedLiquidityTx(inputs: {
+		amount: Balance;
+		minCollateralAmountOut: Balance;
+		recipientAddress?: SuiAddress;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxBody,
+			ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse
+		>(
+			"vault/transactions/owner/withdraw-locked-liquidity",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
+
 	// =========================================================================
 	//  User Interactions Txs
 	// =========================================================================
@@ -690,6 +736,28 @@ export class PerpetualsVault extends Caller {
 			ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
 			ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody
 		>("vault/previews/owner/withdraw-collateral", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	/**
+	 * Preview an owner locked liquidity withdrawal.
+	 *
+	 * Returns the estimated collateral output for withdrawing a given amount
+	 * of the owner's locked LP tokens. Owner-locked withdrawals are exempt
+	 * from performance fees.
+	 *
+	 * @param inputs.amount - Amount of locked LP to withdraw (native units).
+	 * @returns Preview response including estimated collateral out and price.
+	 */
+	public async getPreviewOwnerWithdrawLockedLiquidity(inputs: {
+		amount: Balance;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse,
+			ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody
+		>("vault/previews/owner/withdraw-locked-liquidity", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});

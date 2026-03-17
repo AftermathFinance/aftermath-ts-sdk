@@ -865,6 +865,13 @@ export interface PerpetualsVaultObject {
 	pausedUntilTimestamp: bigint | undefined;
 	/** Timestamp at which `pause_vault_for_force_withdraw` was last called. */
 	lastPausedTimestamp: Timestamp;
+	/**
+	 * The amount of LP tokens locked by the vault owner (native units).
+	 *
+	 * This is the owner's initially locked liquidity, a portion of which can be
+	 * withdrawn via the owner locked liquidity withdraw flow.
+	 */
+	ownerLockedLpBalance: Balance;
 }
 
 /**
@@ -3468,6 +3475,25 @@ export interface ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse {
 }
 
 /**
+ * API body for withdrawing the vault owner's locked liquidity.
+ */
+export interface ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxBody {
+	vaultId: ObjectId;
+	amount: Balance;
+	minCollateralAmountOut: Balance;
+	recipientAddress?: SuiAddress;
+	txKind?: SerializedTransaction;
+}
+
+/**
+ * Response body for vault owner withdraw-locked-liquidity transactions.
+ */
+export interface ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse {
+	txKind: SerializedTransaction;
+	coinOutArg: TransactionObjectArgument | undefined;
+}
+
+/**
  * API body for canceling withdrawal requests across vaults for a wallet.
  */
 export interface ApiPerpetualsVaultCancelWithdrawRequestTxBody {
@@ -3530,6 +3556,26 @@ export interface ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody {
  * Response body for vault owner collateral withdrawal preview.
  */
 export type ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse =
+	| {
+			error: string;
+	  }
+	| {
+			collateralAmountOut: Balance;
+			collateralPrice: number;
+	  };
+
+/**
+ * Request body for previewing a vault owner locked liquidity withdrawal.
+ */
+export interface ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody {
+	vaultId: ObjectId;
+	amount: Balance;
+}
+
+/**
+ * Response body for vault owner locked liquidity withdrawal preview.
+ */
+export type ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse =
 	| {
 			error: string;
 	  }
