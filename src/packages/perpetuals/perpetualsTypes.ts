@@ -260,6 +260,8 @@ export interface PerpetualsVaultLpCoin {
 	lpAmount: Balance;
 	/** Estimated USD value of `lpAmount` at query time. */
 	lpAmountUsd: number;
+	/** USD value of the deposit. */
+	depositedAmountUsd: number;
 }
 
 /**
