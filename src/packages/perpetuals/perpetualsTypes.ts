@@ -3066,11 +3066,15 @@ export type ApiPerpetualsCancelOrdersBody = {
 	  }
 );
 
+export type ApiPerpetualsCancelStopOrdersMethod = "Executor" | "User";
+
 /**
  * API request body for canceling stop orders identified by object IDs.
  */
 export type ApiPerpetualsCancelStopOrdersBody = {
+	walletAddress: SuiAddress;
 	stopOrderIds: ObjectId[];
+	cancelMethod?: ApiPerpetualsCancelStopOrdersMethod;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
