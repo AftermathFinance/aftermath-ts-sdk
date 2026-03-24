@@ -2688,7 +2688,7 @@ export type ApiPerpetualsDeallocateCollateralBody = {
  */
 export interface SdkPerpetualsPlaceStopOrdersInputs {
 	/** Stop orders to place (without objectId, which is created on-chain). */
-	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
+	stopOrders: Omit<PerpetualsStopOrderData, "objectId" | "orderState">[];
 	/** Optional transaction to embed the call in. */
 	tx?: Transaction;
 	/** Optional gas coin for sponsored or custom gas usage. */
@@ -2704,7 +2704,7 @@ export interface SdkPerpetualsPlaceStopOrdersInputs {
  */
 export type ApiPerpetualsPlaceStopOrdersBody = {
 	walletAddress: SuiAddress;
-	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
+	stopOrders: Omit<PerpetualsStopOrderData, "objectId" | "orderState">[];
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
 	sponsor?: PerpetualsSponsorConfig;
