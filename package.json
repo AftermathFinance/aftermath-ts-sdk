@@ -1,71 +1,71 @@
 {
-  "name": "aftermath-ts-sdk",
-  "version": "2.0.0",
-  "description": "Aftermath TypeScript SDK",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "clean": "rimraf ./dist",
-    "build": "tsup",
-    "build:tsc": "npm run clean && tsc",
-    "link": "npm link && cd ../aftermath-frontend/ && npm link aftermath-ts-sdk",
-    "prepack": "npm run build",
-    "prepare": "npm run build",
-    "test": "jest",
-    "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "npm run build && changeset publish"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/AftermathFinance/aftermath-ts-sdk.git"
-  },
-  "keywords": [
-    "aftermath",
-    "aftermath finance",
-    "sui",
-    "aftermath sdk",
-    "aftermath finance sdk",
-    "aftermath typescript sdk",
-    "aftermath finance typescript sdk"
-  ],
-  "author": "Aftermath",
-  "license": "Apache-2.0",
-  "files": [
-    "dist/*"
-  ],
-  "bugs": {
-    "url": "https://github.com/AftermathFinance/aftermath-ts-sdk/issues"
-  },
-  "homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
-  "dependencies": {
-    "dayjs": "^1.11.7"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.29.8",
-    "@types/jest": "^29.5.2",
-    "eslint-plugin-tsdoc": "^0.2.17",
-    "jest": "^29.5.0",
-    "prettier": "^2.8.8",
-    "rimraf": "^6.0.1",
-    "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.1",
-    "tsup": "^8.5.1",
-    "typescript": "^5.8.3",
-    "yaml": "^2.3.1"
-  },
-  "peerDependencies": {
-    "@mysten/sui": ">=2.0.0 <3.0.0"
-  },
-  "prettier": {
-    "tabWidth": 4,
-    "useTabs": true
-  }
+	"name": "aftermath-ts-sdk",
+	"version": "2.0.0",
+	"description": "Aftermath TypeScript SDK",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"clean": "rimraf ./dist",
+		"build": "tsup",
+		"build:tsc": "npm run clean && tsc",
+		"link": "npm link && cd ../aftermath-frontend/ && npm link aftermath-ts-sdk",
+		"prepack": "npm run build",
+		"prepare": "npm run build",
+		"test": "jest",
+		"changeset": "changeset",
+		"version-packages": "changeset version",
+		"release": "npm run build && changeset publish"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/AftermathFinance/aftermath-ts-sdk.git"
+	},
+	"keywords": [
+		"aftermath",
+		"aftermath finance",
+		"sui",
+		"aftermath sdk",
+		"aftermath finance sdk",
+		"aftermath typescript sdk",
+		"aftermath finance typescript sdk"
+	],
+	"author": "Aftermath",
+	"license": "Apache-2.0",
+	"files": [
+		"dist/*"
+	],
+	"bugs": {
+		"url": "https://github.com/AftermathFinance/aftermath-ts-sdk/issues"
+	},
+	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
+	"dependencies": {
+		"dayjs": "^1.11.7"
+	},
+	"devDependencies": {
+		"@changesets/cli": "^2.29.8",
+		"@types/jest": "^29.5.2",
+		"eslint-plugin-tsdoc": "^0.2.17",
+		"jest": "^29.5.0",
+		"prettier": "^2.8.8",
+		"rimraf": "^6.0.1",
+		"ts-jest": "^29.1.0",
+		"ts-node": "^10.9.1",
+		"tsup": "^8.5.1",
+		"typescript": "^5.8.3",
+		"yaml": "^2.3.1"
+	},
+	"peerDependencies": {
+		"@mysten/sui": ">=2.0.0 <3.0.0"
+	},
+	"prettier": {
+		"tabWidth": 4,
+		"useTabs": true
+	}
 }
