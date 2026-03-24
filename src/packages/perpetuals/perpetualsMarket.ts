@@ -35,7 +35,9 @@ import {
 	ApiPerpetualsPreviewPlaceOrderResponse,
 	PerpetualsMarket24hrStats,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	SdkPerpetualsPlaceScaleOrderPreviewInputs,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	PerpetualsAccountId,
@@ -279,6 +281,35 @@ export class PerpetualsMarket extends Caller {
 			ApiPerpetualsPreviewPlaceLimitOrderBody
 		>(
 			"account/previews/place-limit-order",
+			{
+				...inputs,
+				accountId: undefined,
+			},
+			abortSignal
+		);
+	}
+
+	/**
+	 * Market-level preview of placing a scale order.
+	 *
+	 * Similar to {@link getPlaceLimitOrderPreview}, this uses:
+	 * - `account/previews/place-scale-order`
+	 * - `accountId: undefined`
+	 *
+	 * @param inputs - {@link SdkPerpetualsPlaceScaleOrderPreviewInputs}.
+	 * @param abortSignal - Optional abort signal to cancel the request.
+	 *
+	 * @returns Either `{ error }` or a preview describing the simulated post-order state.
+	 */
+	public async getPlaceScaleOrderPreview(
+		inputs: SdkPerpetualsPlaceScaleOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceScaleOrderBody
+		>(
+			"account/previews/place-scale-order",
 			{
 				...inputs,
 				accountId: undefined,

@@ -74,6 +74,12 @@ import {
 	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
 	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	ApiPerpetualsTransferCapTxBody,
+	PerpetualsSponsorConfig,
+	ApiPerpetualsCurrentRebateRewardsBody,
+	ApiPerpetualsCurrentRebateRewardsResponse,
+	ApiPerpetualsCreateAccountResponse,
+	ApiPerpetualsGrantAgentWalletTxBody,
+	ApiPerpetualsShareAccountBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -681,26 +687,27 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	/**
-	 * Build a `transfer-cap` transaction that transfers a Perpetuals capability object (cap)
-	 * to another wallet.
+	 * Build a transaction to transfer a Perpetuals capability object (cap) to another wallet.
 	 *
-	 * Provide the `capObjectId` of the capability you want to transfer (e.g., an account cap
-	 * or vault cap) and the `recipientAddress` that should receive it.
-	 *
-	 * This endpoint builds a transaction only; it does not submit it on-chain.
+	 * Supports two methods:
+	 * - **Method 1**: Provide `capObjectId` to transfer an existing on-chain object.
+	 * - **Method 2**: Provide `capArg` and `capType` to transfer a capability
+	 *   from a deferred PTB composition (e.g., from `getCreateAccountTx` with `deferShare=true`).
 	 *
 	 * @param inputs.recipientAddress - Recipient wallet address that should receive the cap.
-	 * @param inputs.capObjectId - Object ID of the capability to transfer.
+	 * @param inputs.capObjectId - Object ID of the capability to transfer (Method 1).
+	 * @param inputs.capArg - PTB argument reference for the capability (Method 2).
+	 * @param inputs.capType - Object type tag for the capability (Method 2).
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing a `tx`.
 	 */
-	public async getTransferCapTx(inputs: {
-		recipientAddress: SuiAddress;
-		capObjectId: ObjectId;
-		tx?: Transaction;
-	}) {
-		const { tx, recipientAddress, capObjectId } = inputs;
+	public async getTransferCapTx(
+		inputs: Omit<ApiPerpetualsTransferCapTxBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsTransferCapTxBody,
@@ -708,8 +715,7 @@ export class Perpetuals extends Caller {
 		>(
 			"transactions/transfer-cap",
 			{
-				recipientAddress,
-				capObjectId,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -726,29 +732,117 @@ export class Perpetuals extends Caller {
 	/**
 	 * Build a `create-account` transaction for Aftermath Perpetuals.
 	 *
+	 * When `deferShare` is `true`, the response includes `accountArg`, `sharePolicyArg`,
+	 * `adminCapArg`, and `collateralCoinType` so you can compose additional commands
+	 * (grant-agent-wallet, transfer-cap) before calling {@link getShareAccountTx} to finalize.
+	 *
 	 * @param inputs.walletAddress - Wallet address that will own the new account.
 	 * @param inputs.collateralCoinType - Collateral coin type used by the account.
-	 * @param inputs.tx - Optional {@link Transaction} to extend; if provided, the
-	 *   create-account commands are appended to this transaction.
-	 *
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @param inputs.deferShare - When true, returns args without sharing yet.
+	 * @param inputs.tx - Optional {@link Transaction} to extend.
+	 * @returns `tx` plus optional `accountArg`, `sharePolicyArg`, `adminCapArg`, `collateralCoinType` when deferred.
 	 */
-	public async getCreateAccountTx(inputs: {
-		walletAddress: SuiAddress;
-		collateralCoinType: CoinType;
-		tx?: Transaction;
-	}): Promise<SdkTransactionResponse> {
-		const { walletAddress, collateralCoinType, tx } = inputs;
+	public async getCreateAccountTx(
+		inputs: Omit<ApiPerpetualsCreateAccountBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateAccountBody,
-			ApiTransactionResponse
+			ApiPerpetualsCreateAccountResponse
 		>(
 			"transactions/create-account",
 			{
-				walletAddress,
-				collateralCoinType,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a transaction that grants an Agent Wallet permission on a Perpetuals account.
+	 *
+	 * Supports two methods:
+	 * - **Method 1 (existing account)**: Provide `accountId` to look up an existing shared account.
+	 * - **Method 2 (composed flow)**: Provide `accountArg`, `adminCapArg`, and `collateralCoinType`
+	 *   from a deferred `getCreateAccountTx` call.
+	 *
+	 * @param inputs.recipientAddress - Wallet address to receive agent permissions.
+	 * @param inputs.accountId - Perpetuals account ID (Method 1).
+	 * @param inputs.accountArg - Account argument from deferred create (Method 2).
+	 * @param inputs.adminCapArg - Admin cap argument from deferred create (Method 2).
+	 * @param inputs.collateralCoinType - Collateral type for the account (Method 2).
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Transaction response containing a `tx`.
+	 */
+	public async getGrantAgentWalletTx(
+		inputs: Omit<ApiPerpetualsGrantAgentWalletTxBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsGrantAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"account/transactions/grant-agent-wallet",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a transaction to share a Perpetuals account that was created with deferred sharing.
+	 *
+	 * This finalizes the account creation flow by consuming the `AccountSharePolicy`
+	 * and sharing the `Account` object. Call this after composing additional commands
+	 * (grant-agent-wallet, transfer-cap) with the args returned by {@link getCreateAccountTx}.
+	 *
+	 * @param inputs.accountArg - Account argument from deferred create.
+	 * @param inputs.sharePolicyArg - Share policy argument from deferred create.
+	 * @param inputs.collateralCoinType - Collateral type for the account.
+	 * @param inputs.sponsor - Optional sponsorship config.
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Transaction response containing a `tx`.
+	 */
+	public async getShareAccountTx(
+		inputs: Omit<ApiPerpetualsShareAccountBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsShareAccountBody,
+			ApiTransactionResponse
+		>(
+			"account/transactions/share",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
 				),
 			},
 			undefined,
@@ -832,6 +926,7 @@ export class Perpetuals extends Caller {
 			lockPeriodMs: bigint;
 			performanceFeePercentage: Percentage;
 			forceWithdrawDelayMs: bigint;
+			sponsor?: PerpetualsSponsorConfig;
 			tx?: Transaction;
 			isSponsoredTx?: boolean;
 		} & (
@@ -863,6 +958,41 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
+	//  Rebates
+	// =========================================================================
+
+	/**
+	 * Calculate rewards and rebates for one or more perpetuals accounts.
+	 *
+	 * Computes per-account maker and taker reward allocations, fee-tier rebates,
+	 * and volume-based metrics. When `accountIds` is omitted or empty, all eligible
+	 * accounts are included.
+	 *
+	 * **Note:** All data returned is for the current epoch only.
+	 *
+	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
+	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
+	 * @param inputs.accountIds - Optional list of account IDs.
+	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
+	 *
+	 * @example
+	 * ```ts
+	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
+	 *   totalMakerRewards: 10000,
+	 *   totalTakerRewards: 5000,
+	 * });
+	 * ```
+	 */
+	public async getCurrentRebateRewards(
+		inputs: ApiPerpetualsCurrentRebateRewardsBody
+	): Promise<ApiPerpetualsCurrentRebateRewardsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCurrentRebateRewardsResponse,
+			ApiPerpetualsCurrentRebateRewardsBody
+		>("rebates/rewards", inputs);
+	}
+
+	// =========================================================================
 	//  Builder Codes Transactions
 	// =========================================================================
 
@@ -889,14 +1019,23 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getCreateBuilderCodeIntegratorConfigTx(
-		inputs: ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/create-integrator-config",
-			inputs,
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -927,14 +1066,23 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getRemoveBuilderCodeIntegratorConfigTx(
-		inputs: ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/remove-integrator-config",
-			inputs,
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -965,14 +1113,23 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getCreateBuilderCodeIntegratorVaultTx(
-		inputs: ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
 			ApiTransactionResponse
 		>(
 			"builder-codes/transactions/create-integrator-vault",
-			inputs,
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
 			undefined,
 			{
 				txKind: true,
@@ -1017,14 +1174,23 @@ export class Perpetuals extends Caller {
 	 * ```
 	 */
 	public async getClaimBuilderCodeIntegratorVaultFeesTx(
-		inputs: ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody
+		inputs: Omit<
+			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+			"txKind"
+		> & { tx?: Transaction }
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
 			ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse
 		>(
 			"builder-codes/transactions/claim-integrator-vault-fees",
-			inputs,
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
 			undefined,
 			{
 				txKind: true,

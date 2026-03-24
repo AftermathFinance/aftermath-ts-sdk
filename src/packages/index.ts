@@ -8,6 +8,7 @@ export * from "./pools";
 export * from "./referralVault";
 export * from "./router";
 export * from "./staking";
-
+export * from "./gasPools";
+export * from "./auth";
 export * from "./sui";
 export * from "./suiFrens";

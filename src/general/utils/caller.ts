@@ -24,10 +24,11 @@ function bigIntReplacer(_key: string, value: unknown): unknown {
   return value;
 }
 
-type ResponseWithTxKind = { txKind: SerializedTransaction } & (
-  | Record<string, unknown>
-  | {}
-);
+
+type ResponseWithTxKind = {
+	txKind: SerializedTransaction;
+	sponsorSignature?: string;
+} & (Record<string, unknown> | {});
 
 export class Caller {
   protected readonly apiBaseUrl?: Url;
@@ -198,11 +199,10 @@ export class Caller {
       options
     );
 
-    const tx = Transaction.fromKind(response.txKind);
 
-    if (body?.walletAddress) {
-      tx.setSender(body.walletAddress);
-    }
+		const tx = response.sponsorSignature
+			? Transaction.from(response.txKind)
+			: Transaction.fromKind(response.txKind);
 
     const { txKind, ...rest } = response;
     type Rest = Omit<Extract<OutputType, ResponseWithTxKind>, "txKind">;

@@ -3,6 +3,7 @@ import {
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsScaleOrderBody,
 	ApiPerpetualsPreviewPlaceOrderResponse,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
@@ -49,12 +50,16 @@ import {
 	ApiPerpetualsWithdrawCollateralResponse,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	SdkPerpetualsPlaceScaleOrderInputs,
+	SdkPerpetualsPlaceScaleOrderPreviewInputs,
+	SdkPerpetualsCancelAndPlaceOrdersInputs,
+	ApiPerpetualsCancelAndPlaceOrdersBody,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
 	ApiTransactionResponse,
 	ApiPerpetualsPreviewEditCollateralResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
-	PerpetualsAccountMarginHistoryData,
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsVaultCap,
 	PerpetualsPartialVaultCap,
@@ -63,6 +68,8 @@ import {
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsRevokeAgentWalletTxBody,
 	PerpetualsOrderData,
+	PerpetualsSponsorConfig,
+	ApiPerpetualsCancelStopOrdersMethod,
 } from "../../types";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -207,6 +214,7 @@ export class PerpetualsAccount extends Caller {
 		inputs: {
 			tx?: Transaction;
 			isSponsoredTx?: boolean;
+			sponsor?: PerpetualsSponsorConfig;
 		} & (
 			| {
 					depositAmount: Balance;
@@ -275,9 +283,10 @@ export class PerpetualsAccount extends Caller {
 	public async getWithdrawCollateralTx(inputs: {
 		withdrawAmount: Balance;
 		recipientAddress?: SuiAddress;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { withdrawAmount, recipientAddress, tx: txFromInputs } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		if (this.vaultId)
 			throw new Error(
@@ -290,8 +299,7 @@ export class PerpetualsAccount extends Caller {
 		>(
 			"account/transactions/withdraw-collateral",
 			{
-				withdrawAmount,
-				recipientAddress,
+				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				accountId: this.accountCap.accountId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
@@ -322,9 +330,10 @@ export class PerpetualsAccount extends Caller {
 	public async getAllocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
 		allocateAmount: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx, allocateAmount, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsAllocateCollateralBody,
 			ApiTransactionResponse
@@ -332,8 +341,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/allocate-collateral",
 			{
-				marketId,
-				allocateAmount,
+				...otherInputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
@@ -371,9 +379,10 @@ export class PerpetualsAccount extends Caller {
 	public async getDeallocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
 		deallocateAmount: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx, deallocateAmount, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsDeallocateCollateralBody,
 			ApiTransactionResponse
@@ -381,8 +390,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/deallocate-collateral",
 			{
-				marketId,
-				deallocateAmount,
+				...otherInputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
@@ -420,9 +428,10 @@ export class PerpetualsAccount extends Caller {
 		transferAmount: Balance;
 		toAccountId: PerpetualsAccountId;
 		toAccountCapId?: ObjectId;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { transferAmount, toAccountId, toAccountCapId, tx } = inputs;
+		const { tx, ...otherInputs } = inputs;
 
 		if ("vaultId" in this.accountCap)
 			throw new Error(
@@ -436,9 +445,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/transfer-collateral",
 			{
-				transferAmount,
-				toAccountId,
-				toAccountCapId,
+				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				fromAccountId: this.accountCap.accountId,
 				fromAccountCapId: this.accountCap.objectId,
@@ -589,6 +596,102 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	/**
+	 * Build a `place-scale-order` transaction for this account.
+	 *
+	 * A scale order distributes a total size across multiple limit orders
+	 * evenly spaced between a start and end price. An optional `sizeSkew`
+	 * parameter controls whether the distribution is uniform or weighted.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsPlaceScaleOrderInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getPlaceScaleOrderTx(
+		inputs: SdkPerpetualsPlaceScaleOrderInputs
+	) {
+		const { tx: txFromInputs, ...otherInputs } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsScaleOrderBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/place-scale-order",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `cancel-and-place-orders` transaction for this account.
+	 *
+	 * Atomically cancels existing orders and places new ones in a single
+	 * transaction. Useful for rebalancing order grids or replacing stale
+	 * orders without intermediate exposure.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsCancelAndPlaceOrdersInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCancelAndPlaceOrdersTx(
+		inputs: SdkPerpetualsCancelAndPlaceOrdersInputs
+	) {
+		const { tx: txFromInputs, ...otherInputs } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCancelAndPlaceOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-and-place-orders",
+			{
+				...otherInputs,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
 	 * Build a `cancel-orders` transaction for this account.
 	 *
 	 * Each market in `marketIdsToData` supplies:
@@ -609,6 +712,7 @@ export class PerpetualsAccount extends Caller {
 	 */
 	public async getCancelOrdersTx(inputs: {
 		tx?: Transaction;
+		sponsor?: PerpetualsSponsorConfig;
 		marketIdsToData: Record<
 			PerpetualsMarketId,
 			{
@@ -661,9 +765,11 @@ export class PerpetualsAccount extends Caller {
 	 */
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
+		sponsor?: PerpetualsSponsorConfig;
+		cancelMethod?: ApiPerpetualsCancelStopOrdersMethod;
 		stopOrderIds: ObjectId[];
 	}) {
-		const { tx, ...otherInputs } = inputs;
+		const { tx, cancelMethod, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCancelStopOrdersBody,
 			ApiTransactionResponse
@@ -672,6 +778,7 @@ export class PerpetualsAccount extends Caller {
 				"transactions/cancel-stop-orders",
 			{
 				...otherInputs,
+				cancelMethod: cancelMethod ?? "User",
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -712,12 +819,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceStopOrdersTx(
 		inputs: SdkPerpetualsPlaceStopOrdersInputs
 	) {
-		const {
-			tx: txFromInputs,
-			isSponsoredTx,
-			stopOrders,
-			gasCoinArg,
-		} = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -729,9 +831,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/place-stop-orders",
 			{
-				stopOrders,
-				gasCoinArg,
-				isSponsoredTx,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -773,12 +873,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceSlTpOrdersTx(
 		inputs: SdkPerpetualsPlaceSlTpOrdersInputs
 	) {
-		const {
-			tx: txFromInputs,
-			isSponsoredTx,
-			marketId,
-			...slTpInputs
-		} = inputs;
+		const { tx: txFromInputs, marketId, ...otherInputs } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
 		if (!position) throw new Error("you have no position for this market");
@@ -793,7 +888,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/place-sl-tp-orders",
 			{
-				...slTpInputs,
+				...otherInputs,
 				marketId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
@@ -843,7 +938,7 @@ export class PerpetualsAccount extends Caller {
 			tx?: Transaction;
 		}
 	) {
-		const { tx: txFromInputs, stopOrders } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -855,7 +950,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/edit-stop-orders",
 			{
-				stopOrders,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -940,8 +1035,9 @@ export class PerpetualsAccount extends Caller {
 		leverage: number;
 		collateralChange: number;
 		marketId: PerpetualsMarketId;
+		sponsor?: PerpetualsSponsorConfig;
 	}) {
-		const { leverage, tx, collateralChange, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsSetLeverageTxBody,
 			ApiTransactionResponse
@@ -949,9 +1045,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/set-leverage",
 			{
-				leverage,
-				marketId,
-				collateralChange,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -1138,6 +1232,48 @@ export class PerpetualsAccount extends Caller {
 		>(
 			`${this.vaultId ? "vault" : "account"}/` +
 				"previews/place-limit-order",
+			{
+				...inputs,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+					  }
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+					  }),
+			},
+			abortSignal
+		);
+	}
+
+	/**
+	 * Preview the effects of placing a scale order (without building a tx).
+	 *
+	 * A scale order distributes total size across multiple limit orders
+	 * spaced between a start and end price. The preview simulates:
+	 * - How much size would execute immediately vs post to the book
+	 * - Expected slippage and execution price
+	 * - Resulting position and margin impact
+	 *
+	 * @param inputs - See {@link SdkPerpetualsPlaceScaleOrderPreviewInputs}.
+	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
+	 *
+	 * @returns Either an error message or a preview object similar to
+	 *   {@link getPlaceMarketOrderPreview}.
+	 */
+	public async getPlaceScaleOrderPreview(
+		inputs: SdkPerpetualsPlaceScaleOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<ApiPerpetualsPreviewPlaceOrderResponse> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceScaleOrderBody
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"previews/place-scale-order",
 			{
 				...inputs,
 				...("vaultId" in this.accountCap

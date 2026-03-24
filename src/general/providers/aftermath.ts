@@ -6,6 +6,7 @@ import { Farms } from "../../packages/farms/farms";
 import { Faucet } from "../../packages/faucet/faucet";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { Multisig } from "../../packages/multisig/multisig";
+import { GasPools } from "../../packages/gasPools";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Pools } from "../../packages/pools/pools";
 import { Referrals } from "../../packages/referrals/referrals";
@@ -189,10 +190,15 @@ export class Aftermath extends Caller {
    */
   public Referrals = () => new Referrals(this.config);
 
-  /**
-   * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.
-   */
-  public Perpetuals = () => new Perpetuals(this.config, this.Provider);
+	/**
+	 * Returns an instance of `GasPools` for shared gas pool interactions.
+	 */
+	public GasPools = () => new GasPools(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.
+	 */
+	public Perpetuals = () => new Perpetuals(this.config, this.Provider);
 
   /**
    * Returns an instance of `Rewards` for querying user reward points.

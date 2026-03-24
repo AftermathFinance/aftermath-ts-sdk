@@ -1,4 +1,3 @@
-// TODO: make it so that casting types are not exported ?
 export * from "./general/types";
 export * from "./packages/auth/authTypes";
 export * from "./packages/coin/coinTypes";
@@ -6,6 +5,7 @@ export * from "./packages/farms/farmsTypes";
 export * from "./packages/faucet/faucetTypes";
 export * from "./packages/nftAmm/nftAmmTypes";
 export * from "./packages/perpetuals/perpetualsTypes";
+export * from "./packages/gasPools/gasPoolsTypes";
 export * from "./packages/pools/poolsTypes";
 export * from "./packages/referrals/referralsTypes";
 export * from "./packages/rewards/rewardsTypes";
