@@ -69,7 +69,6 @@ import {
 	ApiPerpetualsRevokeAgentWalletTxBody,
 	PerpetualsOrderData,
 	PerpetualsSponsorConfig,
-	ApiPerpetualsCancelStopOrdersMethod,
 } from "../../types";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -766,10 +765,9 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
 		sponsor?: PerpetualsSponsorConfig;
-		cancelMethod?: ApiPerpetualsCancelStopOrdersMethod;
 		stopOrderIds: ObjectId[];
 	}) {
-		const { tx, cancelMethod, ...otherInputs } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsCancelStopOrdersBody,
 			ApiTransactionResponse
@@ -778,7 +776,6 @@ export class PerpetualsAccount extends Caller {
 				"transactions/cancel-stop-orders",
 			{
 				...otherInputs,
-				cancelMethod: cancelMethod ?? "User",
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
