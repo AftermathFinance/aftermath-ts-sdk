@@ -1084,8 +1084,10 @@ export interface PerpetualsAccountMarginHistoryData {
 	takerFeesUsd: number;
 	/** Maker fees in USD at that time. */
 	makerFeesUsd: number;
-	/** Liquidation fees in USD at that time. */
-	liquidationFeesUsd: number;
+	/** Liquidated fees in USD at that time. */
+	liquidatedFeesUsd: number;
+	/** Liquidator fees in USD at that time. */
+	liquidatorFeesUsd: number;
 }
 
 /**
