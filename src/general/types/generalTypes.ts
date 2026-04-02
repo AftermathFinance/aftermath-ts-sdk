@@ -398,6 +398,7 @@ export interface CallerConfig {
 
 export interface ApiTransactionResponse {
 	txKind: SerializedTransaction;
+	sponsorSignature?: string;
 }
 
 export interface SdkTransactionResponse {

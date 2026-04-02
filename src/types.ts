@@ -9,6 +9,7 @@ export * from "./packages/nftAmm/nftAmmTypes";
 export * from "./packages/auth/authTypes";
 export * from "./packages/farms/farmsTypes";
 export * from "./packages/perpetuals/perpetualsTypes";
+export * from "./packages/gasPools/gasPoolsTypes";
 export * from "./packages/referrals/referralsTypes";
 export * from "./packages/rewards/rewardsTypes";
 

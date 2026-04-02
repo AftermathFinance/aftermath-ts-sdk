@@ -68,6 +68,7 @@ import {
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsRevokeAgentWalletTxBody,
 	PerpetualsOrderData,
+	PerpetualsSponsorConfig,
 } from "../../types";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
@@ -212,6 +213,7 @@ export class PerpetualsAccount extends Caller {
 		inputs: {
 			tx?: Transaction;
 			isSponsoredTx?: boolean;
+			sponsor?: PerpetualsSponsorConfig;
 		} & (
 			| {
 					depositAmount: Balance;
@@ -280,9 +282,10 @@ export class PerpetualsAccount extends Caller {
 	public async getWithdrawCollateralTx(inputs: {
 		withdrawAmount: Balance;
 		recipientAddress?: SuiAddress;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { withdrawAmount, recipientAddress, tx: txFromInputs } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		if (this.vaultId)
 			throw new Error(
@@ -295,8 +298,7 @@ export class PerpetualsAccount extends Caller {
 		>(
 			"account/transactions/withdraw-collateral",
 			{
-				withdrawAmount,
-				recipientAddress,
+				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				accountId: this.accountCap.accountId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
@@ -327,9 +329,10 @@ export class PerpetualsAccount extends Caller {
 	public async getAllocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
 		allocateAmount: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx, allocateAmount, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsAllocateCollateralBody,
 			ApiTransactionResponse
@@ -337,8 +340,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/allocate-collateral",
 			{
-				marketId,
-				allocateAmount,
+				...otherInputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
@@ -376,9 +378,10 @@ export class PerpetualsAccount extends Caller {
 	public async getDeallocateCollateralTx(inputs: {
 		marketId: PerpetualsMarketId;
 		deallocateAmount: Balance;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { tx, deallocateAmount, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsDeallocateCollateralBody,
 			ApiTransactionResponse
@@ -386,8 +389,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/deallocate-collateral",
 			{
-				marketId,
-				deallocateAmount,
+				...otherInputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
@@ -425,9 +427,10 @@ export class PerpetualsAccount extends Caller {
 		transferAmount: Balance;
 		toAccountId: PerpetualsAccountId;
 		toAccountCapId?: ObjectId;
+		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
 	}) {
-		const { transferAmount, toAccountId, toAccountCapId, tx } = inputs;
+		const { tx, ...otherInputs } = inputs;
 
 		if ("vaultId" in this.accountCap)
 			throw new Error(
@@ -441,9 +444,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/transfer-collateral",
 			{
-				transferAmount,
-				toAccountId,
-				toAccountCapId,
+				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				fromAccountId: this.accountCap.accountId,
 				fromAccountCapId: this.accountCap.objectId,
@@ -710,6 +711,7 @@ export class PerpetualsAccount extends Caller {
 	 */
 	public async getCancelOrdersTx(inputs: {
 		tx?: Transaction;
+		sponsor?: PerpetualsSponsorConfig;
 		marketIdsToData: Record<
 			PerpetualsMarketId,
 			{
@@ -762,6 +764,7 @@ export class PerpetualsAccount extends Caller {
 	 */
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
+		sponsor?: PerpetualsSponsorConfig;
 		stopOrderIds: ObjectId[];
 	}) {
 		const { tx, ...otherInputs } = inputs;
@@ -813,12 +816,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceStopOrdersTx(
 		inputs: SdkPerpetualsPlaceStopOrdersInputs
 	) {
-		const {
-			tx: txFromInputs,
-			isSponsoredTx,
-			stopOrders,
-			gasCoinArg,
-		} = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -830,9 +828,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/place-stop-orders",
 			{
-				stopOrders,
-				gasCoinArg,
-				isSponsoredTx,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -874,12 +870,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceSlTpOrdersTx(
 		inputs: SdkPerpetualsPlaceSlTpOrdersInputs
 	) {
-		const {
-			tx: txFromInputs,
-			isSponsoredTx,
-			marketId,
-			...slTpInputs
-		} = inputs;
+		const { tx: txFromInputs, marketId, ...otherInputs } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
 		if (!position) throw new Error("you have no position for this market");
@@ -894,7 +885,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/place-sl-tp-orders",
 			{
-				...slTpInputs,
+				...otherInputs,
 				marketId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
@@ -944,7 +935,7 @@ export class PerpetualsAccount extends Caller {
 			tx?: Transaction;
 		}
 	) {
-		const { tx: txFromInputs, stopOrders } = inputs;
+		const { tx: txFromInputs, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -956,7 +947,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/edit-stop-orders",
 			{
-				stopOrders,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -1041,8 +1032,9 @@ export class PerpetualsAccount extends Caller {
 		leverage: number;
 		collateralChange: number;
 		marketId: PerpetualsMarketId;
+		sponsor?: PerpetualsSponsorConfig;
 	}) {
-		const { leverage, tx, collateralChange, marketId } = inputs;
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTxObject<
 			ApiPerpetualsSetLeverageTxBody,
 			ApiTransactionResponse
@@ -1050,9 +1042,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.vaultId ? "vault" : "account"}/` +
 				"transactions/set-leverage",
 			{
-				leverage,
-				marketId,
-				collateralChange,
+				...otherInputs,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),

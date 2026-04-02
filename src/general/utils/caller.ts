@@ -13,10 +13,10 @@ import {
 } from "../../types";
 import { Helpers } from "./helpers";
 
-type ResponseWithTxKind = { txKind: SerializedTransaction } & (
-	| Record<string, unknown>
-	| {}
-);
+type ResponseWithTxKind = {
+	txKind: SerializedTransaction;
+	sponsorSignature?: string;
+} & (Record<string, unknown> | {});
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
@@ -193,7 +193,9 @@ export class Caller {
 			options
 		);
 
-		const tx = Transaction.fromKind(response.txKind);
+		const tx = response.sponsorSignature
+			? Transaction.from(response.txKind)
+			: Transaction.fromKind(response.txKind);
 
 		if (body?.walletAddress) {
 			tx.setSender(body.walletAddress);
