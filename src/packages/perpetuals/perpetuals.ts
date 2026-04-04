@@ -691,13 +691,12 @@ export class Perpetuals extends Caller {
 	 *
 	 * Supports two methods:
 	 * - **Method 1**: Provide `capObjectId` to transfer an existing on-chain object.
-	 * - **Method 2**: Provide `capArg` and `capType` to transfer a capability
+	 * - **Method 2**: Provide `composed` with the PTB argument and capability type
 	 *   from a deferred PTB composition (e.g., from `getCreateAccountTx` with `deferShare=true`).
 	 *
 	 * @param inputs.recipientAddress - Recipient wallet address that should receive the cap.
 	 * @param inputs.capObjectId - Object ID of the capability to transfer (Method 1).
-	 * @param inputs.capArg - PTB argument reference for the capability (Method 2).
-	 * @param inputs.capType - Object type tag for the capability (Method 2).
+	 * @param inputs.composed - Composed PTB argument + capability type (Method 2).
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing a `tx`.
@@ -732,15 +731,16 @@ export class Perpetuals extends Caller {
 	/**
 	 * Build a `create-account` transaction for Aftermath Perpetuals.
 	 *
-	 * When `deferShare` is `true`, the response includes `accountArg`, `sharePolicyArg`,
-	 * `adminCapArg`, and `collateralCoinType` so you can compose additional commands
-	 * (grant-agent-wallet, transfer-cap) before calling {@link getShareAccountTx} to finalize.
+	 * When `deferShare` is `true`, the response includes a `deferred` object with
+	 * `accountArg`, `sharePolicyArg`, `adminCapArg`, and `collateralCoinType` so you
+	 * can compose additional commands (grant-agent-wallet, transfer-cap) before calling
+	 * {@link getShareAccountTx} to finalize.
 	 *
 	 * @param inputs.walletAddress - Wallet address that will own the new account.
 	 * @param inputs.collateralCoinType - Collateral coin type used by the account.
-	 * @param inputs.deferShare - When true, returns args without sharing yet.
+	 * @param inputs.deferShare - When true, returns `deferred` args without sharing yet.
 	 * @param inputs.tx - Optional {@link Transaction} to extend.
-	 * @returns `tx` plus optional `accountArg`, `sharePolicyArg`, `adminCapArg`, `collateralCoinType` when deferred.
+	 * @returns `tx` plus optional `deferred` containing argument references when deferred.
 	 */
 	public async getCreateAccountTx(
 		inputs: Omit<ApiPerpetualsCreateAccountBody, "txKind"> & {
@@ -771,14 +771,12 @@ export class Perpetuals extends Caller {
 	 *
 	 * Supports two methods:
 	 * - **Method 1 (existing account)**: Provide `accountId` to look up an existing shared account.
-	 * - **Method 2 (composed flow)**: Provide `accountArg`, `adminCapArg`, and `collateralCoinType`
+	 * - **Method 2 (composed flow)**: Provide `deferred` with the argument references
 	 *   from a deferred `getCreateAccountTx` call.
 	 *
 	 * @param inputs.recipientAddress - Wallet address to receive agent permissions.
 	 * @param inputs.accountId - Perpetuals account ID (Method 1).
-	 * @param inputs.accountArg - Account argument from deferred create (Method 2).
-	 * @param inputs.adminCapArg - Admin cap argument from deferred create (Method 2).
-	 * @param inputs.collateralCoinType - Collateral type for the account (Method 2).
+	 * @param inputs.deferred - Deferred account args from `getCreateAccountTx` (Method 2).
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing a `tx`.
@@ -817,8 +815,12 @@ export class Perpetuals extends Caller {
 	 * and sharing the `Account` object. Call this after composing additional commands
 	 * (grant-agent-wallet, transfer-cap) with the args returned by {@link getCreateAccountTx}.
 	 *
+	 * Pass the deferred fields (`accountArg`, `sharePolicyArg`, `adminCapArg`,
+	 * `collateralCoinType`) from the `deferred` object returned by `getCreateAccountTx`.
+	 *
 	 * @param inputs.accountArg - Account argument from deferred create.
 	 * @param inputs.sharePolicyArg - Share policy argument from deferred create.
+	 * @param inputs.adminCapArg - Admin cap argument from deferred create.
 	 * @param inputs.collateralCoinType - Collateral type for the account.
 	 * @param inputs.sponsor - Optional sponsorship config.
 	 * @param inputs.tx - Optional transaction to extend.

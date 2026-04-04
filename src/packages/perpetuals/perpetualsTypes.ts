@@ -60,6 +60,47 @@ export type PerpetualsCapType =
 	| "vaultAgent";
 
 // =========================================================================
+//  Sponsor Config
+// =========================================================================
+
+/**
+ * Configuration for gas pool sponsorship on perpetuals transactions.
+ *
+ * When provided, the transaction will include a gas pool sponsor rebate step
+ * that debits the specified wallet's gas pool.
+ */
+export interface PerpetualsSponsorConfig {
+	/** Wallet address to use for gas pool sponsorship. */
+	walletAddress: SuiAddress;
+}
+
+/**
+ * PTB argument references returned by deferred `create_account` for use
+ * in downstream composed endpoints (share-account, grant-agent-wallet, etc.).
+ */
+export interface DeferredAccountArgs {
+	/** Argument reference for the created Account object. */
+	accountArg: TransactionObjectArgument;
+	/** Argument reference for the AccountSharePolicy. */
+	sharePolicyArg: TransactionObjectArgument;
+	/** Argument reference for the AccountCap<ADMIN>. */
+	adminCapArg: TransactionObjectArgument;
+	/** Collateral type for the account. */
+	collateralCoinType: CoinType;
+}
+
+/**
+ * PTB argument reference + semantic capability type for composed-flow
+ * party transfers.
+ */
+export interface ComposedTransferArgs {
+	/** PTB argument reference for the object to transfer. */
+	objectArg: TransactionObjectArgument;
+	/** Semantic capability type being transferred. */
+	capType: PerpetualsCapType;
+}
+
+// =========================================================================
 //  Name Only
 // =========================================================================
 
@@ -1058,8 +1099,10 @@ export interface PerpetualsAccountMarginHistoryData {
 	takerFeesUsd: number;
 	/** Maker fees in USD at that time. */
 	makerFeesUsd: number;
-	/** Liquidation fees in USD at that time. */
-	liquidationFeesUsd: number;
+	/** Liquidated fees in USD at that time. */
+	liquidatedFeesUsd: number;
+	/** Liquidator fees in USD at that time. */
+	liquidatorFeesUsd: number;
 }
 
 /**
@@ -2574,15 +2617,15 @@ export interface ApiPerpetualsCreateAccountBody {
  * Response from the create-account endpoint.
  *
  * When `deferShare` is false (default), returns `txKind` and optionally `sponsorSignature`.
- * When `deferShare` is true, additionally returns argument references for PTB composition.
+ * When `deferShare` is true, additionally returns `deferred` with argument references
+ * for PTB composition.
  */
 export interface ApiPerpetualsCreateAccountResponse {
 	txKind: SerializedTransaction;
 	sponsorSignature?: string;
-	accountArg?: TransactionObjectArgument;
-	sharePolicyArg?: TransactionObjectArgument;
-	adminCapArg?: TransactionObjectArgument;
-	collateralCoinType?: CoinType;
+	/** Deferred account argument references for downstream composition
+	 * (only set when `deferShare = true`). */
+	deferred?: DeferredAccountArgs;
 }
 
 /**
@@ -3066,15 +3109,12 @@ export type ApiPerpetualsCancelOrdersBody = {
 	  }
 );
 
-export type ApiPerpetualsCancelStopOrdersMethod = "Executor" | "User";
-
 /**
  * API request body for canceling stop orders identified by object IDs.
  */
 export type ApiPerpetualsCancelStopOrdersBody = {
 	walletAddress: SuiAddress;
 	stopOrderIds: ObjectId[];
-	cancelMethod?: ApiPerpetualsCancelStopOrdersMethod;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3301,13 +3341,18 @@ export interface ApiPerpetualsMarketsPricesResponse {
  * The resulting on-chain transaction must be signed by the **account admin** wallet.
  * After execution, `recipientAddress` receives assistant-level permissions for `accountId`
  * (trading actions are allowed, but **withdrawing collateral** and managing other agent wallets are not).
+ *
+ * ### Methods
+ * - **Method 1 (existing account)**: Provide `accountId`.
+ * - **Method 2 (composed flow)**: Provide `deferred` with argument references
+ *   from a deferred `getCreateAccountTx` call.
  */
 export type ApiPerpetualsGrantAgentWalletTxBody = {
 	recipientAddress: SuiAddress;
+	/** Perpetuals account ID (Method 1). */
 	accountId?: PerpetualsAccountId;
-	accountArg?: TransactionObjectArgument;
-	adminCapArg?: TransactionObjectArgument;
-	collateralCoinType?: CoinType;
+	/** Composed PTB args from deferred create-account (Method 2). */
+	deferred?: DeferredAccountArgs;
 	txKind?: SerializedTransaction;
 };
 
@@ -3341,18 +3386,11 @@ export type ApiPerpetualsTransferCapTxBody = {
 	capObjectId?: ObjectId;
 
 	/**
-	 * PTB argument reference for the capability from a deferred create-account call.
+	 * Composed PTB argument + capability type from a deferred flow.
 	 *
 	 * Required for Method 2 (composed flow); omit for Method 1.
 	 */
-	capArg?: TransactionObjectArgument;
-
-	/**
-	 * Semantic capability type. Required for Method 2 (composed flow); omit for Method 1.
-	 *
-	 * Accepted values: `"accountAdmin"`, `"accountAgent"`, `"vaultAdmin"`, `"vaultAgent"`.
-	 */
-	capType?: PerpetualsCapType;
+	composed?: ComposedTransferArgs;
 
 	/**
 	 * Optional serialized (base64) Sui `TransactionKind` to extend.
@@ -3369,15 +3407,19 @@ export type ApiPerpetualsTransferCapTxBody = {
  * This finalizes the account creation flow by consuming the `AccountSharePolicy`
  * and sharing the `Account` object.
  *
+ * The deferred account fields (`accountArg`, `sharePolicyArg`, `adminCapArg`,
+ * `collateralCoinType`) are sent as top-level fields (matching the API's flattened layout).
+ *
  * ### Example flow
- * 1. `create-account` with `deferShare=true` → returns `accountArg`, `sharePolicyArg`, `adminCapArg`
- * 2. `grant-agent-wallet` with `accountArg`, `adminCapArg` → mints assistant cap
- * 3. `transfer-cap` with `adminCapArg` → transfers admin cap to primary wallet
- * 4. `share` with `accountArg`, `sharePolicyArg` → finalizes account sharing
+ * 1. `create-account` with `deferShare=true` → returns `deferred` with argument references
+ * 2. `grant-agent-wallet` with `deferred` → mints assistant cap
+ * 3. `transfer-cap` with `composed` → transfers admin cap to primary wallet
+ * 4. `share` with deferred fields → finalizes account sharing
  */
 export interface ApiPerpetualsShareAccountBody {
 	accountArg: TransactionObjectArgument;
 	sharePolicyArg: TransactionObjectArgument;
+	adminCapArg: TransactionObjectArgument;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
