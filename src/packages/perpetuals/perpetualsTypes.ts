@@ -1124,6 +1124,8 @@ export type PerpetualsAccountOrderHistoryData = {
 		/** Index price at which the stop order should trigger. */
 		stopIndexPrice: number;
 	};
+	/** Optional order ID. */
+	orderId?: string;
 };
 
 /**
