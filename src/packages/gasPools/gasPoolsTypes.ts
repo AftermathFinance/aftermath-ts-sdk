@@ -54,6 +54,8 @@ export interface ApiGasPoolCreateResponse {
 
 export interface ApiGasPoolDepositBody {
 	walletAddress: SuiAddress;
+	/** Whether to build the transaction for sponsored gas. Defaults to false. */
+	isSponsoredTx?: boolean;
 	/** Coin type of the deposit token. Defaults to SUI if omitted.
 	 * When set to a non-SUI type, the endpoint swaps to SUI before depositing. */
 	coinType?: CoinType;

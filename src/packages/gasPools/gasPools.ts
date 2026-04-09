@@ -119,6 +119,7 @@ export class GasPools extends Caller {
 	 * is swapped into SUI via the Aftermath router before depositing.
 	 *
 	 * @param inputs.walletAddress - Wallet address submitting the deposit.
+	 * @param inputs.isSponsoredTx - Whether to build the transaction for sponsored gas. Defaults to false.
 	 * @param inputs.coinType - Coin type to deposit. Defaults to SUI.
 	 * @param inputs.amount - Amount to deposit (required when sourcing from wallet or for non-SUI).
 	 * @param inputs.coinArg - PTB coin argument to use as input (if omitted, sourced from wallet).
