@@ -1126,6 +1126,10 @@ export type PerpetualsAccountOrderHistoryData = {
 	};
 	/** Optional order ID. */
 	orderId?: string;
+	/** Realized PnL for this order event, if applicable. */
+	pnl?: number;
+	/** Fees charged for this order event, if applicable. */
+	fees?: number;
 };
 
 /**
