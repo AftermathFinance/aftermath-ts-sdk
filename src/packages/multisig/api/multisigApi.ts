@@ -34,10 +34,18 @@ export class MultisigApi {
 			this.sharedCustodyAddresses.publicKey || "",
 			"base64"
 		);
-		// MARK: Shifting the first byte
+
+		// MARK: Shifting the first byte (scheme flag)
 		const afPublicKeyArray = new Uint8Array(afPublicKeyBuffer).subarray(1);
 		const afPK = new Ed25519PublicKey(afPublicKeyArray);
-		const userPK = new Ed25519PublicKey(inputs.userPublicKey);
+
+		// MARK: Strip the scheme flag byte from user key if present
+		const userPublicKeyArray = new Uint8Array(inputs.userPublicKey);
+		const userPK = new Ed25519PublicKey(
+			userPublicKeyArray.length === 33
+				? userPublicKeyArray.subarray(1)
+				: userPublicKeyArray
+		);
 
 		const newMultiSigPublicKey = MultiSigPublicKey.fromPublicKeys({
 			threshold: 1,
