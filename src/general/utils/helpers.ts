@@ -357,7 +357,9 @@ export class Helpers {
    * @param arr - The input array.
    * @returns The index of the maximum value, or -1 if the array is empty.
    */
-  static indexOfMax = <T extends number | bigint>(arr: T[]): number => {
+  static indexOfMax = <T extends number | bigint | string | Date>(
+    arr: T[]
+  ): number => {
     if (arr.length === 0) {
       return -1;
     }
