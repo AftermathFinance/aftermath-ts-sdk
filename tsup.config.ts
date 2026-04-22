@@ -12,7 +12,7 @@ export default defineConfig({
   external: [
     "@mysten/sui",
     "bn.js",
-    "dayjs",
+    "date-fns",
     "node-fetch",
     "priority-queue-typescript",
   ],

@@ -9,7 +9,6 @@ import {
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { UniqueId } from "../router/routerTypes";
 
@@ -346,12 +345,24 @@ export interface PoolDataPoint {
 export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
 
 /**
- * An optional object or approach to define timeframe windows, using
- * dayjs manipulation. Not always used directly.
+ * Unit of time used to describe a timeframe window (e.g. "day", "week").
+ */
+export type PoolGraphDataTimeUnit =
+	| "second"
+	| "minute"
+	| "hour"
+	| "day"
+	| "week"
+	| "month"
+	| "year";
+
+/**
+ * An optional object or approach to define timeframe windows.
+ * Not always used directly.
  */
 export interface PoolGraphDataTimeframe {
 	time: Timestamp;
-	timeUnit: ManipulateType;
+	timeUnit: PoolGraphDataTimeUnit;
 }
 
 // =========================================================================

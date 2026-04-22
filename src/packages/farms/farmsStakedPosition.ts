@@ -21,8 +21,6 @@ import {
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Helpers } from "../../general/utils";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
 import { Farms } from "./farms";
 import { AftermathApi } from "../../general/providers";
 
@@ -325,7 +323,7 @@ export class FarmsStakedPosition extends Caller {
 				this.stakedPosition.stakedAmountWithMultiplier;
 		}
 
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 		// Accumulate any newly emitted rewards in the pool’s state
 		stakingPool.emitRewards();
 
@@ -653,7 +651,7 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 	}): boolean => {
 		const { stakingPool } = inputs;
-		const currentTime = dayjs().valueOf();
+		const currentTime = Date.now();
 
 		// If lock has expired, the emission has ended, or the pool is forcibly unlocked, then it is unlocked
 		return (

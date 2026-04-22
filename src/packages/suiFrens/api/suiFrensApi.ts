@@ -1167,8 +1167,7 @@ export class SuiFrensApi {
 			this.fetchSuiFrenVaultStateV1Object(),
 			this.Provider.Events().fetchEventsWithinTime({
 				fetchEventsFunc: this.fetchMixSuiFrensEvents,
-				timeUnit: "hour",
-				time: 24,
+				timeMs: 24 * 60 * 60 * 1000,
 			}),
 		]);
 

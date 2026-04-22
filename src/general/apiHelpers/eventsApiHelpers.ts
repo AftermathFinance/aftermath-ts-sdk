@@ -1,19 +1,17 @@
-import {
-	Event,
-	EventsWithCursor,
-	AnyObjectType,
-	EventsInputs,
-	SuiAddress,
-} from "../../types";
-import dayjs, { QUnitType, OpUnitType } from "dayjs";
-import { AftermathApi } from "../providers/aftermathApi";
 import type {
 	EventId,
 	SuiEvent,
 	SuiEventFilter,
 	SuiTransactionBlockResponse,
-	Unsubscribe,
 } from "@mysten/sui/jsonRpc";
+import type {
+	AnyObjectType,
+	Event,
+	EventsInputs,
+	EventsWithCursor,
+	SuiAddress,
+} from "../../types";
+import type { AftermathApi } from "../providers/aftermathApi";
 
 export class EventsApiHelpers {
 	// =========================================================================
@@ -48,7 +46,7 @@ export class EventsApiHelpers {
 	public fetchSubscribeToUserEvents = async (_inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
-	}): Promise<Unsubscribe> => {
+	}): Promise<never> => {
 		throw new Error(
 			"fetchSubscribeToUserEvents is not supported in @mysten/sui v2. " +
 				"subscribeEvent was removed from SuiJsonRpcClient. " +
@@ -69,21 +67,15 @@ export class EventsApiHelpers {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor: cursor
-				? {
-						...cursor,
-						eventSeq: cursor?.eventSeq.toString(),
-				  }
+				? { ...cursor, eventSeq: cursor.eventSeq.toString() }
 				: undefined,
-			limit, // defaultlimit ?
+			limit,
 		});
-		const eventsOnChain =
-			fetchedEvents.data as unknown as EventOnChainType[];
-		const events = eventsOnChain.map((event) =>
-			eventFromEventOnChain(event)
-		);
-		const nextCursor = fetchedEvents.nextCursor ?? null;
+		const events = (
+			fetchedEvents.data as unknown as EventOnChainType[]
+		).map(eventFromEventOnChain);
 
-		return { events, nextCursor };
+		return { events, nextCursor: fetchedEvents.nextCursor ?? null };
 	};
 
 	// TODO: make this function use timestamp passing as one of event filter args
@@ -91,53 +83,46 @@ export class EventsApiHelpers {
 		fetchEventsFunc: (
 			eventsInputs: EventsInputs
 		) => Promise<EventsWithCursor<T>>;
-		timeUnit: QUnitType | OpUnitType;
-		time: number;
+		timeMs: number;
 		limitStepSize?: number;
 	}) => {
-		const { fetchEventsFunc, timeUnit, time, limitStepSize } = inputs;
+		const { fetchEventsFunc, timeMs, limitStepSize } = inputs;
+		const limit =
+			limitStepSize ?? EventsApiHelpers.constants.defaultLimitStepSize;
 
-		let loopCount = 0;
-		let eventsWithinTime: T[] = [];
-		let cursor: EventId | undefined = undefined;
-		do {
-			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
-				{
-					cursor,
-					limit:
-						limitStepSize ??
-						EventsApiHelpers.constants.defaultLimitStepSize,
-				}
-			);
-			const events = eventsWithCursor.events;
+		const eventsWithinTime: T[] = [];
+		let cursor: EventId | undefined;
+
+		for (
+			let loopCount = 0;
+			loopCount < EventsApiHelpers.constants.maxLoops;
+			loopCount++
+		) {
+			const { events, nextCursor } = await fetchEventsFunc({
+				cursor,
+				limit,
+			});
 
 			const now = Date.now();
-			const endIndex = events.findIndex((event) => {
-				if (event.timestamp === undefined) return false;
-
-				const eventDate = dayjs.unix(event.timestamp / 1000);
-				return dayjs(now).diff(eventDate, timeUnit, true) > time;
-			});
-			eventsWithinTime = [
-				...eventsWithinTime,
-				...(endIndex < 0 ? events : events.slice(0, endIndex)),
-			];
+			const endIndex = events.findIndex(
+				(event) =>
+					event.timestamp !== undefined &&
+					now - event.timestamp > timeMs
+			);
+			eventsWithinTime.push(
+				...(endIndex < 0 ? events : events.slice(0, endIndex))
+			);
 
 			if (
 				events.length === 0 ||
-				// events.length < limitStepSize ||
-				eventsWithCursor.nextCursor === null ||
+				nextCursor === null ||
 				endIndex >= 0
-			)
-				return eventsWithinTime;
-
-			cursor = eventsWithCursor.nextCursor;
-
-			loopCount += 1;
-			if (loopCount >= EventsApiHelpers.constants.maxLoops) {
+			) {
 				return eventsWithinTime;
 			}
-		} while (true);
+			cursor = nextCursor;
+		}
+		return eventsWithinTime;
 	};
 
 	public fetchAllEvents = async <T /* extends Event */>(inputs: {
@@ -147,25 +132,27 @@ export class EventsApiHelpers {
 		limitStepSize?: number;
 	}) => {
 		const { fetchEventsFunc, limitStepSize } = inputs;
+		const limit =
+			limitStepSize ?? EventsApiHelpers.constants.defaultLimitStepSize;
 
-		let allEvents: T[] = [];
-		let cursor: EventId | undefined = undefined;
-		do {
-			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
-				{
-					cursor,
-					limit:
-						limitStepSize ??
-						EventsApiHelpers.constants.defaultLimitStepSize,
-				}
-			);
-			const events = eventsWithCursor.events;
-			allEvents = [...allEvents, ...events];
+		const allEvents: T[] = [];
+		let cursor: EventId | undefined;
+		let done = false;
 
-			if (events.length === 0 || eventsWithCursor.nextCursor === null)
-				return allEvents;
-			cursor = eventsWithCursor.nextCursor;
-		} while (true);
+		while (!done) {
+			const { events, nextCursor } = await fetchEventsFunc({
+				cursor,
+				limit,
+			});
+			allEvents.push(...events);
+
+			if (events.length === 0 || nextCursor === null) {
+				done = true;
+			} else {
+				cursor = nextCursor;
+			}
+		}
+		return allEvents;
 	};
 
 	// =========================================================================
@@ -176,14 +163,16 @@ export class EventsApiHelpers {
 	//  Helpers
 	// =========================================================================
 
+	private static resolveEventType = (
+		eventType: AnyObjectType | (() => AnyObjectType)
+	): AnyObjectType =>
+		typeof eventType === "string" ? eventType : eventType();
+
 	public static suiEventOfTypeOrUndefined = (
 		event: SuiEvent,
 		eventType: AnyObjectType | (() => AnyObjectType)
 	): SuiEvent | undefined =>
-		// event.type === (typeof eventType === "string" ? eventType : eventType())
-		event.type.includes(
-			typeof eventType === "string" ? eventType : eventType()
-		)
+		event.type.includes(EventsApiHelpers.resolveEventType(eventType))
 			? event
 			: undefined;
 
@@ -193,18 +182,13 @@ export class EventsApiHelpers {
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType,
 		exactMatch?: boolean
 	): EventType | undefined => {
-		if (
-			exactMatch
-				? event.type !==
-				  (typeof eventType === "string" ? eventType : eventType())
-				: !event.type.includes(
-						typeof eventType === "string" ? eventType : eventType()
-				  )
-		)
-			return;
+		const resolved = EventsApiHelpers.resolveEventType(eventType);
+		const matches = exactMatch
+			? event.type === resolved
+			: event.type.includes(resolved);
+		if (!matches) return undefined;
 
-		const castedEvent = castFunction(event as EventTypeOnChain);
-		return castedEvent;
+		return castFunction(event as EventTypeOnChain);
 	};
 
 	public static findCastEventsOrUndefined = <
@@ -216,16 +200,11 @@ export class EventsApiHelpers {
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
 	}) => {
 		const { events, eventType, castFunction } = inputs;
+		const resolved = EventsApiHelpers.resolveEventType(eventType);
 
-		const foundEvents = events.filter(
-			(event) =>
-				EventsApiHelpers.suiEventOfTypeOrUndefined(event, eventType) !==
-				undefined
-		);
-		const castedEvents = foundEvents.map((event) =>
-			castFunction(event as EventTypeOnChain)
-		);
-		return castedEvents;
+		return events
+			.filter((event) => event.type.includes(resolved))
+			.map((event) => castFunction(event as EventTypeOnChain));
 	};
 
 	public static findCastEventOrUndefined = <
@@ -235,10 +214,8 @@ export class EventsApiHelpers {
 		events: SuiEvent[];
 		eventType: AnyObjectType | (() => AnyObjectType);
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
-	}) => {
-		const events = this.findCastEventsOrUndefined(inputs);
-		if (events.length <= 0) return;
-		return events[0];
+	}): EventType | undefined => {
+		return EventsApiHelpers.findCastEventsOrUndefined(inputs)[0];
 	};
 
 	public static findCastEventInTransactionOrUndefined = <
@@ -248,8 +225,8 @@ export class EventsApiHelpers {
 		transaction: SuiTransactionBlockResponse,
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
-	) => {
-		return this.findCastEventOrUndefined({
+	): EventType | undefined => {
+		return EventsApiHelpers.findCastEventOrUndefined({
 			events: transaction.events ?? [],
 			eventType,
 			castFunction,
@@ -263,20 +240,17 @@ export class EventsApiHelpers {
 		transactions: SuiTransactionBlockResponse[],
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
-	) => {
-		if (transactions.length === 0) return;
-
-		const foundEvent = transactions
-			.map((transaction) =>
+	): EventType | undefined => {
+		for (const transaction of transactions) {
+			const event =
 				EventsApiHelpers.findCastEventInTransactionOrUndefined(
 					transaction,
 					eventType,
 					castFunction
-				)
-			)
-			.find((event) => event !== undefined);
-
-		return foundEvent;
+				);
+			if (event !== undefined) return event;
+		}
+		return undefined;
 	};
 
 	public static createEventType = (

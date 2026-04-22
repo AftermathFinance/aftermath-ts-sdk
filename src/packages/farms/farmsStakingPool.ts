@@ -24,8 +24,6 @@ import {
 	FarmsVersion,
 } from "./farmsTypes";
 import { Casting, Helpers } from "../../general/utils";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Coin } from "../coin/coin";
 import { AftermathApi } from "../../general/providers";
@@ -174,7 +172,7 @@ export class FarmsStakingPool extends Caller {
 		return Math.max(
 			Math.min(
 				this.stakingPool.maxLockDurationMs,
-				this.stakingPool.emissionEndTimestamp - dayjs().valueOf()
+				this.stakingPool.emissionEndTimestamp - Date.now()
 			),
 			0
 		);
@@ -196,7 +194,7 @@ export class FarmsStakingPool extends Caller {
 	 * ```
 	 */
 	public emitRewards = () => {
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// If no staked amount, no distribution
 		if (this.stakingPool.stakedAmount === BigInt(0)) return;
@@ -252,7 +250,7 @@ export class FarmsStakingPool extends Caller {
 		if (price <= 0 || tvlUsd <= 0) return 0;
 
 		const rewardCoin = this.rewardCoin({ coinType });
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// If the current emission rate is below the actual supply, or if the pool hasn't started or is ended, yield 0
 		if (rewardCoin.emissionRate > rewardCoin.actualRewards) return 0;
@@ -267,8 +265,7 @@ export class FarmsStakingPool extends Caller {
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(emissionRateTokens, decimals) * price;
 
-		dayjs.extend(duration);
-		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+		const oneYearMs = 365 * 24 * 60 * 60 * 1000;
 		const rewardsUsdOneYear =
 			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
 
@@ -621,7 +618,7 @@ export class FarmsStakingPool extends Caller {
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
 		const { rewardCoin } = inputs;
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// Calculate the number of rewards that have been emitted since the last time this reward was emitted.
 		const rewardsToEmit = this.calcRewardsEmittedFromTimeTmToTn({

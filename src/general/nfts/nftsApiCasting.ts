@@ -143,8 +143,8 @@ export class NftsApiCasting {
 			},
 		];
 
-		let suggested: NftDisplaySuggested = {};
-		let other: NftDisplayOther = Helpers.deepCopy(fields);
+		const suggested: NftDisplaySuggested = {};
+		const other = Helpers.deepCopy(fields) as NftDisplayOther;
 
 		for (const field of suggestedFields) {
 			if (!(field.onChain in other)) continue;
