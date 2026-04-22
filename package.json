@@ -14,15 +14,16 @@
 	"scripts": {
 		"clean": "rimraf ./dist",
 		"build": "tsup",
-		"build:tsc": "npm run clean && tsc",
-		"link": "npm link && cd ../aftermath-frontend/ && npm link aftermath-ts-sdk",
-		"prepack": "npm run build",
-		"prepare": "npm run build",
+		"build:tsc": "bun run clean && tsc",
+		"link": "bun link && cd ../aftermath-frontend/ && bun link aftermath-ts-sdk",
+		"prepack": "bun run build",
+		"prepare": "bun run build",
 		"test": "jest",
 		"changeset": "changeset",
 		"version-packages": "changeset version",
-		"release": "npm run build && changeset publish"
+		"release": "bun run build && changeset publish"
 	},
+	"packageManager": "bun@1.3.8",
 	"repository": {
 		"type": "git",
 		"url": "git+ssh://git@github.com/AftermathFinance/aftermath-ts-sdk.git"
