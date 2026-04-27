@@ -2242,6 +2242,8 @@ export interface ApiPerpetualsMarketFundingHistoryBody {
 
 /**
  * Single funding rate datapoint for a perpetuals market at a given timestamp.
+ *
+ * Funding rate fields are expressed as fractions: `0.01` = `1%`.
  */
 export interface PerpetualsMarketFundingHistoryPoint {
 	/** Identifier of the perpetuals market. */
@@ -2250,16 +2252,28 @@ export interface PerpetualsMarketFundingHistoryPoint {
 	timestamp: Timestamp;
 	/** On-chain event timestamp (ms). */
 	eventTimestamp: Timestamp;
-	/** Funding rate applied to long positions for this period. */
-	longRate: number;
-	/** Funding rate applied to short positions for this period. */
-	shortRate: number;
-	/** Cumulative funding rate accrued by long positions up to this point. */
-	cumLong: number;
-	/** Cumulative funding rate accrued by short positions up to this point. */
-	cumShort: number;
+	/**
+	 * Funding rate applied to long positions for this period, as a fraction
+	 * (e.g. `0.01` = `1%`).
+	 */
+	longFundingRate: Percentage;
+	/**
+	 * Funding rate applied to short positions for this period, as a fraction
+	 * (e.g. `0.01` = `1%`).
+	 */
+	shortFundingRate: Percentage;
+	/**
+	 * Cumulative funding rate accrued by long positions up to this point, as
+	 * a fraction (e.g. `0.01` = `1%`).
+	 */
+	cumulativeLongFundingRate: Percentage;
+	/**
+	 * Cumulative funding rate accrued by short positions up to this point, as
+	 * a fraction (e.g. `0.01` = `1%`).
+	 */
+	cumulativeShortFundingRate: Percentage;
 	/** Sui transaction digest associated with this funding event. */
-	txDigest: string;
+	txDigest: TransactionDigest;
 }
 
 /**
