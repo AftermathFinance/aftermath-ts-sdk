@@ -1734,6 +1734,29 @@ export interface ApiPerpetualsOwnedAccountCapsResponse {
 // =========================================================================
 
 /**
+ * Discrete event type recorded in user history responses
+ * (trade, collateral, etc.).
+ *
+ * Serialized as PascalCase strings on the wire.
+ */
+export type UserHistoryEventType =
+	| "PostedOrder"
+	| "CanceledOrder"
+	| "FilledTakerOrder"
+	| "FilledMakerOrder"
+	| "LiquidatedPosition"
+	| "PerformedLiquidation"
+	| "PerformedADL"
+	| "DepositedCollateral"
+	| "WithdrewCollateral"
+	| "AllocatedCollateral"
+	| "DeallocatedCollateral"
+	| "SettledFunding"
+	| "CreatedStopOrderTicket"
+	| "DeletedStopOrderTicket"
+	| "ExecutedStopOrderTicket";
+
+/**
  * Generic shape for Perpetuals API historical data requests that include
  * `beforeTimestampCursor` and `limit` pagination parameters.
  */
@@ -1813,6 +1836,12 @@ export type ApiPerpetualsAccountOrderHistoryBody =
 			bytes: string;
 			signature: string;
 		};
+		/**
+		 * Optional filter restricting results to the specified event types.
+		 *
+		 * When omitted, the backend returns events of all types.
+		 */
+		eventTypes?: UserHistoryEventType[];
 	};
 
 /**
@@ -1826,6 +1855,12 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 			bytes: string;
 			signature: string;
 		};
+		/**
+		 * Optional filter restricting results to the specified event types.
+		 *
+		 * When omitted, the backend returns events of all types.
+		 */
+		eventTypes?: UserHistoryEventType[];
 	};
 
 // export type ApiPerpetualsPreviewOrderBody = (
@@ -2188,6 +2223,50 @@ export interface ApiPerpetualsMarketCandleHistoryBody {
  */
 export interface ApiPerpetualsMarketCandleHistoryResponse {
 	candles: PerpetualsMarketCandleDataPoint[];
+}
+
+/**
+ * Request payload for fetching historical funding rate data for a given
+ * perpetuals market.
+ */
+export interface ApiPerpetualsMarketFundingHistoryBody {
+	/** Market ID to query. Must be a valid on-chain market ID. */
+	marketId: PerpetualsMarketId;
+	/** Start of the time range to query (Unix timestamp in **milliseconds**). */
+	fromTimestamp: Timestamp;
+	/** End of the time range to query (Unix timestamp in **milliseconds**). */
+	toTimestamp: Timestamp;
+	/** Maximum number of funding points to return. */
+	limit?: number;
+}
+
+/**
+ * Single funding rate datapoint for a perpetuals market at a given timestamp.
+ */
+export interface PerpetualsMarketFundingHistoryPoint {
+	/** Identifier of the perpetuals market. */
+	marketId: PerpetualsMarketId;
+	/** Timestamp at which this funding point was recorded (ms). */
+	timestamp: Timestamp;
+	/** On-chain event timestamp (ms). */
+	eventTimestamp: Timestamp;
+	/** Funding rate applied to long positions for this period. */
+	longRate: number;
+	/** Funding rate applied to short positions for this period. */
+	shortRate: number;
+	/** Cumulative funding rate accrued by long positions up to this point. */
+	cumLong: number;
+	/** Cumulative funding rate accrued by short positions up to this point. */
+	cumShort: number;
+	/** Sui transaction digest associated with this funding event. */
+	txDigest: string;
+}
+
+/**
+ * Response type for historical market funding data.
+ */
+export interface ApiPerpetualsMarketFundingHistoryResponse {
+	history: PerpetualsMarketFundingHistoryPoint[];
 }
 
 /**

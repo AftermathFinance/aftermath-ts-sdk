@@ -44,6 +44,8 @@ import {
 	PerpetualsPartialVaultCap,
 	PerpetualsVaultMetatada,
 	ApiPerpetualsMarketCandleHistoryBody,
+	ApiPerpetualsMarketFundingHistoryBody,
+	ApiPerpetualsMarketFundingHistoryResponse,
 	ApiPerpetualsAdminAccountCapsResponse,
 	ApiPerpetualsOwnedAccountCapsResponse,
 	ApiPerpetualsAccountPositionsResponse,
@@ -609,6 +611,26 @@ export class Perpetuals extends Caller {
 			toTimestamp,
 			intervalMs,
 		});
+	}
+
+	/**
+	 * Fetch historical funding rate data for a single market.
+	 *
+	 * @param inputs.marketId - Market ID to query.
+	 * @param inputs.fromTimestamp - Start timestamp (inclusive).
+	 * @param inputs.toTimestamp - End timestamp (exclusive).
+	 * @param inputs.limit - Optional cap on the number of points returned.
+	 *
+	 * @returns {@link ApiPerpetualsMarketFundingHistoryResponse} containing
+	 * funding history points.
+	 */
+	public getMarketFundingHistory(
+		inputs: ApiPerpetualsMarketFundingHistoryBody
+	): Promise<ApiPerpetualsMarketFundingHistoryResponse> {
+		return this.fetchApi<
+			ApiPerpetualsMarketFundingHistoryResponse,
+			ApiPerpetualsMarketFundingHistoryBody
+		>("market/funding-history", inputs);
 	}
 
 	/**
