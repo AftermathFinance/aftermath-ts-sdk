@@ -62,6 +62,8 @@ import {
 	ApiPerpetualsVaultOwnedLpCoinsBody,
 	ApiPerpetualsOwnedVaultCapsBody,
 	ApiPerpetualsOwnedVaultCapsResponse,
+	ApiPerpetualsOwnedVaultAssistantCapsBody,
+	ApiPerpetualsOwnedVaultAssistantCapsResponse,
 	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
 	ApiPerpetualsVaultsResponse,
 	ApiPerpetualsVaultsBody,
@@ -523,6 +525,28 @@ export class Perpetuals extends Caller {
 			ApiPerpetualsOwnedVaultCapsResponse,
 			ApiPerpetualsOwnedVaultCapsBody
 		>("vaults/owned-vault-caps", inputs);
+	}
+
+	/**
+	 * Fetch all vault **assistant** caps owned by a wallet.
+	 *
+	 * Assistant caps grant a non-owner wallet the ability to operate a vault
+	 * on behalf of the owner. The returned caps are structurally identical to
+	 * regular vault caps ({@link PerpetualsVaultCap}) and can be used to
+	 * construct a {@link PerpetualsAccount} that signs vault transactions with
+	 * the assistant's wallet.
+	 *
+	 * @param inputs.walletAddress - Assistant wallet address.
+	 * @returns {@link ApiPerpetualsOwnedVaultAssistantCapsResponse} containing
+	 *   assistant caps.
+	 */
+	public async getOwnedVaultAssistantCaps(
+		inputs: ApiPerpetualsOwnedVaultAssistantCapsBody
+	) {
+		return this.fetchApi<
+			ApiPerpetualsOwnedVaultAssistantCapsResponse,
+			ApiPerpetualsOwnedVaultAssistantCapsBody
+		>("vaults/owned-vault-assistant-caps", inputs);
 	}
 
 	/**
@@ -997,6 +1021,8 @@ export class Perpetuals extends Caller {
 	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
 	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
 	 * @param inputs.accountIds - Optional list of account IDs.
+	 * @param inputs.calculationVariables - Coefficients used to compute Q-scores
+	 *   and taker shares.
 	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
 	 *
 	 * @example
@@ -1004,6 +1030,13 @@ export class Perpetuals extends Caller {
 	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
 	 *   totalMakerRewards: 10000,
 	 *   totalTakerRewards: 5000,
+	 *   calculationVariables: {
+	 *     qScoreCoefficient: 1,
+	 *     uptimeCoefficient: 1,
+	 *     mmVolumeCoefficient: 1,
+	 *     takerVolumeCoefficient: 1,
+	 *     takerOiCoefficient: 1,
+	 *   },
 	 * });
 	 * ```
 	 */

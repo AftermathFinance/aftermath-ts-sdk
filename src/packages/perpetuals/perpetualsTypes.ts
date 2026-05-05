@@ -2774,10 +2774,15 @@ export interface ApiPerpetualsTransferCollateralBody {
 
 /**
  * Request body for allocating collateral to a given market (account/vault).
+ *
+ * For vault-backed accounts, `walletAddress` identifies the caller. When the
+ * caller is a vault assistant (rather than the vault owner), the backend uses
+ * this to resolve the correct assistant cap.
  */
 export type ApiPerpetualsAllocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	allocateAmount: Balance;
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -2792,10 +2797,15 @@ export type ApiPerpetualsAllocateCollateralBody = {
 
 /**
  * Request body for deallocating collateral from a given market (account/vault).
+ *
+ * For vault-backed accounts, `walletAddress` identifies the caller. When the
+ * caller is a vault assistant (rather than the vault owner), the backend uses
+ * this to resolve the correct assistant cap.
  */
 export type ApiPerpetualsDeallocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	deallocateAmount: Balance;
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -2923,9 +2933,14 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 /**
  * API request body for editing existing stop orders for an
  * account or vault.
+ *
+ * For vault-backed accounts, `walletAddress` identifies the caller. When the
+ * caller is a vault assistant (rather than the vault owner), the backend uses
+ * this to resolve the correct assistant cap.
  */
 export type ApiPerpetualsEditStopOrdersBody = {
 	stopOrders: PerpetualsStopOrderData[];
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3229,11 +3244,16 @@ export type ApiPerpetualsCancelStopOrdersBody = {
 
 /**
  * API body for setting leverage on an existing position.
+ *
+ * For vault-backed accounts, `walletAddress` identifies the caller. When the
+ * caller is a vault assistant (rather than the vault owner), the backend uses
+ * this to resolve the correct assistant cap.
  */
 export type ApiPerpetualsSetLeverageTxBody = {
 	marketId: PerpetualsMarketId;
 	collateralChange: number;
 	leverage: number;
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3561,6 +3581,25 @@ export interface ApiPerpetualsOwnedVaultCapsBody {
  */
 export interface ApiPerpetualsOwnedVaultCapsResponse {
 	ownedVaultCaps: PerpetualsVaultCap[];
+}
+
+/**
+ * Request body for fetching vault **assistant** capability objects owned by a
+ * wallet.
+ *
+ * Assistant caps let a non-owner wallet operate a vault on behalf of the
+ * owner. They are structurally identical to regular vault caps but grant a
+ * narrower permission set.
+ */
+export interface ApiPerpetualsOwnedVaultAssistantCapsBody {
+	walletAddress: SuiAddress;
+}
+
+/**
+ * Response payload listing all vault assistant caps owned by the wallet.
+ */
+export interface ApiPerpetualsOwnedVaultAssistantCapsResponse {
+	ownedVaultAssistantCaps: PerpetualsVaultCap[];
 }
 
 /**
@@ -3958,6 +3997,24 @@ export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 // =========================================================================
 
 /**
+ * Coefficients used when computing Q-scores and taker shares for the rebate
+ * rewards calculation. Each is a weighting exponent applied to a corresponding
+ * per-account metric.
+ */
+export interface PerpetualsCalculationVariables {
+	/** Exponent applied to the raw Q-score component. */
+	qScoreCoefficient: number;
+	/** Exponent applied to the uptime component. */
+	uptimeCoefficient: number;
+	/** Exponent applied to the maker volume component. */
+	mmVolumeCoefficient: number;
+	/** Exponent applied to the taker volume component. */
+	takerVolumeCoefficient: number;
+	/** Exponent applied to the taker open-interest component. */
+	takerOiCoefficient: number;
+}
+
+/**
  * Request body for calculating rewards and rebates for perpetuals accounts.
  *
  * This corresponds to `POST /api/perpetuals/rebates/rewards`.
@@ -3974,6 +4031,8 @@ export interface ApiPerpetualsCurrentRebateRewardsBody {
 	totalMakerRewards: number;
 	/** Total taker reward pool to distribute among eligible takers. */
 	totalTakerRewards: number;
+	/** Coefficients used to compute Q-scores and taker shares. */
+	calculationVariables: PerpetualsCalculationVariables;
 }
 
 /**
