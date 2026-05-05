@@ -10,14 +10,14 @@ import type {
 } from "../../types";
 
 // =========================================================================
-//  API - Points
+//  API - History
 // =========================================================================
 
 /**
- * Request body for fetching a user's reward points.
+ * Request body for fetching a user's rewards history.
  * Uses a pre-signed message (bytes + signature) for authentication.
  */
-export interface ApiRewardsGetPointsBody {
+export interface ApiRewardsGetHistoryBody {
 	/**
 	 * The user's Sui wallet address (e.g., "0x<address>").
 	 */
@@ -31,30 +31,6 @@ export interface ApiRewardsGetPointsBody {
 	 * The signature corresponding to the signed message bytes.
 	 */
 	signature: string;
-}
-
-/**
- * Response containing the user's reward points.
- */
-export interface ApiRewardsGetPointsResponse {
-	/**
-	 * The user's total reward points.
-	 */
-	points: number;
-}
-
-// =========================================================================
-//  API - History
-// =========================================================================
-
-/**
- * Request body for fetching a user's rewards history.
- */
-export interface ApiRewardsGetHistoryBody {
-	/**
-	 * Sui wallet address to query history for.
-	 */
-	walletAddress: SuiAddress;
 	/**
 	 * Optional domain filter (e.g., "referrals", "perpetuals").
 	 * If omitted, returns all domains.
@@ -82,20 +58,30 @@ export interface ApiRewardsGetHistoryResponse {
 	 * Pagination info.
 	 */
 	pagination: RewardsPaginationInfo;
+	/**
+	 * Total accumulated reward points across all epochs.
+	 * Returned alongside every page of history.
+	 */
+	totalPoints: number;
 }
+
+/**
+ * Event type for a rewards history entry.
+ */
+export type RewardsHistoryEventType = "deposit" | "withdraw" | "points";
 
 /**
  * A single historical reward entry.
  */
 export interface RewardsHistoryEntry {
 	/**
-	 * Vault ID where the deposit was made.
+	 * Vault ID where the event occurred.
 	 */
 	vaultId: ObjectId;
 	/**
-	 * Fully-qualified Coin type (e.g., "0x2::sui::SUI").
+	 * Fully-qualified Coin type (e.g., "0x2::sui::SUI"), or "points" for point entries.
 	 */
-	coinType: CoinType;
+	coinType: CoinType | "points";
 	/**
 	 * Reward amount in base units.
 	 */
@@ -113,9 +99,13 @@ export interface RewardsHistoryEntry {
 	 */
 	epochEndTimestampMs: Timestamp;
 	/**
-	 * Transaction digest for this deposit event, if available.
+	 * Transaction digest for this event, if available.
 	 */
 	txDigest?: TransactionDigest;
+	/**
+	 * Event type: "deposit", "withdraw", or "points".
+	 */
+	eventType: RewardsHistoryEventType;
 }
 
 /**

@@ -9,8 +9,6 @@ import type {
 	ApiRewardsGetClaimableResponse,
 	ApiRewardsGetHistoryBody,
 	ApiRewardsGetHistoryResponse,
-	ApiRewardsGetPointsBody,
-	ApiRewardsGetPointsResponse,
 } from "./rewardsTypes";
 
 export class Rewards extends Caller {
@@ -28,15 +26,6 @@ export class Rewards extends Caller {
 	// =========================================================================
 	//  Fetching
 	// =========================================================================
-
-	public async getPoints(
-		inputs: ApiRewardsGetPointsBody
-	): Promise<ApiRewardsGetPointsResponse> {
-		return this.fetchApi<
-			ApiRewardsGetPointsResponse,
-			ApiRewardsGetPointsBody
-		>("points", inputs);
-	}
 
 	public async getHistory(
 		inputs: ApiRewardsGetHistoryBody
