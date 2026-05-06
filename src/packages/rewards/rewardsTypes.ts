@@ -10,6 +10,40 @@ import type {
 } from "../../types";
 
 // =========================================================================
+//  API - Points
+// =========================================================================
+
+/**
+ * Request body for fetching a user's total accumulated reward points.
+ * Uses a pre-signed message (bytes + signature) for authentication.
+ */
+export interface ApiRewardsGetPointsBody {
+	/**
+	 * Sui wallet address to query total points for.
+	 */
+	walletAddress: SuiAddress;
+	/**
+	 * The message bytes (base64 encoded) that the user previously signed.
+	 * Can be reused from other signed messages (e.g., Terms and Conditions).
+	 */
+	bytes: string;
+	/**
+	 * The signature corresponding to the signed message bytes.
+	 */
+	signature: string;
+}
+
+/**
+ * Response containing the user's total accumulated reward points.
+ */
+export interface ApiRewardsGetPointsResponse {
+	/**
+	 * Total accumulated points for this wallet across all epochs and domains.
+	 */
+	totalPoints: number;
+}
+
+// =========================================================================
 //  API - History
 // =========================================================================
 
@@ -58,11 +92,6 @@ export interface ApiRewardsGetHistoryResponse {
 	 * Pagination info.
 	 */
 	pagination: RewardsPaginationInfo;
-	/**
-	 * Total accumulated reward points across all epochs.
-	 * Returned alongside every page of history.
-	 */
-	totalPoints: number;
 }
 
 /**
