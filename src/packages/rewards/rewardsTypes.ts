@@ -110,7 +110,7 @@ export interface RewardsHistoryEntry {
 	/**
 	 * Fully-qualified Coin type (e.g., "0x2::sui::SUI"), or "points" for point entries.
 	 */
-	coinType: CoinType | "points";
+	coinType: "points" | (CoinType & {});
 	/**
 	 * Reward amount in base units.
 	 */
