@@ -77,6 +77,10 @@ import {
 	PerpetualsSponsorConfig,
 	ApiPerpetualsCurrentRebateRewardsBody,
 	ApiPerpetualsCurrentRebateRewardsResponse,
+	ApiPerpetualsCreateCsvRebatesBody,
+	ApiPerpetualsCreateCsvRebatesResponse,
+	ApiPerpetualsCreateReferralCsvRebatesBody,
+	ApiPerpetualsCreateReferralCsvRebatesResponse,
 	ApiPerpetualsCreateAccountResponse,
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsShareAccountBody,
@@ -992,6 +996,45 @@ export class Perpetuals extends Caller {
 			ApiPerpetualsCurrentRebateRewardsResponse,
 			ApiPerpetualsCurrentRebateRewardsBody
 		>("rebates/rewards", inputs);
+	}
+
+	/**
+	 * Generate a CSV-formatted rebate report for perpetuals market makers.
+	 *
+	 * Computes per-account reward allocations and fee-tier rebate adjustments,
+	 * returning the result as a CSV string. When `aggregated` is true, the CSV
+	 * groups rewards by owner address instead of per-account.
+	 *
+	 * **Note:** All data returned is for the current epoch only.
+	 *
+	 * @param inputs - {@link ApiPerpetualsCreateCsvRebatesBody}.
+	 * @returns {@link ApiPerpetualsCreateCsvRebatesResponse} containing the CSV string.
+	 */
+	public async getCsvRebates(
+		inputs: ApiPerpetualsCreateCsvRebatesBody
+	): Promise<ApiPerpetualsCreateCsvRebatesResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCreateCsvRebatesResponse,
+			ApiPerpetualsCreateCsvRebatesBody
+		>("rebates/create-csv-rebates", inputs);
+	}
+
+	/**
+	 * Generate a CSV-formatted referral rebate report.
+	 *
+	 * Calculates referrer commissions and referee discounts based on trading
+	 * fees within the specified epoch, returning the result as a CSV string.
+	 *
+	 * @param inputs - {@link ApiPerpetualsCreateReferralCsvRebatesBody}.
+	 * @returns {@link ApiPerpetualsCreateReferralCsvRebatesResponse} containing the CSV string.
+	 */
+	public async getReferralCsvRebates(
+		inputs: ApiPerpetualsCreateReferralCsvRebatesBody
+	): Promise<ApiPerpetualsCreateReferralCsvRebatesResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCreateReferralCsvRebatesResponse,
+			ApiPerpetualsCreateReferralCsvRebatesBody
+		>("rebates/create-referral-csv-rebates", inputs);
 	}
 
 	// =========================================================================

@@ -3951,8 +3951,58 @@ export interface PerpetualsRewardData {
 export interface ApiPerpetualsCurrentRebateRewardsResponse {
 	/** Sum of all final quality scores across eligible makers. */
 	totalQScoreFinal: number;
+	/** Total estimated gas cost for order management across all accounts (decimal SUI). */
+	totalEstimatedGasCost: number;
 	/** Per-account reward and rebate breakdown. */
 	rewards: PerpetualsRewardData[];
+}
+
+/**
+ * Request body for generating a CSV-formatted rebate report.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/create-csv-rebates`.
+ *
+ * Produces a CSV string containing per-account rebate and reward data.
+ * When `accountIds` is omitted or empty, all eligible accounts are included.
+ */
+export interface ApiPerpetualsCreateCsvRebatesBody
+	extends ApiPerpetualsCurrentRebateRewardsBody {
+	/**
+	 * When true, aggregate rewards by owner address instead of per-account.
+	 * Defaults to false when omitted.
+	 */
+	aggregated?: boolean;
+}
+
+/**
+ * Response body for the CSV rebate report.
+ */
+export interface ApiPerpetualsCreateCsvRebatesResponse {
+	/** The CSV-formatted rebate data as a string. */
+	csv: string;
+}
+
+/**
+ * Request body for generating a referral rebate CSV report.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/create-referral-csv-rebates`.
+ *
+ * Calculates referrer commissions and referee discounts based on trading
+ * fees within the specified epoch.
+ */
+export interface ApiPerpetualsCreateReferralCsvRebatesBody {
+	/** Epoch start timestamp in milliseconds. */
+	epochStartTimestampMs: Timestamp;
+	/** Epoch end timestamp in milliseconds. */
+	epochEndTimestampMs: Timestamp;
+}
+
+/**
+ * Response body for the referral rebate CSV report.
+ */
+export interface ApiPerpetualsCreateReferralCsvRebatesResponse {
+	/** The CSV-formatted referral rebate data as a string. */
+	csv: string;
 }
 
 // =========================================================================
