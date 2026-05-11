@@ -44,6 +44,8 @@ import {
 	PerpetualsPartialVaultCap,
 	PerpetualsVaultMetatada,
 	ApiPerpetualsMarketCandleHistoryBody,
+	ApiPerpetualsMarketFundingHistoryBody,
+	ApiPerpetualsMarketFundingHistoryResponse,
 	ApiPerpetualsAdminAccountCapsResponse,
 	ApiPerpetualsOwnedAccountCapsResponse,
 	ApiPerpetualsAccountPositionsResponse,
@@ -60,6 +62,8 @@ import {
 	ApiPerpetualsVaultOwnedLpCoinsBody,
 	ApiPerpetualsOwnedVaultCapsBody,
 	ApiPerpetualsOwnedVaultCapsResponse,
+	ApiPerpetualsOwnedVaultAssistantCapsBody,
+	ApiPerpetualsOwnedVaultAssistantCapsResponse,
 	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
 	ApiPerpetualsVaultsResponse,
 	ApiPerpetualsVaultsBody,
@@ -528,6 +532,28 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
+	 * Fetch all vault **assistant** caps owned by a wallet.
+	 *
+	 * Assistant caps grant a non-owner wallet the ability to operate a vault
+	 * on behalf of the owner. The returned caps are structurally identical to
+	 * regular vault caps ({@link PerpetualsVaultCap}) and can be used to
+	 * construct a {@link PerpetualsAccount} that signs vault transactions with
+	 * the assistant's wallet.
+	 *
+	 * @param inputs.walletAddress - Assistant wallet address.
+	 * @returns {@link ApiPerpetualsOwnedVaultAssistantCapsResponse} containing
+	 *   assistant caps.
+	 */
+	public async getOwnedVaultAssistantCaps(
+		inputs: ApiPerpetualsOwnedVaultAssistantCapsBody
+	) {
+		return this.fetchApi<
+			ApiPerpetualsOwnedVaultAssistantCapsResponse,
+			ApiPerpetualsOwnedVaultAssistantCapsBody
+		>("vaults/owned-vault-assistant-caps", inputs);
+	}
+
+	/**
 	 * Fetch all pending vault withdrawal requests created by a given wallet.
 	 *
 	 * Withdraw requests are typically created when LPs request to exit a vault
@@ -613,6 +639,26 @@ export class Perpetuals extends Caller {
 			toTimestamp,
 			intervalMs,
 		});
+	}
+
+	/**
+	 * Fetch historical funding rate data for a single market.
+	 *
+	 * @param inputs.marketId - Market ID to query.
+	 * @param inputs.fromTimestamp - Start timestamp (inclusive).
+	 * @param inputs.toTimestamp - End timestamp (exclusive).
+	 * @param inputs.limit - Optional cap on the number of points returned.
+	 *
+	 * @returns {@link ApiPerpetualsMarketFundingHistoryResponse} containing
+	 * funding history points.
+	 */
+	public getMarketFundingHistory(
+		inputs: ApiPerpetualsMarketFundingHistoryBody
+	): Promise<ApiPerpetualsMarketFundingHistoryResponse> {
+		return this.fetchApi<
+			ApiPerpetualsMarketFundingHistoryResponse,
+			ApiPerpetualsMarketFundingHistoryBody
+		>("market/funding-history", inputs);
 	}
 
 	/**

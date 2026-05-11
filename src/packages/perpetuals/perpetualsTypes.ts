@@ -1139,6 +1139,12 @@ export type PerpetualsAccountOrderHistoryData = {
 		/** Index price at which the stop order should trigger. */
 		stopIndexPrice: number;
 	};
+	/** Optional order ID. */
+	orderId?: string;
+	/** Realized PnL for this order event, if applicable. */
+	pnl?: number;
+	/** Fees charged for this order event, if applicable. */
+	fees?: number;
 };
 
 /**
@@ -1743,6 +1749,29 @@ export interface ApiPerpetualsOwnedAccountCapsResponse {
 // =========================================================================
 
 /**
+ * Discrete event type recorded in user history responses
+ * (trade, collateral, etc.).
+ *
+ * Serialized as PascalCase strings on the wire.
+ */
+export type UserHistoryEventType =
+	| "PostedOrder"
+	| "CanceledOrder"
+	| "FilledTakerOrder"
+	| "FilledMakerOrder"
+	| "LiquidatedPosition"
+	| "PerformedLiquidation"
+	| "PerformedADL"
+	| "DepositedCollateral"
+	| "WithdrewCollateral"
+	| "AllocatedCollateral"
+	| "DeallocatedCollateral"
+	| "SettledFunding"
+	| "CreatedStopOrderTicket"
+	| "DeletedStopOrderTicket"
+	| "ExecutedStopOrderTicket";
+
+/**
  * Generic shape for Perpetuals API historical data requests that include
  * `beforeTimestampCursor` and `limit` pagination parameters.
  */
@@ -1822,6 +1851,12 @@ export type ApiPerpetualsAccountOrderHistoryBody =
 			bytes: string;
 			signature: string;
 		};
+		/**
+		 * Optional filter restricting results to the specified event types.
+		 *
+		 * When omitted, the backend returns events of all types.
+		 */
+		eventTypes?: UserHistoryEventType[];
 	};
 
 /**
@@ -1835,6 +1870,12 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 			bytes: string;
 			signature: string;
 		};
+		/**
+		 * Optional filter restricting results to the specified event types.
+		 *
+		 * When omitted, the backend returns events of all types.
+		 */
+		eventTypes?: UserHistoryEventType[];
 	};
 
 // export type ApiPerpetualsPreviewOrderBody = (
@@ -2197,6 +2238,64 @@ export interface ApiPerpetualsMarketCandleHistoryBody {
  */
 export interface ApiPerpetualsMarketCandleHistoryResponse {
 	candles: PerpetualsMarketCandleDataPoint[];
+}
+
+/**
+ * Request payload for fetching historical funding rate data for a given
+ * perpetuals market.
+ */
+export interface ApiPerpetualsMarketFundingHistoryBody {
+	/** Market ID to query. Must be a valid on-chain market ID. */
+	marketId: PerpetualsMarketId;
+	/** Start of the time range to query (Unix timestamp in **milliseconds**). */
+	fromTimestamp: Timestamp;
+	/** End of the time range to query (Unix timestamp in **milliseconds**). */
+	toTimestamp: Timestamp;
+	/** Maximum number of funding points to return. */
+	limit?: number;
+}
+
+/**
+ * Single funding rate datapoint for a perpetuals market at a given timestamp.
+ *
+ * Funding rate fields are expressed as fractions: `0.01` = `1%`.
+ */
+export interface PerpetualsMarketFundingHistoryPoint {
+	/** Identifier of the perpetuals market. */
+	marketId: PerpetualsMarketId;
+	/** Timestamp at which this funding point was recorded (ms). */
+	timestamp: Timestamp;
+	/** On-chain event timestamp (ms). */
+	eventTimestamp: Timestamp;
+	/**
+	 * Funding rate applied to long positions for this period, as a fraction
+	 * (e.g. `0.01` = `1%`).
+	 */
+	longFundingRate: Percentage;
+	/**
+	 * Funding rate applied to short positions for this period, as a fraction
+	 * (e.g. `0.01` = `1%`).
+	 */
+	shortFundingRate: Percentage;
+	/**
+	 * Cumulative funding rate accrued by long positions up to this point, as
+	 * a fraction (e.g. `0.01` = `1%`).
+	 */
+	cumulativeLongFundingRate: Percentage;
+	/**
+	 * Cumulative funding rate accrued by short positions up to this point, as
+	 * a fraction (e.g. `0.01` = `1%`).
+	 */
+	cumulativeShortFundingRate: Percentage;
+	/** Sui transaction digest associated with this funding event. */
+	txDigest: TransactionDigest;
+}
+
+/**
+ * Response type for historical market funding data.
+ */
+export interface ApiPerpetualsMarketFundingHistoryResponse {
+	history: PerpetualsMarketFundingHistoryPoint[];
 }
 
 /**
@@ -2694,6 +2793,12 @@ export interface ApiPerpetualsTransferCollateralBody {
 export type ApiPerpetualsAllocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	allocateAmount: Balance;
+	/**
+	 * Caller wallet. For vault-backed accounts, when the caller is a vault
+	 * assistant (rather than the vault owner), the backend uses this to
+	 * resolve the correct assistant cap.
+	 */
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -2712,6 +2817,12 @@ export type ApiPerpetualsAllocateCollateralBody = {
 export type ApiPerpetualsDeallocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	deallocateAmount: Balance;
+	/**
+	 * Caller wallet. For vault-backed accounts, when the caller is a vault
+	 * assistant (rather than the vault owner), the backend uses this to
+	 * resolve the correct assistant cap.
+	 */
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -2842,6 +2953,12 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
  */
 export type ApiPerpetualsEditStopOrdersBody = {
 	stopOrders: PerpetualsStopOrderData[];
+	/**
+	 * Caller wallet. For vault-backed accounts, when the caller is a vault
+	 * assistant (rather than the vault owner), the backend uses this to
+	 * resolve the correct assistant cap.
+	 */
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3150,6 +3267,12 @@ export type ApiPerpetualsSetLeverageTxBody = {
 	marketId: PerpetualsMarketId;
 	collateralChange: number;
 	leverage: number;
+	/**
+	 * Caller wallet. For vault-backed accounts, when the caller is a vault
+	 * assistant (rather than the vault owner), the backend uses this to
+	 * resolve the correct assistant cap.
+	 */
+	walletAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3477,6 +3600,25 @@ export interface ApiPerpetualsOwnedVaultCapsBody {
  */
 export interface ApiPerpetualsOwnedVaultCapsResponse {
 	ownedVaultCaps: PerpetualsVaultCap[];
+}
+
+/**
+ * Request body for fetching vault **assistant** capability objects owned by a
+ * wallet.
+ *
+ * Assistant caps let a non-owner wallet operate a vault on behalf of the
+ * owner. They are structurally identical to regular vault caps but grant a
+ * narrower permission set.
+ */
+export interface ApiPerpetualsOwnedVaultAssistantCapsBody {
+	walletAddress: SuiAddress;
+}
+
+/**
+ * Response payload listing all vault assistant caps owned by the wallet.
+ */
+export interface ApiPerpetualsOwnedVaultAssistantCapsResponse {
+	ownedVaultAssistantCaps: PerpetualsVaultCap[];
 }
 
 /**
@@ -3890,6 +4032,26 @@ export interface ApiPerpetualsCurrentRebateRewardsBody {
 	totalMakerRewards: number;
 	/** Total taker reward pool to distribute among eligible takers. */
 	totalTakerRewards: number;
+	/** Coefficients used to compute Q-scores and taker shares. */
+	calculationVariables: PerpetualsCalculationVariables;
+}
+
+/**
+ * Coefficients used when computing Q-scores and taker shares for the rebate
+ * rewards calculation. Each is a weighting exponent applied to a corresponding
+ * per-account metric.
+ */
+export interface PerpetualsCalculationVariables {
+	/** Exponent applied to the raw Q-score component. */
+	qScoreCoefficient: number;
+	/** Exponent applied to the uptime component. */
+	uptimeCoefficient: number;
+	/** Exponent applied to the maker volume component. */
+	mmVolumeCoefficient: number;
+	/** Exponent applied to the taker volume component. */
+	takerVolumeCoefficient: number;
+	/** Exponent applied to the taker open-interest component. */
+	takerOiCoefficient: number;
 }
 
 /**
