@@ -222,7 +222,7 @@ export class Pools extends Caller {
    * This indicates the user's liquidity positions across multiple pools.
    *
    * @param inputs - An object containing the `walletAddress`.
-   * @returns A `PoolLpInfo` object summarizing the user's LP balances.
+   * @returns An array of `PoolLpInfo` objects summarizing the user's LP balances.
    *
    * @example
    * ```typescript
@@ -232,7 +232,7 @@ export class Pools extends Caller {
    */
   public async getOwnedLpCoins(inputs: {
     walletAddress: SuiAddress;
-  }): Promise<PoolLpInfo> {
+  }): Promise<PoolLpInfo[]> {
     return this.fetchApi("owned-lp-coins", inputs);
   }
 
