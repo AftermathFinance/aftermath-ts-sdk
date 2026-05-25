@@ -29,7 +29,11 @@ import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import type { MoveErrors } from "../types/moveErrorsInterface";
+import type {
+	MoveErrors,
+	ParsedMoveError,
+	TranslatedMoveError,
+} from "../types/moveErrorsInterface";
 
 const NUMERIC_STRING_REGEX = /^\d*\.?\d*$/;
 const BIGINT_STRING_REGEX = /^-?\d+n$/;
@@ -720,13 +724,9 @@ export class Helpers {
 	 * @param inputs - The object containing the raw `errorMessage` from Sui.
 	 * @returns A partial structure of the error details or undefined.
 	 */
-	static parseMoveErrorMessage(inputs: { errorMessage: string }):
-		| {
-				errorCode: MoveErrorCode;
-				packageId: ObjectId;
-				module: ModuleName;
-		  }
-		| undefined {
+	static parseMoveErrorMessage(
+		inputs: { errorMessage: string }
+	): ParsedMoveError | undefined {
 		const { errorMessage } = inputs;
 		if (!errorMessage.toLowerCase().includes("moveabort")) {
 			return undefined;
@@ -816,14 +816,7 @@ export class Helpers {
 	static translateMoveErrorMessage(inputs: {
 		errorMessage: string;
 		moveErrors: MoveErrors;
-	}):
-		| {
-				errorCode: MoveErrorCode;
-				packageId: ObjectId;
-				module: ModuleName;
-				error: string;
-		  }
-		| undefined {
+	}): TranslatedMoveError | undefined {
 		const { errorMessage, moveErrors } = inputs;
 
 		const parsed = Helpers.parseMoveErrorMessage({ errorMessage });

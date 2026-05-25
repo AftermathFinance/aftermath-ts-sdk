@@ -13,7 +13,10 @@ import { RouterApi } from "../../packages/router/api/routerApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
-import type { ModuleName, MoveErrorCode, ObjectId } from "../../types";
+import type {
+	MoveErrorsInterface,
+	TranslatedMoveError,
+} from "../types/moveErrorsInterface";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
@@ -22,7 +25,6 @@ import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 
 import { NftsApi } from "../nfts/nftsApi";
 import type { ConfigAddresses } from "../types/configTypes";
-import type { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { Helpers } from "../utils";
 import { WalletApi } from "../wallet/walletApi";
 
@@ -249,48 +251,28 @@ export class AftermathApi {
 	 * }
 	 * ```
 	 */
-	public translateMoveErrorMessage = <T extends MoveErrorsInterface>(inputs: {
-		errorMessage: string;
-	}):
-		| {
-				errorCode: MoveErrorCode;
-				packageId: ObjectId;
-				module: ModuleName;
-				error: string;
-		  }
-		| undefined => {
-		const { errorMessage } = inputs;
-
-		// Candidate packageApis that define `moveErrors` we can search against
-		const packageApis: (() => T)[] = [
-			// @ts-expect-error
-			this.Pools,
-			// @ts-expect-error
-			this.Staking,
-			// @ts-expect-error
-			this.Perpetuals,
-			// @ts-expect-error
-			this.Farms,
-			// @ts-expect-error
-			this.Router,
+	public translateMoveErrorMessage(
+		inputs: { errorMessage: string }
+	): TranslatedMoveError | undefined {
+		// @dev: packages that publish move error tables; order is significant: first match wins.
+		const sources: MoveErrorsInterface[] = [
+			this.Pools(),
+			this.Staking(),
+			this.Perpetuals(),
+			this.Farms(),
+			this.Router(),
 		];
-		for (const packageApi of packageApis) {
-			try {
-				const moveErrors = packageApi().moveErrors;
-				const translation = Helpers.translateMoveErrorMessage({
-					errorMessage,
-					moveErrors,
-				});
-				if (!translation) {
-					continue;
-				}
 
+		for (const source of sources) {
+			const translation = Helpers.translateMoveErrorMessage({
+				errorMessage: inputs.errorMessage,
+				moveErrors: source.moveErrors,
+			});
+			if (translation) {
 				return translation;
-			} catch (_e) {
-				// If any package lacks `moveErrors`, we skip it
 			}
 		}
 
 		return undefined;
-	};
+	}
 }

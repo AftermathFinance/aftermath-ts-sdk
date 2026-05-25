@@ -19,6 +19,7 @@ import type {
 	ConfigAddresses,
 	SuiAddress,
 	SuiNetwork,
+	TranslatedMoveError,
 	Url,
 } from "../../types";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
@@ -180,14 +181,9 @@ export class Aftermath extends Caller {
 	 * Thin pass-through to the underlying {@link AftermathApi} so consumers
 	 * don't need to reach into the private `api` field.
 	 */
-	translateMoveErrorMessage(inputs: { errorMessage: string }):
-		| {
-				errorCode: number;
-				packageId: SuiAddress;
-				module: string;
-				error: string;
-		  }
-		| undefined {
+	translateMoveErrorMessage(
+		inputs: { errorMessage: string }
+	): TranslatedMoveError | undefined {
 		return this.api.translateMoveErrorMessage(inputs);
 	}
 
