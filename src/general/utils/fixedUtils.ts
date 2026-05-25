@@ -1,4 +1,4 @@
-import { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
+import type { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
 
 /**
  * The `FixedUtils` class provides utilities for fixed-point arithmetic
@@ -112,9 +112,7 @@ export class FixedUtils {
 		decimalsScalar: DecimalsScalar,
 		amount: Balance
 	): LocalNumber =>
-		FixedUtils.directCast(
-			FixedUtils.normalizeAmount(decimalsScalar, amount)
-		);
+		FixedUtils.directCast(FixedUtils.normalizeAmount(decimalsScalar, amount));
 
 	/**
 	 * Reverse the cast of a normalized float back to a raw `Balance`,

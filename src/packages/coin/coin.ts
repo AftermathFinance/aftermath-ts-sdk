@@ -1,24 +1,22 @@
-import {
+import type { CoinMetadata } from "@mysten/sui/jsonRpc";
+import { Prices } from "../../general/prices/prices";
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import { Helpers } from "../../general/utils/helpers";
+import type {
 	AnyObjectType,
 	Balance,
 	CallerConfig,
 	CoinDecimal,
 	CoinMetadaWithInfo,
 	CoinPriceInfo,
-	CoinsToBalance,
-	CoinsToDecimals,
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
+	CoinsToBalance,
+	CoinsToDecimals,
 	CoinType,
 	KeyType,
-	SuiNetwork,
-	Url,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { Helpers } from "../../general/utils/helpers";
-import { Prices } from "../../general/prices/prices";
-import { AftermathApi } from "../../general/providers";
-import type { CoinMetadata } from "@mysten/sui/jsonRpc";
 
 /**
  * The `Coin` class provides functionality to manage and inspect coin types,
@@ -28,8 +26,7 @@ import type { CoinMetadata } from "@mysten/sui/jsonRpc";
  * @example
  * ```typescript
  *
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init(); // initialize provider
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const coin = afSdk.Coin("0x2::sui::SUI");
  *
@@ -113,12 +110,12 @@ export class Coin extends Caller {
 	 *
 	 * @param coinType - The coin's type string (e.g., "0x2::sui::SUI"). If omitted, methods that require a type will need it passed in manually.
 	 * @param config - Optional caller configuration (network, access token).
-	 * @param Provider - An optional `AftermathApi` instance for coin-specific API calls.
+	 * @param api - An optional `AftermathApi` instance for coin-specific API calls.
 	 */
 	constructor(
 		public readonly coinType: CoinType | undefined = undefined,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "coins");
 		this.coinType = coinType;
@@ -185,10 +182,14 @@ export class Coin extends Caller {
 	 * ```
 	 */
 	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadaWithInfo> {
-		if (this.metadata) return this.metadata;
+		if (this.metadata) {
+			return this.metadata;
+		}
 
 		const coinType = this.coinType ?? coin;
-		if (!coinType) throw new Error("no valid coin type");
+		if (!coinType) {
+			throw new Error("no valid coin type");
+		}
 
 		const [metadata] = await this.getCoinMetadatas({ coins: [coinType] });
 		this.setCoinMetadata(metadata);
@@ -216,9 +217,7 @@ export class Coin extends Caller {
 		return this.fetchApi<CoinMetadaWithInfo[], { coins: CoinType[] }>(
 			"metadata",
 			{
-				coins: inputs.coins.map((coin) =>
-					Helpers.addLeadingZeroesToType(coin)
-				),
+				coins: inputs.coins.map((coin) => Helpers.addLeadingZeroesToType(coin)),
 			}
 		);
 	}
@@ -247,10 +246,14 @@ export class Coin extends Caller {
 	 * ```
 	 */
 	public async getPrice(coin?: CoinType): Promise<CoinPriceInfo> {
-		if (this.priceInfo !== undefined) return this.priceInfo;
+		if (this.priceInfo !== undefined) {
+			return this.priceInfo;
+		}
 
 		const coinType = this.coinType ?? coin;
-		if (!coinType) throw new Error("no valid coin type");
+		if (!coinType) {
+			throw new Error("no valid coin type");
+		}
 
 		const priceInfo = await new Prices(this.config).getCoinPriceInfo({
 			coin: coinType,
@@ -305,9 +308,13 @@ export class Coin extends Caller {
 	 */
 	public static getCoinTypePackageName = (coin: CoinType): string => {
 		const splitCoin = coin.split("::");
-		if (splitCoin.length !== 3) return "";
+		if (splitCoin.length !== 3) {
+			return "";
+		}
 		const packageName = splitCoin[splitCoin.length - 2];
-		if (!packageName) return "";
+		if (!packageName) {
+			return "";
+		}
 		return packageName;
 	};
 
@@ -321,7 +328,9 @@ export class Coin extends Caller {
 	public static getCoinTypeSymbol = (coin: CoinType): string => {
 		const startIndex = coin.lastIndexOf("::") + 2;
 		// NOTE: should error if coin is not a valid coin type instead of empty string ?
-		if (startIndex <= 1) return "";
+		if (startIndex <= 1) {
+			return "";
+		}
 
 		const foundEndIndex = coin.indexOf(">");
 		const endIndex = foundEndIndex < 0 ? coin.length : foundEndIndex;
@@ -392,9 +401,7 @@ export class Coin extends Caller {
 		const coins = Object.keys(coinAmounts).filter(
 			(key) => coinAmounts[key] > 0
 		);
-		const amounts = Object.values(coinAmounts).filter(
-			(amount) => amount > 0
-		);
+		const amounts = Object.values(coinAmounts).filter((amount) => amount > 0);
 
 		return { coins, amounts };
 	};
@@ -406,9 +413,7 @@ export class Coin extends Caller {
 	 * @param coinsToBalance - A record mapping coin types to bigints.
 	 * @returns An object with `coins` array and `balances` array in matching indexes.
 	 */
-	public static coinsAndBalancesOverZero = (
-		coinsToBalance: CoinsToBalance
-	) => {
+	public static coinsAndBalancesOverZero = (coinsToBalance: CoinsToBalance) => {
 		// NOTE: will these loops always run in same order (is this a js guarantee or not) ?
 		const coins = Object.keys(coinsToBalance).filter(
 			(key) => BigInt(coinsToBalance[key]) > BigInt(0)
@@ -450,7 +455,7 @@ export class Coin extends Caller {
 						.toLowerCase()
 						.includes(Helpers.addLeadingZeroesToType(filter))
 				);
-			} catch (e) {}
+			} catch (_e) {}
 			return (
 				Helpers.stripLeadingZeroesFromType(coinType)
 					.toLowerCase()
@@ -555,9 +560,7 @@ export class Coin extends Caller {
 			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
 			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
 				([, coinsTypes]) =>
-					coinsTypes
-						.map(Helpers.addLeadingZeroesToType)
-						.includes(fullCoinType)
+					coinsTypes.map(Helpers.addLeadingZeroesToType).includes(fullCoinType)
 			);
 
 			const foundCoinSymbol = foundCoinData?.[0];
@@ -565,19 +568,5 @@ export class Coin extends Caller {
 		} catch {
 			return undefined;
 		}
-	};
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	/**
-	 * Internal method to retrieve a specialized coin-related API from `AftermathApi`.
-	 * Throws an error if no provider is set.
-	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Coin();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
 	};
 }

@@ -1,4 +1,9 @@
-import { AnyObjectType, Object, ObjectId, Url } from "../types/generalTypes";
+import type {
+	AnyObjectType,
+	Object,
+	ObjectId,
+	Url,
+} from "../types/generalTypes";
 
 // =========================================================================
 //  Objects

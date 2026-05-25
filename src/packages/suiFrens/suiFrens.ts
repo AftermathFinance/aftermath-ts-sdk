@@ -56,7 +56,7 @@ export class SuiFrens extends Caller {
 
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "sui-frens");
 	}
@@ -88,11 +88,11 @@ export class SuiFrens extends Caller {
 		return mixFee1 !== undefined
 			? this.calcMixFeeForStakedSuiFren({ mixFee: mixFee1 })
 			: mixFee2 !== undefined
-			? this.calcMixFeeForStakedSuiFren({ mixFee: mixFee2 })
-			: (() => {
-					// to make TS happy :)
-					throw new Error("unreachable");
-			  })();
+				? this.calcMixFeeForStakedSuiFren({ mixFee: mixFee2 })
+				: (() => {
+						// to make TS happy :)
+						throw new Error("unreachable");
+					})();
 	}
 
 	private static calcMixFeeForStakedSuiFren(inputs: {
@@ -106,10 +106,7 @@ export class SuiFrens extends Caller {
 				this.constants.protocolFees.minMixStaked,
 				mixFee /
 					BigInt(
-						Math.floor(
-							this.constants.protocolFees.mixStakedPercentage *
-								100
-						)
+						Math.floor(this.constants.protocolFees.mixStakedPercentage * 100)
 					)
 			)
 		);
@@ -150,9 +147,7 @@ export class SuiFrens extends Caller {
 			ApiOwnedStakedSuiFrensBody
 		>(`owned-staked-sui-frens`, inputs);
 
-		return stakesInfo.map(
-			(info) => new StakedSuiFren(info, this.config, true)
-		);
+		return stakesInfo.map((info) => new StakedSuiFren(info, this.config, true));
 	}
 
 	public async getAllStakedSuiFrens(
@@ -222,10 +217,7 @@ export class SuiFrens extends Caller {
 	}
 
 	public async getUnstakeEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<UnstakeSuiFrenEvent>(
-			"events/unstake",
-			inputs
-		);
+		return this.fetchApiEvents<UnstakeSuiFrenEvent>("events/unstake", inputs);
 	}
 
 	// =========================================================================
@@ -233,11 +225,11 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public async getMixTransaction(inputs: ApiMixSuiFrensBody) {
-		return this.useProvider().fetchBuildMixTx(inputs);
+		return this.suiFrensApi().fetchBuildMixTx(inputs);
 	}
 
 	public async getHarvestFeesTransaction(inputs: ApiHarvestSuiFrenFeesBody) {
-		return this.useProvider().fetchBuildHarvestFeesTx(inputs);
+		return this.suiFrensApi().fetchBuildHarvestFeesTx(inputs);
 	}
 
 	// =========================================================================
@@ -298,9 +290,7 @@ export class SuiFrens extends Caller {
 					Object.entries(attributes)
 						.map(
 							([key, val], i) =>
-								`${
-									i === 0 && startStr === "" ? "" : "&"
-								}${key}=${val}`
+								`${i === 0 && startStr === "" ? "" : "&"}${key}=${val}`
 						)
 						.reduce((acc, curr) => acc + curr, "");
 	}
@@ -309,9 +299,11 @@ export class SuiFrens extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.SuiFrens();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private suiFrensApi = () => {
+		const suiFrens = this.api?.SuiFrens();
+		if (!suiFrens) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return suiFrens;
 	};
 }

@@ -1,9 +1,9 @@
-import { NftAmmMarketObject } from "../nftAmmTypes";
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
 import { Helpers } from "../../../general/utils";
-import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 import { Coin } from "../../coin";
 import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import type { NftAmmMarketObject } from "../nftAmmTypes";
+import type { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 
 export class NftAmmApiCasting {
 	// =========================================================================
@@ -19,7 +19,9 @@ export class NftAmmApiCasting {
 	): NftAmmMarketObject => {
 		const objectId = Helpers.getObjectId(suiObject);
 		const marketType = Helpers.getObjectType(suiObject);
-		if (!marketType) throw new Error("no object type found");
+		if (!marketType) {
+			throw new Error("no object type found");
+		}
 
 		const fields = Helpers.getObjectFields(
 			suiObject
@@ -27,9 +29,7 @@ export class NftAmmApiCasting {
 
 		const pool = PoolsApiCasting.poolObjectFromSuiObject(fields.pool);
 
-		const fractionalizedCoinType = Coin.getInnerCoinType(
-			fields.supply.type
-		);
+		const fractionalizedCoinType = Coin.getInnerCoinType(fields.supply.type);
 
 		const innerMarketTypes = Coin.getInnerCoinType(marketType);
 		const genericTypes = innerMarketTypes.replaceAll(" ", "").split(",");

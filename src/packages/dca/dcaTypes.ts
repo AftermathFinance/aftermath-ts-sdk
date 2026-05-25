@@ -1,13 +1,10 @@
-import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
-import {
+import type {
 	Balance,
 	Timestamp,
-	Event,
 	TransactionDigest,
-	SerializedTransaction,
-	BigIntAsString,
 } from "../../general/types/generalTypes";
+import type { ObjectId, SuiAddress } from "../../types";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Common Types
@@ -137,12 +134,12 @@ export interface ApiDcaTransactionForCloseOrderBody {
  * Represents parameters for a manual order close workflow. Typically not
  * used in the standard approach.
  */
-export type ApiDcaManualCloseOrderBody = {
+export interface ApiDcaManualCloseOrderBody {
 	walletAddress: SuiAddress;
 	buyCoinType: CoinType;
 	allocateCoinType: CoinType;
 	orderId: SuiAddress;
-};
+}
 
 // =========================================================================
 //  DCA Order Fetch

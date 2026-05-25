@@ -1,12 +1,12 @@
-import {
+import type { TransactionObjectArgument } from "@mysten/sui/transactions";
+import type {
 	Balance,
 	ObjectId,
 	SerializedTransaction,
 	Slippage,
 	SuiAddress,
 } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
-import { TransactionObjectArgument } from "@mysten/sui/transactions";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Api

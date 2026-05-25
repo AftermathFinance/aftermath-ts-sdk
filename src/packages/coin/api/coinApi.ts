@@ -1,13 +1,13 @@
-import {
-	Transaction,
-	type TransactionObjectArgument,
-} from "@mysten/sui/transactions";
 import type { CoinStruct, PaginatedCoins } from "@mysten/sui/jsonRpc";
-import { Coin } from "../coin";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
-import { Helpers } from "../../../general/utils/helpers";
+import type {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import { Helpers } from "../../../general/utils/helpers";
+import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
+import { Coin } from "../coin";
 // import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
@@ -15,7 +15,7 @@ export class CoinApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Transaction Builders
@@ -28,8 +28,7 @@ export class CoinApi {
 		coinAmount: Balance;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument> => {
-		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } =
-			inputs;
+		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } = inputs;
 
 		tx.setSender(walletAddress);
 
@@ -50,8 +49,7 @@ export class CoinApi {
 		coinAmounts: Balance[];
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument[]> => {
-		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } =
-			inputs;
+		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } = inputs;
 
 		tx.setSender(walletAddress);
 
@@ -87,14 +85,13 @@ export class CoinApi {
 		coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined = undefined;
+		let cursor: string | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
-					...inputs,
-					owner: inputs.walletAddress,
-					cursor,
-				});
+			const paginatedCoins: PaginatedCoins = await this.api.client.getCoins({
+				...inputs,
+				owner: inputs.walletAddress,
+				cursor,
+			});
 
 			const coinData = paginatedCoins.data;
 			allCoinData = [...allCoinData, ...coinData];
@@ -108,17 +105,17 @@ export class CoinApi {
 					Number(BigInt(a.balance) - BigInt(b.balance))
 				);
 
-				let coinDatas: CoinStruct[] = [];
+				const coinDatas: CoinStruct[] = [];
 				let sum = BigInt(0);
 				for (const coinData of allCoinData) {
 					coinDatas.push(coinData);
 					sum += BigInt(coinData.balance);
 
-					if (sum >= inputs.coinAmount) return coinDatas;
+					if (sum >= inputs.coinAmount) {
+						return coinDatas;
+					}
 				}
-				throw new Error(
-					"wallet does not have coins of sufficient balance"
-				);
+				throw new Error("wallet does not have coins of sufficient balance");
 			}
 
 			cursor = paginatedCoins.nextCursor;
@@ -132,14 +129,13 @@ export class CoinApi {
 		// coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined = undefined;
+		let cursor: string | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
-					...inputs,
-					owner: inputs.walletAddress,
-					cursor,
-				});
+			const paginatedCoins: PaginatedCoins = await this.api.client.getCoins({
+				...inputs,
+				owner: inputs.walletAddress,
+				cursor,
+			});
 
 			// const coinData = paginatedCoins.data.filter(
 			// 	(data) => BigInt(data.balance) > BigInt(0)
@@ -156,10 +152,11 @@ export class CoinApi {
 				paginatedCoins.data.length === 0 ||
 				!paginatedCoins.hasNextPage ||
 				!paginatedCoins.nextCursor
-			)
+			) {
 				return allCoinData.sort((b, a) =>
 					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
 				);
+			}
 
 			cursor = paginatedCoins.nextCursor;
 		} while (true);
@@ -178,16 +175,18 @@ export class CoinApi {
 	}): TransactionObjectArgument => {
 		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
-		if (coinData.length <= 0)
+		if (coinData.length <= 0) {
 			throw new Error("wallet does not have coins of sufficient balance");
+		}
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
 		const totalCoinBalance = Helpers.sumBigInt(
 			coinData.map((data) => BigInt(data.balance))
 		);
-		if (totalCoinBalance < coinAmount)
+		if (totalCoinBalance < coinAmount) {
 			throw new Error("wallet does not have coins of sufficient balance");
+		}
 
 		if (!isSponsoredTx && isSuiCoin) {
 			tx.setGasPayment(
@@ -220,17 +219,13 @@ export class CoinApi {
 					MergeCoins: {
 						destination: tx.object(mergedCoinObjectId),
 						sources: [
-							...coinObjectIds
-								.slice(1)
-								.map((coinId) => tx.object(coinId)),
+							...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
 						],
 					},
 				});
 			} else {
 				tx.mergeCoins(tx.object(mergedCoinObjectId), [
-					...coinObjectIds
-						.slice(1)
-						.map((coinId) => tx.object(coinId)),
+					...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
 				]);
 			}
 		}
@@ -246,7 +241,7 @@ export class CoinApi {
 					coinId: mergedCoinObjectId,
 					amount: coinAmount,
 					coinType,
-			  })
+				})
 			: tx.splitCoins(mergedCoinObjectId, [coinAmount]);
 	};
 }

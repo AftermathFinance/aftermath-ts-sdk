@@ -1,11 +1,11 @@
-import { ObjectId, SuiAddress } from "../../types";
-import {
+import type {
 	Balance,
 	Event,
 	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+import type { ObjectId, SuiAddress } from "../../types";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Name Only
@@ -695,7 +695,7 @@ export type ApiFarmsTopUpStakingPoolRewardsBody = {
 /**
  * Request body for increasing the emissions for specified reward coins in a pool (owner only).
  */
-export type ApiFarmsIncreaseStakingPoolRewardsEmissionsBody = {
+export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
 	ownerCapId: ObjectId;
 	stakingPoolId: ObjectId;
 	stakeCoinType: CoinType;
@@ -705,7 +705,7 @@ export type ApiFarmsIncreaseStakingPoolRewardsEmissionsBody = {
 		emissionRate: bigint;
 	}[];
 	walletAddress: SuiAddress;
-};
+}
 
 /**
  * Request body for fetching staking pool owner caps owned by a user.
@@ -724,10 +724,10 @@ export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
 /**
  * Request body for granting a one-time admin cap of a particular reward coin to another user.
  */
-export type ApiFarmsGrantOneTimeAdminCapBody = {
+export interface ApiFarmsGrantOneTimeAdminCapBody {
 	ownerCapId: ObjectId;
 	recipientAddress: SuiAddress;
 	rewardCoinType: CoinType;
 	walletAddress: SuiAddress;
 	isSponsoredTx?: boolean;
-};
+}

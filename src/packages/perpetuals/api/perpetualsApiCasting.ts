@@ -1,80 +1,62 @@
-import {
-	PerpetualsMarketState,
-	PerpetualsOrderbook,
-	PerpetualsMarketParams,
-	PerpetualsAccountObject,
-	PerpetualsPosition,
-	DepositedCollateralEvent,
-	WithdrewCollateralEvent,
-	CreatedAccountEvent,
-	CanceledOrderEvent,
-	PerpetualsOrderSide,
-	FilledTakerOrderEvent,
-	FilledMakerOrdersEvent,
-	PerpetualsOrderInfo,
-	SettledFundingEvent,
-	UpdatedSpreadTwapEvent,
-	UpdatedPremiumTwapEvent,
-	LiquidatedEvent,
-	PerpetualsMarketData,
-	PostedOrderEvent,
-	AllocatedCollateralEvent,
-	DeallocatedCollateralEvent,
-	PerpetualsMarketId,
-	PerpetualsOrderIdAsString,
-	PerpetualsAccountId,
-	UpdatedFundingEvent,
-	UpdatedMarketVersionEvent,
-	ReducedOrderEvent,
-	CreatedStopOrderTicketEvent,
-	DeletedStopOrderTicketEvent,
-	ReceivedCollateralEvent,
-	TransferredDeallocatedCollateralEvent,
-	EditedStopOrderTicketExecutorEvent,
-	// AddedStopOrderTicketCollateralEvent,
-	// RemovedStopOrderTicketCollateralEvent,
-	EditedStopOrderTicketDetailsEvent,
-	ExecutedStopOrderTicketEvent,
-	SetPositionInitialMarginRatioEvent,
-	// CreatedSubAccountEvent,
-	// SetSubAccountUsersEvent,
-} from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
-import { Coin, Perpetuals } from "../..";
-import { CoinSymbol, CoinType } from "../../coin/coinTypes";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
-import {
+import { Perpetuals } from "../..";
+import type {
+	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,
 	CreatedAccountEventOnChain,
-	DepositedCollateralEventOnChain,
-	WithdrewCollateralEventOnChain,
-	FilledMakerOrdersEventOnChain,
-	FilledTakerOrderEventOnChain,
-	LiquidatedEventOnChain,
-	SettledFundingEventOnChain,
-	UpdatedPremiumTwapEventOnChain,
-	UpdatedSpreadTwapEventOnChain,
-	PostedOrderEventOnChain,
-	AllocatedCollateralEventOnChain,
-	DeallocatedCollateralEventOnChain,
-	UpdatedFundingEventOnChain,
-	UpdatedMarketVersionEventOnChain,
-	ReducedOrderEventOnChain,
 	CreatedStopOrderTicketEventOnChain,
+	DeallocatedCollateralEventOnChain,
 	DeletedStopOrderTicketEventOnChain,
-	// ReceivedCollateralEventOnChain,
-	// TransferredDeallocatedCollateralEventOnChain,
-	EditedStopOrderTicketExecutorEventOnChain,
+	DepositedCollateralEventOnChain,
 	// AddedStopOrderTicketCollateralEventOnChain,
 	// RemovedStopOrderTicketCollateralEventOnChain,
 	EditedStopOrderTicketDetailsEventOnChain,
+	// ReceivedCollateralEventOnChain,
+	// TransferredDeallocatedCollateralEventOnChain,
+	EditedStopOrderTicketExecutorEventOnChain,
 	ExecutedStopOrderTicketEventOnChain,
+	FilledMakerOrdersEventOnChain,
+	FilledTakerOrderEventOnChain,
+	LiquidatedEventOnChain,
+	PostedOrderEventOnChain,
+	ReducedOrderEventOnChain,
 	SetPositionInitialMarginRatioEventOnChain,
-	CreatedSubAccountEventOnChain,
-	SetSubAccountUsersEventOnChain,
+	SettledFundingEventOnChain,
+	UpdatedFundingEventOnChain,
+	UpdatedMarketVersionEventOnChain,
+	UpdatedPremiumTwapEventOnChain,
+	UpdatedSpreadTwapEventOnChain,
+	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
-import { bcs } from "@mysten/sui/bcs";
-import { IFixedAsStringBytes } from "../../../types";
+import {
+	type AllocatedCollateralEvent,
+	type CanceledOrderEvent,
+	type CreatedAccountEvent,
+	type CreatedStopOrderTicketEvent,
+	type DeallocatedCollateralEvent,
+	type DeletedStopOrderTicketEvent,
+	type DepositedCollateralEvent,
+	// AddedStopOrderTicketCollateralEvent,
+	// RemovedStopOrderTicketCollateralEvent,
+	type EditedStopOrderTicketDetailsEvent,
+	type EditedStopOrderTicketExecutorEvent,
+	type ExecutedStopOrderTicketEvent,
+	type FilledMakerOrdersEvent,
+	type FilledTakerOrderEvent,
+	type LiquidatedEvent,
+	PerpetualsOrderSide,
+	type PostedOrderEvent,
+	type ReducedOrderEvent,
+	type SetPositionInitialMarginRatioEvent,
+	type SettledFundingEvent,
+	type UpdatedFundingEvent,
+	type UpdatedMarketVersionEvent,
+	type UpdatedPremiumTwapEvent,
+	type UpdatedSpreadTwapEvent,
+	type WithdrewCollateralEvent,
+	// CreatedSubAccountEvent,
+	// SetSubAccountUsersEvent,
+} from "../perpetualsTypes";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -234,15 +216,9 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.liqee_account_id),
 			collateralDeltaUsd:
 				Casting.IFixed.numberFromIFixed(BigInt(fields.liqee_pnl)) -
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.liquidation_fees)
-				) -
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.force_cancel_fees)
-				) -
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.insurance_fund_fees)
-				),
+				Casting.IFixed.numberFromIFixed(BigInt(fields.liquidation_fees)) -
+				Casting.IFixed.numberFromIFixed(BigInt(fields.force_cancel_fees)) -
+				Casting.IFixed.numberFromIFixed(BigInt(fields.insurance_fund_fees)),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			baseLiquidated: Casting.IFixed.numberFromIFixed(
@@ -251,9 +227,7 @@ export class PerpetualsApiCasting {
 			quoteLiquidated: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.quote_liquidated)
 			),
-			liqeePnlUsd: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.liqee_pnl)
-			),
+			liqeePnlUsd: Casting.IFixed.numberFromIFixed(BigInt(fields.liqee_pnl)),
 			liquidationFeesUsd: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.liquidation_fees)
 			),
@@ -388,33 +362,21 @@ export class PerpetualsApiCasting {
 	): FilledTakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		const baseAssetDelta =
-			Casting.IFixed.numberFromIFixed(
-				BigInt(fields.base_asset_delta_bid)
-			) -
-			Casting.IFixed.numberFromIFixed(
-				BigInt(fields.base_asset_delta_ask)
-			);
+			Casting.IFixed.numberFromIFixed(BigInt(fields.base_asset_delta_bid)) -
+			Casting.IFixed.numberFromIFixed(BigInt(fields.base_asset_delta_ask));
 		return {
 			baseAssetDelta,
 			accountId: BigInt(fields.taker_account_id),
 			collateralDeltaUsd:
 				Casting.IFixed.numberFromIFixed(BigInt(fields.taker_pnl)) -
 				Casting.IFixed.numberFromIFixed(BigInt(fields.taker_fees)),
-			takerPnlUsd: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.taker_pnl)
-			),
-			takerFeesUsd: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.taker_fees)
-			),
+			takerPnlUsd: Casting.IFixed.numberFromIFixed(BigInt(fields.taker_pnl)),
+			takerFeesUsd: Casting.IFixed.numberFromIFixed(BigInt(fields.taker_fees)),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.positionSide({ baseAssetAmount: baseAssetDelta }),
 			quoteAssetDelta:
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.quote_asset_delta_bid)
-				) -
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.quote_asset_delta_ask)
-				),
+				Casting.IFixed.numberFromIFixed(BigInt(fields.quote_asset_delta_bid)) -
+				Casting.IFixed.numberFromIFixed(BigInt(fields.quote_asset_delta_ask)),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -432,9 +394,9 @@ export class PerpetualsApiCasting {
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			reduceOnly: fields.reduce_only,
-			expiryTimestamp: !fields.expiration_timestamp_ms
-				? undefined
-				: BigInt(fields.expiration_timestamp_ms),
+			expiryTimestamp: fields.expiration_timestamp_ms
+				? BigInt(fields.expiration_timestamp_ms)
+				: undefined,
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -620,15 +582,9 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			indexPrice: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.index_price)
-			),
-			bookPrice: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.book_price)
-			),
-			premiumTwap: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.premium_twap)
-			),
+			indexPrice: Casting.IFixed.numberFromIFixed(BigInt(fields.index_price)),
+			bookPrice: Casting.IFixed.numberFromIFixed(BigInt(fields.book_price)),
+			premiumTwap: Casting.IFixed.numberFromIFixed(BigInt(fields.premium_twap)),
 			premiumTwapLastUpdateMs: Number(fields.premium_twap_last_upd_ms),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -642,15 +598,9 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			bookPrice: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.book_price)
-			),
-			indexPrice: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.index_price)
-			),
-			spreadTwap: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.spread_twap)
-			),
+			bookPrice: Casting.IFixed.numberFromIFixed(BigInt(fields.book_price)),
+			indexPrice: Casting.IFixed.numberFromIFixed(BigInt(fields.index_price)),
+			spreadTwap: Casting.IFixed.numberFromIFixed(BigInt(fields.spread_twap)),
 			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,

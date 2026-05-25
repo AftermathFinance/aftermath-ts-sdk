@@ -1,17 +1,21 @@
-import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Helpers } from "../utils/helpers";
-import {
-	Transaction,
-	type TransactionObjectArgument,
-} from "@mysten/sui/transactions";
+import type { BcsType } from "@mysten/sui/bcs";
 import type {
 	SuiObjectDataFilter,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
 } from "@mysten/sui/jsonRpc";
-import type { BcsType } from "@mysten/sui/bcs";
-import { BcsTypeName } from "../types/castingTypes";
+import type {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type {
+	AnyObjectType,
+	ObjectId,
+	PackageId,
+	SuiAddress,
+} from "../../types";
+import type { AftermathApi } from "../providers/aftermathApi";
+import { Helpers } from "../utils/helpers";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -26,7 +30,7 @@ export class ObjectsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -37,7 +41,7 @@ export class ObjectsApiHelpers {
 	// =========================================================================
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
-		const object = await this.Provider.provider.getObject({ id: objectId });
+		const object = await this.api.client.getObject({ id: objectId });
 		return object.error === undefined;
 	};
 
@@ -50,18 +54,22 @@ export class ObjectsApiHelpers {
 		const object = await this.fetchObject({ objectId });
 
 		const objectOwner = object.data?.owner;
-		if (!objectOwner || typeof objectOwner !== "object") return false;
+		if (!objectOwner || typeof objectOwner !== "object") {
+			return false;
+		}
 
 		if (
 			"AddressOwner" in objectOwner &&
 			objectOwner.AddressOwner === walletAddress
-		)
+		) {
 			return true;
+		}
 		if (
 			"ObjectOwner" in objectOwner &&
 			objectOwner.ObjectOwner === walletAddress
-		)
+		) {
 			return true;
+		}
 
 		return false;
 	};
@@ -75,9 +83,7 @@ export class ObjectsApiHelpers {
 		return this.fetchOwnedObjects({
 			...inputs,
 			filter: {
-				StructType: Helpers.stripLeadingZeroesFromType(
-					inputs.objectType
-				),
+				StructType: Helpers.stripLeadingZeroesFromType(inputs.objectType),
 			},
 		});
 	};
@@ -91,21 +97,20 @@ export class ObjectsApiHelpers {
 		const { walletAddress, withDisplay, filter } = inputs;
 
 		let allObjectData: SuiObjectResponse[] = [];
-		let cursor: string | undefined = undefined;
+		let cursor: string | undefined;
 		do {
-			const paginatedObjects =
-				await this.Provider.provider.getOwnedObjects({
-					owner: walletAddress,
-					options: inputs.options ?? {
-						showContent: true,
-						showDisplay: withDisplay,
-						showOwner: true,
-						showType: true,
-					},
-					limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
-					cursor,
-					filter,
-				});
+			const paginatedObjects = await this.api.client.getOwnedObjects({
+				owner: walletAddress,
+				options: inputs.options ?? {
+					showContent: true,
+					showDisplay: withDisplay,
+					showOwner: true,
+					showType: true,
+				},
+				limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
+				cursor,
+				filter,
+			});
 
 			const objectData = paginatedObjects.data;
 			allObjectData = [...allObjectData, ...objectData];
@@ -114,8 +119,9 @@ export class ObjectsApiHelpers {
 				paginatedObjects.data.length === 0 ||
 				!paginatedObjects.hasNextPage ||
 				!paginatedObjects.nextCursor
-			)
+			) {
 				return allObjectData;
+			}
 
 			cursor = paginatedObjects.nextCursor;
 		} while (true);
@@ -143,14 +149,15 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse> => {
 		const { objectId, options } = inputs;
 
-		const object = await this.Provider.provider.getObject({
+		const object = await this.api.client.getObject({
 			id: objectId,
 			options,
 		});
-		if (object.error !== undefined)
+		if (object.error !== undefined) {
 			throw new Error(
 				`an error occured fetching object: ${object.error?.code}`
 			);
+		}
 		return object;
 	};
 
@@ -161,9 +168,7 @@ export class ObjectsApiHelpers {
 		) => ObjectType;
 		withDisplay?: boolean;
 	}): Promise<ObjectType> => {
-		return inputs.objectFromSuiObjectResponse(
-			await this.fetchObject(inputs)
-		);
+		return inputs.objectFromSuiObjectResponse(await this.fetchObject(inputs));
 	};
 
 	public fetchCastObjectGeneral = async <ObjectType>(inputs: {
@@ -185,15 +190,13 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse[]> => {
 		const { objectIds, options } = inputs;
 
-		let objectIdsBatches: ObjectId[][] = [];
+		const objectIdsBatches: ObjectId[][] = [];
 		let endIndex = 0;
 		while (true) {
 			const newEndIndex =
 				endIndex + ObjectsApiHelpers.constants.maxObjectFetchingLimit;
 			if (newEndIndex >= objectIds.length) {
-				objectIdsBatches.push(
-					objectIds.slice(endIndex, objectIds.length)
-				);
+				objectIdsBatches.push(objectIds.slice(endIndex, objectIds.length));
 				break;
 			}
 
@@ -204,7 +207,7 @@ export class ObjectsApiHelpers {
 
 		const objectBatches = await Promise.all(
 			objectIdsBatches.map((objectIds) =>
-				this.Provider.provider.multiGetObjects({
+				this.api.client.multiGetObjects({
 					ids: objectIds,
 					options:
 						options === undefined
@@ -212,7 +215,7 @@ export class ObjectsApiHelpers {
 									showContent: true,
 									showOwner: true,
 									showType: true,
-							  }
+								}
 							: options,
 				})
 			)
@@ -252,11 +255,11 @@ export class ObjectsApiHelpers {
 		withDisplay?: boolean;
 		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType[]> => {
-		const objects = (
-			await this.fetchObjectsOfTypeOwnedByAddress(inputs)
-		).map((SuiObjectResponse: SuiObjectResponse) => {
-			return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
-		});
+		const objects = (await this.fetchObjectsOfTypeOwnedByAddress(inputs)).map(
+			(SuiObjectResponse: SuiObjectResponse) => {
+				return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
+			}
+		);
 		return objects;
 	};
 
@@ -267,14 +270,15 @@ export class ObjectsApiHelpers {
 	public fetchObjectBcs = async (
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.Provider.provider.getObject({
+		const objectResponse = await this.api.client.getObject({
 			id: objectId,
 			options: { showBcs: true },
 		});
-		if (objectResponse.error !== undefined)
+		if (objectResponse.error !== undefined) {
 			throw new Error(
 				`an error occured fetching object: ${objectResponse.error?.code}`
 			);
+		}
 		return objectResponse;
 	};
 
@@ -284,13 +288,11 @@ export class ObjectsApiHelpers {
 		fromDeserialized: (deserialized: U) => T;
 	}): Promise<T> => {
 		const { objectId } = inputs;
-		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
-			objectId
-		);
+		const suiObjectResponse = await this.api.Objects().fetchObjectBcs(objectId);
 		const { Casting } = await import("../utils/casting.js");
 		return Casting.castObjectBcs({
 			...inputs,
-			suiObjectResponse: suiObjectResponse,
+			suiObjectResponse,
 		});
 	};
 

@@ -2,7 +2,7 @@ import type {
 	DisplayFieldsResponse,
 	SuiObjectResponse,
 } from "@mysten/sui/jsonRpc";
-import {
+import type {
 	KioskOwnerCapObject,
 	Nft,
 	NftDisplay,
@@ -21,9 +21,7 @@ export class NftsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static nftsFromSuiObjects = (
-		objects: SuiObjectResponse[]
-	): Nft[] => {
+	public static nftsFromSuiObjects = (objects: SuiObjectResponse[]): Nft[] => {
 		const nfts = objects.filter((object) => object.data?.display);
 		return nfts
 			.map((nft) => NftsApiCasting.nftFromSuiObject(nft))
@@ -68,9 +66,7 @@ export class NftsApiCasting {
 		return {
 			objectId,
 			objectType,
-			kioskObjectId: Helpers.addLeadingZeroesToType(
-				fields.cap.fields.for
-			),
+			kioskObjectId: Helpers.addLeadingZeroesToType(fields.cap.fields.for),
 		};
 	};
 
@@ -88,10 +84,9 @@ export class NftsApiCasting {
 		const objectType = Helpers.getObjectType(object);
 		const objectId = Helpers.getObjectId(object);
 
-		if (!objectId || !objectType)
-			throw new Error(
-				"unable to obtain object info from sui object response"
-			);
+		if (!(objectId && objectType)) {
+			throw new Error("unable to obtain object info from sui object response");
+		}
 
 		return {
 			objectId,
@@ -107,11 +102,12 @@ export class NftsApiCasting {
 			fields === null ||
 			fields === undefined ||
 			displayFields.error !== null
-		)
+		) {
 			return {
 				suggested: {},
 				other: {},
 			};
+		}
 
 		const suggestedFields: {
 			offChain: keyof NftDisplaySuggested;
@@ -147,7 +143,9 @@ export class NftsApiCasting {
 		const other = Helpers.deepCopy(fields) as NftDisplayOther;
 
 		for (const field of suggestedFields) {
-			if (!(field.onChain in other)) continue;
+			if (!(field.onChain in other)) {
+				continue;
+			}
 
 			suggested[field.offChain] = other[field.onChain];
 			delete other[field.onChain];

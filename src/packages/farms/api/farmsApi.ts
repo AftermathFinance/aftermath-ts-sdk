@@ -1,66 +1,44 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	AnyObjectType,
-	FarmsAddresses,
-	Timestamp,
-	CoinType,
-	ApiFarmsStakeBody,
-	ApiHarvestFarmsRewardsBody,
-	ApiFarmsDepositPrincipalBody,
-	Balance,
-	ApiFarmsUnstakeBody,
-	FarmsLockEnforcement,
-	FarmsMultiplier,
-	ApiFarmsCreateStakingPoolBody,
-	FarmsStakingPoolObject,
-	ApiFarmsTopUpStakingPoolRewardsBody,
-	ApiFarmsInitializeStakingPoolRewardBody,
-	StakingPoolOwnerCapObject,
-	ApiFarmsOwnedStakingPoolOwnerCapsBody,
-	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
-	PartialFarmsStakedPositionObject,
-	EventsInputs,
-	FarmsStakedEvent,
-	FarmsStakedRelaxedEvent,
-	FarmsLockedEvent,
-	FarmsUnlockedEvent,
-	FarmsWithdrewPrincipalEvent,
-	FarmsDepositedPrincipalEvent,
-	FarmsHarvestedRewardsEvent,
-	FarmsCreatedVaultEvent,
-	StakingPoolOneTimeAdminCapObject,
-	FarmOwnerOrOneTimeAdminCap,
-	ObjectId,
-	SuiAddress,
-	BigIntAsString,
-	ApiFarmsCreateStakingPoolBodyV1,
-	ApiFarmsStakeBodyV1,
-	FarmsVersion,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Sui } from "../../sui";
-import {
-	FarmsCreatedVaultEventOnChainV1,
-	FarmsDepositedPrincipalEventOnChainV1,
-	FarmsHarvestedRewardsEventOnChainV1,
-	FarmsLockedEventOnChainV1,
-	FarmsStakedEventOnChainV1,
-	FarmsStakedRelaxedEventOnChainV1,
-	FarmsUnlockedEventOnChainV1,
-	FarmsWithdrewPrincipalEventOnChainV1,
-} from "./farmsApiCastingTypes";
 import {
 	Transaction,
 	type TransactionArgument,
 	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { bcs } from "@mysten/sui/bcs";
-import { Coin } from "../..";
-import {
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import type {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import { Casting, Helpers } from "../../../general/utils";
+import type {
+	AnyObjectType,
+	ApiFarmsCreateStakingPoolBody,
+	ApiFarmsCreateStakingPoolBodyV1,
+	ApiFarmsDepositPrincipalBody,
+	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
+	ApiFarmsInitializeStakingPoolRewardBody,
+	ApiFarmsOwnedStakingPoolOwnerCapsBody,
+	ApiFarmsStakeBody,
+	ApiFarmsStakeBodyV1,
+	ApiFarmsTopUpStakingPoolRewardsBody,
+	ApiFarmsUnstakeBody,
+	ApiHarvestFarmsRewardsBody,
+	Balance,
+	CoinType,
+	FarmOwnerOrOneTimeAdminCap,
+	FarmsAddresses,
+	FarmsLockEnforcement,
+	FarmsMultiplier,
+	FarmsVersion,
+	ObjectId,
+	PartialFarmsStakedPositionObject,
+	StakingPoolOneTimeAdminCapObject,
+	StakingPoolOwnerCapObject,
+	SuiAddress,
+	Timestamp,
+} from "../../../types";
+import { Coin } from "../..";
+import { Sui } from "../../sui";
 
 export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
@@ -171,15 +149,14 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Constructor for FarmsApi
-	 * @param Provider The AftermathApi provider instance
+	 * @param api The AftermathApi provider instance
 	 * @throws Error if not all required addresses have been set in provider
 	 */
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.farms;
-		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.farms;
+		if (!addresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = addresses;
 		this.objectTypes = {
@@ -373,19 +350,17 @@ export class FarmsApi implements MoveErrorsInterface {
 		const { walletAddress } = inputs;
 
 		const [capsV1, capsV2] = await Promise.all([
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakingPoolOwnerCapV1,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.stakingPoolOwnerCapObjectFromSuiObjectResponseV1,
+					Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV1,
 			}),
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakingPoolOwnerCapV2,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.stakingPoolOwnerCapObjectFromSuiObjectResponseV2,
+					Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV2,
 			}),
 		]);
 		return [...capsV1, ...capsV2];
@@ -403,19 +378,17 @@ export class FarmsApi implements MoveErrorsInterface {
 		const { walletAddress } = inputs;
 
 		const [capsV1, capsV2] = await Promise.all([
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakingPoolOneTimeAdminCapV1,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1,
+					Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1,
 			}),
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakingPoolOneTimeAdminCapV2,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2,
+					Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2,
 			}),
 		]);
 		return [...capsV1, ...capsV2];
@@ -437,19 +410,17 @@ export class FarmsApi implements MoveErrorsInterface {
 		const { walletAddress } = inputs;
 
 		const [positionsV1, positionsV2] = await Promise.all([
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakedPositionV1,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.partialStakedPositionObjectFromSuiObjectResponseV1,
+					Casting.farms.partialStakedPositionObjectFromSuiObjectResponseV1,
 			}),
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakedPositionV2,
 				objectFromSuiObjectResponse:
-					Casting.farms
-						.partialStakedPositionObjectFromSuiObjectResponseV2,
+					Casting.farms.partialStakedPositionObjectFromSuiObjectResponseV2,
 			}),
 		]);
 		return [...positionsV1, ...positionsV2];
@@ -488,9 +459,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			arguments: [
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				typeof stakeCoinId === "string"
-					? tx.object(stakeCoinId)
-					: stakeCoinId, // Coin
+				typeof stakeCoinId === "string" ? tx.object(stakeCoinId) : stakeCoinId, // Coin
 				tx.pure.u64(inputs.lockDurationMs),
 			],
 		});
@@ -522,9 +491,7 @@ export class FarmsApi implements MoveErrorsInterface {
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(this.addresses.objects.version), // Version
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				typeof stakeCoinId === "string"
-					? tx.object(stakeCoinId)
-					: stakeCoinId, // Coin
+				typeof stakeCoinId === "string" ? tx.object(stakeCoinId) : stakeCoinId, // Coin
 				tx.pure.u8(inputs.lockEnforcement === "Strict" ? 0 : 1), // lock_enforcement
 				tx.pure.u64(inputs.lockDurationMs), // lock_duration_ms
 			],
@@ -557,9 +524,7 @@ export class FarmsApi implements MoveErrorsInterface {
 				tx.object(inputs.stakedPositionId), // StakedPosition
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				typeof stakeCoinId === "string"
-					? tx.object(stakeCoinId)
-					: stakeCoinId, // Coin
+				typeof stakeCoinId === "string" ? tx.object(stakeCoinId) : stakeCoinId, // Coin
 			],
 		});
 	};
@@ -590,9 +555,7 @@ export class FarmsApi implements MoveErrorsInterface {
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(this.addresses.objects.version), // Version
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				typeof stakeCoinId === "string"
-					? tx.object(stakeCoinId)
-					: stakeCoinId, // Coin
+				typeof stakeCoinId === "string" ? tx.object(stakeCoinId) : stakeCoinId, // Coin
 			],
 		});
 	};
@@ -1287,9 +1250,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [],
 			arguments: [
-				typeof ownerCapId === "string"
-					? tx.object(ownerCapId)
-					: ownerCapId, // OwnerCap
+				typeof ownerCapId === "string" ? tx.object(ownerCapId) : ownerCapId, // OwnerCap
 				tx.pure.address(inputs.recipientAddress),
 			],
 		});
@@ -1317,9 +1278,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.rewardCoinType],
 			arguments: [
-				typeof ownerCapId === "string"
-					? tx.object(ownerCapId)
-					: ownerCapId, // OwnerCap
+				typeof ownerCapId === "string" ? tx.object(ownerCapId) : ownerCapId, // OwnerCap
 				tx.pure.address(inputs.recipientAddress),
 			],
 		});
@@ -1346,9 +1305,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.rewardCoinType],
 			arguments: [
-				typeof ownerCapId === "string"
-					? tx.object(ownerCapId)
-					: ownerCapId, // OwnerCap
+				typeof ownerCapId === "string" ? tx.object(ownerCapId) : ownerCapId, // OwnerCap
 				tx.object(this.addresses.objects.version), // Version
 				tx.pure.address(inputs.recipientAddress),
 			],
@@ -1472,9 +1429,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vaultV1,
-				isOneTimeAdminCap
-					? "add_reward_and_consume_admin_cap"
-					: "add_reward"
+				isOneTimeAdminCap ? "add_reward_and_consume_admin_cap" : "add_reward"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
@@ -1509,9 +1464,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vaultV2,
-				isOneTimeAdminCap
-					? "add_reward_and_consume_admin_cap"
-					: "add_reward"
+				isOneTimeAdminCap ? "add_reward_and_consume_admin_cap" : "add_reward"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
@@ -1805,7 +1758,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const stakeCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.stakeCoinType,
@@ -1834,7 +1787,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const stakeCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.stakeCoinType,
@@ -1867,7 +1820,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const stakeCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.stakeCoinType,
@@ -1897,7 +1850,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const stakeCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.stakeCoinType,
@@ -2074,18 +2027,14 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param parameters for lockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public buildLockTxV1 = Helpers.transactions.createBuildTxFunc(
-		this.lockTxV1
-	);
+	public buildLockTxV1 = Helpers.transactions.createBuildTxFunc(this.lockTxV1);
 
 	/**
 	 * Builds a transaction for locking a staked position
 	 * @param parameters for lockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public buildLockTxV2 = Helpers.transactions.createBuildTxFunc(
-		this.lockTxV2
-	);
+	public buildLockTxV2 = Helpers.transactions.createBuildTxFunc(this.lockTxV2);
 
 	/**
 	 * @deprecated use buildRenewLockTxV2 instead
@@ -2150,7 +2099,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			tx,
 		});
 
-		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
+		const harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
@@ -2175,22 +2124,20 @@ export class FarmsApi implements MoveErrorsInterface {
 			harvestedRewardsEventMetadataId: harvestRewardsCap,
 		});
 
-		for (const [coinType, harvestedCoinIds] of Object.entries(
-			harvestedCoins
-		)) {
+		for (const [coinType, harvestedCoinIds] of Object.entries(harvestedCoins)) {
 			const coinToTransfer = harvestedCoinIds[0];
 
-			if (harvestedCoinIds.length > 1)
+			if (harvestedCoinIds.length > 1) {
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
+			}
 
 			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
-				this.Provider.Staking().stakeTx({
+				this.api.Staking().stakeTx({
 					tx,
 					suiCoin: coinToTransfer,
 					withTransfer: true,
 					validatorAddress:
-						this.Provider.Staking().addresses.objects
-							.aftermathValidator,
+						this.api.Staking().addresses.objects.aftermathValidator,
 				});
 			} else {
 				tx.transferObjects([coinToTransfer], walletAddress);
@@ -2223,7 +2170,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			stakedPositionId: firstPositionId,
 		});
 
-		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
+		const harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
@@ -2245,22 +2192,20 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		this.endHarvestTxV2({ tx, harvestRewardsCap });
 
-		for (const [coinType, harvestedCoinIds] of Object.entries(
-			harvestedCoins
-		)) {
+		for (const [coinType, harvestedCoinIds] of Object.entries(harvestedCoins)) {
 			const coinToTransfer = harvestedCoinIds[0];
 
-			if (harvestedCoinIds.length > 1)
+			if (harvestedCoinIds.length > 1) {
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
+			}
 
 			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
-				this.Provider.Staking().stakeTx({
+				this.api.Staking().stakeTx({
 					tx,
 					suiCoin: coinToTransfer,
 					withTransfer: true,
 					validatorAddress:
-						this.Provider.Staking().addresses.objects
-							.aftermathValidator,
+						this.api.Staking().addresses.objects.aftermathValidator,
 				});
 			} else {
 				tx.transferObjects([coinToTransfer], walletAddress);
@@ -2357,7 +2302,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const rewardCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.rewardCoinType,
@@ -2383,7 +2328,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const rewardCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: inputs.rewardCoinType,
@@ -2411,14 +2356,13 @@ export class FarmsApi implements MoveErrorsInterface {
 		tx.setSender(walletAddress);
 
 		for (const reward of inputs.rewards) {
-			const rewardCoinId =
-				await this.Provider.Coin().fetchCoinWithAmountTx({
-					tx,
-					walletAddress,
-					coinType: reward.rewardCoinType,
-					coinAmount: reward.rewardAmount,
-					isSponsoredTx,
-				});
+			const rewardCoinId = await this.api.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: reward.rewardCoinType,
+				coinAmount: reward.rewardAmount,
+				isSponsoredTx,
+			});
 
 			this.topUpStakingPoolRewardTxV1({
 				...inputs,
@@ -2445,14 +2389,13 @@ export class FarmsApi implements MoveErrorsInterface {
 		tx.setSender(walletAddress);
 
 		for (const reward of inputs.rewards) {
-			const rewardCoinId =
-				await this.Provider.Coin().fetchCoinWithAmountTx({
-					tx,
-					walletAddress,
-					coinType: reward.rewardCoinType,
-					coinAmount: reward.rewardAmount,
-					isSponsoredTx,
-				});
+			const rewardCoinId = await this.api.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: reward.rewardCoinType,
+				coinAmount: reward.rewardAmount,
+				isSponsoredTx,
+			});
 
 			this.topUpStakingPoolRewardTxV2({
 				...inputs,
@@ -2607,16 +2550,18 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param parameters for grantOneTimeAdminCapTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public buildGrantOneTimeAdminCapTxV1 =
-		Helpers.transactions.createBuildTxFunc(this.grantOneTimeAdminCapTxV1);
+	public buildGrantOneTimeAdminCapTxV1 = Helpers.transactions.createBuildTxFunc(
+		this.grantOneTimeAdminCapTxV1
+	);
 
 	/**
 	 * Builds a transaction for granting a one-time admin capability for a staking pool
 	 * @param parameters for grantOneTimeAdminCapTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public buildGrantOneTimeAdminCapTxV2 =
-		Helpers.transactions.createBuildTxFunc(this.grantOneTimeAdminCapTxV2);
+	public buildGrantOneTimeAdminCapTxV2 = Helpers.transactions.createBuildTxFunc(
+		this.grantOneTimeAdminCapTxV2
+	);
 
 	// =========================================================================
 	//  Private Methods
@@ -2630,7 +2575,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Vault Creation
 	// =========================================================================
 
-	private eventWrapperType = () =>
+	private readonly eventWrapperType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
@@ -2641,7 +2586,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for vault creation events
 	 * @returns Fully qualified event type string
 	 */
-	private createdVaultEventType = (version: FarmsVersion) =>
+	private readonly createdVaultEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2659,7 +2604,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for reward initialization events
 	 * @returns Fully qualified event type string
 	 */
-	private initializedRewardEventType = (version: FarmsVersion) =>
+	private readonly initializedRewardEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2673,7 +2618,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for reward addition events
 	 * @returns Fully qualified event type string
 	 */
-	private addedRewardEventType = (version: FarmsVersion) =>
+	private readonly addedRewardEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2687,7 +2632,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for emission increase events
 	 * @returns Fully qualified event type string
 	 */
-	private increasedEmissionsEventType = () =>
+	private readonly increasedEmissionsEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
@@ -2698,7 +2643,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for emission update events
 	 * @returns Fully qualified event type string
 	 */
-	private updatedEmissionsEventType = () =>
+	private readonly updatedEmissionsEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
@@ -2714,7 +2659,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for strict staking events
 	 * @returns Fully qualified event type string
 	 */
-	private stakedEventType = (version: FarmsVersion) =>
+	private readonly stakedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2728,7 +2673,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for relaxed staking events
 	 * @returns Fully qualified event type string
 	 */
-	private stakedRelaxedEventType = (version: FarmsVersion) =>
+	private readonly stakedRelaxedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2746,7 +2691,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for position locking events
 	 * @returns Fully qualified event type string
 	 */
-	private lockedEventType = (version: FarmsVersion) =>
+	private readonly lockedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2760,7 +2705,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for position unlocking events
 	 * @returns Fully qualified event type string
 	 */
-	private unlockedEventType = (version: FarmsVersion) =>
+	private readonly unlockedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2778,7 +2723,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for principal deposit events
 	 * @returns Fully qualified event type string
 	 */
-	private depositedPrincipalEventType = (version: FarmsVersion) =>
+	private readonly depositedPrincipalEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2792,7 +2737,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for principal withdrawal events
 	 * @returns Fully qualified event type string
 	 */
-	private withdrewPrincipalEventType = (version: FarmsVersion) =>
+	private readonly withdrewPrincipalEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial
@@ -2810,7 +2755,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for reward harvesting events
 	 * @returns Fully qualified event type string
 	 */
-	private harvestedRewardsEventType = (version: FarmsVersion) =>
+	private readonly harvestedRewardsEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
 			version === 1
 				? this.addresses.packages.vaultsInitial

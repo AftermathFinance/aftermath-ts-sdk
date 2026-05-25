@@ -1,4 +1,4 @@
-import {
+import type {
 	Balance,
 	Event,
 	Object,
@@ -9,8 +9,8 @@ import {
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { UniqueId } from "../router/routerTypes";
+import type { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
+import type { UniqueId } from "../router/routerTypes";
 
 /**
  * Name or label used to identify a pool. e.g., "My Stable Pool" or "SUI-COIN LP".

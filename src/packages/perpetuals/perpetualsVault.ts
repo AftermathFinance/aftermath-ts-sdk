@@ -2,60 +2,57 @@ import {
 	Transaction,
 	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { AftermathApi } from "../../general/providers";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import {
+import type {
+	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
+	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
+	ApiPerpetualsVaultDepositTxBody,
+	ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody,
 	ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody,
 	ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody,
-	ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
-	ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody,
-	Balance,
-	CallerConfig,
-	PerpetualsMarketId,
-	PerpetualsVaultObject,
-	SuiAddress,
 	ApiPerpetualsVaultOwnerUpdatePerformanceFeeTxBody,
-	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse,
-	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody,
-	PerpetualsVaultWithdrawRequest,
-	ApiPerpetualsVaultsWithdrawRequestsBody,
-	ApiPerpetualsVaultOwnedWithdrawRequestsBody,
-	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
-	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
-	ApiPerpetualsVaultDepositTxBody,
-	ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody,
-	ApiPerpetualsVaultPreviewCreateWithdrawRequestBody,
-	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
-	ApiPerpetualsVaultPreviewDepositResponse,
-	ApiPerpetualsVaultPreviewDepositBody,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody,
-	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse,
-	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody,
-	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse,
-	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody,
-	PerpetualsVaultCap,
-	ApiTransactionResponse,
-	ObjectId,
-	PerpetualsPartialVaultCap,
-	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
-	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
-	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse,
-	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody,
 	ApiPerpetualsVaultOwnerWithdrawCollateralTxBody,
+	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
 	ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxBody,
 	ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse,
-	ApiPerpetualsVaultsWithdrawRequestsResponse,
-	ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse,
-	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
-	PerpetualsAccountObject,
+	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxBody,
+	ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse,
+	ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
+	ApiPerpetualsVaultPreviewCreateWithdrawRequestBody,
+	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
+	ApiPerpetualsVaultPreviewDepositBody,
+	ApiPerpetualsVaultPreviewDepositResponse,
+	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody,
+	ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody,
+	ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody,
+	ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse,
+	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody,
+	ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse,
 	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody,
 	ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse,
-	ApiPerpetualsVaultPauseVaultForForceWithdrawRequestTxBody,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
+	ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
+	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
+	ApiPerpetualsVaultsWithdrawRequestsBody,
+	ApiPerpetualsVaultsWithdrawRequestsResponse,
+	ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody,
+	ApiTransactionResponse,
+	Balance,
+	CallerConfig,
+	PerpetualsAccountObject,
+	PerpetualsMarketId,
+	PerpetualsPartialVaultCap,
 	PerpetualsSponsorConfig,
+	PerpetualsVaultObject,
+	PerpetualsVaultWithdrawRequest,
+	SuiAddress,
 } from "../../types";
-import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
+import type { PerpetualsAccount } from "./perpetualsAccount";
 
 /**
  * High-level wrapper around a single Perpetuals vault.
@@ -107,12 +104,12 @@ export class PerpetualsVault extends Caller {
 		/**
 		 * Maximum lock period in milliseconds.
 		 */
-		maxLockPeriodMs: 5184000000, // 2 months
+		maxLockPeriodMs: 5_184_000_000, // 2 months
 
 		/**
 		 * Maximum period for force withdraw delay in milliseconds.
 		 */
-		maxForceWithdrawDelayMs: 86400000, // 1 day
+		maxForceWithdrawDelayMs: 86_400_000, // 1 day
 
 		/**
 		 * Maximum vault fee (performance fee).
@@ -149,13 +146,13 @@ export class PerpetualsVault extends Caller {
 	 *
 	 * @param vaultObject - Raw on-chain vault object snapshot.
 	 * @param config - Optional {@link CallerConfig} (network, auth, base URL).
-	 * @param Provider - Optional shared {@link AftermathApi} provider. When provided,
+	 * @param api - Optional shared {@link AftermathApi} provider. When provided,
 	 *   transaction builders will serialize {@link Transaction}s into `txKind`.
 	 */
 	constructor(
 		public readonly vaultObject: PerpetualsVaultObject,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "perpetuals");
 	}
@@ -199,11 +196,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -224,11 +219,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -260,11 +253,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -297,11 +288,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -330,11 +319,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -364,11 +351,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -404,11 +389,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -439,11 +422,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: txFromInputs ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: txFromInputs ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -476,11 +457,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -518,11 +497,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -562,11 +539,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -595,11 +570,9 @@ export class PerpetualsVault extends Caller {
 			{
 				...otherInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -651,7 +624,7 @@ export class PerpetualsVault extends Caller {
 				? {
 						depositAmount: otherInputs.depositAmount,
 						collateralCoinType: this.vaultObject.collateralCoinType,
-				  }
+					}
 				: { depositCoinArg: otherInputs.depositCoinArg };
 
 		return this.fetchApiTxObject<
@@ -663,11 +636,9 @@ export class PerpetualsVault extends Caller {
 				...otherInputs,
 				...depositInputs,
 				vaultId: this.vaultObject.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }
@@ -862,7 +833,7 @@ export class PerpetualsVault extends Caller {
 	 */
 	public async getLpCoinPrice(): Promise<number> {
 		return (
-			await new Perpetuals(this.config, this.Provider).getLpCoinPrices({
+			await new Perpetuals(this.config, this.api).getLpCoinPrices({
 				vaultIds: [this.vaultObject.objectId],
 			})
 		).lpCoinPrices[0];
@@ -898,10 +869,7 @@ export class PerpetualsVault extends Caller {
 	}> {
 		return {
 			account: (
-				await new Perpetuals(
-					this.config,
-					this.Provider
-				).getAccountObjects({
+				await new Perpetuals(this.config, this.api).getAccountObjects({
 					accountIds: [this.vaultObject.accountId],
 				})
 			).accounts[0],
@@ -914,7 +882,7 @@ export class PerpetualsVault extends Caller {
 	 * @returns `{ account }` where `account` is a high-level {@link PerpetualsAccount}.
 	 */
 	public async getAccount(): Promise<{ account: PerpetualsAccount }> {
-		return new Perpetuals(this.config, this.Provider).getAccount({
+		return new Perpetuals(this.config, this.api).getAccount({
 			accountCap: this.partialVaultCap(),
 		});
 	}

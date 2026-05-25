@@ -1,18 +1,12 @@
-import {
+import type {
 	Transaction,
-	type TransactionObjectArgument,
+	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { bcs, type BcsType } from "@mysten/sui/bcs";
-import {
+import type {
 	AnyObjectType,
-	ApiDataWithCursorBody,
-	ApiIndexerEventsBody,
 	Balance,
 	Byte,
 	Event,
-	IFixed,
-	IFixedAsString,
-	Object,
 	ObjectDigest,
 	ObjectId,
 	ObjectVersion,
@@ -21,16 +15,10 @@ import {
 	SerializedTransaction,
 	Slippage,
 	SuiAddress,
-	SuiCheckpoint,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
-import {
-	CoinDecimal,
-	CoinSymbol,
-	CoinType,
-	ServiceCoinData,
-} from "../coin/coinTypes";
+import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Sponsor Config
@@ -1038,7 +1026,7 @@ export type ApiPerpetualsAccountCollateralHistoryResponse =
  * - Funding settlements
  * - Trading fees
  */
-export type PerpetualsAccountCollateralChange = {
+export interface PerpetualsAccountCollateralChange {
 	/** When the change occurred. */
 	timestamp: Timestamp;
 	/** Sui transaction digest that produced this change. */
@@ -1066,7 +1054,7 @@ export type PerpetualsAccountCollateralChange = {
 		| {
 				netFeesUsd: number;
 		  };
-};
+}
 
 /**
  * Cursor-based response wrapping a list of orders for an account.
@@ -1108,7 +1096,7 @@ export interface PerpetualsAccountMarginHistoryData {
 /**
  * Individual order affecting an account.
  */
-export type PerpetualsAccountOrderHistoryData = {
+export interface PerpetualsAccountOrderHistoryData {
 	/** Timestamp of the order. */
 	timestamp: Timestamp;
 	/** Sui transaction digest. */
@@ -1145,7 +1133,7 @@ export type PerpetualsAccountOrderHistoryData = {
 	pnl?: number;
 	/** Fees charged for this order event, if applicable. */
 	fees?: number;
-};
+}
 
 /**
  * Event emitted when collateral is deposited into an account.
@@ -2754,13 +2742,13 @@ export type ApiPerpetualsDepositCollateralBody = {
 /**
  * Request body for withdrawing collateral from an account.
  */
-export type ApiPerpetualsWithdrawCollateralBody = {
+export interface ApiPerpetualsWithdrawCollateralBody {
 	accountId: PerpetualsAccountId;
 	withdrawAmount: Balance;
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
-};
+}
 
 /**
  * Response body for withdraw-collateral transactions.
@@ -2877,7 +2865,7 @@ export type ApiPerpetualsPlaceStopOrdersBody = {
  * SDK-level inputs for placing stop-loss / take-profit orders bound to a
  * specific market and position side.
  */
-export type SdkPerpetualsPlaceSlTpOrdersInputs = {
+export interface SdkPerpetualsPlaceSlTpOrdersInputs {
 	marketId: PerpetualsMarketId;
 	/** Optional target size for SL/TP orders (scaled base units). */
 	size?: bigint;
@@ -2895,7 +2883,7 @@ export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 	isSponsoredTx?: boolean;
 	/** Optional gas pool sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
-};
+}
 // & (
 // 	| {
 // 			stopLossIndexPrice: number;
@@ -3156,14 +3144,14 @@ export type ApiPerpetualsScaleOrderBody = {
 /**
  * A single order to place as part of a cancel-and-place batch.
  */
-export type ApiPerpetualsOrderToPlace = {
+export interface ApiPerpetualsOrderToPlace {
 	/** Order side: `0` = bid (long), `1` = ask (short). */
 	side: PerpetualsOrderSide;
 	/** Limit price (scaled bigint). */
 	price: bigint;
 	/** Order size in scaled base units. */
 	size: bigint;
-};
+}
 
 /**
  * API request body for atomically canceling existing orders and placing
@@ -3470,14 +3458,14 @@ export interface ApiPerpetualsMarketsPricesResponse {
  * - **Method 2 (composed flow)**: Provide `deferred` with argument references
  *   from a deferred `getCreateAccountTx` call.
  */
-export type ApiPerpetualsGrantAgentWalletTxBody = {
+export interface ApiPerpetualsGrantAgentWalletTxBody {
 	recipientAddress: SuiAddress;
 	/** Perpetuals account ID (Method 1). */
 	accountId?: PerpetualsAccountId;
 	/** Composed PTB args from deferred create-account (Method 2). */
 	deferred?: DeferredAccountArgs;
 	txKind?: SerializedTransaction;
-};
+}
 
 /**
  * Request body for revoking an Agent Wallet from a perpetuals account.
@@ -3487,13 +3475,13 @@ export type ApiPerpetualsGrantAgentWalletTxBody = {
  * The resulting on-chain transaction must be signed by the **account admin** wallet.
  * `accountCapId` is the object ID of the assistant capability to revoke.
  */
-export type ApiPerpetualsRevokeAgentWalletTxBody = {
+export interface ApiPerpetualsRevokeAgentWalletTxBody {
 	accountId: PerpetualsAccountId;
 	accountCapId: ObjectId;
 	txKind?: SerializedTransaction;
-};
+}
 
-export type ApiPerpetualsTransferCapTxBody = {
+export interface ApiPerpetualsTransferCapTxBody {
 	/**
 	 * Recipient wallet address that should receive the capability object.
 	 *
@@ -3522,7 +3510,7 @@ export type ApiPerpetualsTransferCapTxBody = {
 	 */
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
-};
+}
 
 /**
  * Request body for sharing a Perpetuals account that was created with deferred sharing.
@@ -3959,14 +3947,13 @@ export interface ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestBody 
 
 // TODO: docs
 export type ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse =
-
-		| {
-				error: string;
-		  }
-		| {
-				isPausable: boolean;
-				minNextPauseTimestamp: bigint;
-		  };
+	| {
+			error: string;
+	  }
+	| {
+			isPausable: boolean;
+			minNextPauseTimestamp: bigint;
+	  };
 
 /**
  * Request body for previewing normal withdraw requests processing for a vault.

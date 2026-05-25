@@ -39,9 +39,7 @@ export class SuiFrensApiCasting {
 	): CapyLabsAppObject => {
 		const objectType = Helpers.getObjectType(data);
 
-		const fields = Helpers.getObjectFields(
-			data
-		) as CapyLabsAppFieldsOnChain;
+		const fields = Helpers.getObjectFields(data) as CapyLabsAppFieldsOnChain;
 
 		return {
 			objectType,
@@ -148,9 +146,7 @@ export class SuiFrensApiCasting {
 		} => {
 			return {
 				stakedSuiFrenMetadata:
-					this.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse(
-						data
-					),
+					this.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse(data),
 				partialSuiFren:
 					this.partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse(
 						data

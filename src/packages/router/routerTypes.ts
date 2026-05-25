@@ -1,22 +1,20 @@
-import {
+import type { TransactionObjectArgument } from "@mysten/sui/transactions";
+import type {
 	AnyObjectType,
+	ApiIndexerEventsBody,
 	Balance,
-	Percentage,
+	BigIntAsString,
 	Event,
-	Slippage,
-	ApiEventsBody,
+	ExternalFee,
+	IFixed,
 	ObjectId,
+	Percentage,
+	SerializedTransaction,
+	Slippage,
 	SuiAddress,
 	TxBytes,
-	BigIntAsString,
-	SerializedTransaction,
-	ExternalFee,
-	IFixedAsString,
-	IFixed,
-	ApiIndexerEventsBody,
 } from "../../general/types/generalTypes";
-import { CoinType, ServiceCoinData } from "../coin/coinTypes";
-import type { TransactionObjectArgument } from "@mysten/sui/transactions";
+import type { CoinType, ServiceCoinData } from "../coin/coinTypes";
 
 /**
  * A unique identifier, typically used to track items or route segments.

@@ -1,14 +1,11 @@
-import {
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import type {
 	ApiFaucetMintSuiFrenBody,
 	ApiFaucetRequestBody,
 	CallerConfig,
 	CoinType,
-	SuiNetwork,
-	Url,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
-import { Transaction } from "@mysten/sui/transactions";
 
 export class Faucet extends Caller {
 	// =========================================================================
@@ -25,7 +22,7 @@ export class Faucet extends Caller {
 
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "faucet");
 	}
@@ -49,20 +46,22 @@ export class Faucet extends Caller {
 	// =========================================================================
 
 	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
-		return this.useProvider().buildRequestCoinTx(inputs);
+		return this.faucetApi().buildRequestCoinTx(inputs);
 	}
 
 	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {
-		return this.useProvider().fetchBuildMintSuiFrenTx(inputs);
+		return this.faucetApi().fetchBuildMintSuiFrenTx(inputs);
 	}
 
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.Faucet();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly faucetApi = () => {
+		const faucet = this.api?.Faucet();
+		if (!faucet) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return faucet;
 	};
 }

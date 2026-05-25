@@ -1,54 +1,32 @@
-import { AftermathApi, Casting, Coin, Helpers, PerpetualsAccount } from "../..";
+import { type AftermathApi, Casting, PerpetualsAccount } from "../..";
 import { Caller } from "../../general/utils/caller";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import {
-	ApiIndexerEventsBody,
-	ApiPerpetualsExecutionPriceBody,
-	ApiPerpetualsExecutionPriceResponse,
+import type {
+	ApiPerpetualsMarketOrderHistoryBody,
+	ApiPerpetualsMarketOrderHistoryResponse,
+	ApiPerpetualsMaxOrderSizeBody,
+	ApiPerpetualsOrderbooksBody,
+	ApiPerpetualsOrderbooksResponse,
+	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsPreviewPlaceMarketOrderBody,
+	ApiPerpetualsPreviewPlaceOrderResponse,
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
+	CallerConfig,
 	CoinType,
-	FilledMakerOrdersEvent,
-	FilledTakerOrderEvent,
-	ObjectId,
-	PerpetualsMarketCandleDataPoint,
+	Percentage,
+	PerpetualsMarket24hrStats,
+	PerpetualsMarketData,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
-	PerpetualsOrderData,
-	PerpetualsOrderId,
-	PerpetualsOrderPrice,
-	PerpetualsOrderSide,
 	PerpetualsOrderbook,
+	PerpetualsOrderData,
 	PerpetualsPosition,
-	SuiNetwork,
-	Timestamp,
-	Url,
-	PerpetualsMarketData,
-	Balance,
-	PerpetualsFilledOrderData,
-	ApiPerpetualsMaxOrderSizeBody,
-	ApiPerpetualsMarkets24hrStatsResponse,
-	ApiDataWithCursorBody,
-	ApiPerpetualsMarketOrderHistoryResponse,
-	CallerConfig,
-	Percentage,
-	ApiPerpetualsPreviewPlaceOrderResponse,
-	PerpetualsMarket24hrStats,
-	ApiPerpetualsPreviewPlaceLimitOrderBody,
-	ApiPerpetualsPreviewPlaceScaleOrderBody,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
-	SdkPerpetualsPlaceScaleOrderPreviewInputs,
-	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
-	PerpetualsAccountId,
-	ApiPerpetualsMarketOrderHistoryBody,
-	ApiPerpetualsMarketsResponse,
-	ApiPerpetualsMarketsBody,
-	ApiPerpetualsOrderbooksResponse,
-	ApiPerpetualsOrderbooksBody,
+	SdkPerpetualsPlaceScaleOrderPreviewInputs,
+	Timestamp,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
-import { PerpetualsOrderUtils } from "./utils";
 
 /**
  * High-level wrapper around a single perpetuals market.
@@ -117,7 +95,7 @@ export class PerpetualsMarket extends Caller {
 	 *
 	 * @param marketData - Snapshot of market configuration and state.
 	 * @param config - Optional {@link CallerConfig} (network, base URL, etc.).
-	 * @param Provider - Optional shared {@link AftermathApi} provider instance.
+	 * @param api - Optional shared {@link AftermathApi} provider instance.
 	 *
 	 * @remarks
 	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning
@@ -126,7 +104,7 @@ export class PerpetualsMarket extends Caller {
 	constructor(
 		public marketData: PerpetualsMarketData,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "perpetuals");
 		this.marketId = marketData.objectId;
@@ -151,8 +129,8 @@ export class PerpetualsMarket extends Caller {
 	 *
 	 * @remarks
 	 * This method creates a new {@link Perpetuals} instance using `this.config`.
-	 * If you need shared Provider behavior, prefer calling `perps.getMarkets24hrStats`
-	 * directly with the same Provider you initialized.
+	 * If you need shared api behavior, prefer calling `perps.getMarkets24hrStats`
+	 * directly with the same api you initialized.
 	 */
 	public async get24hrStats(): Promise<PerpetualsMarket24hrStats> {
 		const res = await new Perpetuals(this.config).getMarkets24hrStats({
@@ -359,7 +337,7 @@ export class PerpetualsMarket extends Caller {
 	 *
 	 * @remarks
 	 * This method instantiates a new {@link Perpetuals} client using `this.config`.
-	 * If you rely on a shared Provider, call `perps.getPrices(...)` directly instead.
+	 * If you rely on a shared api, call `perps.getPrices(...)` directly instead.
 	 */
 	public async getPrices(): Promise<{
 		marketId: PerpetualsMarketId;
@@ -560,8 +538,8 @@ export class PerpetualsMarket extends Caller {
 			(inputs.floor
 				? Math.floor(ticks)
 				: inputs.ceil
-				? Math.ceil(ticks)
-				: Math.round(ticks)) * this.tickSize()
+					? Math.ceil(ticks)
+					: Math.round(ticks)) * this.tickSize()
 		);
 	};
 
@@ -587,8 +565,8 @@ export class PerpetualsMarket extends Caller {
 				inputs.floor
 					? Math.floor(scaledPrice)
 					: inputs.ceil
-					? Math.ceil(scaledPrice)
-					: Math.round(scaledPrice)
+						? Math.ceil(scaledPrice)
+						: Math.round(scaledPrice)
 			) /
 				this.marketParams.tickSize) *
 			this.marketParams.tickSize
@@ -618,8 +596,8 @@ export class PerpetualsMarket extends Caller {
 			(inputs.floor
 				? Math.floor(lots)
 				: inputs.ceil
-				? Math.ceil(lots)
-				: Math.round(lots)) * this.lotSize()
+					? Math.ceil(lots)
+					: Math.round(lots)) * this.lotSize()
 		);
 	};
 
@@ -642,8 +620,8 @@ export class PerpetualsMarket extends Caller {
 				inputs.floor
 					? Math.floor(scaledSize)
 					: inputs.ceil
-					? Math.ceil(scaledSize)
-					: Math.round(scaledSize)
+						? Math.ceil(scaledSize)
+						: Math.round(scaledSize)
 			) /
 				this.marketParams.lotSize) *
 			this.marketParams.lotSize
@@ -666,8 +644,7 @@ export class PerpetualsMarket extends Caller {
 			baseAssetAmount: 0,
 			quoteAssetNotionalAmount: 0,
 			cumFundingRateLong: this.marketData.marketState.cumFundingRateLong,
-			cumFundingRateShort:
-				this.marketData.marketState.cumFundingRateShort,
+			cumFundingRateShort: this.marketData.marketState.cumFundingRateShort,
 			asksQuantity: 0,
 			bidsQuantity: 0,
 			pendingOrders: [],

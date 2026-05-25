@@ -1,10 +1,5 @@
-import { Balance, Helpers } from "../../..";
-import {
-	RouterCompleteTradeRoute,
-	RouterTradeEvent,
-	RouterTradeRoute,
-} from "../routerTypes";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import type { RouterTradeEvent } from "../routerTypes";
+import type { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 
 export class RouterApiCasting {
 	// =========================================================================

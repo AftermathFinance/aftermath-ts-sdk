@@ -1,18 +1,10 @@
-import { EventOnChain } from "../../general/types/castingTypes";
-import {
-	AnyObjectType,
+import type { EventOnChain } from "../../general/types/castingTypes";
+import type {
 	BigIntAsString,
 	Byte,
-	CoinSymbol,
-	IdAsStringBytes,
-	IFixedAsBytes,
 	IFixedAsString,
-	IFixedAsStringBytes,
 	ObjectId,
 	PerpetualsAccountId,
-	PerpetualsMarketId,
-	PerpetualsOrderId,
-	PerpetualsOrderIdAsString,
 	SuiAddress,
 } from "../../types";
 

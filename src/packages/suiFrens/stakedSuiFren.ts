@@ -1,20 +1,14 @@
-import {
-	ApiAddSuiFrenAccessoryBody,
-	ApiRemoveSuiFrenAccessoryBody,
-	ApiUnstakeSuiFrenBody,
-	ApiHarvestSuiFrenFeesBody,
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import type {
 	Balance,
-	StakedSuiFrenInfo,
-	SuiFrenAccessoryType,
-	SuiNetwork,
-	Url,
-	ObjectId,
-	SuiAddress,
 	CallerConfig,
+	ObjectId,
+	StakedSuiFrenInfo,
+	SuiAddress,
+	SuiFrenAccessoryType,
 } from "../../types";
 import { SuiFren } from "./suiFren";
-import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
 
 export class StakedSuiFren extends Caller {
 	// =========================================================================
@@ -31,7 +25,7 @@ export class StakedSuiFren extends Caller {
 		public readonly info: StakedSuiFrenInfo,
 		config?: CallerConfig,
 		public readonly isOwned: boolean = false,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "sui-frens");
 		this.suiFren = new SuiFren(info.suiFren, this.config, true, isOwned);
@@ -50,12 +44,7 @@ export class StakedSuiFren extends Caller {
 	}
 
 	public clone(): StakedSuiFren {
-		return new StakedSuiFren(
-			this.info,
-			this.config,
-			this.isOwned,
-			this.Provider
-		);
+		return new StakedSuiFren(this.info, this.config, this.isOwned, this.api);
 	}
 
 	// =========================================================================
@@ -71,10 +60,11 @@ export class StakedSuiFren extends Caller {
 	// =========================================================================
 
 	public async getUnstakeTransaction(inputs: { walletAddress: SuiAddress }) {
-		if (!this.info.position)
+		if (!this.info.position) {
 			throw new Error("no position found on suiFren");
+		}
 
-		return this.useProvider().fetchUnstakeTx({
+		return this.suiFrensApi().fetchUnstakeTx({
 			...inputs,
 			suiFrenType: this.suiFren.suiFrenType(),
 			stakedPositionId: this.info.position.objectId,
@@ -84,14 +74,16 @@ export class StakedSuiFren extends Caller {
 	public async getHarvestFeesTransaction(inputs: {
 		walletAddress: SuiAddress;
 	}) {
-		if (!this.info.position)
+		if (!this.info.position) {
 			throw new Error("no position found on suiFren");
-		if (!this.isOwned)
+		}
+		if (!this.isOwned) {
 			throw new Error(
 				"unable to remove accessory from suiFren that is not owned by caller"
 			);
+		}
 
-		return this.useProvider().fetchBuildHarvestFeesTx({
+		return this.suiFrensApi().fetchBuildHarvestFeesTx({
 			...inputs,
 			stakedPositionIds: [this.info.position.objectId],
 		});
@@ -108,14 +100,16 @@ export class StakedSuiFren extends Caller {
 		accessoryType: SuiFrenAccessoryType;
 		walletAddress: SuiAddress;
 	}) {
-		if (!this.info.position)
+		if (!this.info.position) {
 			throw new Error("no position found on suiFren");
-		if (!this.isOwned)
+		}
+		if (!this.isOwned) {
 			throw new Error(
 				"unable to remove accessory from suiFren that is not owned by caller"
 			);
+		}
 
-		return this.useProvider().fetchBuildRemoveAccessoryTx({
+		return this.suiFrensApi().fetchBuildRemoveAccessoryTx({
 			...inputs,
 			suiFrenType: this.suiFren.suiFrenType(),
 			stakedPositionId: this.info.position.objectId,
@@ -126,9 +120,11 @@ export class StakedSuiFren extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.SuiFrens();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private suiFrensApi = () => {
+		const suiFrens = this.api?.SuiFrens();
+		if (!suiFrens) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return suiFrens;
 	};
 }

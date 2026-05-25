@@ -58,19 +58,14 @@ export class StakingApiCasting {
 			objectId,
 			objectType,
 			atomicUnstakeSuiReservesTargetValue: BigInt(
-				fields.protocol_config.fields
-					.atomic_unstake_sui_reserves_target_value
+				fields.protocol_config.fields.atomic_unstake_sui_reserves_target_value
 			),
-			atomicUnstakeSuiReserves: BigInt(
-				fields.atomic_unstake_sui_reserves
-			),
+			atomicUnstakeSuiReserves: BigInt(fields.atomic_unstake_sui_reserves),
 			minAtomicUnstakeFee: BigInt(
-				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
-					.min_fee
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields.min_fee
 			),
 			maxAtomicUnstakeFee: BigInt(
-				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
-					.max_fee
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields.max_fee
 			),
 			totalSuiAmount: BigInt(fields.total_sui_amount),
 			totalRewardsAmount: BigInt(fields.total_rewards_amount),

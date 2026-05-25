@@ -1,5 +1,8 @@
-import {
-	DaoFeePoolObject,
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import { Helpers } from "../../../general/utils";
+import type { ObjectId } from "../../../types";
+import { Coin } from "../../coin";
+import type {
 	DaoFeePoolOwnerCapObject,
 	PoolCoins,
 	PoolDepositEvent,
@@ -7,23 +10,14 @@ import {
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 } from "../poolsTypes";
-import {
-	PoolCreateEventOnChain,
-	PoolFieldsOnChain,
-	PoolTradeEventOnChainFields,
-	PoolDepositEventFieldsOnChain,
-	PoolWithdrawEventFieldsOnChain,
-	PoolTradeEventOnChain,
-	PoolDepositEventOnChain,
-	PoolWithdrawEventOnChain,
-	DaoFeePoolFieldsOnChain,
+import type {
 	DaoFeePoolOwnerCapFieldsOnChain,
+	PoolCreateEventOnChain,
+	PoolDepositEventOnChain,
+	PoolFieldsOnChain,
+	PoolTradeEventOnChain,
+	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Coin } from "../../coin";
-import { Helpers } from "../../../general/utils";
-import { AnyObjectType, ObjectId } from "../../../types";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
 
 export class PoolsApiCasting {
 	// =========================================================================
@@ -47,7 +41,7 @@ export class PoolsApiCasting {
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
 			(acc, cur, index) => ({
 				...acc,
-				[Helpers.addLeadingZeroesToType("0x" + cur)]: {
+				[Helpers.addLeadingZeroesToType(`0x${cur}`)]: {
 					weight: BigInt(poolFieldsOnChain.weights[index]),
 					balance:
 						BigInt(poolFieldsOnChain.normalized_balances[index]) /
@@ -59,15 +53,11 @@ export class PoolsApiCasting {
 					normalizedBalance: BigInt(
 						poolFieldsOnChain.normalized_balances[index]
 					),
-					decimalsScalar: BigInt(
-						poolFieldsOnChain.decimal_scalars[index]
-					),
+					decimalsScalar: BigInt(poolFieldsOnChain.decimal_scalars[index]),
 					...(poolFieldsOnChain.coin_decimals
 						? {
-								decimals: Number(
-									poolFieldsOnChain.coin_decimals[index]
-								),
-						  }
+								decimals: Number(poolFieldsOnChain.coin_decimals[index]),
+							}
 						: {}),
 				},
 			}),
@@ -100,9 +90,7 @@ export class PoolsApiCasting {
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			daoFeePoolId: Helpers.addLeadingZeroesToType(
-				fields.dao_fee_pool_id
-			),
+			daoFeePoolId: Helpers.addLeadingZeroesToType(fields.dao_fee_pool_id),
 		};
 	};
 
@@ -125,11 +113,11 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			trader: fields.issuer,
 			typesIn: fields.types_in.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			amountsIn: fields.amounts_in.map((amount) => BigInt(amount)),
 			typesOut: fields.types_out.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			amountsOut: fields.amounts_out.map((amount) => BigInt(amount)),
 			timestamp: Number(eventOnChain.timestampMs),
@@ -146,7 +134,7 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			depositor: fields.issuer,
 			types: fields.types.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			deposits: fields.deposits.map((deposit) => BigInt(deposit)),
 			lpMinted: BigInt(fields.lp_coins_minted),
@@ -164,7 +152,7 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			withdrawer: fields.issuer,
 			types: fields.types.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			withdrawn: fields.withdrawn.map((withdraw) => BigInt(withdraw)),
 			lpBurned: BigInt(fields.lp_coins_burned),

@@ -1,35 +1,30 @@
-import {
+import type { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
+import { Casting, Helpers } from "../../general/utils";
+import { Caller } from "../../general/utils/caller";
+import type {
+	ApiIndexerEventsBody,
+	ApiPoolAllCoinWithdrawBody,
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
 	ApiPoolWithdrawBody,
 	Balance,
-	CoinType,
+	CallerConfig,
 	CoinsToBalance,
+	CoinType,
+	ObjectId,
+	Percentage,
+	PoolCoin,
 	PoolDataPoint,
+	PoolDepositEvent,
 	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolStats,
-	SuiNetwork,
-	PoolDepositEvent,
 	PoolWithdrawEvent,
-	PoolTradeEvent,
-	Url,
-	ApiPoolAllCoinWithdrawBody,
-	ApiIndexerEventsBody,
-	IndexerEventsWithCursor,
-	Percentage,
 	SuiAddress,
-	ObjectId,
-	PoolCoin,
-	CallerConfig,
 } from "../../types";
-import { CmmmCalculations } from "./utils/cmmmCalculations";
-import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
-import { Casting, Helpers } from "../../general/utils";
-import { Transaction } from "@mysten/sui/transactions";
-import { Coin } from "..";
-import { AftermathApi } from "../../general/providers";
+import { CmmmCalculations } from "./utils/cmmmCalculations";
 
 /**
  * The `Pool` class encapsulates all the functionality needed to interact
@@ -39,8 +34,7 @@ import { AftermathApi } from "../../general/providers";
  *
  * @example
  * ```typescript
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init(); // initialize provider
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const pools = afSdk.Pools();
  * const pool = await pools.getPool({ objectId: "0x..." });
@@ -75,12 +69,12 @@ export class Pool extends Caller {
 	 *
 	 * @param pool - The fetched `PoolObject` from Aftermath API or on-chain query.
 	 * @param config - Optional caller configuration (e.g., network, access token).
-	 * @param Provider - An optional `AftermathApi` instance for advanced transaction usage.
+	 * @param api - An optional `AftermathApi` instance for advanced transaction usage.
 	 */
 	constructor(
 		public readonly pool: PoolObject,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, `pools/${pool.objectId}`);
 		this.pool = pool;
@@ -109,7 +103,7 @@ export class Pool extends Caller {
 	public async getDepositTransaction(
 		inputs: ApiPoolDepositBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildDepositTx({
+		return this.poolsApi().fetchBuildDepositTx({
 			...inputs,
 			pool: this,
 		});
@@ -136,7 +130,7 @@ export class Pool extends Caller {
 	public async getWithdrawTransaction(
 		inputs: ApiPoolWithdrawBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildWithdrawTx({
+		return this.poolsApi().fetchBuildWithdrawTx({
 			...inputs,
 			pool: this,
 		});
@@ -160,7 +154,7 @@ export class Pool extends Caller {
 	public async getAllCoinWithdrawTransaction(
 		inputs: ApiPoolAllCoinWithdrawBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildAllCoinWithdrawTx({
+		return this.poolsApi().fetchBuildAllCoinWithdrawTx({
 			...inputs,
 			pool: this,
 		});
@@ -186,7 +180,7 @@ export class Pool extends Caller {
 	public async getTradeTransaction(
 		inputs: ApiPoolTradeBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildTradeTx({
+		return this.poolsApi().fetchBuildTradeTx({
 			...inputs,
 			pool: this,
 		});
@@ -216,9 +210,11 @@ export class Pool extends Caller {
 		newFeePercentage: Percentage;
 	}): Promise<Transaction> {
 		const daoFeePoolId = this.pool.daoFeePoolObject?.objectId;
-		if (!daoFeePoolId) throw new Error("this pool has no DAO fee");
+		if (!daoFeePoolId) {
+			throw new Error("this pool has no DAO fee");
+		}
 
-		return this.useProvider().buildDaoFeePoolUpdateFeeBpsTx({
+		return this.poolsApi().buildDaoFeePoolUpdateFeeBpsTx({
 			...inputs,
 			daoFeePoolId,
 			lpCoinType: this.pool.lpCoinType,
@@ -250,15 +246,15 @@ export class Pool extends Caller {
 		newFeeRecipient: SuiAddress;
 	}): Promise<Transaction> {
 		const daoFeePoolId = this.pool.daoFeePoolObject?.objectId;
-		if (!daoFeePoolId) throw new Error("this pool has no DAO fee");
+		if (!daoFeePoolId) {
+			throw new Error("this pool has no DAO fee");
+		}
 
-		return this.useProvider().buildDaoFeePoolUpdateFeeRecipientTx({
+		return this.poolsApi().buildDaoFeePoolUpdateFeeRecipientTx({
 			...inputs,
 			daoFeePoolId,
 			lpCoinType: this.pool.lpCoinType,
-			newFeeRecipient: Helpers.addLeadingZeroesToType(
-				inputs.newFeeRecipient
-			),
+			newFeeRecipient: Helpers.addLeadingZeroesToType(inputs.newFeeRecipient),
 		});
 	}
 
@@ -453,10 +449,11 @@ export class Pool extends Caller {
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
-		)
+		) {
 			throw new Error(
 				"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
+		}
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
 			pool,
@@ -465,16 +462,19 @@ export class Pool extends Caller {
 			coinInAmountWithFees
 		);
 
-		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
+		if (coinOutAmount <= 0) {
+			throw new Error("coinOutAmount <= 0");
+		}
 
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
-		)
+		) {
 			throw new Error(
 				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
+		}
 
 		return coinOutAmount;
 	};
@@ -510,10 +510,11 @@ export class Pool extends Caller {
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
-		)
+		) {
 			throw new Error(
 				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
+		}
 
 		const coinInAmount = CmmmCalculations.calcInGivenOut(
 			pool,
@@ -522,16 +523,19 @@ export class Pool extends Caller {
 			inputs.coinOutAmount
 		);
 
-		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
+		if (coinInAmount <= 0) {
+			throw new Error("coinInAmount <= 0");
+		}
 
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
-		)
+		) {
 			throw new Error(
 				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
+		}
 
 		const coinInAmountWithoutFees = this.getAmountWithoutDAOFee({
 			amount: Pools.getAmountWithoutProtocolFees({
@@ -575,8 +579,9 @@ export class Pool extends Caller {
 			)
 		);
 
-		if (calcedLpRatio >= Casting.Fixed.fixedOneB)
+		if (calcedLpRatio >= Casting.Fixed.fixedOneB) {
 			throw new Error("lpRatio >= 1");
+		}
 
 		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
 		const lpAmountOut = BigInt(
@@ -620,8 +625,9 @@ export class Pool extends Caller {
 			if (
 				!(coin in inputs.amountsOutDirection) ||
 				inputs.amountsOutDirection[coin] <= BigInt(0)
-			)
+			) {
 				continue;
+			}
 
 			const amountOut = amountsOut[coin];
 			if (amountOut <= 0) {
@@ -659,11 +665,10 @@ export class Pool extends Caller {
 
 		const lpCoinSupply = this.pool.lpCoinSupply;
 
-		let withdrawAmountsEstimates: CoinsToBalance = {};
+		const withdrawAmountsEstimates: CoinsToBalance = {};
 		coinTypesOut.forEach((poolCoin) => {
 			const poolCoinAmountInPool =
-				this.pool.coins[Helpers.addLeadingZeroesToType(poolCoin)]
-					.balance;
+				this.pool.coins[Helpers.addLeadingZeroesToType(poolCoin)].balance;
 
 			const poolCoinAmount =
 				Number(poolCoinAmountInPool) *
@@ -687,20 +692,23 @@ export class Pool extends Caller {
 				!coinTypesOut
 					.map((coinOut) => Helpers.addLeadingZeroesToType(coinOut))
 					.includes(coin)
-			)
+			) {
 				continue;
+			}
 
 			const amountOut = amountsOut[coin];
-			if (amountOut <= BigInt(0))
+			if (amountOut <= BigInt(0)) {
 				throw new Error(`amountsOut[${coin}] <= 0 `);
+			}
 
 			if (
 				amountOut / this.pool.coins[coin].balance >=
 				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
-			)
+			) {
 				throw new Error(
 					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
 				);
+			}
 
 			amountsOut[coin] = this.getAmountWithDAOFee({
 				amount: amountOut,
@@ -727,20 +735,21 @@ export class Pool extends Caller {
 		lpRatio: number;
 		referral?: boolean;
 	}): CoinsToBalance => {
-		if (inputs.lpRatio >= 1) throw new Error("lpRatio >= 1");
+		if (inputs.lpRatio >= 1) {
+			throw new Error("lpRatio >= 1");
+		}
 
-		const amountsOut: CoinsToBalance = Object.entries(
-			this.pool.coins
-		).reduce((acc, [coin, info]) => {
-			return {
-				...acc,
-				[coin]: this.getAmountWithDAOFee({
-					amount: BigInt(
-						Math.floor(Number(info.balance) * inputs.lpRatio)
-					),
-				}),
-			};
-		}, {});
+		const amountsOut: CoinsToBalance = Object.entries(this.pool.coins).reduce(
+			(acc, [coin, info]) => {
+				return {
+					...acc,
+					[coin]: this.getAmountWithDAOFee({
+						amount: BigInt(Math.floor(Number(info.balance) * inputs.lpRatio)),
+					}),
+				};
+			},
+			{}
+		);
 
 		return amountsOut;
 	};
@@ -767,8 +776,7 @@ export class Pool extends Caller {
 	 */
 	public getAllCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountIn: bigint;
-	}): number =>
-		Number(inputs.lpCoinAmountIn) / Number(this.pool.lpCoinSupply);
+	}): number => Number(inputs.lpCoinAmountIn) / Number(this.pool.lpCoinSupply);
 
 	// =========================================================================
 	//  Getters
@@ -839,13 +847,13 @@ export class Pool extends Caller {
 	 * @param inputs - Contains `amount` as a bigint.
 	 * @returns The post-fee amount as a bigint.
 	 */
-	private getAmountWithDAOFee = (inputs: { amount: Balance }) => {
+	private readonly getAmountWithDAOFee = (inputs: { amount: Balance }) => {
 		const daoFeePercentage = this.daoFeePercentage();
-		if (!daoFeePercentage) return inputs.amount;
+		if (!daoFeePercentage) {
+			return inputs.amount;
+		}
 
-		return BigInt(
-			Math.floor(Number(inputs.amount) * (1 - daoFeePercentage))
-		);
+		return BigInt(Math.floor(Number(inputs.amount) * (1 - daoFeePercentage)));
 	};
 
 	/**
@@ -855,9 +863,11 @@ export class Pool extends Caller {
 	 * @param inputs - Contains `amount` as a bigint.
 	 * @returns The pre-fee amount as a bigint.
 	 */
-	private getAmountWithoutDAOFee = (inputs: { amount: Balance }) => {
+	private readonly getAmountWithoutDAOFee = (inputs: { amount: Balance }) => {
 		const daoFeePercentage = this.daoFeePercentage();
-		if (!daoFeePercentage) return inputs.amount;
+		if (!daoFeePercentage) {
+			return inputs.amount;
+		}
 
 		return BigInt(
 			Math.floor(Number(inputs.amount) * (1 / (1 - daoFeePercentage)))
@@ -868,9 +878,11 @@ export class Pool extends Caller {
 	 * Provides an instance of the Pools provider from `AftermathApi`.
 	 * Throws an error if not defined.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Pools();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly poolsApi = () => {
+		const pools = this.api?.Pools();
+		if (!pools) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return pools;
 	};
 }

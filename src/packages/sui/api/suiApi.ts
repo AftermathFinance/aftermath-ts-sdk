@@ -11,7 +11,7 @@ export class SuiApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Inspections
@@ -31,17 +31,12 @@ export class SuiApi {
 	 * console.log(systemState.epoch, systemState.validators);
 	 */
 	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
-		const systemState =
-			await this.Provider.provider.getLatestSuiSystemState();
+		const systemState = await this.api.client.getLatestSuiSystemState();
 
-		const activeValidators = systemState.activeValidators.map(
-			(validator) => ({
-				...validator,
-				suiAddress: Helpers.addLeadingZeroesToType(
-					validator.suiAddress
-				),
-			})
-		);
+		const activeValidators = systemState.activeValidators.map((validator) => ({
+			...validator,
+			suiAddress: Helpers.addLeadingZeroesToType(validator.suiAddress),
+		}));
 
 		return {
 			...systemState,

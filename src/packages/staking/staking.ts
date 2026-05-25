@@ -1,27 +1,27 @@
-import {
-	ApiStakeBody,
-	ApiUnstakeBody,
-	ApiStakingPositionsBody,
-	StakingPosition,
-	Balance,
-	ValidatorConfigObject,
-	ApiStakeStakedSuiBody,
+import type { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/jsonRpc";
+import type { AftermathApi } from "../../general/providers";
+import { Casting } from "../../general/utils";
+import { Caller } from "../../general/utils/caller";
+import type {
 	ApiDelegatedStakesBody,
-	SuiDelegatedStake,
-	ApiValidatorOperationCapsBody,
-	ValidatorOperationCapObject,
+	ApiStakeBody,
+	ApiStakeStakedSuiBody,
+	ApiStakingPositionsBody,
+	ApiUnstakeBody,
 	ApiUpdateValidatorFeeBody,
+	ApiValidatorOperationCapsBody,
+	Balance,
+	CallerConfig,
 	Percentage,
 	StakedSuiVaultStateObject,
-	SuiAddress,
 	StakingApyDataPoint,
 	StakingApyTimeframeKey,
-	CallerConfig,
+	StakingPosition,
+	SuiAddress,
+	SuiDelegatedStake,
+	ValidatorConfigObject,
+	ValidatorOperationCapObject,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import type { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/jsonRpc";
-import { Casting } from "../../general/utils";
-import { AftermathApi } from "../../general/providers";
 
 /**
  * The `Staking` class provides methods for interacting with Aftermath's
@@ -32,8 +32,7 @@ import { AftermathApi } from "../../general/providers";
  * @example
  * ```typescript
  * // Instantiate Staking
- * const sdk = new Aftermath("MAINNET");
- * await sdk.init();
+ * const sdk = await Aftermath.create({ network: "MAINNET" });
  * const staking = sdk.Staking();
  *
  * // Get active validators
@@ -110,11 +109,11 @@ export class Staking extends Caller {
 	 * staking contracts.
 	 *
 	 * @param config - Optional configuration containing the Sui network and/or access token.
-	 * @param Provider - Optional instance of `AftermathApi` for building transactions.
+	 * @param api - Optional instance of `AftermathApi` for building transactions.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "staking");
 	}
@@ -264,7 +263,7 @@ export class Staking extends Caller {
 	 * ```
 	 */
 	public async getStakeTransaction(inputs: ApiStakeBody) {
-		return this.useProvider().fetchBuildStakeTx(inputs);
+		return this.stakingApi().fetchBuildStakeTx(inputs);
 	}
 
 	/**
@@ -288,7 +287,7 @@ export class Staking extends Caller {
 	 * ```
 	 */
 	public async getUnstakeTransaction(inputs: ApiUnstakeBody) {
-		return this.useProvider().fetchBuildUnstakeTx(inputs);
+		return this.stakingApi().fetchBuildUnstakeTx(inputs);
 	}
 
 	/**
@@ -313,7 +312,7 @@ export class Staking extends Caller {
 	 * ```
 	 */
 	public async getStakeStakedSuiTransaction(inputs: ApiStakeStakedSuiBody) {
-		return this.useProvider().fetchBuildStakeStakedSuiTx(inputs);
+		return this.stakingApi().fetchBuildStakeStakedSuiTx(inputs);
 	}
 
 	/**
@@ -337,7 +336,7 @@ export class Staking extends Caller {
 	 * ```
 	 */
 	public getUpdateValidatorFeeTransaction(inputs: ApiUpdateValidatorFeeBody) {
-		return this.useProvider().buildUpdateValidatorFeeTx(inputs);
+		return this.stakingApi().buildUpdateValidatorFeeTx(inputs);
 	}
 
 	/**
@@ -358,7 +357,7 @@ export class Staking extends Caller {
 	 * ```
 	 */
 	public getCrankAfSuiTransaction(inputs: { walletAddress: SuiAddress }) {
-		return this.useProvider().buildEpochWasChangedTx(inputs);
+		return this.stakingApi().buildEpochWasChangedTx(inputs);
 	}
 
 	// =========================================================================
@@ -493,22 +492,20 @@ export class Staking extends Caller {
 			return Casting.bigIntToFixedNumber(
 				stakedSuiVaultState.minAtomicUnstakeFee
 			);
-		} else {
-			// Atomic unstakes that bring the `atomic_unstake_sui_reserves` below the desired target
-			// incur a variable fee:
-			//   fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
-
-			const atomicFeeDelta =
-				stakedSuiVaultState.maxAtomicUnstakeFee -
-				stakedSuiVaultState.minAtomicUnstakeFee;
-
-			return Casting.bigIntToFixedNumber(
-				stakedSuiVaultState.maxAtomicUnstakeFee -
-					(atomicFeeDelta *
-						stakedSuiVaultState.atomicUnstakeSuiReserves) /
-						stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
-			);
 		}
+		// Atomic unstakes that bring the `atomic_unstake_sui_reserves` below the desired target
+		// incur a variable fee:
+		//   fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
+
+		const atomicFeeDelta =
+			stakedSuiVaultState.maxAtomicUnstakeFee -
+			stakedSuiVaultState.minAtomicUnstakeFee;
+
+		return Casting.bigIntToFixedNumber(
+			stakedSuiVaultState.maxAtomicUnstakeFee -
+				(atomicFeeDelta * stakedSuiVaultState.atomicUnstakeSuiReserves) /
+					stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
+		);
 	}
 
 	// =========================================================================
@@ -517,14 +514,16 @@ export class Staking extends Caller {
 
 	/**
 	 * Returns a provider instance for building transactions. Throws an error
-	 * if `Provider` is not defined.
+	 * if `api` is not defined.
 	 *
 	 * @returns An instance of `AftermathApi.Staking`.
-	 * @throws Will throw if the `Provider` is undefined.
+	 * @throws Will throw if the `api` is undefined.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Staking();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly stakingApi = () => {
+		const staking = this.api?.Staking();
+		if (!staking) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return staking;
 	};
 }

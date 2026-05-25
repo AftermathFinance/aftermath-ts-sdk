@@ -1,9 +1,11 @@
-import { SuiNetwork } from "../types/suiTypes";
-import { CallerConfig, SuiAddress, Url } from "../types/generalTypes";
-import { CoinType } from "../../packages/coin/coinTypes";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { CoinType } from "../../packages/coin/coinTypes";
+import type { CallerConfig, SuiAddress } from "../types/generalTypes";
 import { Caller } from "../utils/caller";
-import { Transaction } from "@mysten/sui/transactions";
-import { ApiDynamicGasBody, ApiDynamicGasResponse } from "./dynamicGasTypes";
+import type {
+	ApiDynamicGasBody,
+	ApiDynamicGasResponse,
+} from "./dynamicGasTypes";
 
 /**
  * The `DynamicGas` class provides functionality for dynamically determining
@@ -39,8 +41,7 @@ export class DynamicGas extends Caller {
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const dynamicGas = afSdk.DynamicGas();
 	 *

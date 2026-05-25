@@ -1,39 +1,14 @@
-import {
-	Transaction,
-	type TransactionArgument,
-	type TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { bcs } from "@mysten/sui/bcs";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	CoinType,
-	PerpetualsAddresses,
-	ObjectId,
-	SuiAddress,
-	AnyObjectType,
-	IFixed,
-	Balance,
-	ObjectVersion,
-	PackageId,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
-import {
-	ApiPerpetualsDepositCollateralBody,
-	ApiPerpetualsCreateAccountBody,
-	PerpetualsMarketId,
-	PerpetualsAccountId,
-	PerpetualsOrderId,
-	PerpetualsOrderSide,
-	PerpetualsOrderType,
-} from "../perpetualsTypes";
-import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import {
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import type {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import type {
+	AnyObjectType,
+	CoinType,
+	PerpetualsAddresses,
+} from "../../../types";
 
 export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
@@ -87,12 +62,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.perpetuals;
-		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.perpetuals;
+		if (!addresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = addresses;
 		this.eventTypes = {
@@ -104,9 +78,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			deallocatedCollateral: this.eventType("DeallocatedCollateral"),
 			// Liquidation
 			liquidated: this.eventType("LiquidatedPosition"),
-			filledTakerOrderLiquidator: this.eventType(
-				"FilledTakerOrderLiquidator"
-			),
+			filledTakerOrderLiquidator: this.eventType("FilledTakerOrderLiquidator"),
 			performedLiquidation: this.eventType("PerformedLiquidation"),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
@@ -280,7 +252,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	collateralCoinType: CoinType;
 	// }): Promise<PerpetualsMarketData> => {
 	// 	const { collateralCoinType } = inputs;
-	// 	return this.Provider.Objects().fetchCastObject({
+	// 	return this.api.Objects().fetchCastObject({
 	// 		objectId: inputs.marketId,
 	// 		objectFromSuiObjectResponse: (data) =>
 	// 			Casting.perpetuals.clearingHouseFromOnChain(
@@ -315,7 +287,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	});
 
 	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 		await this.api.Inspections().fetchFirstBytesFromTxOutput({
 	// 			tx,
 	// 		});
 
@@ -326,7 +298,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	collateralCoinType: CoinType;
 	// }): Promise<PerpetualsMarketId[]> => {
 	// 	const { collateralCoinType } = inputs;
-	// 	const marketIdsData = await this.Provider.indexerCaller.fetchIndexer<
+	// 	const marketIdsData = await this.api.indexerCaller.fetchIndexer<
 	// 		{
 	// 			marketId: ObjectId;
 	// 		}[]
@@ -928,7 +900,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	tx.setSender(inputs.walletAddress);
 
 	// 	const { walletAddress, collateralCoinType, amount } = inputs;
-	// 	const coinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+	// 	const coinId = await this.api.Coin().fetchCoinWithAmountTx({
 	// 		tx,
 	// 		walletAddress,
 	// 		coinType: collateralCoinType,
@@ -1201,7 +1173,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	}
 
 	// 	const { allBytes } =
-	// 		await this.Provider.Inspections().fetchAllBytesFromTx({
+	// 		await this.api.Inspections().fetchAllBytesFromTx({
 	// 			tx,
 	// 		});
 
@@ -1231,7 +1203,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
 
 	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 		await this.api.Inspections().fetchFirstBytesFromTxOutput({
 	// 			tx,
 	// 		});
 
@@ -1336,7 +1308,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	});
 
 	// 	const { events } =
-	// 		await this.Provider.Inspections().fetchAllBytesFromTx({
+	// 		await this.api.Inspections().fetchAllBytesFromTx({
 	// 			tx,
 	// 		});
 
@@ -1609,7 +1581,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Event Types
 	// =========================================================================
 
-	private eventType = (eventName: string) =>
+	private readonly eventType = (eventName: string) =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			PerpetualsApi.constants.moduleNames.events,

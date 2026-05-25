@@ -1,5 +1,4 @@
-import { AftermathApi } from "../providers/aftermathApi";
-import {
+import type {
 	AnyObjectType,
 	KioskObject,
 	KioskOwnerCapObject,
@@ -8,8 +7,8 @@ import {
 	ObjectId,
 	SuiAddress,
 } from "../../types";
+import type { AftermathApi } from "../providers/aftermathApi";
 import { Casting, Helpers } from "../utils";
-import { NftsApiCasting } from "./nftsApiCasting";
 
 export class NftsApi {
 	// =========================================================================
@@ -32,13 +31,12 @@ export class NftsApi {
 		personalKioskCap: AnyObjectType;
 	};
 
-	constructor(private readonly Provider: AftermathApi) {
-		if (!this.Provider.addresses.nfts)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		if (!this.api.addresses.nfts) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
-		this.addresses = this.Provider.addresses.nfts;
+		this.addresses = this.api.addresses.nfts;
 
 		this.objectTypes = {
 			personalKioskCap: `${this.addresses.packages.mystenTransferPolicy}::personal_kiosk::PersonalKioskCap`,
@@ -60,7 +58,7 @@ export class NftsApi {
 	public fetchOwnedNfts = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<Nft[]> => {
-		const objects = await this.Provider.Objects().fetchOwnedObjects({
+		const objects = await this.api.Objects().fetchOwnedObjects({
 			...inputs,
 			options: {
 				// NOTE: do we need all of this ?
@@ -76,7 +74,7 @@ export class NftsApi {
 	public fetchNfts = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<Nft[]> => {
-		const objects = await this.Provider.Objects().fetchObjectBatch({
+		const objects = await this.api.Objects().fetchObjectBatch({
 			...inputs,
 			options: {
 				// NOTE: do we need all of this ?
@@ -99,14 +97,13 @@ export class NftsApi {
 		const { walletAddress } = inputs;
 
 		const [kioskOwnerCaps, personalKioskOwnerCaps] = await Promise.all([
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType:
 					"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
-				objectFromSuiObjectResponse:
-					Casting.nfts.kioskOwnerCapFromSuiObject,
+				objectFromSuiObjectResponse: Casting.nfts.kioskOwnerCapFromSuiObject,
 			}),
-			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.personalKioskCap,
 				objectFromSuiObjectResponse:
@@ -120,7 +117,7 @@ export class NftsApi {
 		kioskObjectId: ObjectId;
 	}): Promise<Nft[]> => {
 		const { kioskObjectId } = inputs;
-		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+		return this.api.DynamicFields().fetchCastAllDynamicFieldsOfType({
 			parentObjectId: kioskObjectId,
 			objectsFromObjectIds: (objectIds) => this.fetchNfts({ objectIds }),
 		});
@@ -131,15 +128,13 @@ export class NftsApi {
 	}): Promise<KioskOwnerCapObject[]> => {
 		const { kioskOwnerCapIds } = inputs;
 
-		return this.Provider.Objects().fetchCastObjectBatch({
+		return this.api.Objects().fetchCastObjectBatch({
 			objectIds: kioskOwnerCapIds,
 			objectFromSuiObjectResponse: (response) =>
 				response.data?.type &&
 				Helpers.addLeadingZeroesToType(response.data?.type) ===
 					this.objectTypes.personalKioskCap
-					? Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(
-							response
-					  )
+					? Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(response)
 					: Casting.nfts.kioskOwnerCapFromSuiObject(response),
 		});
 	};

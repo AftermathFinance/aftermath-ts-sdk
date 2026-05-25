@@ -1,5 +1,4 @@
-import { CoinType } from "../..";
-import {
+import type {
 	AnyObjectType,
 	BigIntAsString,
 	ModuleName,

@@ -1,9 +1,9 @@
-import { BigIntAsString } from "../../../types";
-import {
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import type {
 	SupplyOnChain,
 	TableOnChain,
 } from "../../../general/types/castingTypes";
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import type { BigIntAsString } from "../../../types";
 
 // =========================================================================
 //  Objects

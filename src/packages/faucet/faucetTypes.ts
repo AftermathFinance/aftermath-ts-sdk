@@ -1,10 +1,10 @@
-import {
+import type {
 	AnyObjectType,
 	Balance,
 	Event,
 	SuiAddress,
 } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Events

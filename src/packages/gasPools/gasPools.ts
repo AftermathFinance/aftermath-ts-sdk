@@ -1,14 +1,10 @@
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { AftermathApi } from "../../general/providers";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import {
+import type {
 	ApiTransactionResponse,
 	CallerConfig,
 	SdkTransactionResponse,
-	SuiAddress,
 } from "../../types";
 import type {
 	ApiGasPoolBody,
@@ -53,7 +49,7 @@ export class GasPools extends Caller {
 
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "gas-pool");
 	}
@@ -69,10 +65,7 @@ export class GasPools extends Caller {
 	 * @returns {@link ApiGasPoolResponse} containing pool ID, balance, and whitelisted addresses.
 	 */
 	public async getPool(inputs: ApiGasPoolBody): Promise<ApiGasPoolResponse> {
-		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>(
-			"pool",
-			inputs
-		);
+		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>("pool", inputs);
 	}
 
 	// =========================================================================
@@ -103,9 +96,7 @@ export class GasPools extends Caller {
 			"transactions/create",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -132,16 +123,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolDepositBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolDepositBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolDepositBody, ApiTransactionResponse>(
 			"transactions/deposit",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -173,9 +159,7 @@ export class GasPools extends Caller {
 			"transactions/withdraw",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -195,16 +179,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolSponsorBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolSponsorBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolSponsorBody, ApiTransactionResponse>(
 			"transactions/sponsor",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -224,16 +203,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolGrantBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolGrantBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolGrantBody, ApiTransactionResponse>(
 			"transactions/grant",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -252,16 +226,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolRevokeBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolRevokeBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolRevokeBody, ApiTransactionResponse>(
 			"transactions/revoke",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -283,16 +252,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolShareBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolShareBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolShareBody, ApiTransactionResponse>(
 			"transactions/share",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }

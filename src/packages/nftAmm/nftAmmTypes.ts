@@ -1,12 +1,11 @@
-import {
+import type {
 	AnyObjectType,
 	Balance,
 	CoinType,
 	Object,
+	ObjectId,
 	PoolObject,
 	Slippage,
-	Url,
-	ObjectId,
 	SuiAddress,
 } from "../../types";
 
@@ -36,7 +35,7 @@ export type NftAmmInterfaceGenericTypes = [
 	lpCoinType: CoinType,
 	fractionalizedCoinType: CoinType,
 	assetCoinType: CoinType,
-	nftType: AnyObjectType
+	nftType: AnyObjectType,
 ];
 
 // =========================================================================

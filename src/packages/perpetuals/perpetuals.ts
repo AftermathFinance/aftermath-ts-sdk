@@ -1,107 +1,89 @@
-import { Caller } from "../../general/utils/caller";
-import {
-	ApiPerpetualsCreateAccountBody,
-	SuiNetwork,
-	Url,
-	PerpetualsMarketState,
-	PerpetualsMarketData,
-	PerpetualsAccountData,
-	PerpetualsMarketId,
-	ApiPerpetualsOwnedAccountCapsBody,
-	PerpetualsPosition,
-	PerpetualsOrderSide,
-	PerpetualsOrderbook,
-	CoinType,
-	PerpetualsOrderId,
-	FilledTakerOrderEvent,
-	Timestamp,
-	PerpetualsMarketCandleDataPoint,
-	ApiPerpetualsMarketCandleHistoryResponse,
-	PerpetualsAccountCap,
-	PerpetualsAccountId,
-	PerpetualsAccountObject,
-	IFixed,
-	MoveErrorCode,
-	CallerConfig,
-	SuiAddress,
-	ObjectId,
-	ApiPerpetualsMarkets24hrStatsResponse,
-	ApiPerpetualsAdminAccountCapsBody,
-	PerpetualsVaultObject,
-	Percentage,
-	Balance,
-	PerpetualsVaultCap,
-	PerpetualsVaultWithdrawRequest,
-	ApiPerpetualsVaultOwnedWithdrawRequestsBody,
-	PerpetualsOrderPrice,
-	ApiTransactionResponse,
-	PerpetualsWsUpdatesSubscriptionMessage,
-	PerpetualsWsUpdatesResponseMessage,
-	PerpetualsWsCandleResponseMessage,
-	ApiPerpetualsCreateVaultBody,
-	ApiPerpetualsCreateVaultCapBody,
-	PerpetualsVaultLpCoin,
-	PerpetualsPartialVaultCap,
-	PerpetualsVaultMetatada,
-	ApiPerpetualsMarketCandleHistoryBody,
-	ApiPerpetualsMarketFundingHistoryBody,
-	ApiPerpetualsMarketFundingHistoryResponse,
-	ApiPerpetualsAdminAccountCapsResponse,
-	ApiPerpetualsOwnedAccountCapsResponse,
-	ApiPerpetualsAccountPositionsResponse,
-	ApiPerpetualsAccountPositionsBody,
-	ApiPerpetualsAllMarketsResponse,
-	ApiPerpetualsAllMarketsBody,
-	ApiPerpetualsMarketsBody,
-	ApiPerpetualsMarketsResponse,
-	ApiPerpetualsMarketsPricesResponse,
-	ApiPerpetualsMarketsPricesBody,
-	ApiPerpetualsVaultLpCoinPricesResponse,
-	ApiPerpetualsVaultLpCoinPricesBody,
-	ApiPerpetualsVaultOwnedLpCoinsResponse,
-	ApiPerpetualsVaultOwnedLpCoinsBody,
-	ApiPerpetualsOwnedVaultCapsBody,
-	ApiPerpetualsOwnedVaultCapsResponse,
-	ApiPerpetualsOwnedVaultAssistantCapsBody,
-	ApiPerpetualsOwnedVaultAssistantCapsResponse,
-	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
-	ApiPerpetualsVaultsResponse,
-	ApiPerpetualsVaultsBody,
-	SdkTransactionResponse,
-	ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
-	ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
-	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
-	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse,
-	ApiPerpetualsBuilderCodesIntegratorConfigBody,
-	ApiPerpetualsBuilderCodesIntegratorConfigResponse,
-	ApiPerpetualsBuilderCodesIntegratorVaultsBody,
-	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
-	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
-	ApiPerpetualsTransferCapTxBody,
-	PerpetualsSponsorConfig,
-	ApiPerpetualsCurrentRebateRewardsBody,
-	ApiPerpetualsCurrentRebateRewardsResponse,
-	ApiPerpetualsCreateCsvRebatesBody,
-	ApiPerpetualsCreateCsvRebatesResponse,
-	ApiPerpetualsCreateReferralCsvRebatesBody,
-	ApiPerpetualsCreateReferralCsvRebatesResponse,
-	ApiPerpetualsCreateAccountResponse,
-	ApiPerpetualsGrantAgentWalletTxBody,
-	ApiPerpetualsShareAccountBody,
-} from "../../types";
-import { PerpetualsMarket } from "./perpetualsMarket";
-import { PerpetualsAccount } from "./perpetualsAccount";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Casting, Helpers } from "../../general/utils";
-import { PerpetualsOrderUtils } from "./utils";
-import { AftermathApi } from "../../general/providers";
-import { Coin } from "../coin";
 import {
 	Transaction,
 	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
+import {
+	type ApiPerpetualsAccountPositionsBody,
+	type ApiPerpetualsAccountPositionsResponse,
+	type ApiPerpetualsAdminAccountCapsBody,
+	type ApiPerpetualsAdminAccountCapsResponse,
+	type ApiPerpetualsAllMarketsBody,
+	type ApiPerpetualsAllMarketsResponse,
+	type ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+	type ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse,
+	type ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+	type ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+	type ApiPerpetualsBuilderCodesIntegratorConfigBody,
+	type ApiPerpetualsBuilderCodesIntegratorConfigResponse,
+	type ApiPerpetualsBuilderCodesIntegratorVaultsBody,
+	type ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
+	type ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+	type ApiPerpetualsCreateAccountBody,
+	type ApiPerpetualsCreateAccountResponse,
+	type ApiPerpetualsCreateCsvRebatesBody,
+	type ApiPerpetualsCreateCsvRebatesResponse,
+	type ApiPerpetualsCreateReferralCsvRebatesBody,
+	type ApiPerpetualsCreateReferralCsvRebatesResponse,
+	type ApiPerpetualsCreateVaultBody,
+	type ApiPerpetualsCreateVaultCapBody,
+	type ApiPerpetualsCurrentRebateRewardsBody,
+	type ApiPerpetualsCurrentRebateRewardsResponse,
+	type ApiPerpetualsGrantAgentWalletTxBody,
+	type ApiPerpetualsMarketCandleHistoryBody,
+	type ApiPerpetualsMarketCandleHistoryResponse,
+	type ApiPerpetualsMarketFundingHistoryBody,
+	type ApiPerpetualsMarketFundingHistoryResponse,
+	type ApiPerpetualsMarkets24hrStatsResponse,
+	type ApiPerpetualsMarketsBody,
+	type ApiPerpetualsMarketsPricesBody,
+	type ApiPerpetualsMarketsPricesResponse,
+	type ApiPerpetualsMarketsResponse,
+	type ApiPerpetualsOwnedAccountCapsBody,
+	type ApiPerpetualsOwnedAccountCapsResponse,
+	type ApiPerpetualsOwnedVaultAssistantCapsBody,
+	type ApiPerpetualsOwnedVaultAssistantCapsResponse,
+	type ApiPerpetualsOwnedVaultCapsBody,
+	type ApiPerpetualsOwnedVaultCapsResponse,
+	type ApiPerpetualsShareAccountBody,
+	type ApiPerpetualsTransferCapTxBody,
+	type ApiPerpetualsVaultLpCoinPricesBody,
+	type ApiPerpetualsVaultLpCoinPricesResponse,
+	type ApiPerpetualsVaultOwnedLpCoinsBody,
+	type ApiPerpetualsVaultOwnedLpCoinsResponse,
+	type ApiPerpetualsVaultOwnedWithdrawRequestsBody,
+	type ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
+	type ApiPerpetualsVaultsBody,
+	type ApiPerpetualsVaultsResponse,
+	type ApiTransactionResponse,
+	type Balance,
+	type CallerConfig,
+	type CoinType,
+	type FilledTakerOrderEvent,
+	type ObjectId,
+	type Percentage,
+	type PerpetualsAccountCap,
+	type PerpetualsAccountId,
+	PerpetualsAccountObject,
+	type PerpetualsMarketId,
+	type PerpetualsOrderId,
+	type PerpetualsOrderPrice,
+	PerpetualsOrderSide,
+	type PerpetualsPartialVaultCap,
+	type PerpetualsSponsorConfig,
+	PerpetualsVaultCap,
+	type PerpetualsWsCandleResponseMessage,
+	type PerpetualsWsUpdatesResponseMessage,
+	type PerpetualsWsUpdatesSubscriptionMessage,
+	SdkTransactionResponse,
+	type SuiAddress,
+} from "../../types";
+import { PerpetualsAccount } from "./perpetualsAccount";
+import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsVault } from "./perpetualsVault";
+import { PerpetualsOrderUtils } from "./utils";
 
 /**
  * High-level client for interacting with Aftermath Perpetuals.
@@ -123,8 +105,7 @@ import { PerpetualsVault } from "./perpetualsVault";
  * ```ts
  * import { Aftermath } from "@aftermath/sdk";
  *
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init();
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const perps = afSdk.Perpetuals();
  *
@@ -168,9 +149,9 @@ export class Perpetuals extends Caller {
 	 * Creates a new Perpetuals client.
 	 *
 	 * @param config - Optional caller configuration (network, auth token, etc.).
-	 * @param Provider - Optional shared {@link AftermathApi} provider instance. When
+	 * @param api - Optional shared {@link AftermathApi} provider instance. When
 	 *   provided, transaction-building helpers can derive serialized `txKind`
-	 *   from a {@link Transaction} object via `Provider.Transactions().fetchBase64TxKindFromTx`.
+	 *   from a {@link Transaction} object via `api.Transactions().fetchBase64TxKindFromTx`.
 	 *
 	 * @remarks
 	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning:
@@ -179,7 +160,7 @@ export class Perpetuals extends Caller {
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "perpetuals");
 	}
@@ -216,8 +197,7 @@ export class Perpetuals extends Caller {
 		>("all-markets", inputs);
 		return {
 			markets: res.markets.map(
-				(marketData) =>
-					new PerpetualsMarket(marketData, this.config, this.Provider)
+				(marketData) => new PerpetualsMarket(marketData, this.config, this.api)
 			),
 		};
 	}
@@ -279,11 +259,7 @@ export class Perpetuals extends Caller {
 		return {
 			markets: res.marketDatas.map(
 				(marketData) =>
-					new PerpetualsMarket(
-						marketData.market,
-						this.config,
-						this.Provider
-					)
+					new PerpetualsMarket(marketData.market, this.config, this.api)
 			),
 		};
 	}
@@ -314,8 +290,7 @@ export class Perpetuals extends Caller {
 		>("vaults", {});
 		return {
 			vaults: res.vaults.map(
-				(vaultObject) =>
-					new PerpetualsVault(vaultObject, this.config, this.Provider)
+				(vaultObject) => new PerpetualsVault(vaultObject, this.config, this.api)
 			),
 		};
 	}
@@ -354,8 +329,7 @@ export class Perpetuals extends Caller {
 		>("vaults", inputs);
 		return {
 			vaults: res.vaults.map(
-				(vaultObject) =>
-					new PerpetualsVault(vaultObject, this.config, this.Provider)
+				(vaultObject) => new PerpetualsVault(vaultObject, this.config, this.api)
 			),
 		};
 	}
@@ -422,16 +396,15 @@ export class Perpetuals extends Caller {
 		accounts: PerpetualsAccount[];
 	}> {
 		const { accountCaps, marketIds } = inputs;
-		if (accountCaps.length <= 0)
+		if (accountCaps.length <= 0) {
 			return {
 				accounts: [],
 			};
+		}
 
 		const accountObjects = (
 			await this.getAccountObjects({
-				accountIds: accountCaps.map(
-					(accountCap) => accountCap.accountId
-				),
+				accountIds: accountCaps.map((accountCap) => accountCap.accountId),
 				marketIds,
 			})
 		).accounts;
@@ -443,7 +416,7 @@ export class Perpetuals extends Caller {
 						account,
 						accountCaps[index],
 						this.config,
-						this.Provider
+						this.api
 					)
 			),
 		};
@@ -466,10 +439,11 @@ export class Perpetuals extends Caller {
 		inputs: ApiPerpetualsAccountPositionsBody
 	): Promise<ApiPerpetualsAccountPositionsResponse> {
 		const { accountIds, marketIds } = inputs;
-		if (accountIds.length <= 0)
+		if (accountIds.length <= 0) {
 			return {
 				accounts: [],
 			};
+		}
 
 		return this.fetchApi<
 			ApiPerpetualsAccountPositionsResponse,
@@ -503,9 +477,7 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getOwnedAccountCaps(
-		inputs: ApiPerpetualsOwnedAccountCapsBody
-	) {
+	public async getOwnedAccountCaps(inputs: ApiPerpetualsOwnedAccountCapsBody) {
 		const { walletAddress, collateralCoinTypes } = inputs;
 		return this.fetchApi<
 			ApiPerpetualsOwnedAccountCapsResponse,
@@ -598,9 +570,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.accountCapIds - List of account IDs.
 	 * @returns {@link ApiPerpetualsAccountCapsResponse} containing caps.
 	 */
-	public async getAdminAccountCaps(
-		inputs: ApiPerpetualsAdminAccountCapsBody
-	) {
+	public async getAdminAccountCaps(inputs: ApiPerpetualsAdminAccountCapsBody) {
 		return this.fetchApi<
 			ApiPerpetualsAdminAccountCapsResponse,
 			ApiPerpetualsAdminAccountCapsBody
@@ -626,9 +596,7 @@ export class Perpetuals extends Caller {
 	 * relocated to {@link PerpetualsMarket} in the future.
 	 */
 	// TODO: move to market class ?
-	public getMarketCandleHistory(
-		inputs: ApiPerpetualsMarketCandleHistoryBody
-	) {
+	public getMarketCandleHistory(inputs: ApiPerpetualsMarketCandleHistoryBody) {
 		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
 		return this.fetchApi<
 			ApiPerpetualsMarketCandleHistoryResponse,
@@ -700,10 +668,11 @@ export class Perpetuals extends Caller {
 	public async getPrices(inputs: {
 		marketIds: ObjectId[];
 	}): Promise<ApiPerpetualsMarketsPricesResponse> {
-		if (inputs.marketIds.length <= 0)
+		if (inputs.marketIds.length <= 0) {
 			return {
 				marketsPrices: [],
 			};
+		}
 		return this.fetchApi<
 			ApiPerpetualsMarketsPricesResponse,
 			ApiPerpetualsMarketsPricesBody
@@ -722,10 +691,11 @@ export class Perpetuals extends Caller {
 	public async getLpCoinPrices(
 		inputs: ApiPerpetualsVaultLpCoinPricesBody
 	): Promise<ApiPerpetualsVaultLpCoinPricesResponse> {
-		if (inputs.vaultIds.length <= 0)
+		if (inputs.vaultIds.length <= 0) {
 			return {
 				lpCoinPrices: [],
 			};
+		}
 		return this.fetchApi<
 			ApiPerpetualsVaultLpCoinPricesResponse,
 			ApiPerpetualsVaultLpCoinPricesBody
@@ -765,11 +735,9 @@ export class Perpetuals extends Caller {
 			"transactions/transfer-cap",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -805,9 +773,7 @@ export class Perpetuals extends Caller {
 			"transactions/create-account",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -845,11 +811,9 @@ export class Perpetuals extends Caller {
 			"account/transactions/grant-agent-wallet",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -891,11 +855,9 @@ export class Perpetuals extends Caller {
 			"account/transactions/share",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -998,9 +960,7 @@ export class Perpetuals extends Caller {
 			"vault/transactions/create-vault",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1123,9 +1083,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-config",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1170,9 +1128,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/remove-integrator-config",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1217,9 +1173,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-vault",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1278,9 +1232,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/claim-integrator-vault-fees",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1421,7 +1373,7 @@ export class Perpetuals extends Caller {
 	}): number {
 		const { orderId } = inputs;
 		const orderPrice = PerpetualsOrderUtils.price(orderId);
-		return this.orderPriceToPrice({ orderPrice });
+		return Perpetuals.orderPriceToPrice({ orderPrice });
 	}
 
 	/**
@@ -1558,11 +1510,7 @@ export class Perpetuals extends Caller {
 		 * Each helper sends a structured subscription message of the form:
 		 * `{ action: "subscribe" | "unsubscribe", subscriptionType: { ... } }`
 		 */
-		const subscribeMarket = ({
-			marketId,
-		}: {
-			marketId: PerpetualsMarketId;
-		}) =>
+		const subscribeMarket = ({ marketId }: { marketId: PerpetualsMarketId }) =>
 			ctl.send({
 				action: "subscribe",
 				subscriptionType: { market: { marketId } },
@@ -1614,11 +1562,7 @@ export class Perpetuals extends Caller {
 				subscriptionType: { user: { accountId, withStopOrders } },
 			});
 
-		const subscribeOracle = ({
-			marketId,
-		}: {
-			marketId: PerpetualsMarketId;
-		}) =>
+		const subscribeOracle = ({ marketId }: { marketId: PerpetualsMarketId }) =>
 			ctl.send({
 				action: "subscribe",
 				subscriptionType: { oracle: { marketId } },
@@ -1809,23 +1753,21 @@ export class Perpetuals extends Caller {
 		onError?: (ev: Event) => void;
 		onClose?: (ev: CloseEvent) => void;
 	}) {
-		const { marketId, intervalMs, onMessage, onOpen, onError, onClose } =
-			args;
+		const { marketId, intervalMs, onMessage, onOpen, onError, onClose } = args;
 
 		const path = `ws/market-candles/${encodeURIComponent(
 			marketId
 		)}/${intervalMs}`;
 
-		const ctl = this.openWsStream<
-			undefined,
-			PerpetualsWsCandleResponseMessage
-		>({
-			path,
-			onMessage,
-			onOpen,
-			onError,
-			onClose,
-		});
+		const ctl = this.openWsStream<undefined, PerpetualsWsCandleResponseMessage>(
+			{
+				path,
+				onMessage,
+				onOpen,
+				onError,
+				onClose,
+			}
+		);
 
 		return {
 			ws: ctl.ws,

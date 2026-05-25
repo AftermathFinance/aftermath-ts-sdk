@@ -1,17 +1,14 @@
-import {
-	AnyObjectType,
-	Balance,
-	BigIntAsString,
-	CoinType,
-	PoolName,
-	ObjectId,
-	SuiAddress,
-} from "../../../types";
-import {
+import type {
 	EventOnChain,
-	IndexerEventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
+import type {
+	BigIntAsString,
+	CoinType,
+	ObjectId,
+	PoolName,
+	SuiAddress,
+} from "../../../types";
 
 // =========================================================================
 //  Objects

@@ -1,13 +1,13 @@
-import {
+import type { CoinsToBalance, CoinType } from "../../packages/coin/coinTypes";
+import type { AftermathApi } from "../providers";
+import type {
 	ApiTransactionsBody,
 	Balance,
 	CallerConfig,
 	SuiAddress,
 	TransactionsWithCursor,
 } from "../types/generalTypes";
-import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
-import { AftermathApi } from "../providers";
 
 /**
  * The `Wallet` class allows querying a user's balances and transactions.
@@ -20,14 +20,14 @@ export class Wallet extends Caller {
 	 *
 	 * @param address - The Sui address for this wallet (e.g., "0x<address>").
 	 * @param config - An optional caller configuration including network and authentication.
-	 * @param Provider - An optional `AftermathApi` instance for wallet-specific methods.
+	 * @param api - An optional `AftermathApi` instance for wallet-specific methods.
 	 */
 	constructor(
 		public readonly address: SuiAddress,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
-		super(config, `wallet`);
+		super(config, "wallet");
 	}
 
 	// =========================================================================
@@ -43,8 +43,7 @@ export class Wallet extends Caller {
 	 * @example
 	 * ```typescript
 	 *
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const wallet = afSdk.Wallet("0x<address>");
 	 *
@@ -71,10 +70,8 @@ export class Wallet extends Caller {
 	 * console.log(balances); // e.g. [1000000000n, 50000000000n]
 	 * ```
 	 */
-	public async getBalances(inputs: {
-		coins: CoinType[];
-	}): Promise<Balance[]> {
-		return this.fetchApi(`coin-balances`, {
+	public async getBalances(inputs: { coins: CoinType[] }): Promise<Balance[]> {
+		return this.fetchApi("coin-balances", {
 			...inputs,
 			walletAddress: this.address,
 		});
@@ -94,7 +91,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.fetchApi(`all-coin-balances`, {
+		return this.fetchApi("all-coin-balances", {
 			walletAddress: this.address,
 		});
 	}
@@ -119,7 +116,7 @@ export class Wallet extends Caller {
 	public async getPastTransactions(
 		inputs: ApiTransactionsBody
 	): Promise<TransactionsWithCursor> {
-		return this.fetchApi(`past-transactions`, {
+		return this.fetchApi("past-transactions", {
 			...inputs,
 			walletAddress: this.address,
 		});

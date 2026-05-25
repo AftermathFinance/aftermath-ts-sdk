@@ -4,6 +4,9 @@
 	"files": {
 		"includes": ["**", "!dist", "!docs"]
 	},
+	"formatter": {
+		"indentStyle": "tab"
+	},
 	"linter": {
 		"rules": {
 			"style": {
@@ -12,7 +15,9 @@
 					"options": {
 						"filenameCases": ["camelCase"]
 					}
-				}
+				},
+				"noParameterProperties": "off",
+				"useConsistentMemberAccessibility": "off"
 			}
 		}
 	}

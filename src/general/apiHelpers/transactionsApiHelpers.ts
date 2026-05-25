@@ -1,12 +1,11 @@
-import {
-	Transaction,
-	isTransaction,
-	type TransactionArgument,
-	type TransactionObjectArgument,
-	type Argument,
-} from "@mysten/sui/transactions";
 import type { SuiTransactionBlockResponseQuery } from "@mysten/sui/jsonRpc";
 import {
+	type Argument,
+	Transaction,
+	type TransactionArgument,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type {
 	Balance,
 	CoinType,
 	ObjectId,
@@ -17,7 +16,7 @@ import {
 	TransactionDigest,
 	TransactionsWithCursor,
 } from "../../types";
-import { AftermathApi } from "../providers/aftermathApi";
+import type { AftermathApi } from "../providers/aftermathApi";
 import { Helpers } from "../utils/helpers";
 
 export class TransactionsApiHelpers {
@@ -25,7 +24,7 @@ export class TransactionsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -42,8 +41,8 @@ export class TransactionsApiHelpers {
 	}): Promise<TransactionsWithCursor> => {
 		const { query, cursor, limit } = inputs;
 
-		const transactionsWithCursor =
-			await this.Provider.provider.queryTransactionBlocks({
+		const transactionsWithCursor = await this.api.client.queryTransactionBlocks(
+			{
 				...query,
 				cursor,
 				limit,
@@ -54,7 +53,8 @@ export class TransactionsApiHelpers {
 					showObjectChanges: true,
 					showInput: true,
 				},
-			});
+			}
+		);
 
 		return {
 			transactions: transactionsWithCursor.data,
@@ -68,12 +68,12 @@ export class TransactionsApiHelpers {
 		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.dryRunTransactionBlock({
+			this.api.client.dryRunTransactionBlock({
 				transactionBlock: await tx.build({
-					client: this.Provider.provider,
+					client: this.api.client,
 				}),
 			}),
-			this.Provider.provider.getReferenceGasPrice(),
+			this.api.client.getReferenceGasPrice(),
 		]);
 
 		const gasData = txResponse.effects.gasUsed;
@@ -94,11 +94,11 @@ export class TransactionsApiHelpers {
 	}): Promise<SerializedTransaction> => {
 		const { tx, isSponsoredTx } = inputs;
 
-		if (isSponsoredTx) return (await tx).serialize();
+		if (isSponsoredTx) {
+			return (await tx).toJSON();
+		}
 
-		return (
-			await this.fetchSetGasBudgetForTx({ tx: await tx })
-		).serialize();
+		return (await this.fetchSetGasBudgetForTx({ tx: await tx })).toJSON();
 	};
 
 	public fetchBase64TxKindFromTx = async (inputs: {
@@ -106,10 +106,12 @@ export class TransactionsApiHelpers {
 	}): Promise<SerializedTransaction | undefined> => {
 		const { tx } = inputs;
 
-		if (!tx) return;
+		if (!tx) {
+			return;
+		}
 
 		const txBytes = await tx.build({
-			client: this.Provider?.provider,
+			client: this.api?.client,
 			onlyTransactionKind: true,
 		});
 
@@ -166,7 +168,7 @@ export class TransactionsApiHelpers {
 	}) {
 		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
-			target: this.createTxTarget(
+			target: TransactionsApiHelpers.createTxTarget(
 				// Sui.constants.addresses.suiPackageId,
 				"0x2",
 				"coin",
@@ -185,32 +187,35 @@ export class TransactionsApiHelpers {
 	}): ServiceCoinData => {
 		const { coinTxArg } = inputs;
 
-		if (typeof coinTxArg === "string")
+		if (typeof coinTxArg === "string") {
 			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
+		}
 
 		if (!("$kind" in coinTxArg)) {
-			if (typeof coinTxArg === "function" || "GasCoin" in coinTxArg)
-				throw new Error(
-					"unable to convert gas coin arg to service coin data"
-				);
+			if (typeof coinTxArg === "function" || "GasCoin" in coinTxArg) {
+				throw new Error("unable to convert gas coin arg to service coin data");
+			}
 			// Input
 			return coinTxArg;
 		}
 
-		if (coinTxArg.$kind === "NestedResult")
+		if (coinTxArg.$kind === "NestedResult") {
 			return {
 				[coinTxArg.$kind]: coinTxArg.NestedResult,
 			};
+		}
 
-		if (coinTxArg.$kind === "Result")
+		if (coinTxArg.$kind === "Result") {
 			return { [coinTxArg.$kind]: coinTxArg.Result };
+		}
 
-		if (coinTxArg.$kind === "GasCoin")
-			throw new Error(
-				"unable to convert gas coin arg to service coin data"
-			);
+		if (coinTxArg.$kind === "GasCoin") {
+			throw new Error("unable to convert gas coin arg to service coin data");
+		}
 
-		if (coinTxArg.$kind === "Input") return { Input: coinTxArg.Input };
+		if (coinTxArg.$kind === "Input") {
+			return { Input: coinTxArg.Input };
+		}
 
 		throw new Error(`unexpected coinTxArg.$kind: ${coinTxArg.$kind}`);
 	};
@@ -221,29 +226,43 @@ export class TransactionsApiHelpers {
 		const { coinTxArg } = inputs;
 
 		if (!("$kind" in coinTxArg)) {
-			if ("Result" in coinTxArg) return { Result: coinTxArg.Result };
+			if ("Result" in coinTxArg) {
+				return { Result: coinTxArg.Result };
+			}
 
-			if ("NestedResult" in coinTxArg)
+			if ("NestedResult" in coinTxArg) {
 				return { NestedResult: coinTxArg.NestedResult };
+			}
 
-			if ("GasCoin" in coinTxArg) return "Gas";
+			if ("GasCoin" in coinTxArg) {
+				return "Gas";
+			}
 
-			if ("Input" in coinTxArg) return { Input: coinTxArg.Input };
+			if ("Input" in coinTxArg) {
+				return { Input: coinTxArg.Input };
+			}
 
 			// TODO: handle this case better
 			throw new Error(`coinTxArg in format ${coinTxArg} not supported`);
 		}
 
-		if (coinTxArg.$kind === "NestedResult")
+		if (coinTxArg.$kind === "NestedResult") {
 			return {
 				NestedResult: coinTxArg.NestedResult,
 			};
+		}
 
-		if (coinTxArg.$kind === "Result") return { Result: coinTxArg.Result };
+		if (coinTxArg.$kind === "Result") {
+			return { Result: coinTxArg.Result };
+		}
 
-		if (coinTxArg.$kind === "GasCoin") return "Gas";
+		if (coinTxArg.$kind === "GasCoin") {
+			return "Gas";
+		}
 
-		if (coinTxArg.$kind === "Input") return { Input: coinTxArg.Input };
+		if (coinTxArg.$kind === "Input") {
+			return { Input: coinTxArg.Input };
+		}
 
 		throw new Error(`unexpected coinTxArg.$kind: ${coinTxArg.$kind}`);
 	};
@@ -256,10 +275,11 @@ export class TransactionsApiHelpers {
 		const key = Object.keys(serviceCoinData)[0];
 
 		// TODO: handle all cases
-		if (key === "Coin")
+		if (key === "Coin") {
 			throw new Error(
 				"serviceCoinData in format { Coin: ObjectId } not supported"
 			);
+		}
 
 		// TODO: handle this cleaner
 		const kind = key as "Input" | "NestedResult" | "Result";
@@ -349,7 +369,7 @@ export class TransactionsApiHelpers {
 	// 				: destinationCoinId, // Coin,
 
 	// 			// TODO: clean this up
-	// 			// @ts-ignore
+	// 			// @ts-expect-error
 	// 			coinVec, // coins
 	// 		],
 	// 	});
@@ -362,21 +382,31 @@ export class TransactionsApiHelpers {
 		const { initTx, newTx } = inputs;
 
 		const sender = initTx.getData().sender;
-		if (sender) newTx.setSender(sender);
+		if (sender) {
+			newTx.setSender(sender);
+		}
 
 		const expiration = initTx.getData().expiration;
-		if (expiration) newTx.setExpiration(expiration);
+		if (expiration) {
+			newTx.setExpiration(expiration);
+		}
 
 		const gasData = initTx.getData().gasData;
 
-		if (gasData.budget && typeof gasData.budget !== "string")
+		if (gasData.budget && typeof gasData.budget !== "string") {
 			newTx.setGasBudget(gasData.budget);
+		}
 
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+		if (gasData.owner) {
+			newTx.setGasOwner(gasData.owner);
+		}
 
-		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+		if (gasData.payment) {
+			newTx.setGasPayment(gasData.payment);
+		}
 
-		if (gasData.price && typeof gasData.price !== "string")
+		if (gasData.price && typeof gasData.price !== "string") {
 			newTx.setGasPrice(gasData.price);
+		}
 	};
 }

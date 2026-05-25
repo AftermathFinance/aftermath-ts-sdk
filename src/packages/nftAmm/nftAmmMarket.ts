@@ -1,30 +1,21 @@
-import {
-	SuiNetwork,
-	NftAmmMarketObject,
-	ApiNftAmmDepositBody,
-	Balance,
-	ApiNftAmmWithdrawBody,
-	ApiNftAmmBuyBody,
-	Nft,
-	DynamicFieldObjectsWithCursor,
-	ApiDynamicFieldsBody,
-	ApiNftAmmSellBody,
-	Url,
-	ObjectId,
-	CallerConfig,
-} from "../../types";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
+import type {
+	ApiNftAmmBuyBody,
+	ApiNftAmmDepositBody,
+	ApiNftAmmSellBody,
+	ApiNftAmmWithdrawBody,
+	Balance,
+	CallerConfig,
+	DynamicFieldObjectsWithCursor,
+	Nft,
+	NftAmmMarketObject,
+	ObjectId,
+} from "../../types";
 import { Pool } from "../pools";
-import { AftermathApi } from "../../general/providers";
-import { Transaction } from "@mysten/sui/transactions";
 
 export class NftAmmMarket extends Caller {
-	// =========================================================================
-	//  Private Constants
-	// =========================================================================
-
-	private static readonly constants = {};
-
 	// =========================================================================
 	//  Public Class Members
 	// =========================================================================
@@ -38,7 +29,7 @@ export class NftAmmMarket extends Caller {
 	constructor(
 		public readonly market: NftAmmMarketObject,
 		config?: CallerConfig,
-		private readonly Provider?: AftermathApi
+		private readonly api?: AftermathApi
 	) {
 		super(config, `nft-amm/markets/${market.objectId}`);
 		this.market = market;
@@ -54,7 +45,7 @@ export class NftAmmMarket extends Caller {
 		limit?: number;
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> {
 		const { cursor, limit } = inputs;
-		return this.useProvider().fetchNftsInMarketTable({
+		return this.nftAmmApi().fetchNftsInMarketTable({
 			marketTableObjectId: this.market.objectId,
 			limit: limit ?? 25,
 			cursor,
@@ -68,7 +59,7 @@ export class NftAmmMarket extends Caller {
 	public async getBuyTransaction(
 		inputs: ApiNftAmmBuyBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildBuyTx({
+		return this.nftAmmApi().fetchBuildBuyTx({
 			...inputs,
 			market: this,
 		});
@@ -77,7 +68,7 @@ export class NftAmmMarket extends Caller {
 	public async getSellTransaction(
 		inputs: ApiNftAmmSellBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildSellTx({
+		return this.nftAmmApi().fetchBuildSellTx({
 			...inputs,
 			market: this,
 		});
@@ -87,7 +78,7 @@ export class NftAmmMarket extends Caller {
 		inputs: ApiNftAmmDepositBody
 	): Promise<Transaction> {
 		const { nftObjectIds: nfts, ...otherInputs } = inputs;
-		return this.useProvider().fetchBuildDepositTx({
+		return this.nftAmmApi().fetchBuildDepositTx({
 			...otherInputs,
 			nfts,
 			market: this,
@@ -97,7 +88,7 @@ export class NftAmmMarket extends Caller {
 	public async getWithdrawTransaction(
 		inputs: ApiNftAmmWithdrawBody
 	): Promise<Transaction> {
-		return this.useProvider().fetchBuildWithdrawTx({
+		return this.nftAmmApi().fetchBuildWithdrawTx({
 			...inputs,
 			market: this,
 		});
@@ -218,9 +209,11 @@ export class NftAmmMarket extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.NftAmm();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly nftAmmApi = () => {
+		const nftAmm = this.api?.NftAmm();
+		if (!nftAmm) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return nftAmm;
 	};
 }

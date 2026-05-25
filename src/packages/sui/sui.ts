@@ -40,11 +40,11 @@ export class Sui extends Caller {
 	 * Creates a new instance of the `Sui` class for fetching chain-level info.
 	 *
 	 * @param config - Optional configuration, including the Sui network and an access token.
-	 * @param Provider - An optional `AftermathApi` instance for advanced transaction building or data fetching.
+	 * @param api - An optional `AftermathApi` instance for advanced transaction building or data fetching.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "sui");
 	}

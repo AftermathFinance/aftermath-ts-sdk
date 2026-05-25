@@ -1,10 +1,10 @@
-import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
-import {
+import type {
 	Balance,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
+import type { ObjectId, SuiAddress } from "../../types";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Common Types

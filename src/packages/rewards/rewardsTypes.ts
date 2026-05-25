@@ -1,4 +1,3 @@
-import type { Transaction } from "@mysten/sui/transactions";
 import type {
 	Balance,
 	CoinType,

@@ -19,34 +19,36 @@ import { Helpers } from "./helpers";
  */
 function bigIntReplacer(_key: string, value: unknown): unknown {
 	if (typeof value === "bigint") {
-		return value.toString() + "n";
+		return `${value.toString()}n`;
 	}
 	return value;
 }
 
-type ResponseWithTxKind = {
+interface ResponseWithTxKind {
 	txKind: SerializedTransaction;
 	sponsorSignature?: string;
-} & (Record<string, unknown> | {});
+}
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
 	protected readonly apiEndpoint: Url;
+	config: CallerConfig;
+	private readonly apiUrlPrefix: Url;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public config: CallerConfig = {},
-		private readonly apiUrlPrefix: Url = ""
-	) {
+	constructor(config: CallerConfig = {}, apiUrlPrefix: Url = "") {
+		this.config = config;
+		this.apiUrlPrefix = apiUrlPrefix;
 		this.apiBaseUrl =
-			this.config.network === undefined
+			this.config.baseUrl ??
+			(this.config.network === undefined
 				? undefined
-				: Caller.apiBaseUrlForNetwork(this.config.network);
+				: Caller.apiBaseUrlForNetwork(this.config.network));
 
-		this.apiEndpoint = this.config.network === "INTERNAL" ? "af-fe" : "api";
+		this.apiEndpoint = this.config.apiEndpoint ?? "api";
 	}
 
 	// =========================================================================
@@ -66,9 +68,7 @@ export class Caller {
 		const text = await response.text();
 
 		const output = disableBigIntJsonParsing
-			? JSON.parse(text, (_key, value) =>
-					value === null ? undefined : value
-			  )
+			? JSON.parse(text, (_key, value) => (value === null ? undefined : value))
 			: Helpers.parseJsonWithBigint(text);
 
 		return (output ?? undefined) as OutputType;
@@ -78,26 +78,43 @@ export class Caller {
 	//  Api Calling
 	// =========================================================================
 
-	private static apiBaseUrlForNetwork(network: SuiNetwork): Url {
-		if (network === "MAINNET") {
-			return "https://aftermath.finance";
-		}
-		if (network === "TESTNET") {
-			return "https://testnet.aftermath.finance";
-		}
-		if (network === "DEVNET") {
-			return "https://devnet.aftermath.finance";
-		}
-		if (network === "LOCAL") {
-			return "http://localhost:3000";
-		}
-		if (network === "INTERNAL") {
-			return "http://";
-		}
-		return network;
+	// Regex constants hoisted to avoid re-compilation per call.
+	private static readonly TRAILING_SLASHES_REGEX = /\/+$/;
+	private static readonly HTTP_PROTOCOL_REGEX = /^http(s?):\/\//;
+
+	// Lookup tables for the SDK's well-known networks.
+	private static readonly NETWORK_API_BASE_URLS: Record<SuiNetwork, Url> = {
+		MAINNET: "https://aftermath.finance",
+		TESTNET: "https://testnet.aftermath.finance",
+		DEVNET: "https://devnet.aftermath.finance",
+		LOCAL: "http://localhost:3000",
+	};
+
+	private static readonly NETWORK_FULLNODE_URLS: Record<SuiNetwork, Url> = {
+		MAINNET: "https://fullnode.mainnet.sui.io:443",
+		TESTNET: "https://fullnode.testnet.sui.io:443",
+		DEVNET: "https://fullnode.devnet.sui.io:443",
+		LOCAL: "http://127.0.0.1:9000",
+	};
+
+	/**
+	 * Resolves the canonical Aftermath API base URL for a given network.
+	 * To target a non-canonical host (custom deployment, local backend, etc.)
+	 * pass `baseUrl` on `CallerConfig` instead.
+	 */
+	static apiBaseUrlForNetwork(network: SuiNetwork): Url {
+		return Caller.NETWORK_API_BASE_URLS[network];
 	}
 
-	private urlForApiCall = (url: string): Url => {
+	/**
+	 * Resolves the canonical Sui fullnode URL for a given network. Falls back
+	 * to the mainnet fullnode when `network` is undefined.
+	 */
+	static defaultFullnodeUrl(network: SuiNetwork | undefined): Url {
+		return Caller.NETWORK_FULLNODE_URLS[network ?? "MAINNET"];
+	}
+
+	private readonly urlForApiCall = (url: string): Url => {
 		if (this.apiBaseUrl === undefined) {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 		}
@@ -147,7 +164,7 @@ export class Caller {
 					body: JSON.stringify(body, bigIntReplacer),
 					headers,
 					signal,
-			  }));
+				}));
 
 		return Caller.fetchResponseToType<Output>(
 			uncastResponse,
@@ -182,7 +199,7 @@ export class Caller {
 
 	protected async fetchApiTxObject<
 		BodyType extends object,
-		OutputType extends ResponseWithTxKind
+		OutputType extends ResponseWithTxKind,
 	>(
 		url: Url,
 		body?: BodyType & { walletAddress?: SuiAddress },
@@ -209,7 +226,7 @@ export class Caller {
 		return { ...(rest as Rest), tx };
 	}
 
-	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(
+	protected fetchApiEvents<EventType, BodyType = ApiEventsBody>(
 		url: Url,
 		body: BodyType,
 		signal?: AbortSignal,
@@ -227,7 +244,7 @@ export class Caller {
 
 	protected async fetchApiIndexerEvents<
 		EventType,
-		BodyType extends ApiIndexerEventsBody
+		BodyType extends ApiIndexerEventsBody,
 	>(
 		url: Url,
 		body: BodyType,
@@ -271,8 +288,9 @@ export class Caller {
 		const { path, onMessage, onOpen, onError, onClose } = args;
 
 		/**
-		 * Build a WS URL using the same base the HTTP calls use, plus this.apiEndpoint and apiUrlPrefix.
-		 * Mirrors `urlForApiCall`, but swaps http(s) -> ws(s).
+		 * Build a WS URL using the same base the HTTP calls use, plus
+		 * `apiEndpoint` and `apiUrlPrefix`. Mirrors `urlForApiCall`, but
+		 * swaps http(s) -> ws(s).
 		 */
 		const buildWsUrl = (path: string): Url => {
 			if (this.apiBaseUrl === undefined) {
@@ -280,16 +298,22 @@ export class Caller {
 			}
 
 			// Normalize base & path
-			const baseHttp = this.apiBaseUrl.replace(/\/+$/, "");
-			const baseWs = baseHttp.replace(/^http(s?):\/\//, "ws$1://");
+			const baseHttp = this.apiBaseUrl.replace(
+				Caller.TRAILING_SLASHES_REGEX,
+				""
+			);
+			const baseWs = baseHttp.replace(Caller.HTTP_PROTOCOL_REGEX, "ws$1://");
 
 			// Prefix with endpoint + service prefix (same pattern as fetch)
 			const prefix = `${this.apiEndpoint}/${this.apiUrlPrefix}`;
-			const normalizedPrefix = prefix.replace(/\/+$/, "");
+			const normalizedPrefix = prefix.replace(
+				Caller.TRAILING_SLASHES_REGEX,
+				""
+			);
 			const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
 
 			return `${baseWs}/${normalizedPrefix}${
-				normalizedPath ? "/" + normalizedPath : ""
+				normalizedPath ? `/${normalizedPath}` : ""
 			}`;
 		};
 

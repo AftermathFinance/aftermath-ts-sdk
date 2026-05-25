@@ -13,8 +13,8 @@ npm i aftermath-ts-sdk
 For most integrations, use the Aftermath SDK for simplified access:
 
 ```typescript
-const afSdk = new Aftermath("MAINNET"); // "MAINNET" | "TESTNET"
-await afSdk.init(); // initialize provider
+// "MAINNET" | "TESTNET" | "DEVNET" | "LOCAL"
+const afSdk = await Aftermath.create({ network: "MAINNET" });
 
 // Access protocols
 const router = afSdk.Router();
@@ -29,8 +29,8 @@ const dca = afSdk.Dca();
 For complex transaction construction, use AftermathApi for direct control:
 
 ```typescript
-const afSdk = new Aftermath("MAINNET");
-const addresses = afSdk.getAddresses();
+const afSdk = await Aftermath.create({ network: "MAINNET" });
+const addresses = await afSdk.getAddresses();
 
 const afApi = new AftermathApi(
 	new SuiClient({

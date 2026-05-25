@@ -1,15 +1,14 @@
+import type { CoinsToBalance, CoinType } from "../../packages/coin/coinTypes";
+import type { AftermathApi } from "../providers/aftermathApi";
+import type { SuiAddress, TransactionDigest } from "../types";
 import { Helpers } from "../utils/helpers";
-import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import { AftermathApi } from "../providers/aftermathApi";
-import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
-import { SuiAddress, TransactionDigest } from "../types";
 
 export class WalletApi {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Fetching
@@ -24,7 +23,7 @@ export class WalletApi {
 		coin: CoinType;
 	}) => {
 		const { walletAddress, coin } = inputs;
-		const coinBalance = await this.Provider.provider.getBalance({
+		const coinBalance = await this.api.client.getBalance({
 			owner: walletAddress,
 			coinType: Helpers.stripLeadingZeroesFromType(coin),
 		});
@@ -38,7 +37,7 @@ export class WalletApi {
 	}): Promise<CoinsToBalance> => {
 		const { walletAddress } = inputs;
 
-		const allBalances = await this.Provider.provider.getAllBalances({
+		const allBalances = await this.api.client.getAllBalances({
 			owner: walletAddress,
 		});
 
@@ -70,8 +69,9 @@ export class WalletApi {
 	}) => {
 		const { walletAddress, cursor, limit } = inputs;
 
-		const transactionsWithCursor =
-			await this.Provider.Transactions().fetchTransactionsWithCursor({
+		const transactionsWithCursor = await this.api
+			.Transactions()
+			.fetchTransactionsWithCursor({
 				query: {
 					filter: {
 						FromAddress: walletAddress,

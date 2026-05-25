@@ -27,7 +27,7 @@ export class EventsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -57,23 +57,21 @@ export class EventsApiHelpers {
 	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
 		inputs: {
 			query: SuiEventFilter;
-			eventFromEventOnChain: (
-				eventOnChain: EventOnChainType
-			) => EventType;
+			eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType;
 		} & EventsInputs
 	): Promise<EventsWithCursor<EventType>> => {
 		const { query, eventFromEventOnChain, cursor, limit } = inputs;
 
-		const fetchedEvents = await this.Provider.provider.queryEvents({
+		const fetchedEvents = await this.api.client.queryEvents({
 			query,
 			cursor: cursor
 				? { ...cursor, eventSeq: cursor.eventSeq.toString() }
 				: undefined,
 			limit,
 		});
-		const events = (
-			fetchedEvents.data as unknown as EventOnChainType[]
-		).map(eventFromEventOnChain);
+		const events = (fetchedEvents.data as unknown as EventOnChainType[]).map(
+			eventFromEventOnChain
+		);
 
 		return { events, nextCursor: fetchedEvents.nextCursor ?? null };
 	};
@@ -106,18 +104,13 @@ export class EventsApiHelpers {
 			const now = Date.now();
 			const endIndex = events.findIndex(
 				(event) =>
-					event.timestamp !== undefined &&
-					now - event.timestamp > timeMs
+					event.timestamp !== undefined && now - event.timestamp > timeMs
 			);
 			eventsWithinTime.push(
 				...(endIndex < 0 ? events : events.slice(0, endIndex))
 			);
 
-			if (
-				events.length === 0 ||
-				nextCursor === null ||
-				endIndex >= 0
-			) {
+			if (events.length === 0 || nextCursor === null || endIndex >= 0) {
 				return eventsWithinTime;
 			}
 			cursor = nextCursor;
@@ -165,8 +158,7 @@ export class EventsApiHelpers {
 
 	private static resolveEventType = (
 		eventType: AnyObjectType | (() => AnyObjectType)
-	): AnyObjectType =>
-		typeof eventType === "string" ? eventType : eventType();
+	): AnyObjectType => (typeof eventType === "string" ? eventType : eventType());
 
 	public static suiEventOfTypeOrUndefined = (
 		event: SuiEvent,
@@ -186,14 +178,16 @@ export class EventsApiHelpers {
 		const matches = exactMatch
 			? event.type === resolved
 			: event.type.includes(resolved);
-		if (!matches) return undefined;
+		if (!matches) {
+			return undefined;
+		}
 
 		return castFunction(event as EventTypeOnChain);
 	};
 
 	public static findCastEventsOrUndefined = <
 		EventTypeOnChain,
-		EventType
+		EventType,
 	>(inputs: {
 		events: SuiEvent[];
 		eventType: AnyObjectType | (() => AnyObjectType);
@@ -209,7 +203,7 @@ export class EventsApiHelpers {
 
 	public static findCastEventOrUndefined = <
 		EventTypeOnChain,
-		EventType
+		EventType,
 	>(inputs: {
 		events: SuiEvent[];
 		eventType: AnyObjectType | (() => AnyObjectType);
@@ -220,7 +214,7 @@ export class EventsApiHelpers {
 
 	public static findCastEventInTransactionOrUndefined = <
 		EventTypeOnChain,
-		EventType
+		EventType,
 	>(
 		transaction: SuiTransactionBlockResponse,
 		eventType: AnyObjectType | (() => AnyObjectType),
@@ -235,20 +229,21 @@ export class EventsApiHelpers {
 
 	public static findCastEventInTransactionsOrUndefined = <
 		EventTypeOnChain,
-		EventType
+		EventType,
 	>(
 		transactions: SuiTransactionBlockResponse[],
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	): EventType | undefined => {
 		for (const transaction of transactions) {
-			const event =
-				EventsApiHelpers.findCastEventInTransactionOrUndefined(
-					transaction,
-					eventType,
-					castFunction
-				);
-			if (event !== undefined) return event;
+			const event = EventsApiHelpers.findCastEventInTransactionOrUndefined(
+				transaction,
+				eventType,
+				castFunction
+			);
+			if (event !== undefined) {
+				return event;
+			}
 		}
 		return undefined;
 	};

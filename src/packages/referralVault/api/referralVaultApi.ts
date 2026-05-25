@@ -1,13 +1,13 @@
-import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
+import { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import { Casting, Helpers } from "../../../general/utils";
+import type {
 	Balance,
 	CoinType,
 	ReferralVaultAddresses,
 	SuiAddress,
 } from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
 
 export class ReferralVaultApi {
 	// =========================================================================
@@ -30,12 +30,11 @@ export class ReferralVaultApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.referralVault;
-		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.referralVault;
+		if (!addresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = addresses;
 	}
@@ -62,8 +61,9 @@ export class ReferralVaultApi {
 				txData.sender &&
 				Helpers.addLeadingZeroesToType(txData.sender) ===
 					Helpers.addLeadingZeroesToType(referrer)
-			)
+			) {
 				return;
+			}
 
 			return tx.moveCall({
 				target: Helpers.transactions.createTxTarget(
@@ -77,7 +77,7 @@ export class ReferralVaultApi {
 					tx.pure.address(referrer),
 				],
 			});
-		} catch (e) {}
+		} catch (_e) {}
 	};
 
 	public withdrawRebateTx = (inputs: {
@@ -90,9 +90,7 @@ export class ReferralVaultApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
-				inputs.withTransfer
-					? "withdraw_and_transfer"
-					: "withdraw_rebate"
+				inputs.withTransfer ? "withdraw_and_transfer" : "withdraw_rebate"
 			),
 			typeArguments: [inputs.coinType],
 			arguments: [tx.object(this.addresses.objects.referralVault)],
@@ -167,10 +165,9 @@ export class ReferralVaultApi {
 	}): Promise<Balance> => {
 		const tx = new Transaction();
 		this.balanceOfRebateTx({ ...inputs, tx });
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
+		const bytes = await this.api.Inspections().fetchFirstBytesFromTxOutput({
+			tx,
+		});
 		return Casting.bigIntFromBytes(bytes);
 	};
 
@@ -179,10 +176,9 @@ export class ReferralVaultApi {
 	}): Promise<SuiAddress | undefined> => {
 		const tx = new Transaction();
 		this.referrerForTx({ ...inputs, tx });
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
+		const bytes = await this.api.Inspections().fetchFirstBytesFromTxOutput({
+			tx,
+		});
 
 		const unwrapped = bcs.option(bcs.Address).parse(new Uint8Array(bytes));
 		return unwrapped ?? undefined;

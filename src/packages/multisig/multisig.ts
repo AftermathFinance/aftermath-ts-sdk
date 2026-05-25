@@ -1,7 +1,7 @@
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { CallerConfig, SuiNetwork } from "../../types";
-import { AftermathApi } from "../../general/providers";
-import { ApiMultisigUserBody } from "./multisigTypes";
+import type { CallerConfig } from "../../types";
+import type { ApiMultisigUserBody } from "./multisigTypes";
 
 /**
  * The `Multisig` class provides methods to interact with multisig-related functionality,
@@ -16,11 +16,11 @@ export class Multisig extends Caller {
 	 * Creates a new instance of `Multisig`.
 	 *
 	 * @param config - Optional configuration for the `Caller`, including network and access token.
-	 * @param Provider - An optional instance of `AftermathApi` to build or fetch multisig data.
+	 * @param api - An optional instance of `AftermathApi` to build or fetch multisig data.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "multisig");
 	}
@@ -39,8 +39,7 @@ export class Multisig extends Caller {
 	 * @example
 	 * ```typescript
 	 *
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const multisig = afSdk.Multisig();
 	 *
@@ -51,7 +50,7 @@ export class Multisig extends Caller {
 	 * ```
 	 */
 	public getMultisigForUser(inputs: ApiMultisigUserBody) {
-		return this.useProvider().getMultisigForUser(inputs);
+		return this.multisigApi().getMultisigForUser(inputs);
 	}
 
 	// =========================================================================
@@ -62,9 +61,11 @@ export class Multisig extends Caller {
 	 * Internal helper to get the configured `Multisig` provider from `AftermathApi`.
 	 * Throws an error if the provider is not available.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Multisig();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly multisigApi = () => {
+		const multisig = this.api?.Multisig();
+		if (!multisig) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return multisig;
 	};
 }

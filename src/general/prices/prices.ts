@@ -1,14 +1,11 @@
-import { SuiNetwork } from "../types/suiTypes";
-import {
+import type {
 	CoinPriceInfo,
-	CoinSymbol,
-	CoinSymbolsToPriceInfo,
-	CoinType,
 	CoinsToPrice,
 	CoinsToPriceInfo,
+	CoinType,
 } from "../../packages/coin/coinTypes";
+import type { CallerConfig } from "../types";
 import { Caller } from "../utils/caller";
-import { CallerConfig, Url } from "../types";
 
 /**
  * The `Prices` class provides methods for fetching price information for various
@@ -43,8 +40,7 @@ export class Prices extends Caller {
 	 * @example
 	 * ```typescript
 	 *
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const prices = afSdk.Prices();
 	 *
@@ -120,9 +116,7 @@ export class Prices extends Caller {
 		coins: CoinType[];
 	}): Promise<CoinsToPrice> {
 		const coinsToPriceInfo = await this.getCoinsToPriceInfo(inputs);
-		const coinsToPrice: CoinsToPrice = Object.entries(
-			coinsToPriceInfo
-		).reduce(
+		const coinsToPrice: CoinsToPrice = Object.entries(coinsToPriceInfo).reduce(
 			(acc, [coinType, info]) => ({
 				...acc,
 				[coinType]: info.price,

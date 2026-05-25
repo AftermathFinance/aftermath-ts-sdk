@@ -1,10 +1,9 @@
-import { BigIntAsString, CoinType, ObjectId } from "../../../types";
-import {
+import type {
 	EventOnChain,
 	TableOnChain,
 	WrappedEventOnChain,
 } from "../../../general/types/castingTypes";
-import type { SuiObjectData } from "@mysten/sui/jsonRpc";
+import type { BigIntAsString, CoinType, ObjectId } from "../../../types";
 
 // =========================================================================
 //  Objects
