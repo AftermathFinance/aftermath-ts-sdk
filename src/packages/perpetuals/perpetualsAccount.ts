@@ -1865,7 +1865,7 @@ export class PerpetualsAccount extends Caller {
 	 * - Market ID matches the input market.
 	 * - `slTp` field is present.
 	 * - Order side is opposite of the position side.
-	 * - At least a `stopLossIndexPrice` or `takeProfitIndexPrice` is set.
+	 * - At least a `stopLossPrice` or `takeProfitPrice` is set.
 	 *
 	 * Notes on matching:
 	 * - The side comparison uses the current position side derived from the account snapshot.
@@ -1911,7 +1911,7 @@ export class PerpetualsAccount extends Caller {
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
-					(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt &&
 					!order.limitOrder
 			);
@@ -1921,7 +1921,7 @@ export class PerpetualsAccount extends Caller {
 				order.marketId === marketId &&
 				order.slTp &&
 				order.side !== side &&
-				(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 				order.size < Casting.i64MaxBigInt &&
 				!order.limitOrder
 		);
@@ -1955,7 +1955,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.slTp &&
 					order.slTp.limitOrderId === limitOrderId &&
-					(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt
 			);
 
@@ -1963,7 +1963,7 @@ export class PerpetualsAccount extends Caller {
 			(order) =>
 				order.slTp &&
 				order.slTp.limitOrderId === limitOrderId &&
-				(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 				order.size < Casting.i64MaxBigInt
 		);
 

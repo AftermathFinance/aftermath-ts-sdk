@@ -231,9 +231,6 @@ export class PerpetualsApiCasting {
 			liquidationFeesUsd: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.liquidation_fees)
 			),
-			forceCancelFeesUsd: Casting.IFixed.numberFromIFixed(
-				BigInt(fields.force_cancel_fees)
-			),
 			insuranceFundFeesUsd: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.insurance_fund_fees)
 			),

@@ -648,8 +648,6 @@ export class PerpetualsMarket extends Caller {
 			asksQuantity: 0,
 			bidsQuantity: 0,
 			pendingOrders: [],
-			makerFee: 1, // 100% (placeholder default)
-			takerFee: 1, // 100% (placeholder default)
 			leverage: 1,
 			entryPrice: 0,
 			freeCollateral: 0,
