@@ -3,45 +3,97 @@ name: Release
 on:
     push:
         branches:
-            - main
+            - refac/sui-sdk-v2
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: read
 
 jobs:
     release:
-        name: Release
+        name: Release (changesets)
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         permissions:
             contents: write
             pull-requests: write
+            id-token: write
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
+            - uses: oven-sh/setup-bun@v2
               with:
                   bun-version: 1.3.8
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
+            - uses: actions/setup-node@v4
               with:
-                  node-version: 20
-                  registry-url: "https://registry.npmjs.org"
+                  node-version: 22
+                  registry-url: https://registry.npmjs.org
 
-            - name: Install dependencies
+            # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node ships npm 10.
+            - name: Upgrade npm for OIDC trusted publishing
+              run: npm install -g npm@latest
+
+            - name: Install
               run: bun install --frozen-lockfile
 
-            - name: Build
-              run: bun run build
-
-            - name: Create Release Pull Request or Publish
-              id: changesets
+            - name: Create release PR or publish
               uses: changesets/action@v1
               with:
-                  publish: npx changeset publish
+                  publish: bun run release
+                  version: bun run version-packages
                   title: "chore: version packages"
                   commit: "chore: version packages"
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  NPM_CONFIG_PROVENANCE: true
+
+    publish-dev:
+        name: Publish @dev snapshot
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+            id-token: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: 1.3.8
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  registry-url: https://registry.npmjs.org
+
+            # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node ships npm 10.
+            - name: Upgrade npm for OIDC trusted publishing
+              run: npm install -g npm@latest
+
+            - name: Install
+              run: bun install --frozen-lockfile
+
+            - name: Compute dev version
+              id: dev-version
+              run: |
+                  base_version="$(node -p "require('./package.json').version")"
+                  dev_version="${base_version}-dev.$(git rev-parse --short HEAD)"
+                  echo "version=${dev_version}" >> "$GITHUB_OUTPUT"
+                  echo "Publishing dev snapshot ${dev_version}"
+
+            - name: Apply dev version
+              env:
+                  DEV_VERSION: ${{ steps.dev-version.outputs.version }}
+              run: node -e "const fs = require('node:fs'); const path = 'package.json'; const manifest = JSON.parse(fs.readFileSync(path, 'utf8')); manifest.version = process.env.DEV_VERSION; fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');"
+
+            - name: Build
+              run: bun run build
+
+            - name: Publish to npm under the dev tag
+              env:
+                  NPM_CONFIG_PROVENANCE: true
+              run: npm publish --tag dev --access public
