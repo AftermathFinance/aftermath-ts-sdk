@@ -6,6 +6,7 @@ import type {
 	AnyObjectType,
 	Balance,
 	Byte,
+	EmptyObject,
 	Event,
 	ObjectDigest,
 	ObjectId,
@@ -17,6 +18,7 @@ import type {
 	SuiAddress,
 	Timestamp,
 	TransactionDigest,
+	ValueOf,
 } from "../../general/types/generalTypes";
 import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
@@ -144,10 +146,12 @@ export type PerpetualsOrderPrice = bigint;
  * - `Bid` (0): Long-side orders / buyers.
  * - `Ask` (1): Short-side orders / sellers.
  */
-export enum PerpetualsOrderSide {
-	Ask = 1, // true
-	Bid = 0, // false
-}
+export const PerpetualsOrderSide = {
+	Ask: 1, // true
+	Bid: 0, // false
+} as const;
+
+export type PerpetualsOrderSide = ValueOf<typeof PerpetualsOrderSide>;
 
 /**
  * Order execution and posting behavior.
@@ -157,12 +161,14 @@ export enum PerpetualsOrderSide {
  * - `PostOnly`: Only posts to the book; will not take liquidity.
  * - `ImmediateOrCancel`: Fills as much as possible immediately; remainder is canceled.
  */
-export enum PerpetualsOrderType {
-	Standard = 0,
-	FillOrKill = 1,
-	PostOnly = 2,
-	ImmediateOrCancel = 3,
-}
+export const PerpetualsOrderType = {
+	Standard: 0,
+	FillOrKill: 1,
+	PostOnly: 2,
+	ImmediateOrCancel: 3,
+} as const;
+
+export type PerpetualsOrderType = ValueOf<typeof PerpetualsOrderType>;
 
 /**
  * Stop order mode.
@@ -172,33 +178,31 @@ export enum PerpetualsOrderType {
  * - `Standalone`: Independent stop order that can both reduce or increase
  *   the position, potentially requiring additional allocated collateral.
  */
-export enum PerpetualsStopOrderType {
-	/**
-	 * Stop Loss / Take Profit stop order. Can to be placed to close (fully or partially)
-	 * the position.
-	 */
-	SlTp = 0,
-	/**
-	 * Stop order that can be both reduce or increase the position's size. May require
-	 * some collateral to be allocated to be able to be placed.
-	 */
-	Standalone = 1,
-}
+export const PerpetualsStopOrderType = {
+	SlTp: 0,
+	Standalone: 1,
+} as const;
+
+export type PerpetualsStopOrderType = ValueOf<typeof PerpetualsStopOrderType>;
 
 /**
  * Which on-chain price a stop order's trigger is evaluated against.
- *
- * - `0` = index price (default)
- * - `1` = book mid price
- * - `2` = mark price
  */
-export type PerpetualsStopOrderTriggerPriceType = 0 | 1 | 2;
+export const PerpetualsStopOrderTriggerPriceType = {
+	IndexPrice: 0,
+	BookMidPrice: 1,
+	MarkPrice: 2,
+} as const;
+
+export type PerpetualsStopOrderTriggerPriceType = ValueOf<
+	typeof PerpetualsStopOrderTriggerPriceType
+>;
 
 /**
  * Execution details for a stop order that has been executed.
  */
 export type PerpetualsExecutionInfo =
-	| { notSpecified: {} }
+	| { notSpecified: EmptyObject }
 	| {
 			standaloneExecuted: {
 				executionPrice: number;
@@ -219,18 +223,18 @@ export type PerpetualsExecutionInfo =
  * Current state of a stop order in its lifecycle.
  */
 export type PerpetualsOrderState =
-	| { unknown: {} }
+	| { unknown: EmptyObject }
 	| {
 			invalid: {
 				error: string;
 			};
 	  }
-	| { pending: {} }
-	| { active: {} }
+	| { pending: EmptyObject }
+	| { active: EmptyObject }
 	| { executed: PerpetualsExecutionInfo }
-	| { cancelled: {} }
-	| { inExecution: {} }
-	| { toCancel: {} };
+	| { cancelled: EmptyObject }
+	| { inExecution: EmptyObject }
+	| { toCancel: EmptyObject };
 
 // =========================================================================
 //  Market

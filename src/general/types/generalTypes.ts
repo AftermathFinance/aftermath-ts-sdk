@@ -7,6 +7,16 @@ import type { Transaction } from "@mysten/sui/transactions";
 import type { SuiNetwork } from "./suiTypes";
 
 /**
+ * An object type with no properties.
+ */
+export type EmptyObject = Record<string, never>;
+
+/**
+ * The union of a const object's value types.
+ */
+export type ValueOf<T> = T[keyof T];
+
+/**
  * Represents a token or currency balance in the system, defined as a bigint.
  */
 export type Balance = bigint;

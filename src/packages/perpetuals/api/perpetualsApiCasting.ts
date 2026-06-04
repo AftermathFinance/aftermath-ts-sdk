@@ -45,6 +45,7 @@ import {
 	type FilledTakerOrderEvent,
 	type LiquidatedEvent,
 	PerpetualsOrderSide,
+	type PerpetualsStopOrderType,
 	type PostedOrderEvent,
 	type ReducedOrderEvent,
 	type SetPositionInitialMarginRatioEvent,
@@ -430,7 +431,7 @@ export class PerpetualsApiCasting {
 				Helpers.addLeadingZeroesToType(executor)
 			),
 			gas: BigInt(fields.gas),
-			stopOrderType: Number(fields.stop_order_type),
+			stopOrderType: Number(fields.stop_order_type) as PerpetualsStopOrderType,
 			encryptedDetails: fields.encrypted_details,
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -475,7 +476,7 @@ export class PerpetualsApiCasting {
 		const f = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
-			stopOrderType: Number(f.stop_order_type),
+			stopOrderType: Number(f.stop_order_type) as PerpetualsStopOrderType,
 			accountId: BigInt(f.account_id),
 			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
