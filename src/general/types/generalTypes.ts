@@ -54,6 +54,11 @@ export type Slippage = number;
 export type Percentage = number;
 
 /**
+ * Represents basis points, expressed as an integer hundredth of a percent (e.g., 2000 = 20%, 50 = 0.5%).
+ */
+export type Bps = number;
+
+/**
  * Annual percentage rate (APR), expressed as a `number` (e.g., 0.01 = 1%).
  */
 export type Apr = number;

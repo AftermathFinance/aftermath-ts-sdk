@@ -5,6 +5,7 @@ import type {
 import type {
 	AnyObjectType,
 	Balance,
+	Bps,
 	Byte,
 	EmptyObject,
 	Event,
@@ -2365,6 +2366,212 @@ export type ApiPerpetualsStopOrderDatasBody = {
  */
 export interface ApiPerpetualsStopOrderDatasResponse {
 	stopOrderDatas: PerpetualsStopOrderData[];
+}
+
+// =========================================================================
+//  TWAP Orders
+// =========================================================================
+
+/**
+ * Per-order TWAP (time-weighted-average-price) request payload.
+ */
+export interface PerpetualsTwapOrderDetails {
+	/** Market (clearing house) ID this TWAP order targets. */
+	marketId: PerpetualsMarketId;
+	/** Position side: `0` for bid (long), `1` for ask (short). */
+	side: 0 | 1;
+	/** Total base-asset size to execute across all chunks (scaled base units). */
+	size: bigint;
+	/** Whether the order may only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Number of child executions to split the order into. */
+	chunksAmount: number;
+	/** Target spacing between chunk executions, in milliseconds. */
+	executionGapMs: number;
+	/** Allowed jitter around each scheduled execution time, in milliseconds. */
+	executionTimeUncertaintyMs: number;
+	/** Optional deadline for the first execution (ms since epoch). */
+	firstRunExpireTimestamp?: bigint;
+	/** Optional overall expiry for the TWAP order (ms since epoch). */
+	expireTimestamp?: bigint;
+	/** How long to keep retrying a failed chunk execution, in milliseconds. */
+	timeForRetryMs: number;
+	/** Allowed deviation of a chunk's size from its target, in basis points. */
+	amountUncertaintyBps: Bps;
+	/** Cap on a single execution's size, as basis points of total size. */
+	maxOneExecutionAmountBps: Bps;
+	/**
+	 * Threshold below which a small trailing remainder is merged into the final
+	 * chunk, in basis points.
+	 */
+	smallTailMergeThresholdBps: Bps;
+	/** Max slippage tolerated per chunk execution, in basis points. */
+	maxSlippageBps: Bps;
+	/** Optional integrator fee configuration (friendly fractional fee). */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+}
+
+/**
+ * Lifecycle state of a TWAP order.
+ */
+export type PerpetualsTwapOrderState =
+	| "unknown"
+	| "invalid"
+	| "pending"
+	| "active"
+	| "reservedForProcessing"
+	| "executing"
+	| "completed"
+	| "spoiled"
+	| "cancelled"
+	| "toCancel"
+	| "finalized";
+
+/**
+ * Per-order TWAP details as returned by the read endpoint.
+ *
+ * Same fields as {@link PerpetualsTwapOrderDetails} minus `builderCode`, which
+ * the read response does not include.
+ */
+export type PerpetualsTwapOrderDetailsData = Omit<
+	PerpetualsTwapOrderDetails,
+	"builderCode"
+>;
+
+/**
+ * A TWAP order as surfaced to clients by the read endpoint.
+ */
+export interface PerpetualsTwapOrderData {
+	/** ID of the TWAP order object on-chain. */
+	twapOrderObjectId: ObjectId;
+	/** Collateral coin type backing the order. */
+	collateralType: CoinType;
+	/** Current lifecycle state of the TWAP order. */
+	orderState: PerpetualsTwapOrderState;
+	/** Reason the order is invalid, when `orderState === "invalid"`. */
+	invalidReason?: string;
+	/** Free-form status message about the order, if any. */
+	statusMessage?: string;
+	/** Order details. */
+	details: PerpetualsTwapOrderDetailsData;
+	/** Base-asset amount already executed (scaled base units). */
+	processedAmount: bigint;
+	/** Base-asset amount currently reserved for execution (scaled base units). */
+	scheduledAmount: bigint;
+	/** Timestamp (ms since epoch) of the most recent chunk execution. */
+	lastExecutionTimestampMs: Timestamp;
+}
+
+/**
+ * Edit to apply to an existing TWAP order. Any field left undefined is unchanged.
+ */
+export interface PerpetualsTwapOrderEdit {
+	/** Replacement order details (full set). */
+	newDetails?: PerpetualsTwapOrderDetails;
+	/** Replacement set of authorized executor addresses. */
+	newExecutors?: string[];
+}
+
+/**
+ * Body fields the SDK fills in automatically, so callers omit them from every
+ * `Sdk*Inputs` type.
+ */
+export type PerpetualsServerInjectedTxFields =
+	| "txKind"
+	| "walletAddress"
+	| "accountId"
+	| "accountCapId";
+
+/**
+ * SDK-level inputs for creating one or more TWAP orders — the request body
+ * without the auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCreateTwapOrdersInputs = Omit<
+	ApiPerpetualsCreateTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for creating TWAP orders via the API.
+ */
+export interface ApiPerpetualsCreateTwapOrdersBody {
+	accountId: PerpetualsAccountId;
+	accountCapId?: ObjectId;
+	walletAddress: SuiAddress;
+	twapOrders: PerpetualsTwapOrderDetails[];
+	gasCoinArg?: TransactionObjectArgument;
+	txKind?: SerializedTransaction;
+	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
+}
+
+/**
+ * Request body for editing existing TWAP orders via the API.
+ *
+ * `newTwapOrders` maps each TWAP order object id to the edit to apply.
+ */
+export interface ApiPerpetualsEditTwapOrdersBody {
+	accountId: PerpetualsAccountId;
+	accountCapId?: ObjectId;
+	walletAddress: SuiAddress;
+	newTwapOrders: Record<ObjectId, PerpetualsTwapOrderEdit>;
+	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
+}
+
+/**
+ * SDK-level inputs for editing existing TWAP orders — the request body without
+ * the auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsEditTwapOrdersInputs = Omit<
+	ApiPerpetualsEditTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for canceling TWAP orders identified by object IDs.
+ */
+export interface ApiPerpetualsCancelTwapOrdersBody {
+	accountId: PerpetualsAccountId;
+	accountCapId?: ObjectId;
+	walletAddress: SuiAddress;
+	twapOrderIds: ObjectId[];
+	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
+}
+
+/**
+ * SDK-level inputs for canceling TWAP orders — the request body without the
+ * auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCancelTwapOrdersInputs = Omit<
+	ApiPerpetualsCancelTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for fetching the TWAP orders of an account, validated using a
+ * wallet signature.
+ */
+export interface ApiPerpetualsTwapOrderDatasBody {
+	accountId: PerpetualsAccountId;
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+	marketIds?: PerpetualsMarketId[];
+}
+
+/**
+ * Response payload for TWAP-order queries.
+ */
+export interface ApiPerpetualsTwapOrderDatasResponse {
+	twapOrderDatas: PerpetualsTwapOrderData[];
 }
 
 // =========================================================================

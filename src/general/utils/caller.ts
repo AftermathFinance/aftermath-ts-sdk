@@ -119,15 +119,14 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 		}
 
-		// TODO: handle url prefixing and api calls based on network differently
-
-		// Note: this slash removal is need to avoid double slashes in the url
 		const safeUrl =
 			this.apiBaseUrl.slice(-1) === "/"
 				? this.apiBaseUrl.slice(0, -1)
 				: this.apiBaseUrl;
 
-		return `${safeUrl}/${this.apiEndpoint}/${
+		const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
+
+		return `${safeUrl}/${endpointSegment}${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
@@ -304,8 +303,10 @@ export class Caller {
 			);
 			const baseWs = baseHttp.replace(Caller.HTTP_PROTOCOL_REGEX, "ws$1://");
 
-			// Prefix with endpoint + service prefix (same pattern as fetch)
-			const prefix = `${this.apiEndpoint}/${this.apiUrlPrefix}`;
+			// Prefix with endpoint + service prefix (same pattern as fetch);
+			// an empty `apiEndpoint` must not introduce a double slash.
+			const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
+			const prefix = `${endpointSegment}${this.apiUrlPrefix}`;
 			const normalizedPrefix = prefix.replace(
 				Caller.TRAILING_SLASHES_REGEX,
 				""
