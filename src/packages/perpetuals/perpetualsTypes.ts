@@ -2379,7 +2379,7 @@ export interface PerpetualsTwapOrderDetails {
 	/** Market (clearing house) ID this TWAP order targets. */
 	marketId: PerpetualsMarketId;
 	/** Position side: `0` for bid (long), `1` for ask (short). */
-	side: 0 | 1;
+	side: PerpetualsOrderSide;
 	/** Total base-asset size to execute across all chunks (scaled base units). */
 	size: bigint;
 	/** Whether the order may only reduce an existing position. */
