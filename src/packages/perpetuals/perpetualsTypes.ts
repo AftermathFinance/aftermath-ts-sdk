@@ -428,10 +428,10 @@ export interface PerpetualsMarketParams {
 	marginRatioMaintenance: number;
 	/** Symbol of the underlying asset. */
 	baseAssetSymbol: CoinSymbol;
-	/** On-chain ID of the oracle providing the base asset price. */
-	basePriceFeedId: ObjectId;
-	/** On-chain ID of the oracle providing the collateral asset price. */
-	collateralPriceFeedId: ObjectId;
+	/** Numeric price-feed storage id of the base asset's oracle feed. */
+	basePriceFeedId: number;
+	/** Numeric price-feed storage id of the collateral asset's oracle feed. */
+	collateralPriceFeedId: number;
 	/** Funding interval duration in milliseconds. */
 	fundingFrequencyMs: bigint;
 	/** Funding period used for calculations in milliseconds. */
@@ -847,17 +847,16 @@ export interface PerpetualsVaultObject {
 		 */
 		forceWithdrawDelayMs: bigint;
 		/**
-		 * Price feed storage id idetifying the oracle price for `C`
+		 * Numeric price-feed storage id identifying the oracle price for `C`.
 		 */
-		collateralPriceFeedStorageId: ObjectId;
+		collateralPriceFeedStorageId: number;
 		/**
-		 * Source object ID for the collateral price feed storage.
-		 *
-		 * Some oracle integrations separate the "storage object" from the "source"
-		 * (e.g., an aggregator or publisher object). This field identifies the
-		 * upstream source used to populate `collateralPriceFeedStorageId`.
+		 * Numeric source id of the collateral price feed (the oracle
+		 * provider/source: pyth, stork, etc.). Together with
+		 * `collateralPriceFeedStorageId` it identifies the feed in the oracle
+		 * aggregator registry.
 		 */
-		collateralPriceFeedStorageSourceId: ObjectId;
+		collateralPriceFeedStorageSourceId: number;
 		/**
 		 * Maximum tolerated deviation for the collateral oracle price.
 		 *
