@@ -2245,11 +2245,26 @@ export interface ApiPerpetualsMarketCandleHistoryBody {
 	toTimestamp: Timestamp;
 
 	/**
-	 * Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
-	 * 300_000 for 5m).
+	 * Candle resolution as a CCXT-style timeframe label (e.g. `"1m"`, `"1h"`, `"1d"`).
 	 */
-	intervalMs: number;
+	resolution: PerpetualsCandleResolution;
 }
+
+/**
+ * Candle resolution as a CCXT-style timeframe label.
+ */
+export type PerpetualsCandleResolution =
+	| "1m"
+	| "5m"
+	| "15m"
+	| "30m"
+	| "1h"
+	| "4h"
+	| "12h"
+	| "1d"
+	| "3d"
+	| "1w"
+	| "1mo";
 
 /**
  * Response type for historical market candle data.
@@ -4655,7 +4670,18 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesMarketOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType
-	| PerpetualsWsUpdatesTopOfOrderbookSubscriptionType;
+	| PerpetualsWsUpdatesTopOfOrderbookSubscriptionType
+	| PerpetualsWsUpdatesMarketCandlesSubscriptionType;
+
+/**
+ * Websocket subscription type for market candle (OHLCV) updates.
+ */
+export interface PerpetualsWsUpdatesMarketCandlesSubscriptionType {
+	marketCandles: {
+		marketId: PerpetualsMarketId;
+		interval: PerpetualsCandleResolution;
+	};
+}
 
 /**
  * Websocket payload for oracle price updates.
@@ -4762,7 +4788,8 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| {
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
 	  }
-	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload };
+	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload }
+	| { marketCandles: PerpetualsWsUpdatesMarketCandlesPayload };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 
@@ -4773,4 +4800,14 @@ export type PerpetualsWsUpdatesResponseMessage =
 export interface PerpetualsWsCandleResponseMessage {
 	marketId: PerpetualsMarketId;
 	lastCandle: PerpetualsMarketCandleDataPoint | undefined;
+}
+
+/**
+ * Websocket payload for market candle (OHLCV) updates delivered over the
+ * general `/perpetuals/ws/updates` stream via a `marketCandles` subscription.
+ */
+export interface PerpetualsWsUpdatesMarketCandlesPayload {
+	marketId: PerpetualsMarketId;
+	interval: PerpetualsCandleResolution;
+	lastCandle: PerpetualsMarketCandleDataPoint;
 }

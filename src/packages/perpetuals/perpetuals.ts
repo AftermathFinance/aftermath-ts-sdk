@@ -67,6 +67,7 @@ import {
 	type PerpetualsAccountCap,
 	type PerpetualsAccountId,
 	PerpetualsAccountObject,
+	type PerpetualsCandleResolution,
 	type PerpetualsMarketId,
 	type PerpetualsOrderId,
 	type PerpetualsOrderPrice,
@@ -597,7 +598,7 @@ export class Perpetuals extends Caller {
 	 */
 	// TODO: move to market class ?
 	public getMarketCandleHistory(inputs: ApiPerpetualsMarketCandleHistoryBody) {
-		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
+		const { marketId, fromTimestamp, toTimestamp, resolution } = inputs;
 		return this.fetchApi<
 			ApiPerpetualsMarketCandleHistoryResponse,
 			ApiPerpetualsMarketCandleHistoryBody
@@ -605,7 +606,7 @@ export class Perpetuals extends Caller {
 			marketId,
 			fromTimestamp,
 			toTimestamp,
-			intervalMs,
+			resolution,
 		});
 	}
 
@@ -1317,7 +1318,6 @@ export class Perpetuals extends Caller {
 		>("builder-codes/integrator-vaults", inputs);
 	}
 
-
 	// =========================================================================
 	//  Public Static Helpers
 	// =========================================================================
@@ -1741,27 +1741,37 @@ export class Perpetuals extends Caller {
 	 */
 	public openMarketCandlesWebsocketStream(args: {
 		marketId: PerpetualsMarketId;
-		intervalMs: number;
+		interval: PerpetualsCandleResolution;
 		onMessage: (msg: PerpetualsWsCandleResponseMessage) => void;
 		onOpen?: (ev: Event) => void;
 		onError?: (ev: Event) => void;
 		onClose?: (ev: CloseEvent) => void;
 	}) {
-		const { marketId, intervalMs, onMessage, onOpen, onError, onClose } = args;
+		const { marketId, interval, onMessage, onOpen, onError, onClose } = args;
 
-		const path = `ws/market-candles/${encodeURIComponent(
-			marketId
-		)}/${intervalMs}`;
-
-		const ctl = this.openWsStream<undefined, PerpetualsWsCandleResponseMessage>(
-			{
-				path,
-				onMessage,
-				onOpen,
-				onError,
-				onClose,
-			}
-		);
+		const ctl = this.openWsStream<
+			PerpetualsWsUpdatesSubscriptionMessage,
+			PerpetualsWsUpdatesResponseMessage
+		>({
+			path: "ws/updates",
+			onMessage: (env) => {
+				if ("marketCandles" in env) {
+					onMessage({
+						marketId: env.marketCandles.marketId,
+						lastCandle: env.marketCandles.lastCandle,
+					});
+				}
+			},
+			onOpen: (ev) => {
+				ctl.send({
+					action: "subscribe",
+					subscriptionType: { marketCandles: { marketId, interval } },
+				});
+				onOpen?.(ev);
+			},
+			onError,
+			onClose,
+		});
 
 		return {
 			ws: ctl.ws,
