@@ -1692,6 +1692,30 @@ export class Perpetuals extends Caller {
 				},
 			});
 
+		const subscribeMarketCandles = ({
+			marketId,
+			interval,
+		}: {
+			marketId: PerpetualsMarketId;
+			interval: PerpetualsCandleResolution;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { marketCandles: { marketId, interval } },
+			});
+
+		const unsubscribeMarketCandles = ({
+			marketId,
+			interval,
+		}: {
+			marketId: PerpetualsMarketId;
+			interval: PerpetualsCandleResolution;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { marketCandles: { marketId, interval } },
+			});
+
 		return {
 			ws: ctl.ws,
 			subscribeMarket,
@@ -1710,6 +1734,8 @@ export class Perpetuals extends Caller {
 			unsubscribeUserCollateralChanges,
 			subscribeTopOfOrderbook,
 			unsubscribeTopOfOrderbook,
+			subscribeMarketCandles,
+			unsubscribeMarketCandles,
 			close: ctl.close,
 		};
 	}
