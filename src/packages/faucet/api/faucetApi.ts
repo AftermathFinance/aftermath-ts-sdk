@@ -5,7 +5,6 @@ import {
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import type { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Helpers } from "../../../general/utils";
 import type {
 	AnyObjectType,
 	EventsInputs,
@@ -17,6 +16,7 @@ import type { CoinType } from "../../coin/coinTypes";
 import { Sui } from "../../sui";
 import type {
 	ApiFaucetMintSuiFrenBody,
+	ApiFaucetRequestBody,
 	FaucetAddCoinEvent,
 	FaucetMintCoinEvent,
 } from "../faucetTypes";
@@ -38,7 +38,7 @@ export class FaucetApi {
 		},
 		eventNames: {
 			mintCoin: "MintedCoin",
-			addCoin: "AddedCoinEvent",
+			addCoin: "AddedCoin",
 		},
 	};
 
@@ -85,27 +85,11 @@ export class FaucetApi {
 	//  Transaction Commands
 	// =========================================================================
 
-	// public addCoinTx = (inputs: {
-	// 	tx: Transaction;
-	// 	treasuryCapId: ObjectId;
-	// 	treasuryCapType: AnyObjectType;
-	// }) => {
-	// 	const { tx, treasuryCapId, treasuryCapType } = inputs;
-
-	// 	return tx.moveCall({
-	// 		target: TransactionsApiHelpers.createTxTarget(
-	// 			this.addresses.packages.faucet,
-	// 			FaucetApi.constants.moduleNames.faucet,
-	// 			"add_coin"
-	// 		),
-	// 		typeArguments: [treasuryCapType],
-	// 		arguments: [
-	// 			tx.object(this.addresses.objects.faucet),
-	// 			tx.object(treasuryCapId),
-	// 		],
-	// 	});
-	// };
-
+	/**
+	 * Mints `coinType`'s configured default amount and returns the resulting
+	 * `Coin<T>`. Use {@link buildRequestCoinTx} to mint and transfer it to a
+	 * wallet in one transaction.
+	 */
 	public requestCoinTx = (inputs: { tx: Transaction; coinType: CoinType }) => {
 		const { tx, coinType } = inputs;
 
@@ -113,10 +97,13 @@ export class FaucetApi {
 			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
 				FaucetApi.constants.moduleNames.faucet,
-				"request_default_amount"
+				"mint"
 			),
 			typeArguments: [coinType],
-			arguments: [tx.object(this.addresses.objects.faucet)],
+			arguments: [
+				tx.object(this.addresses.objects.faucet),
+				tx.object(this.addresses.objects.config),
+			],
 		});
 	};
 
@@ -148,9 +135,17 @@ export class FaucetApi {
 	//  Transaction Builders
 	// =========================================================================
 
-	public buildRequestCoinTx = Helpers.transactions.createBuildTxFunc(
-		this.requestCoinTx
-	);
+	public buildRequestCoinTx = (inputs: ApiFaucetRequestBody): Transaction => {
+		const { walletAddress, coinType } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const coin = this.requestCoinTx({ tx, coinType });
+		tx.transferObjects([coin], walletAddress);
+
+		return tx;
+	};
 
 	public fetchBuildMintSuiFrenTx = async (inputs: ApiFaucetMintSuiFrenBody) => {
 		const { walletAddress, mintFee, suiFrenType } = inputs;
@@ -174,7 +169,6 @@ export class FaucetApi {
 	//  Events
 	// =========================================================================
 
-	// TODO: add to indexer
 	public fetchMintCoinEvents = async (inputs: EventsInputs) =>
 		await this.api
 			.Events()
@@ -189,7 +183,6 @@ export class FaucetApi {
 				eventFromEventOnChain: FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			});
 
-	// TODO: add to indexer
 	public fetchAddCoinEvents = async (inputs: EventsInputs) =>
 		await this.api
 			.Events()
