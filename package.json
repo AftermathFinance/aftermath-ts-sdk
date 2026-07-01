@@ -1,6 +1,6 @@
 {
   "name": "aftermath-ts-sdk",
-  "version": "2.1.0-perps.4",
+  "version": "2.1.0-perps.5",
   "description": "Aftermath TypeScript SDK",
   "type": "module",
   "main": "dist/index.js",
