@@ -2508,32 +2508,45 @@ export type SdkPerpetualsCreateTwapOrdersInputs = Omit<
 };
 
 /**
- * Request body for creating TWAP orders via the API.
+ * Request body for creating TWAP orders via the API, for an
+ * account or vault.
  */
-export interface ApiPerpetualsCreateTwapOrdersBody {
-	accountId: PerpetualsAccountId;
-	accountCapId?: ObjectId;
+export type ApiPerpetualsCreateTwapOrdersBody = {
 	walletAddress: SuiAddress;
 	twapOrders: PerpetualsTwapOrderDetails[];
 	gasCoinArg?: TransactionObjectArgument;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
 	sponsor?: PerpetualsSponsorConfig;
-}
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 /**
  * Request body for editing existing TWAP orders via the API.
  *
  * `newTwapOrders` maps each TWAP order object id to the edit to apply.
  */
-export interface ApiPerpetualsEditTwapOrdersBody {
-	accountId: PerpetualsAccountId;
-	accountCapId?: ObjectId;
+export type ApiPerpetualsEditTwapOrdersBody = {
 	walletAddress: SuiAddress;
 	newTwapOrders: Record<ObjectId, PerpetualsTwapOrderEdit>;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
-}
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 /**
  * SDK-level inputs for editing existing TWAP orders — the request body without
@@ -2547,16 +2560,23 @@ export type SdkPerpetualsEditTwapOrdersInputs = Omit<
 };
 
 /**
- * Request body for canceling TWAP orders identified by object IDs.
+ * Request body for canceling TWAP orders identified by object IDs, for an
+ * account or vault.
  */
-export interface ApiPerpetualsCancelTwapOrdersBody {
-	accountId: PerpetualsAccountId;
-	accountCapId?: ObjectId;
+export type ApiPerpetualsCancelTwapOrdersBody = {
 	walletAddress: SuiAddress;
 	twapOrderIds: ObjectId[];
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
-}
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 /**
  * SDK-level inputs for canceling TWAP orders — the request body without the

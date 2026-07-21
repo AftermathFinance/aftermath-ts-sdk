@@ -964,23 +964,28 @@ export class PerpetualsAccount extends Caller {
 	public async getCreateTwapOrdersTx(
 		inputs: SdkPerpetualsCreateTwapOrdersInputs
 	) {
-		if ("vaultId" in this.accountCap) {
-			throw new Error("TWAP orders are not yet supported for vault accounts");
-		}
-
 		const { tx, ...otherInputs } = inputs;
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsCreateTwapOrdersBody,
 			ApiTransactionResponse
 		>(
-			"account/transactions/create-twap-orders",
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/create-twap-orders",
 			{
 				...otherInputs,
 				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
-				accountId: this.accountCap.accountId,
-				accountCapId: this.accountCap.objectId,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
 			},
 			undefined,
 			{
@@ -999,23 +1004,28 @@ export class PerpetualsAccount extends Caller {
 	 * @returns Transaction response containing `tx`.
 	 */
 	public async getEditTwapOrdersTx(inputs: SdkPerpetualsEditTwapOrdersInputs) {
-		if ("vaultId" in this.accountCap) {
-			throw new Error("TWAP orders are not yet supported for vault accounts");
-		}
-
 		const { tx, ...otherInputs } = inputs;
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsEditTwapOrdersBody,
 			ApiTransactionResponse
 		>(
-			"account/transactions/edit-twap-orders",
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/edit-twap-orders",
 			{
 				...otherInputs,
 				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
-				accountId: this.accountCap.accountId,
-				accountCapId: this.accountCap.objectId,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
 			},
 			undefined,
 			{
@@ -1036,23 +1046,28 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelTwapOrdersTx(
 		inputs: SdkPerpetualsCancelTwapOrdersInputs
 	) {
-		if ("vaultId" in this.accountCap) {
-			throw new Error("TWAP orders are not yet supported for vault accounts");
-		}
-
 		const { tx, ...otherInputs } = inputs;
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsCancelTwapOrdersBody,
 			ApiTransactionResponse
 		>(
-			"account/transactions/cancel-twap-orders",
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-twap-orders",
 			{
 				...otherInputs,
 				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
-				accountId: this.accountCap.accountId,
-				accountCapId: this.accountCap.objectId,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
 			},
 			undefined,
 			{
