@@ -4613,7 +4613,8 @@ export interface PerpetualsWsUpdatesMarketSubscriptionType {
 
 /**
  * Websocket subscription payload for subscribing to user/account updates,
- * optionally including stop-order data (via signature).
+ * optionally including special-order (stop and TWAP order) data (via
+ * signature).
  */
 export interface PerpetualsWsUpdatesUserSubscriptionType {
 	user: {
@@ -4783,11 +4784,13 @@ export interface PerpetualsWsUpdatesTopOfOrderbookPayload {
 }
 
 /**
- * Websocket payload for user account and stop-order updates.
+ * Websocket payload for user account and special-order (stop and TWAP order)
+ * updates.
  */
 export interface PerpetualsWsUpdatesUserPayload {
 	account: PerpetualsAccountObject;
 	stopOrders: PerpetualsStopOrderData[] | undefined;
+	twapOrders: PerpetualsTwapOrderData[] | undefined;
 }
 
 /**
