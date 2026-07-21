@@ -1075,21 +1075,23 @@ export class PerpetualsAccount extends Caller {
 		signature: string;
 		marketIds?: PerpetualsMarketId[];
 	}) {
-		if ("vaultId" in this.accountCap) {
-			throw new Error("TWAP orders are not yet supported for vault accounts");
-		}
-
 		const { bytes, signature, marketIds } = inputs;
 
 		return await this.fetchApi<
 			ApiPerpetualsTwapOrderDatasResponse,
 			ApiPerpetualsTwapOrderDatasBody
-		>("account/twap-order-datas", {
+		>(`${this.vaultId ? "vault" : "account"}/twap-order-datas`, {
 			bytes,
 			signature,
 			walletAddress: this.ownerAddress(),
 			marketIds: marketIds ?? [],
-			accountId: this.accountCap.accountId,
+			...("vaultId" in this.accountCap
+				? {
+						vaultId: this.accountCap.vaultId,
+					}
+				: {
+						accountId: this.accountCap.accountId,
+					}),
 		});
 	}
 

@@ -2573,13 +2573,19 @@ export type SdkPerpetualsCancelTwapOrdersInputs = Omit<
  * Request body for fetching the TWAP orders of an account, validated using a
  * wallet signature.
  */
-export interface ApiPerpetualsTwapOrderDatasBody {
-	accountId: PerpetualsAccountId;
+export type ApiPerpetualsTwapOrderDatasBody = {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
 	marketIds?: PerpetualsMarketId[];
-}
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 /**
  * Response payload for TWAP-order queries.
