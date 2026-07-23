@@ -260,7 +260,12 @@ export class Perpetuals extends Caller {
 		return {
 			markets: res.marketDatas.map(
 				(marketData) =>
-					new PerpetualsMarket(marketData.market, this.config, this.api)
+					new PerpetualsMarket(
+						marketData.market,
+						this.config,
+						this.api,
+						marketData.metadata
+					)
 			),
 		};
 	}

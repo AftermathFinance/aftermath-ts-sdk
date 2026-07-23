@@ -3659,13 +3659,34 @@ export interface ApiPerpetualsMarketsBody {
 }
 
 /**
+ * Display metadata for a market: ticker symbols, label, artwork and
+ * category.
+ *
+ * Presentation data only — none of it affects pricing, margin or execution.
+ */
+export interface PerpetualsMarketMetadata {
+	/** Base asset ticker, e.g. `"BTC"` (not the `"BTCUSD"` pair symbol). */
+	symbol: string;
+	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
+	displayName?: string;
+	/** Grouping label, e.g. `"Crypto"`, `"Commodities"`, `"Equities"`. */
+	category: string;
+	/** Icon location for the market, e.g. `"/markets/btc.png"`. */
+	image: string;
+	/** Collateral asset ticker, e.g. `"USDC"`. */
+	collateralSymbol: string;
+}
+
+/**
  * Response payload for {@link ApiPerpetualsMarketsBody}.
  *
- * Each item includes the market data.
+ * Each item includes the market data, plus display metadata when it is
+ * available for that market.
  */
 export interface ApiPerpetualsMarketsResponse {
 	marketDatas: {
 		market: PerpetualsMarketData;
+		metadata?: PerpetualsMarketMetadata | null;
 	}[];
 }
 
