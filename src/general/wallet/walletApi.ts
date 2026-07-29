@@ -1,3 +1,4 @@
+import type { SuiClientTypes } from "@mysten/sui/client";
 import type { CoinsToBalance, CoinType } from "../../packages/coin/coinTypes";
 import type { AftermathApi } from "../providers/aftermathApi";
 import type { SuiAddress, TransactionDigest } from "../types";
@@ -23,11 +24,13 @@ export class WalletApi {
 		coin: CoinType;
 	}) => {
 		const { walletAddress, coin } = inputs;
-		const coinBalance = await this.api.client.getBalance({
+		// @dev: gRPC nests the result under `balance` and names the total `balance`
+		// (JSON-RPC returned a flat `totalBalance`). Values are identical.
+		const { balance } = await this.api.client.getBalance({
 			owner: walletAddress,
 			coinType: Helpers.stripLeadingZeroesFromType(coin),
 		});
-		return BigInt(coinBalance.totalBalance);
+		return BigInt(balance.balance);
 	};
 
 	// TODO: make toBigIntSafe function ?
@@ -37,16 +40,29 @@ export class WalletApi {
 	}): Promise<CoinsToBalance> => {
 		const { walletAddress } = inputs;
 
-		const allBalances = await this.api.client.getAllBalances({
-			owner: walletAddress,
-		});
+		// @dev: JSON-RPC's `getAllBalances` returned every balance in one array;
+		// gRPC's `listBalances` pages. Page to exhaustion to preserve behaviour.
+		const allBalances: SuiClientTypes.Balance[] = [];
+		let cursor: string | null | undefined;
+		do {
+			const page = await this.api.client.listBalances({
+				owner: walletAddress,
+				cursor,
+			});
+			allBalances.push(...page.balances);
+
+			if (page.balances.length === 0 || !page.hasNextPage || !page.cursor) {
+				break;
+			}
+			cursor = page.cursor;
+		} while (true);
 
 		const coinsToBalance: CoinsToBalance = allBalances.reduce(
-			(acc, balance) => {
+			(acc: CoinsToBalance, balance) => {
 				return {
 					...acc,
 					[Helpers.addLeadingZeroesToType(balance.coinType)]: BigInt(
-						balance.totalBalance
+						balance.balance
 					),
 				};
 			},
