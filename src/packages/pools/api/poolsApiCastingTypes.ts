@@ -1,4 +1,5 @@
 import type {
+	BytesOnChain,
 	EventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
@@ -30,7 +31,7 @@ export interface PoolFieldsOnChain {
 	decimal_scalars: BigIntAsString[];
 	lp_decimals: BigIntAsString;
 	lp_decimal_scalar: BigIntAsString;
-	coin_decimals?: BigIntAsString[];
+	coin_decimals?: BytesOnChain;
 }
 
 export interface DaoFeePoolFieldsOnChain {

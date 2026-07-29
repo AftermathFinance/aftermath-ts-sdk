@@ -29,7 +29,42 @@ import poolGrpc from "./fixtures/objects/pool.grpc.json";
 import poolJsonRpc from "./fixtures/objects/pool.jsonrpc.json";
 import vaultStateGrpc from "./fixtures/objects/stakedSuiVaultState.grpc.json";
 import vaultStateJsonRpc from "./fixtures/objects/stakedSuiVaultState.jsonrpc.json";
-import { Casting } from "../src";
+import { Casting, type SuiObjectView } from "../src";
+
+// =============================================================================
+//  Fixture plumbing
+// =============================================================================
+
+/** A captured `.grpc.json` fixture, as the casters now receive it. */
+const grpcView = (fixture: unknown): SuiObjectView =>
+	fixture as unknown as SuiObjectView;
+
+/**
+ * Presents a captured `.jsonrpc.json` fixture through the gRPC object view,
+ * **keeping JSON-RPC's field shapes** (`{ type, fields }` envelopes, number
+ * arrays for `vector<u8>`, nested `UID`s).
+ *
+ * This is what makes each caster's pair of tests meaningful: the caster is fed
+ * the *old* field shapes through the *new* container, and must produce the
+ * identical domain object. A missing `unwrapStructField` /
+ * `bytesFieldToNumbers` / `unwrapUid` breaks one of the two, so neither test can
+ * pass vacuously — and it proves the port is behaviour-preserving rather than
+ * merely internally consistent.
+ */
+const jsonRpcAsView = (fixture: unknown): SuiObjectView => {
+	const data = (fixture as { data: Record<string, any> }).data;
+	return {
+		objectId: data.objectId,
+		version: data.version,
+		digest: data.digest,
+		owner: data.owner,
+		type: data.type,
+		json: data.content?.fields ?? null,
+		display: data.display
+			? { output: data.display.data ?? null, errors: null }
+			: null,
+	} as unknown as SuiObjectView;
+};
 
 // =============================================================================
 //  Pools
@@ -77,24 +112,35 @@ const expectedPool = {
 };
 
 describe("PoolsApiCasting.poolObjectFromSuiObject", () => {
-	it("casts the JSON-RPC shape", () => {
+	it("casts the gRPC json view", () => {
 		expect(
-			Casting.pools.poolObjectFromSuiObject(poolJsonRpc as never)
+			Casting.pools.poolObjectFromSuiObject(grpcView(poolGrpc))
+		).toEqual(expectedPool);
+	});
+
+	it("casts JSON-RPC's field shapes to the identical object", () => {
+		expect(
+			Casting.pools.poolObjectFromSuiObject(jsonRpcAsView(poolJsonRpc))
 		).toEqual(expectedPool);
 	});
 
 	it("resolves `lpCoinType` to the `Pool<L>` type argument", () => {
 		// gRPC drops the nested `Supply<L>` struct's `type`, which is where this
 		// used to come from. `L` is recoverable from the pool's own type.
-		const pool = Casting.pools.poolObjectFromSuiObject(poolJsonRpc as never);
+		const pool = Casting.pools.poolObjectFromSuiObject(grpcView(poolGrpc));
 		expect(pool.lpCoinType).toBe(expectedPool.lpCoinType);
 		expect(poolGrpc.type).toContain(pool.lpCoinType);
+		// The old source of truth is genuinely absent from the gRPC fixture, so
+		// this cannot be passing by still reading it.
+		expect(
+			(poolGrpc.json as Record<string, any>).lp_supply.type
+		).toBeUndefined();
 	});
 
 	it("yields real numbers for `decimals`, never NaN", () => {
 		// gRPC base64-encodes `coin_decimals` ("CQk="), so indexing it without
 		// decoding gives Number("C") === NaN — silently, with no throw.
-		const pool = Casting.pools.poolObjectFromSuiObject(poolJsonRpc as never);
+		const pool = Casting.pools.poolObjectFromSuiObject(grpcView(poolGrpc));
 		const decimals = Object.values(pool.coins).map((c) => c.decimals);
 		expect(decimals).toEqual([9, 9]);
 		for (const d of decimals) {
@@ -104,7 +150,7 @@ describe("PoolsApiCasting.poolObjectFromSuiObject", () => {
 	});
 
 	it("reads `lp_supply` out of its struct envelope without losing precision", () => {
-		const pool = Casting.pools.poolObjectFromSuiObject(poolJsonRpc as never);
+		const pool = Casting.pools.poolObjectFromSuiObject(grpcView(poolGrpc));
 		expect(pool.lpCoinSupply).toBe(100_000_009_899_506_000n);
 		// A u64 that survived as a string; had gRPC returned a JSON number this
 		// would have been rounded.

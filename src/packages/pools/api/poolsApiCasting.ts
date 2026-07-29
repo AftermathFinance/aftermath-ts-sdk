@@ -1,5 +1,8 @@
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
-import { Helpers } from "../../../general/utils";
+import {
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
 import type { ObjectId } from "../../../types";
 import { Coin } from "../../coin";
 import type {
@@ -25,7 +28,7 @@ export class PoolsApiCasting {
 	// =========================================================================
 
 	public static poolObjectFromSuiObject = (
-		suiObject: SuiObjectResponse
+		suiObject: SuiObjectView
 	): PoolObject => {
 		const objectId = Helpers.getObjectId(suiObject);
 		const objectType = Helpers.getObjectType(suiObject);
@@ -34,9 +37,23 @@ export class PoolsApiCasting {
 			suiObject
 		) as PoolFieldsOnChain;
 
+		// @dev: the LP coin type used to come from the nested `Supply<L>` struct's
+		// own `type`, which gRPC's `json` view drops. It is recoverable from the
+		// pool's own type instead: the pool is `Pool<L>` where `L` **is** the LP
+		// coin (see the `/* (Pool<L>, Coin<L>) */` annotation in `poolsApi.ts`).
+		// Verified to yield the byte-identical type string on a real mainnet pool.
 		const lpCoinType = Helpers.addLeadingZeroesToType(
-			Coin.getInnerCoinType(poolFieldsOnChain.lp_supply.type)
+			Coin.getInnerCoinType(objectType)
 		);
+
+		// @dev: `coin_decimals` is a `vector<u8>`, which gRPC base64-encodes.
+		// Indexing it undecoded yields a one-character string, so `Number(...)`
+		// of it is NaN — a pool would render with broken decimals rather than
+		// throwing. Decode once, up front.
+		const coinDecimals =
+			poolFieldsOnChain.coin_decimals === undefined
+				? undefined
+				: GrpcCasting.bytesFieldToNumbers(poolFieldsOnChain.coin_decimals);
 
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
 			(acc, cur, index) => ({
@@ -54,11 +71,7 @@ export class PoolsApiCasting {
 						poolFieldsOnChain.normalized_balances[index]
 					),
 					decimalsScalar: BigInt(poolFieldsOnChain.decimal_scalars[index]),
-					...(poolFieldsOnChain.coin_decimals
-						? {
-								decimals: Number(poolFieldsOnChain.coin_decimals[index]),
-							}
-						: {}),
+					...(coinDecimals ? { decimals: coinDecimals[index] } : {}),
 				},
 			}),
 			{}
@@ -70,7 +83,9 @@ export class PoolsApiCasting {
 			lpCoinType,
 			name: poolFieldsOnChain.name,
 			creator: poolFieldsOnChain.creator,
-			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+			lpCoinSupply: BigInt(
+				GrpcCasting.unwrapStructField(poolFieldsOnChain.lp_supply).value
+			),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
 			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
@@ -79,7 +94,7 @@ export class PoolsApiCasting {
 	};
 
 	public static daoFeePoolOwnerCapObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): DaoFeePoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
