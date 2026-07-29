@@ -15,6 +15,7 @@ import type {
 	SuiAddress,
 } from "../../types";
 import type { AftermathApi } from "../providers/aftermathApi";
+import { GrpcCasting } from "../utils/grpcCasting";
 import { Helpers } from "../utils/helpers";
 
 export class ObjectsApiHelpers {
@@ -41,8 +42,15 @@ export class ObjectsApiHelpers {
 	// =========================================================================
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
-		const object = await this.api.client.getObject({ id: objectId });
-		return object.error === undefined;
+		// @dev: JSON-RPC answered a missing object with `{ error: { code:
+		// "notExists" } }`; gRPC **throws**. Verified live against both the
+		// Aftermath and public fullnodes.
+		try {
+			await this.api.client.getObject({ objectId });
+			return true;
+		} catch (_e) {
+			return false;
+		}
 	};
 
 	public fetchIsObjectOwnedByAddress = async (inputs: {
@@ -74,6 +82,12 @@ export class ObjectsApiHelpers {
 		return false;
 	};
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface** — see
+	 * {@link AftermathApi.jsonRpcClient}. gRPC's `listOwnedObjects` cannot supply
+	 * the parsed `content.fields` view every `objectFromSuiObjectResponse` caster
+	 * consumes.
+	 */
 	public fetchObjectsOfTypeOwnedByAddress = async (inputs: {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
@@ -88,6 +102,14 @@ export class ObjectsApiHelpers {
 		});
 	};
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface** — see
+	 * {@link AftermathApi.jsonRpcClient}. The gRPC equivalent is
+	 * `listOwnedObjects` (`res.data` -> `res.objects`,
+	 * `res.nextCursor` -> `res.cursor`, `options.showDisplay` ->
+	 * `include.display` with `display.data` -> `display.output`), but it cannot
+	 * return the parsed `content.fields` view this helper's callers cast from.
+	 */
 	public fetchOwnedObjects = async (inputs: {
 		walletAddress: SuiAddress;
 		filter?: SuiObjectDataFilter;
@@ -99,7 +121,7 @@ export class ObjectsApiHelpers {
 		let allObjectData: SuiObjectResponse[] = [];
 		let cursor: string | undefined;
 		do {
-			const paginatedObjects = await this.api.client.getOwnedObjects({
+			const paginatedObjects = await this.api.jsonRpcClient.getOwnedObjects({
 				owner: walletAddress,
 				options: inputs.options ?? {
 					showContent: true,
@@ -143,13 +165,23 @@ export class ObjectsApiHelpers {
 		});
 	};
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface** — see
+	 * {@link AftermathApi.jsonRpcClient}. gRPC's `getObject` returns Move object
+	 * contents as BCS bytes (`include: { content: true }`) or as a
+	 * differently-shaped, explicitly unstable `json` view — UIDs flattened from
+	 * `{ id: { id } }` to a bare string, nested structs unwrapped out of their
+	 * `{ type, fields }` envelope, and `vector<u8>` base64-encoded instead of a
+	 * number array. Reading that view would silently change what every
+	 * `objectFromSuiObjectResponse` caster returns.
+	 */
 	public fetchObjectGeneral = async (inputs: {
 		objectId: ObjectId;
 		options?: SuiObjectDataOptions;
 	}): Promise<SuiObjectResponse> => {
 		const { objectId, options } = inputs;
 
-		const object = await this.api.client.getObject({
+		const object = await this.api.jsonRpcClient.getObject({
 			id: objectId,
 			options,
 		});
@@ -184,6 +216,13 @@ export class ObjectsApiHelpers {
 		);
 	};
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface** — see
+	 * {@link AftermathApi.jsonRpcClient}. The gRPC equivalent is `getObjects`,
+	 * whose `objects` array is `(Object | Error)[]` (a per-object error shape
+	 * `multiGetObjects` did not have), but it carries the same unusable content
+	 * view as `getObject`.
+	 */
 	public fetchObjectBatch = async (inputs: {
 		objectIds: ObjectId[];
 		options?: SuiObjectDataOptions;
@@ -207,7 +246,7 @@ export class ObjectsApiHelpers {
 
 		const objectBatches = await Promise.all(
 			objectIdsBatches.map((objectIds) =>
-				this.api.client.multiGetObjects({
+				this.api.jsonRpcClient.multiGetObjects({
 					ids: objectIds,
 					options:
 						options === undefined
@@ -270,16 +309,22 @@ export class ObjectsApiHelpers {
 	public fetchObjectBcs = async (
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.api.client.getObject({
-			id: objectId,
-			options: { showBcs: true },
-		});
-		if (objectResponse.error !== undefined) {
+		// @dev: `options: { showBcs: true }` -> `include: { content: true }`. The
+		// bytes are the BCS of the object's Move struct in both protocols and were
+		// verified byte-identical across a `SuiSystemState`, three Aftermath pools
+		// and three `Coin<SUI>` objects. gRPC throws instead of returning
+		// `{ error }`, so the error message is rebuilt here.
+		try {
+			const { object } = await this.api.client.getObject({
+				objectId,
+				include: { content: true },
+			});
+			return GrpcCasting.suiObjectResponseFromGrpcObjectBcs(object);
+		} catch (e) {
 			throw new Error(
-				`an error occured fetching object: ${objectResponse.error?.code}`
+				`an error occured fetching object: ${e instanceof Error ? e.message : String(e)}`
 			);
 		}
-		return objectResponse;
 	};
 
 	public fetchCastObjectBcs = async <T, U>(inputs: {
