@@ -192,9 +192,9 @@ export class Aftermath extends Caller {
 	 * Thin pass-through to the underlying {@link AftermathApi} so consumers
 	 * don't need to reach into the private `api` field.
 	 */
-	translateMoveErrorMessage(
-		inputs: { errorMessage: string }
-	): TranslatedMoveError | undefined {
+	translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+	}): TranslatedMoveError | undefined {
 		return this.api.translateMoveErrorMessage(inputs);
 	}
 

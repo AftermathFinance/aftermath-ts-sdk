@@ -14,18 +14,17 @@ import { RouterApi } from "../../packages/router/api/routerApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
-import type {
-	MoveErrorsInterface,
-	TranslatedMoveError,
-} from "../types/moveErrorsInterface";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-
 import { NftsApi } from "../nfts/nftsApi";
 import type { ConfigAddresses } from "../types/configTypes";
+import type {
+	MoveErrorsInterface,
+	TranslatedMoveError,
+} from "../types/moveErrorsInterface";
 import { Helpers } from "../utils";
 import { WalletApi } from "../wallet/walletApi";
 
@@ -288,9 +287,9 @@ export class AftermathApi {
 	 * }
 	 * ```
 	 */
-	public translateMoveErrorMessage(
-		inputs: { errorMessage: string }
-	): TranslatedMoveError | undefined {
+	public translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+	}): TranslatedMoveError | undefined {
 		// @dev: packages that publish move error tables; order is significant: first match wins.
 		const sources: MoveErrorsInterface[] = [
 			this.Pools(),
