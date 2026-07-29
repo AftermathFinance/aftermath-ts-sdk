@@ -1,7 +1,4 @@
-import type {
-	DisplayFieldsResponse,
-	SuiObjectResponse,
-} from "@mysten/sui/jsonRpc";
+import type { DisplayFieldsResponse } from "@mysten/sui/jsonRpc";
 import type {
 	KioskOwnerCapObject,
 	Nft,
@@ -10,6 +7,7 @@ import type {
 	NftDisplaySuggested,
 	NftInfo,
 } from "../types";
+import { GrpcCasting, type SuiObjectView } from "../utils/grpcCasting";
 import { Helpers } from "../utils/helpers";
 
 export class NftsApiCasting {
@@ -21,8 +19,12 @@ export class NftsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static nftsFromSuiObjects = (objects: SuiObjectResponse[]): Nft[] => {
-		const nfts = objects.filter((object) => object.data?.display);
+	public static nftsFromSuiObjects = (objects: SuiObjectView[]): Nft[] => {
+		// @dev: gRPC returns `display: undefined` when `include.display` was not
+		// requested and `null` when the object's type has no Display template.
+		// Both mean "not an NFT we can render", exactly as a missing
+		// `data.display` did under JSON-RPC.
+		const nfts = objects.filter((object) => object.display);
 		return nfts
 			.map((nft) => NftsApiCasting.nftFromSuiObject(nft))
 			.filter(
@@ -32,7 +34,7 @@ export class NftsApiCasting {
 			);
 	};
 
-	public static nftFromSuiObject = (object: SuiObjectResponse): Nft => {
+	public static nftFromSuiObject = (object: SuiObjectView): Nft => {
 		const info = this.nftInfoFromSuiObject(object);
 
 		const displayFields = Helpers.getObjectDisplay(object);
@@ -45,7 +47,7 @@ export class NftsApiCasting {
 	};
 
 	public static kioskOwnerCapFromSuiObject = (
-		object: SuiObjectResponse
+		object: SuiObjectView
 	): KioskOwnerCapObject => {
 		const fields = Helpers.getObjectFields(object);
 		const objectId = Helpers.getObjectId(object);
@@ -58,15 +60,18 @@ export class NftsApiCasting {
 	};
 
 	public static kioskOwnerCapFromPersonalKioskCapSuiObject = (
-		object: SuiObjectResponse
+		object: SuiObjectView
 	): KioskOwnerCapObject => {
 		const fields = Helpers.getObjectFields(object);
 		const objectId = Helpers.getObjectId(object);
 		const objectType = Helpers.getObjectType(object);
+		// @dev: `cap` is a nested `KioskOwnerCap` struct, so it lost JSON-RPC's
+		// `{ type, fields }` envelope over gRPC.
+		const cap = GrpcCasting.unwrapStructField(fields.cap);
 		return {
 			objectId,
 			objectType,
-			kioskObjectId: Helpers.addLeadingZeroesToType(fields.cap.fields.for),
+			kioskObjectId: Helpers.addLeadingZeroesToType(cap.for),
 		};
 	};
 
@@ -79,7 +84,7 @@ export class NftsApiCasting {
 	// =========================================================================
 
 	private static nftInfoFromSuiObject = (
-		object: SuiObjectResponse
+		object: SuiObjectView
 	): NftInfo => {
 		const objectType = Helpers.getObjectType(object);
 		const objectId = Helpers.getObjectId(object);
