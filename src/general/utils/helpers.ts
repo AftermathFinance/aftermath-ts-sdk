@@ -1,9 +1,5 @@
 import { decodeSuiPrivateKey, type Keypair } from "@mysten/sui/cryptography";
-import type {
-	DisplayFieldsResponse,
-	SuiMoveObject,
-	SuiObjectResponse,
-} from "@mysten/sui/jsonRpc";
+import type { DisplayFieldsResponse } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
@@ -25,6 +21,7 @@ import type {
 	SuiAddress,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { GrpcCasting, type SuiObjectView } from "./grpcCasting";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
@@ -603,68 +600,97 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a `SuiObjectResponse`,
-	 * normalizing it with leading zeroes if necessary.
+	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a
+	 * gRPC object view, normalizing it with leading zeroes if necessary.
 	 *
-	 * @param data - The object response from Sui.
+	 * The type string is **identical across gRPC and JSON-RPC** — verified live
+	 * on mainnet — so this is the one accessor whose output the transport change
+	 * cannot affect. That is what makes it a safe replacement source for the
+	 * `type` of nested structs, which gRPC's `json` view drops (see
+	 * {@link GrpcCasting.unwrapStructField}).
+	 *
+	 * @param data - The object view from Sui.
 	 * @returns The normalized object type string.
 	 * @throws If the type is not found.
 	 */
-	static getObjectType(data: SuiObjectResponse): ObjectId {
-		const objectType = data.data?.type;
+	static getObjectType(data: SuiObjectView): ObjectId {
+		const objectType = data?.type;
 		if (objectType) {
 			return Helpers.addLeadingZeroesToType(objectType);
 		}
 
-		throw new Error(`no object type found on ${data.data?.objectId}`);
+		throw new Error(`no object type found on ${data?.objectId}`);
 	}
 
 	/**
-	 * Extracts the object ID from a `SuiObjectResponse`, normalizing it with leading zeroes.
+	 * Extracts the object ID from a gRPC object view, normalizing it with
+	 * leading zeroes.
 	 *
-	 * @param data - The object response from Sui.
+	 * @param data - The object view from Sui.
 	 * @returns A zero-padded `ObjectId`.
 	 * @throws If the objectId is not found.
 	 */
-	static getObjectId(data: SuiObjectResponse): ObjectId {
-		const objectId = data.data?.objectId;
+	static getObjectId(data: SuiObjectView): ObjectId {
+		const objectId = data?.objectId;
 		if (objectId) {
 			return Helpers.addLeadingZeroesToType(objectId);
 		}
 
-		throw new Error(`no object id found on ${data.data?.type}`);
+		throw new Error(`no object id found on ${data?.type}`);
 	}
 
 	/**
-	 * Retrieves the fields of a Move object from a `SuiObjectResponse`.
+	 * Retrieves the Move fields of an object from a gRPC object view.
 	 *
-	 * @param data - The Sui object response containing a Move object.
+	 * ⚠️ This is the gRPC **`json` view**, which is *not* shape-identical to
+	 * JSON-RPC's `content.fields`: nested structs arrive without their
+	 * `{ type, fields }` envelope, `vector<u8>` arrives base64-encoded, and
+	 * `UID` arrives as a bare string. Route those through
+	 * {@link GrpcCasting.unwrapStructField}, {@link GrpcCasting.bytesFieldToNumbers}
+	 * and {@link GrpcCasting.unwrapUid} respectively.
+	 *
+	 * ⚠️ The return type is `Record<string, any>`, so **no field read below this
+	 * point is typechecked**. A wrong read is a silently wrong value, not a
+	 * build error. `tests/objectCasters.test.ts` is the only guard.
+	 *
+	 * `json` is `undefined` unless `include: { json: true }` was passed at the
+	 * fetch site.
+	 *
+	 * @param data - The Sui object view containing a Move object.
 	 * @returns A record of fields for that object.
 	 * @throws If no fields are found.
 	 */
 	// biome-ignore lint/suspicious/noExplicitAny: Move fields are dynamic — callers access nested properties directly; typing as `unknown` would cascade casts through dozens of call sites
-	static getObjectFields(data: SuiObjectResponse): Record<string, any> {
-		try {
-			const content = data.data?.content as SuiMoveObject;
-			return content.fields;
-		} catch (_e) {
-			throw new Error(`no object fields found on ${data.data?.objectId}`);
+	static getObjectFields(data: SuiObjectView): Record<string, any> {
+		const fields = data?.json;
+		if (fields) {
+			return fields;
 		}
+		throw new Error(`no object fields found on ${data?.objectId}`);
 	}
 
 	/**
-	 * Retrieves display metadata from a Sui object response, if present.
+	 * Retrieves display metadata from a gRPC object view, if present.
 	 *
-	 * @param data - The Sui object response.
+	 * Reshaped onto JSON-RPC's `DisplayFieldsResponse` so the display casters are
+	 * unaffected by the transport change — see
+	 * {@link GrpcCasting.displayFieldsResponseFromGrpcDisplay} for the two
+	 * semantic differences that reshape absorbs.
+	 *
+	 * `display` is `undefined` unless `include: { display: true }` was passed at
+	 * the fetch site (`withDisplay` on the `ObjectsApiHelpers` fetchers), and
+	 * `null` when the object's type has no Display template.
+	 *
+	 * @param data - The Sui object view.
 	 * @returns The display fields for that object.
-	 * @throws If display fields are not found.
+	 * @throws If display was not requested at the fetch site.
 	 */
-	static getObjectDisplay(data: SuiObjectResponse): DisplayFieldsResponse {
-		const display = data.data?.display;
-		if (display) {
-			return display;
+	static getObjectDisplay(data: SuiObjectView): DisplayFieldsResponse {
+		const display = data?.display;
+		if (display === undefined) {
+			throw new Error(`no object display found on ${data?.objectId}`);
 		}
-		throw new Error(`no object display found on ${data.data?.objectId}`);
+		return GrpcCasting.displayFieldsResponseFromGrpcDisplay(display);
 	}
 
 	// =========================================================================
