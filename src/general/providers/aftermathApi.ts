@@ -1,3 +1,4 @@
+import type { SuiGrpcClient } from "@mysten/sui/grpc";
 import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { CoinApi } from "../../packages/coin/api/coinApi";
 import { DcaApi } from "../../packages/dca/api/dcaApi";
@@ -37,15 +38,23 @@ import { WalletApi } from "../wallet/walletApi";
  * @example
  * ```typescript
  * import { AftermathApi } from "aftermath-ts-sdk";
+ * import { SuiGrpcClient } from "@mysten/sui/grpc";
  * import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
  *
  * const addresses = { ... }; // from aftermath.getAddresses()
- * const client = new SuiJsonRpcClient({
- *   url: "https://fullnode.mainnet.sui.io",
+ * const fullnodeUrl = "https://fullnode.mainnet.sui.io";
+ *
+ * const client = new SuiGrpcClient({
+ *   network: "mainnet",
+ *   baseUrl: fullnodeUrl,
+ * });
+ * // still required by the handful of helpers with no gRPC equivalent
+ * const jsonRpcClient = new SuiJsonRpcClient({
+ *   url: fullnodeUrl,
  *   network: "mainnet",
  * });
  *
- * const afApi = new AftermathApi(client, addresses);
+ * const afApi = new AftermathApi(client, addresses, jsonRpcClient);
  * // access protocol APIs
  * const poolsApi = afApi.Pools();
  * ```
@@ -99,12 +108,40 @@ export class AftermathApi {
 	 * Constructs a new instance of the `AftermathApi`, binding the given Sui client
 	 * to the known `addresses`.
 	 *
-	 * @param client - A `SuiJsonRpcClient` for on-chain queries and transactions.
+	 * @param client - A `SuiGrpcClient` for on-chain queries and transactions.
 	 * @param addresses - The config addresses (object IDs, package IDs, etc.) for the Aftermath protocol.
+	 * @param jsonRpcClient - A `SuiJsonRpcClient` pointed at the same fullnode. Only
+	 * used by the helpers listed on {@link AftermathApi.jsonRpcClient}; every other
+	 * call goes over gRPC via `client`.
 	 */
 	public constructor(
-		public readonly client: SuiJsonRpcClient,
-		public readonly addresses: ConfigAddresses
+		public readonly client: SuiGrpcClient,
+		public readonly addresses: ConfigAddresses,
+		/**
+		 * The **remaining JSON-RPC surface** of this SDK. Sui JSON-RPC is deprecated
+		 * and scheduled for removal from fullnodes in mid-October 2026, but these
+		 * helpers cannot be expressed with `SuiGrpcClient` without changing what
+		 * they return to their callers:
+		 *
+		 * - `Events().fetchCastEventsWithCursor` — `suix_queryEvents` has no
+		 *   `SuiGrpcClient` equivalent (only the raw `ledgerService`, with a
+		 *   different filter model).
+		 * - `Transactions().fetchTransactionsWithCursor` — `suix_queryTransactionBlocks`
+		 *   has no gRPC equivalent at all (GraphQL or an indexer is required).
+		 * - `Objects().fetchObject` / `fetchObjectGeneral` / `fetchObjectBatch` /
+		 *   `fetchOwnedObjects` — gRPC returns Move object contents as BCS bytes or
+		 *   as a differently-shaped `json` view (UIDs flattened, nested structs
+		 *   unwrapped, `vector<u8>` base64-encoded), so the `content.fields` shape
+		 *   every `objectFromSuiObjectResponse` caster consumes cannot be
+		 *   reproduced.
+		 * - `DynamicFields().fetchDynamicFieldObject` — same reason; gRPC's
+		 *   `getDynamicField` returns the field value as BCS bytes, not an object.
+		 * - `Sui().fetchSystemState` — gRPC has no `SuiSystemStateSummary`
+		 *   equivalent (`core.getCurrentSystemState()` carries no validators, and
+		 *   `ledgerService.getEpoch`'s validator shape omits several summary
+		 *   fields).
+		 */
+		public readonly jsonRpcClient: SuiJsonRpcClient
 	) {}
 
 	// =========================================================================

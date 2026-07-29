@@ -1,3 +1,4 @@
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Auth, NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { Coin } from "../../packages/coin/coin";
@@ -132,12 +133,22 @@ export class Aftermath extends Caller {
 		const fullnodeUrl =
 			this.options.fullnodeUrl ?? Caller.defaultFullnodeUrl(network);
 
-		const client = new SuiJsonRpcClient({
+		const client = new SuiGrpcClient({
+			network: network.toLowerCase(),
+			baseUrl: fullnodeUrl,
+		});
+
+		// @dev: the remaining JSON-RPC surface. `SuiGrpcClient` cannot express
+		// `queryEvents`, `queryTransactionBlocks`, the parsed-Move-object
+		// `content.fields` view, or the full `SuiSystemStateSummary`. Those helpers
+		// keep using this client until they are redesigned. Everything else goes
+		// over gRPC. See `AftermathApi.jsonRpcClient`.
+		const jsonRpcClient = new SuiJsonRpcClient({
 			url: fullnodeUrl,
 			network: network.toLowerCase(),
 		});
 
-		this.api = new AftermathApi(client, addresses);
+		this.api = new AftermathApi(client, addresses, jsonRpcClient);
 	}
 
 	/**
