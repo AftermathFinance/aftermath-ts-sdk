@@ -1,0 +1,128 @@
+{
+	"data": {
+		"objectId": "0x55486449e41d89cfbdb20e005c1c5c1007858ad5b4d5d7c047d2b3b592fe8791",
+		"version": "954092498",
+		"digest": "5FyNeRDnCbQvNbfA7PiXRfrSTXou49fq2PWBpUzGw5sP",
+		"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::StakedSuiVaultStateV1",
+		"owner": {
+			"ObjectOwner": "0x2fafec26cc6a73dfefacaf002d1b91714af440c2ff52bdecf37b14716f0a6eb0"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::StakedSuiVaultStateV1",
+			"hasPublicTransfer": true,
+			"fields": {
+				"active_epoch": "1203",
+				"afsui_bin": "0",
+				"atomic_unstake_sui_reserves": "1024602126415",
+				"crank_incentive_reward_pool": "21883680528720",
+				"epoch_was_changed_state": {
+					"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::EpochWasChangedState",
+					"fields": {
+						"amount_to_unstake": "0",
+						"is_epoch_processing": false,
+						"is_inactive_stakes_processed": false,
+						"is_pending_unstakes_processed": false,
+						"is_total_sui_amount_updated": false,
+						"is_unstaking_deque_sorted": false,
+						"is_unstaking_from_storage_processed": false,
+						"reserves_before_unstake": "0"
+					}
+				},
+				"id": {
+					"id": "0x55486449e41d89cfbdb20e005c1c5c1007858ad5b4d5d7c047d2b3b592fe8791"
+				},
+				"inactive_stakes": {
+					"type": "0x2::table_vec::TableVec<0x3::staking_pool::StakedSui>",
+					"fields": {
+						"contents": {
+							"type": "0x2::table::Table<u64, 0x3::staking_pool::StakedSui>",
+							"fields": {
+								"id": {
+									"id": "0x4d6cc7f494cfcc000a405f47aa79471febc990c6a6dfb2d57c96b678b1ebe16f"
+								},
+								"size": "0"
+							}
+						}
+					}
+				},
+				"pending_unstake_records": {
+					"type": "0x2::table_vec::TableVec<0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::record::PendingUnstakeRecord>",
+					"fields": {
+						"contents": {
+							"type": "0x2::table::Table<u64, 0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::record::PendingUnstakeRecord>",
+							"fields": {
+								"id": {
+									"id": "0xac7ab1a584cf8e19b633d1c868b914080275ea87853eb716a949c778b75f00d9"
+								},
+								"size": "0"
+							}
+						}
+					}
+				},
+				"protocol_config": {
+					"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::ProtocolConfig",
+					"fields": {
+						"atomic_unstake_protocol_fee": {
+							"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::AtomicUnstakeProtocolFeeConfig",
+							"fields": {
+								"crank_incentive_allocation": "250000000000000000",
+								"dev_wallet_allocation": "250000000000000000",
+								"max_fee": "10000000000000000",
+								"min_fee": "1000000000000000",
+								"referee_discount": "50000000000000000",
+								"treasury_allocation": "500000000000000000"
+							}
+						},
+						"atomic_unstake_sui_reserves_target_value": "10000000000000",
+						"crank_incentive_reward_per_instruction": "2000",
+						"default_unstake_protocol_fee": {
+							"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::DefaultUnstakeProtocolFeeConfig",
+							"fields": {
+								"crank_incentive_allocation": "250000000000000000",
+								"dev_wallet_allocation": "250000000000000000",
+								"referee_discount": "50000000000000000",
+								"total_fee": "50000000000000000",
+								"treasury_allocation": "500000000000000000"
+							}
+						},
+						"dev_account": "0x4c4c78ec83ad94d9e838659b479f5dfd6030aea7b8d3d4b3b02739ae13eb2fe7",
+						"max_crank_incentive_reward": "2000000",
+						"max_validator_fee": "50000000000000000",
+						"min_fields_requests_per_tx": "0",
+						"min_staking_threshold": "1000000000",
+						"pool_rates_epoch_gap": "6",
+						"reference_gas_price": "1000",
+						"unstaking_bunch_size": "5"
+					}
+				},
+				"staked_sui_storage": {
+					"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::storage::Storage",
+					"fields": {
+						"id": {
+							"id": "0xf31bde96d56612e0f6c510b9bd1b607608ab7b871a672cba8fbb2ff76a9839af"
+						}
+					}
+				},
+				"sui_reserves": "1003073856",
+				"total_rewards_amount": "202307393509923",
+				"total_sui_amount": "3181263324106625",
+				"validator_configs": {
+					"type": "0x2::linked_table::LinkedTable<address, 0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::staked_sui_vault_state::ValidatorConfig>",
+					"fields": {
+						"head": "0x11ec7353e9e08ed4ca13b935ad930a2f937112736aec5eedd08c95cc5cd4c264",
+						"id": {
+							"id": "0x8536350cfb8a8efdd133a1e087b55416d431f7e8b894f77b55b20c4b799ebad9"
+						},
+						"size": "123",
+						"tail": "0x3d9fb148e35ef4d74fcfc36995da14fc504b885d5f2bfeca37d6ea2cc044a32d"
+					}
+				}
+			}
+		}
+	}
+}
