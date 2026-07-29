@@ -182,10 +182,18 @@ const expectedVaultState = {
 };
 
 describe("StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse", () => {
-	it("casts the JSON-RPC shape", () => {
+	it("casts the gRPC json view", () => {
 		expect(
 			Casting.staking.stakedSuiVaultStateObjectFromSuiObjectResponse(
-				vaultStateJsonRpc as never
+				grpcView(vaultStateGrpc)
+			)
+		).toEqual(expectedVaultState);
+	});
+
+	it("casts JSON-RPC's field shapes to the identical object", () => {
+		expect(
+			Casting.staking.stakedSuiVaultStateObjectFromSuiObjectResponse(
+				jsonRpcAsView(vaultStateJsonRpc)
 			)
 		).toEqual(expectedVaultState);
 	});
@@ -196,11 +204,12 @@ describe("StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse", () 
 		// Under JSON-RPC that is two `.fields` hops; under gRPC it is none.
 		const state =
 			Casting.staking.stakedSuiVaultStateObjectFromSuiObjectResponse(
-				vaultStateJsonRpc as never
+				grpcView(vaultStateGrpc)
 			);
 		expect(state.minAtomicUnstakeFee).toBe(1_000_000_000_000_000n);
 		expect(state.maxAtomicUnstakeFee).toBe(10_000_000_000_000_000n);
-		// Both fixtures must actually contain them, or the assertion is vacuous.
+		// Both fixtures must actually carry them at their respective depths, or
+		// these assertions would be vacuous.
 		expect(
 			(vaultStateGrpc.json as Record<string, any>).protocol_config
 				.atomic_unstake_protocol_fee.min_fee
@@ -209,12 +218,17 @@ describe("StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse", () 
 			(vaultStateJsonRpc as Record<string, any>).data.content.fields
 				.protocol_config.fields.atomic_unstake_protocol_fee.fields.min_fee
 		).toBe("1000000000000000");
+		// …and the gRPC fixture must NOT have the JSON-RPC envelope, so a caster
+		// that still read `.fields` could not pass.
+		expect(
+			(vaultStateGrpc.json as Record<string, any>).protocol_config.fields
+		).toBeUndefined();
 	});
 
 	it("reads the singly-nested `protocol_config` values", () => {
 		const state =
 			Casting.staking.stakedSuiVaultStateObjectFromSuiObjectResponse(
-				vaultStateJsonRpc as never
+				grpcView(vaultStateGrpc)
 			);
 		expect(state.atomicUnstakeSuiReservesTargetValue).toBe(10_000_000_000_000n);
 	});

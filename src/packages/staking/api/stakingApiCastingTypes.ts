@@ -8,6 +8,7 @@ import {
 import {
 	EventOnChain,
 	IndexerEventOnChain,
+	MoveStructOnChain,
 } from "../../../general/types/castingTypes";
 
 // =========================================================================
@@ -18,56 +19,56 @@ export interface ValidatorOperationCapFieldsOnChain {
 	authorizer_validator_address: SuiAddress;
 }
 
+export interface EpochWasChangedStateFieldsOnChain {
+	amount_to_unstake: BigIntAsString;
+	is_epoch_processing: boolean;
+	is_inactive_stakes_processed: boolean;
+	is_pending_unstakes_processed: boolean;
+	is_total_sui_amount_updated: boolean;
+	is_unstaking_deque_sorted: boolean;
+	is_unstaking_from_storage_processed: boolean;
+	reserves_before_unstake: BigIntAsString;
+}
+
+export interface AtomicUnstakeProtocolFeeFieldsOnChain {
+	crank_incentive_allocation: BigIntAsString;
+	dev_wallet_allocation: BigIntAsString;
+	max_fee: BigIntAsString;
+	min_fee: BigIntAsString;
+	referee_discount: BigIntAsString;
+	treasury_allocation: BigIntAsString;
+}
+
+export interface DefaultUnstakeProtocolFeeFieldsOnChain {
+	crank_incentive_allocation: BigIntAsString;
+	dev_wallet_allocation: BigIntAsString;
+	referee_discount: BigIntAsString;
+	total_fee: BigIntAsString;
+	treasury_allocation: BigIntAsString;
+}
+
+export interface StakedSuiVaultProtocolConfigFieldsOnChain {
+	atomic_unstake_protocol_fee: MoveStructOnChain<AtomicUnstakeProtocolFeeFieldsOnChain>;
+	atomic_unstake_sui_reserves_target_value: BigIntAsString;
+	crank_incentive_reward_per_instruction: BigIntAsString;
+	default_unstake_protocol_fee: MoveStructOnChain<DefaultUnstakeProtocolFeeFieldsOnChain>;
+	dev_account: SuiAddress;
+	max_crank_incentive_reward: BigIntAsString;
+	max_validator_fee: BigIntAsString;
+	min_fields_requests_per_tx: BigIntAsString;
+	min_staking_threshold: BigIntAsString;
+	pool_rates_epoch_gap: BigIntAsString;
+	reference_gas_price: BigIntAsString;
+	unstaking_bunch_size: BigIntAsString;
+}
+
 export interface StakedSuiVaultStateV1FieldsOnChain {
 	active_epoch: BigIntAsString;
 	afsui_bin: BigIntAsString;
 	atomic_unstake_sui_reserves: BigIntAsString;
 	crank_incentive_reward_pool: BigIntAsString;
-	epoch_was_changed_state: {
-		fields: {
-			amount_to_unstake: BigIntAsString;
-			is_epoch_processing: boolean;
-			is_inactive_stakes_processed: boolean;
-			is_pending_unstakes_processed: boolean;
-			is_total_sui_amount_updated: boolean;
-			is_unstaking_deque_sorted: boolean;
-			is_unstaking_from_storage_processed: boolean;
-			reserves_before_unstake: BigIntAsString;
-		};
-	};
-	protocol_config: {
-		fields: {
-			atomic_unstake_protocol_fee: {
-				fields: {
-					crank_incentive_allocation: BigIntAsString;
-					dev_wallet_allocation: BigIntAsString;
-					max_fee: BigIntAsString;
-					min_fee: BigIntAsString;
-					referee_discount: BigIntAsString;
-					treasury_allocation: BigIntAsString;
-				};
-			};
-			atomic_unstake_sui_reserves_target_value: BigIntAsString;
-			crank_incentive_reward_per_instruction: BigIntAsString;
-			default_unstake_protocol_fee: {
-				fields: {
-					crank_incentive_allocation: BigIntAsString;
-					dev_wallet_allocation: BigIntAsString;
-					referee_discount: BigIntAsString;
-					total_fee: BigIntAsString;
-					treasury_allocation: BigIntAsString;
-				};
-			};
-			dev_account: SuiAddress;
-			max_crank_incentive_reward: BigIntAsString;
-			max_validator_fee: BigIntAsString;
-			min_fields_requests_per_tx: BigIntAsString;
-			min_staking_threshold: BigIntAsString;
-			pool_rates_epoch_gap: BigIntAsString;
-			reference_gas_price: BigIntAsString;
-			unstaking_bunch_size: BigIntAsString;
-		};
-	};
+	epoch_was_changed_state: MoveStructOnChain<EpochWasChangedStateFieldsOnChain>;
+	protocol_config: MoveStructOnChain<StakedSuiVaultProtocolConfigFieldsOnChain>;
 	sui_reserves: BigIntAsString;
 	total_rewards_amount: BigIntAsString;
 	total_sui_amount: BigIntAsString;
