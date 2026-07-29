@@ -1,10 +1,33 @@
 import type { SuiClientTypes } from "@mysten/sui/client";
 import type {
 	CoinStruct,
+	DisplayFieldsResponse,
 	DynamicFieldInfo,
 	SuiObjectResponse,
 } from "@mysten/sui/jsonRpc";
 import { fromBase64, toBase64 } from "@mysten/sui/utils";
+
+/**
+ * The gRPC object view every `objectFromSuiObjectResponse` caster in this SDK
+ * consumes: the object's identity/type plus its Move contents rendered as the
+ * gRPC `json` view, plus its Display v2 output.
+ *
+ * ⚠️ **`include` is load-bearing.** gRPC returns `json` and `display` as
+ * `undefined` unless the corresponding `include` flag was set on the request
+ * (measured against both the Aftermath and public mainnet fullnodes). A caster
+ * that starts reading a new part of the object must also widen the `include` at
+ * the `ObjectsApiHelpers` call site that feeds it, or the field silently reads
+ * `undefined` rather than erroring.
+ *
+ * `display` is typed as present because {@link Helpers.getObjectDisplay} throws
+ * when it is missing — exactly as it did for JSON-RPC's optional
+ * `data.display` — but the fetch helpers only request it when asked to, so do
+ * not read it without having passed `withDisplay`.
+ */
+export type SuiObjectView = SuiClientTypes.Object<{
+	json: true;
+	display: true;
+}>;
 
 /**
  * Adapters from `SuiGrpcClient` response shapes onto the JSON-RPC-shaped types
@@ -130,6 +153,116 @@ export class GrpcCasting {
 				},
 			},
 		}) as unknown as SuiObjectResponse;
+
+	/**
+	 * Reshapes a gRPC `Display` into JSON-RPC's `DisplayFieldsResponse`, so the
+	 * NFT/SuiFren display casters keep reading `.data` / `.error` unchanged.
+	 *
+	 * Two shape differences are reconciled here:
+	 * - `output` values are typed `unknown` (Display v2 templates can render
+	 *   structured JSON), where `data` was `Record<string, string>`. Non-string
+	 *   values are dropped rather than stringified — a caster that assigned an
+	 *   object into a `string` field would produce `"[object Object]"` in the UI.
+	 * - `errors` is **per-field**, where `error` was whole-object. Surfacing a
+	 *   single bad field as a whole-object error would blank out an NFT's entire
+	 *   display, so `error` is only populated when `output` is absent entirely.
+	 *   Per-field failures simply do not appear in `data`.
+	 */
+	public static displayFieldsResponseFromGrpcDisplay = (
+		display: SuiClientTypes.Display | null | undefined
+	): DisplayFieldsResponse => {
+		const output = display?.output ?? null;
+		if (output === null) {
+			const errors = display?.errors ?? null;
+			return {
+				data: null,
+				error: errors
+					? {
+							code: "displayError",
+							error: Object.entries(errors)
+								.map(([field, message]) => `${field}: ${message}`)
+								.join("; "),
+						}
+					: null,
+			};
+		}
+
+		const data: Record<string, string> = {};
+		for (const [key, value] of Object.entries(output)) {
+			if (typeof value === "string") {
+				data[key] = value;
+			}
+		}
+		return { data, error: null };
+	};
+
+	// =========================================================================
+	//  Move Field Shapes
+	// =========================================================================
+
+	/**
+	 * Decodes a `vector<u8>` Move field into a number array.
+	 *
+	 * gRPC's `json` view base64-encodes byte vectors (`"CQk="`), where JSON-RPC
+	 * returned a number array (`[9, 9]`). Indexing the gRPC form directly yields
+	 * a one-character **string**, so `Number(...)` of it is `NaN` — a silently
+	 * wrong value rather than an error. Always route a byte vector through here.
+	 *
+	 * Total by design: a number array (or `Uint8Array`) passes through unchanged,
+	 * so a caster that has been ported still works when handed a JSON-RPC-shaped
+	 * fixture.
+	 */
+	public static bytesFieldToNumbers = (
+		value: string | number[] | Uint8Array
+	): number[] => {
+		if (typeof value === "string") {
+			return Array.from(fromBase64(value));
+		}
+		return Array.from(value);
+	};
+
+	/**
+	 * Unwraps a nested Move struct out of JSON-RPC's `{ type, fields }` envelope.
+	 *
+	 * gRPC's `json` view returns nested structs bare — `{ value: "…" }` where
+	 * JSON-RPC returned
+	 * `{ type: "0x2::balance::Supply<…>", fields: { value: "…" } }`. The `type`
+	 * gRPC drops is not recoverable from the nested value itself; where a caster
+	 * needs it, take it from the **enclosing object's** own type parameters via
+	 * {@link Helpers.getObjectType}.
+	 *
+	 * Total by design: a bare struct passes through unchanged.
+	 */
+	public static unwrapStructField = <T>(value: T | { fields: T }): T => {
+		if (
+			value !== null &&
+			typeof value === "object" &&
+			"fields" in value &&
+			(value as { fields: T }).fields !== undefined
+		) {
+			return (value as { fields: T }).fields;
+		}
+		return value as T;
+	};
+
+	/**
+	 * Reads a Move `UID` as a bare object id.
+	 *
+	 * gRPC's `json` view flattens `UID` to a plain string, where JSON-RPC nested
+	 * it as `{ id: "0x…" }` (and, one level up, `{ id: { id: "0x…" } }`).
+	 * Resolves either shape, recursively, so it is total across both protocols.
+	 */
+	public static unwrapUid = (
+		value: string | { id: string } | { id: { id: string } }
+	): string => {
+		if (typeof value === "string") {
+			return value;
+		}
+		if (value !== null && typeof value === "object" && "id" in value) {
+			return GrpcCasting.unwrapUid(value.id);
+		}
+		return value as unknown as string;
+	};
 
 	// =========================================================================
 	//  Transactions
