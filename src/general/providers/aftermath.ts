@@ -138,11 +138,11 @@ export class Aftermath extends Caller {
 			baseUrl: fullnodeUrl,
 		});
 
-		// @dev: the remaining JSON-RPC surface. `SuiGrpcClient` cannot express
-		// `queryEvents`, `queryTransactionBlocks`, the parsed-Move-object
-		// `content.fields` view, or the full `SuiSystemStateSummary`. Those helpers
-		// keep using this client until they are redesigned. Everything else goes
-		// over gRPC. See `AftermathApi.jsonRpcClient`.
+		// @dev: the remaining JSON-RPC surface, now down to three call sites:
+		// `SuiGrpcClient` cannot express `queryEvents`, `queryTransactionBlocks`,
+		// or the full `SuiSystemStateSummary`. Everything else — including every
+		// Move-object read, which used to need JSON-RPC's parsed `content.fields`
+		// view — goes over gRPC. See `AftermathApi.jsonRpcClient`.
 		const jsonRpcClient = new SuiJsonRpcClient({
 			url: fullnodeUrl,
 			network: network.toLowerCase(),
