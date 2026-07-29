@@ -1,4 +1,3 @@
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
 import {
 	MixSuiFrensEvent,
 	StakeSuiFrenEvent,
@@ -26,7 +25,11 @@ import {
 	HarvestSuiFrenFeesEventOnChain,
 	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
-import { Helpers } from "../../../general/utils";
+import {
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
 export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects
@@ -35,7 +38,7 @@ export class SuiFrensApiCasting {
 	// TODO: handle leading 0s for ALL castings
 
 	public static capyLabsAppObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): CapyLabsAppObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -52,7 +55,7 @@ export class SuiFrensApiCasting {
 	};
 
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): PartialSuiFrenObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -85,7 +88,7 @@ export class SuiFrensApiCasting {
 	};
 
 	public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
-		(data: SuiObjectResponse): PartialSuiFrenObject => {
+		(data: SuiObjectView): PartialSuiFrenObject => {
 			const fields = Helpers.getObjectFields(
 				data
 			) as StakedSuiFrenMetadataV1FieldsOnChain;
@@ -117,7 +120,7 @@ export class SuiFrensApiCasting {
 		};
 
 	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakedSuiFrenMetadataV1Object => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -139,7 +142,7 @@ export class SuiFrensApiCasting {
 
 	public static partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse =
 		(
-			data: SuiObjectResponse
+			data: SuiObjectView
 		): {
 			stakedSuiFrenMetadata: StakedSuiFrenMetadataV1Object;
 			partialSuiFren: PartialSuiFrenObject;
@@ -155,7 +158,7 @@ export class SuiFrensApiCasting {
 		};
 
 	public static stakedSuiFrenPositionFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakedSuiFrenPositionObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -171,7 +174,7 @@ export class SuiFrensApiCasting {
 	};
 
 	public static suiFrenVaultStateV1ObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): SuiFrenVaultStateV1Object => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -179,16 +182,22 @@ export class SuiFrensApiCasting {
 			data
 		) as SuiFrenVaultStateV1FieldsOnChain;
 
+		// @dev: `suifrens_metadata` is a nested `Table`, so it lost JSON-RPC's
+		// `{ type, fields }` envelope over gRPC.
+		const suiFrensMetadata = GrpcCasting.unwrapStructField(
+			fields.suifrens_metadata
+		);
+
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
 			totalMixes: BigInt(fields.mixed),
-			stakedSuiFrens: BigInt(fields.suifrens_metadata.fields.size),
+			stakedSuiFrens: BigInt(suiFrensMetadata.size),
 		};
 	};
 
 	public static accessoryObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): SuiFrenAccessoryObject => {
 		const objectType = Helpers.getObjectType(data);
 

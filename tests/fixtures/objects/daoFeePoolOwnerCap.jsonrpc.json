@@ -1,0 +1,26 @@
+{
+	"data": {
+		"objectId": "0x680c802a272ec193f389a3fae2a24aa5e1d0107a5dc01312ec50809dd4797646",
+		"version": "914857323",
+		"digest": "3eo8i5tHdvie9pSDoaRxrv3zXwRCYRd9SRcxAjAajWgn",
+		"type": "0x6f60a091637054e23915b8745c0c0d47b1d49618ee3435b5f68eccf6a44fb53d::pool::OwnerCap<0x911844e0bbbe38173c87e5411f519b7a321ccaf130d3c5d5cd5708c936c37791::af_lp::AF_LP>",
+		"owner": {
+			"AddressOwner": "0x37faf21c25bf325e8d84589d29efa38721c64b03383fc6a2f34061514d324763"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x6f60a091637054e23915b8745c0c0d47b1d49618ee3435b5f68eccf6a44fb53d::pool::OwnerCap<0x911844e0bbbe38173c87e5411f519b7a321ccaf130d3c5d5cd5708c936c37791::af_lp::AF_LP>",
+			"hasPublicTransfer": true,
+			"fields": {
+				"dao_fee_pool_id": "0x1e5f3ba0332830e739ec7ecdf7a161487a7262dbb7459fcf2b47787164d8f16e",
+				"id": {
+					"id": "0x680c802a272ec193f389a3fae2a24aa5e1d0107a5dc01312ec50809dd4797646"
+				}
+			}
+		}
+	}
+}

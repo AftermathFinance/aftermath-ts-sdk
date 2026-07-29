@@ -108,9 +108,22 @@ for (const [name, objectId] of entries) {
 			})
 		);
 
-		if (g.object.type !== j.data?.type) {
+		// @dev: the two protocols' type strings are semantically equal but not
+		// byte-equal: gRPC fully zero-pads every address (including inside generic
+		// parameters) and emits no space after a generic's comma, where JSON-RPC
+		// echoes the node's abbreviated form (`0x2::sui::SUI`) and keeps `, `.
+		// Compare modulo that, and warn — a *semantic* disagreement means the two
+		// endpoints are serving different objects and the fixture pair is invalid.
+		const canonical = (type) =>
+			(type ?? "").replaceAll(" ", "").replaceAll(/0x0*/g, "0x");
+		if (canonical(g.object.type) !== canonical(j.data?.type)) {
 			throw new Error(
 				`object type disagrees across protocols: grpc=${g.object.type} jsonrpc=${j.data?.type}`
+			);
+		}
+		if (g.object.type !== j.data?.type) {
+			console.warn(
+				`  note ${name}: type differs only in address padding/spacing\n    grpc    ${g.object.type}\n    jsonrpc ${j.data?.type}`
 			);
 		}
 

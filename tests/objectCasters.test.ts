@@ -25,10 +25,32 @@
  * `tests/grpcMigration.test.ts`.
  */
 
+import daoCapGrpc from "./fixtures/objects/daoFeePoolOwnerCap.grpc.json";
+import daoCapJsonRpc from "./fixtures/objects/daoFeePoolOwnerCap.jsonrpc.json";
+import farmsAdminV1Grpc from "./fixtures/objects/farmsOneTimeAdminCapV1.grpc.json";
+import farmsAdminV1JsonRpc from "./fixtures/objects/farmsOneTimeAdminCapV1.jsonrpc.json";
+import farmsAdminV2Grpc from "./fixtures/objects/farmsOneTimeAdminCapV2.grpc.json";
+import farmsAdminV2JsonRpc from "./fixtures/objects/farmsOneTimeAdminCapV2.jsonrpc.json";
+import farmsOwnerV1Grpc from "./fixtures/objects/farmsOwnerCapV1.grpc.json";
+import farmsOwnerV1JsonRpc from "./fixtures/objects/farmsOwnerCapV1.jsonrpc.json";
+import farmsOwnerV2Grpc from "./fixtures/objects/farmsOwnerCapV2.grpc.json";
+import farmsOwnerV2JsonRpc from "./fixtures/objects/farmsOwnerCapV2.jsonrpc.json";
+import farmsPosV1Grpc from "./fixtures/objects/farmsStakedPositionV1.grpc.json";
+import farmsPosV1JsonRpc from "./fixtures/objects/farmsStakedPositionV1.jsonrpc.json";
+import farmsPosV2Grpc from "./fixtures/objects/farmsStakedPositionV2.grpc.json";
+import farmsPosV2JsonRpc from "./fixtures/objects/farmsStakedPositionV2.jsonrpc.json";
+import kioskCapGrpc from "./fixtures/objects/kioskOwnerCap.grpc.json";
+import kioskCapJsonRpc from "./fixtures/objects/kioskOwnerCap.jsonrpc.json";
+import nftGrpc from "./fixtures/objects/nftWithDisplay.grpc.json";
+import nftJsonRpc from "./fixtures/objects/nftWithDisplay.jsonrpc.json";
+import personalKioskGrpc from "./fixtures/objects/personalKioskCap.grpc.json";
+import personalKioskJsonRpc from "./fixtures/objects/personalKioskCap.jsonrpc.json";
 import poolGrpc from "./fixtures/objects/pool.grpc.json";
 import poolJsonRpc from "./fixtures/objects/pool.jsonrpc.json";
 import vaultStateGrpc from "./fixtures/objects/stakedSuiVaultState.grpc.json";
 import vaultStateJsonRpc from "./fixtures/objects/stakedSuiVaultState.jsonrpc.json";
+import validatorCapGrpc from "./fixtures/objects/validatorOperationCap.grpc.json";
+import validatorCapJsonRpc from "./fixtures/objects/validatorOperationCap.jsonrpc.json";
 import { Casting, type SuiObjectView } from "../src";
 
 // =============================================================================
@@ -282,6 +304,260 @@ describe("fixtures exhibit the shape differences the port must absorb", () => {
 		);
 		expect(vaultStateGrpc.type).toBe(
 			(vaultStateJsonRpc as Record<string, any>).data.type
+		);
+	});
+});
+
+// =============================================================================
+//  Every remaining Tier 1 caster: both protocols must agree
+// =============================================================================
+
+/**
+ * The core invariant of the port, applied to every Tier 1 caster that holds it:
+ * feeding the gRPC `json` view and JSON-RPC's `content.fields` through the same
+ * caster yields the **identical** domain object.
+ *
+ * The two casters excluded here are covered in the divergence section below;
+ * their outputs differ, and that difference is a finding, not a passing test.
+ */
+const agreeingCasters: [string, unknown, unknown, (v: SuiObjectView) => unknown][] =
+	[
+		[
+			"pools.daoFeePoolOwnerCapObjectFromSuiObjectResponse",
+			daoCapGrpc,
+			daoCapJsonRpc,
+			Casting.pools.daoFeePoolOwnerCapObjectFromSuiObjectResponse,
+		],
+		[
+			"staking.validatorOperationCapObjectFromSuiObjectResponse",
+			validatorCapGrpc,
+			validatorCapJsonRpc,
+			Casting.staking.validatorOperationCapObjectFromSuiObjectResponse,
+		],
+		[
+			"farms.partialStakedPositionObjectFromSuiObjectResponseV1",
+			farmsPosV1Grpc,
+			farmsPosV1JsonRpc,
+			Casting.farms.partialStakedPositionObjectFromSuiObjectResponseV1,
+		],
+		[
+			"farms.partialStakedPositionObjectFromSuiObjectResponseV2",
+			farmsPosV2Grpc,
+			farmsPosV2JsonRpc,
+			Casting.farms.partialStakedPositionObjectFromSuiObjectResponseV2,
+		],
+		[
+			"farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV1",
+			farmsOwnerV1Grpc,
+			farmsOwnerV1JsonRpc,
+			Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV1,
+		],
+		[
+			"farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV2",
+			farmsOwnerV2Grpc,
+			farmsOwnerV2JsonRpc,
+			Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV2,
+		],
+		[
+			"nfts.kioskOwnerCapFromSuiObject",
+			kioskCapGrpc,
+			kioskCapJsonRpc,
+			Casting.nfts.kioskOwnerCapFromSuiObject,
+		],
+		[
+			"nfts.kioskOwnerCapFromPersonalKioskCapSuiObject",
+			personalKioskGrpc,
+			personalKioskJsonRpc,
+			Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject,
+		],
+		[
+			"nfts.nftFromSuiObject",
+			nftGrpc,
+			nftJsonRpc,
+			Casting.nfts.nftFromSuiObject,
+		],
+	];
+
+describe("every Tier 1 caster agrees across protocols", () => {
+	for (const [label, grpc, jsonRpc, cast] of agreeingCasters) {
+		it(label, () => {
+			const fromGrpc = cast(grpcView(grpc));
+			const fromJsonRpc = cast(jsonRpcAsView(jsonRpc));
+			expect(fromGrpc).toEqual(fromJsonRpc);
+			// Guard against a caster that "agrees" by returning nothing useful.
+			expect(Object.keys(fromGrpc as object).length).toBeGreaterThan(0);
+		});
+	}
+});
+
+// =============================================================================
+//  Named cases the port had to get right
+// =============================================================================
+
+describe("farms V2 owner cap", () => {
+	it("survives `UID` flattening and reads `for` off the bare struct", () => {
+		const cap = Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponseV2(
+			grpcView(farmsOwnerV2Grpc)
+		);
+		expect(cap.stakingPoolId).toBe(
+			"0xc84fbaa8cda83c695d35ecc7d738c3cd4a2bd144998aed4d0a5e70d7fb841093"
+		);
+		// gRPC really did flatten the cap's own UID to a bare string.
+		expect(typeof (farmsOwnerV2Grpc.json as Record<string, any>).id).toBe(
+			"string"
+		);
+		expect(
+			typeof (farmsOwnerV2JsonRpc as Record<string, any>).data.content.fields.id
+		).toBe("object");
+	});
+});
+
+describe("farms V2 one-time admin cap", () => {
+	it("unwraps the nested `cap` struct to read `for`", () => {
+		const cap =
+			Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2(
+				grpcView(farmsAdminV2Grpc)
+			);
+		expect(cap.stakingPoolId).toBe(
+			"0xea8c7ef2269f99b35b7b6ae47dadc428fad9198fdf3efa442547be2a619a7c1e"
+		);
+		// The nested cap is bare under gRPC and enveloped under JSON-RPC, so a
+		// caster that skipped `unwrapStructField` would read `undefined` here.
+		expect(
+			(farmsAdminV2Grpc.json as Record<string, any>).cap.fields
+		).toBeUndefined();
+		expect(
+			(farmsAdminV2JsonRpc as Record<string, any>).data.content.fields.cap.fields
+				.for
+		).toBe("0xea8c7ef2269f99b35b7b6ae47dadc428fad9198fdf3efa442547be2a619a7c1e");
+	});
+});
+
+describe("personal kiosk cap", () => {
+	it("unwraps the nested `cap` struct to read `for`", () => {
+		const cap = Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(
+			grpcView(personalKioskGrpc)
+		);
+		expect(cap.kioskObjectId).toBe(
+			"0x96bdb5344fac122b8f4b45a6315ba0219a5a53ae0fdc5ce5b45539b83826d5a0"
+		);
+		expect(
+			(personalKioskGrpc.json as Record<string, any>).cap.fields
+		).toBeUndefined();
+	});
+});
+
+describe("nftFromSuiObject", () => {
+	it("still populates display from the gRPC `Display` output", () => {
+		const nft = Casting.nfts.nftFromSuiObject(grpcView(nftGrpc));
+		expect(nft.display.suggested.name).toBe("THE SUDOZ #3115");
+		expect(nft.display.suggested.imageUrl).toContain("ipfs");
+		expect(Object.keys(nft.display.other).length).toBeGreaterThan(0);
+		// The suggested keys must have been *moved* out of `other`.
+		expect(nft.display.other.name).toBeUndefined();
+		expect(nft.display.other.image_url).toBeUndefined();
+	});
+
+	it("drops non-string Display v2 values rather than stringifying them", () => {
+		const nft = Casting.nfts.nftFromSuiObject(grpcView(nftGrpc));
+		for (const value of Object.values(nft.display.other)) {
+			expect(typeof value).toBe("string");
+		}
+	});
+});
+
+// =============================================================================
+//  ⚠️ FINDING: `objectType` is NOT protocol-invariant for generic types
+// =============================================================================
+
+/**
+ * Plan 251 asserted (from a single pool probe) that an object's `type` is
+ * "identical on both protocols — proven", and built `getObjectType` on that.
+ * **It is not true in general**, and these two casters' *returned* `objectType`
+ * therefore changes when the transport changes:
+ *
+ * - gRPC fully zero-pads every address, **including inside generic parameters**
+ *   (`OneTimeAdminCap<0x0000…0002::sui::SUI>`); JSON-RPC echoes the node's
+ *   abbreviated form (`OneTimeAdminCap<0x2::sui::SUI>`).
+ * - gRPC emits no space after a generic's comma; JSON-RPC emits `, `.
+ *
+ * `Helpers.addLeadingZeroesToType` does not close the gap because it only
+ * normalises the *outer* address — and it separately strips `0x` from the first
+ * generic parameter (visible on every fixture here, pool included), which is a
+ * pre-existing bug this port merely makes observable.
+ *
+ * Types with **no** generic parameters are unaffected: `kioskOwnerCap` comes back
+ * as `0x2::kiosk::KioskOwnerCap` over JSON-RPC and fully padded over gRPC, and
+ * `addLeadingZeroesToType` maps both to the same string — hence it sits in the
+ * agreeing set above.
+ *
+ * These tests pin the measured divergence so it cannot be lost, and so that any
+ * future fix to `addLeadingZeroesToType` fails here and forces a deliberate
+ * decision about the output change.
+ */
+describe("FINDING: generic `objectType` differs across protocols", () => {
+	it("farms V1 one-time admin cap: only `objectType` differs", () => {
+		const fromGrpc =
+			Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1(
+				grpcView(farmsAdminV1Grpc)
+			);
+		const fromJsonRpc =
+			Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1(
+				jsonRpcAsView(farmsAdminV1JsonRpc)
+			);
+
+		// Everything the caster reads out of the *fields* agrees.
+		expect(fromGrpc.objectId).toBe(fromJsonRpc.objectId);
+		expect(fromGrpc.stakingPoolId).toBe(fromJsonRpc.stakingPoolId);
+
+		// The type does not.
+		expect(fromGrpc.objectType).not.toBe(fromJsonRpc.objectType);
+		expect(fromGrpc.objectType).toContain(
+			"OneTimeAdminCap<0000000000000000000000000000000000000000000000000000000000000002::sui::SUI>"
+		);
+		expect(fromJsonRpc.objectType).toContain("OneTimeAdminCap<2::sui::SUI>");
+
+		// …and the divergence is purely address zero-padding: the two raw type
+		// strings the nodes served are equal once padding is normalised away, so
+		// this is a formatting difference, not a semantic one.
+		const canonical = (t: string) =>
+			t.replaceAll(" ", "").replaceAll(/0x0*/g, "0x");
+		expect(canonical(farmsAdminV1Grpc.type)).toBe(
+			canonical((farmsAdminV1JsonRpc as Record<string, any>).data.type)
+		);
+	});
+
+	it("farms V2 one-time admin cap: only `objectType` differs, by comma spacing", () => {
+		const fromGrpc =
+			Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2(
+				grpcView(farmsAdminV2Grpc)
+			);
+		const fromJsonRpc =
+			Casting.farms.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2(
+				jsonRpcAsView(farmsAdminV2JsonRpc)
+			);
+
+		expect(fromGrpc.objectId).toBe(fromJsonRpc.objectId);
+		expect(fromGrpc.stakingPoolId).toBe(fromJsonRpc.stakingPoolId);
+
+		expect(fromGrpc.objectType).not.toBe(fromJsonRpc.objectType);
+		expect(fromGrpc.objectType).toContain("ADMIN>,0x84dcea");
+		expect(fromJsonRpc.objectType).toContain("ADMIN>, 0x84dcea");
+		expect(fromGrpc.objectType.replaceAll(" ", "")).toBe(
+			fromJsonRpc.objectType.replaceAll(" ", "")
+		);
+	});
+
+	it("a non-generic type IS protocol-invariant after normalisation", () => {
+		// The counter-example that bounds the finding.
+		expect(kioskCapGrpc.type).not.toBe(
+			(kioskCapJsonRpc as Record<string, any>).data.type
+		);
+		expect(
+			Casting.nfts.kioskOwnerCapFromSuiObject(grpcView(kioskCapGrpc)).objectType
+		).toBe(
+			Casting.nfts.kioskOwnerCapFromSuiObject(jsonRpcAsView(kioskCapJsonRpc))
+				.objectType
 		);
 	});
 });

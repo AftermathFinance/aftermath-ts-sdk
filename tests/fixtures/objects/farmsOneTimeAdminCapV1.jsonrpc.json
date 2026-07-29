@@ -1,0 +1,26 @@
+{
+	"data": {
+		"objectId": "0x6ca4c03612566acfaa4101cc989bcbbdae7707861b3c3df9c7d85d5fcf4b696a",
+		"version": "654563878",
+		"digest": "6FcvPV74bEEGGNWaJB6nFJTC8h85Uhi2YxgaWTs7TzsX",
+		"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::afterburner_vault::OneTimeAdminCap<0x2::sui::SUI>",
+		"owner": {
+			"AddressOwner": "0x8d1ca709ea707a22995eed593a07c55e45cec2d4187907fcfbf8557a52cf96ce"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::afterburner_vault::OneTimeAdminCap<0x2::sui::SUI>",
+			"hasPublicTransfer": true,
+			"fields": {
+				"afterburner_vault_id": "0x158f91b3b83eef5612358ddfd5317a505fa323d3e81855937cf0755793b90853",
+				"id": {
+					"id": "0x6ca4c03612566acfaa4101cc989bcbbdae7707861b3c3df9c7d85d5fcf4b696a"
+				}
+			}
+		}
+	}
+}
