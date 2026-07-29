@@ -91,8 +91,16 @@ describe("GrpcCasting.unwrapStructField", () => {
 		// Guard against over-eager unwrapping: only an *envelope* has `fields`
 		// as its content, and gRPC never emits one, so an undefined `fields`
 		// must not be returned in place of the struct.
+		//
+		// @dev: the type argument is explicit because inference would otherwise
+		// resolve `T | { fields: T }` to the *envelope* arm with `T = undefined`,
+		// making `size` an excess property.
+		type FieldsNamedFields = { fields: undefined; size: string };
 		expect(
-			GrpcCasting.unwrapStructField({ fields: undefined, size: "1" })
+			GrpcCasting.unwrapStructField<FieldsNamedFields>({
+				fields: undefined,
+				size: "1",
+			})
 		).toEqual({ fields: undefined, size: "1" });
 	});
 

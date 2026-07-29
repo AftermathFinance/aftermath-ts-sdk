@@ -1,4 +1,5 @@
-import type { DynamicFieldInfo, DynamicFieldName } from "@mysten/sui/jsonRpc";
+import type { SuiClientTypes } from "@mysten/sui/client";
+import type { DynamicFieldInfo } from "@mysten/sui/jsonRpc";
 import type {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
@@ -7,7 +8,7 @@ import type {
 	ObjectId,
 } from "../../types";
 import type { AftermathApi } from "../providers/aftermathApi";
-import { GrpcCasting } from "../utils/grpcCasting";
+import { GrpcCasting, type SuiObjectView } from "../utils/grpcCasting";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================
@@ -187,16 +188,36 @@ export class DynamicFieldsApiHelpers {
 	// =========================================================================
 
 	/**
-	 * @remarks **Remaining JSON-RPC surface** — see
-	 * {@link AftermathApi.jsonRpcClient}. gRPC's `getDynamicField` returns the
-	 * field's value as BCS bytes rather than a `SuiObjectResponse` with a parsed
-	 * `content.fields`, and `SuiGrpcClient` does not expose
-	 * `getDynamicObjectField`.
+	 * @remarks Ported to `client.core.getDynamicObjectField`.
+	 *
+	 * ⚠️ **Not** gRPC's `getDynamicField`, which is the obvious-looking target and
+	 * the wrong one: it returns the field's value as `{ type, bcs }` only — no
+	 * `json` view and no `objectId` — so it cannot feed an object caster.
+	 * `getDynamicObjectField` returns `{ object }` in the same shape as
+	 * `getObject`, which can. (It lives on `client.core`, not on the client root,
+	 * which is why an earlier pass recorded it as unavailable.)
+	 *
+	 * The return type changes from `SuiObjectResponse` to {@link SuiObjectView},
+	 * in step with every other object fetcher here. This helper has **zero
+	 * internal callers**, so nothing inside the SDK is affected.
 	 */
-	public fetchDynamicFieldObject = (inputs: {
+	public fetchDynamicFieldObject = async (inputs: {
 		parentId: ObjectId;
-		name: DynamicFieldName;
-	}) => {
-		return this.api.jsonRpcClient.getDynamicFieldObject(inputs);
+		/**
+		 * ⚠️ gRPC's `DynamicFieldName` requires the name's **BCS bytes**
+		 * (`{ type, bcs }`) where JSON-RPC's took its parsed JSON value
+		 * (`{ type, value }`). The SDK does not carry Move type layouts, so it
+		 * cannot convert one to the other — callers must supply the bytes. Both
+		 * `listDynamicFields` and `GrpcCasting.dynamicFieldInfoFromGrpcEntry`
+		 * expose them (as `bcsName`, base64).
+		 */
+		name: SuiClientTypes.DynamicFieldName;
+	}): Promise<SuiObjectView> => {
+		const { object } = await this.api.client.core.getDynamicObjectField({
+			parentId: inputs.parentId,
+			name: inputs.name,
+			include: { json: true, display: true },
+		});
+		return object;
 	};
 }

@@ -603,11 +603,32 @@ export class Helpers {
 	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a
 	 * gRPC object view, normalizing it with leading zeroes if necessary.
 	 *
-	 * The type string is **identical across gRPC and JSON-RPC** — verified live
-	 * on mainnet — so this is the one accessor whose output the transport change
-	 * cannot affect. That is what makes it a safe replacement source for the
-	 * `type` of nested structs, which gRPC's `json` view drops (see
-	 * {@link GrpcCasting.unwrapStructField}).
+	 * ⚠️ **Not byte-invariant across protocols when the type has generic
+	 * parameters.** Measured on real mainnet objects:
+	 * - For a type with **no** generic parameters the two protocols agree after
+	 *   normalization: gRPC serves `0x0000…0002::kiosk::KioskOwnerCap` and
+	 *   JSON-RPC serves `0x2::kiosk::KioskOwnerCap`, and
+	 *   {@link Helpers.addLeadingZeroesToType} maps both to the same string.
+	 * - **Inside** a generic parameter they differ: gRPC fully zero-pads every
+	 *   address (`OneTimeAdminCap<0x0000…0002::sui::SUI>`) where JSON-RPC echoes
+	 *   the node's abbreviated form (`OneTimeAdminCap<0x2::sui::SUI>`), and gRPC
+	 *   emits no space after a generic's comma. `addLeadingZeroesToType`
+	 *   normalizes only the **outer** address — and separately strips `0x` from
+	 *   the first generic parameter — so the difference survives into this
+	 *   accessor's output.
+	 *
+	 * That divergence is **cosmetic and accepted**: it is purely address padding
+	 * and comma spacing, semantically the same Move type. It is pinned by
+	 * `tests/objectCasters.test.ts` ("FINDING: generic `objectType` differs
+	 * across protocols"). The underlying `addLeadingZeroesToType` generics bug
+	 * pre-dates the gRPC migration and is filed as its own plan — do not fix it
+	 * here.
+	 *
+	 * Still **load-bearing**, and still safe for it: the type's *semantic* content
+	 * is protocol-invariant, which is what lets a caster recover the `type` of a
+	 * nested struct that gRPC's `json` view drops (see
+	 * {@link GrpcCasting.unwrapStructField}) from the enclosing object's own type
+	 * parameters — as `poolObjectFromSuiObject` does for its LP coin.
 	 *
 	 * @param data - The object view from Sui.
 	 * @returns The normalized object type string.

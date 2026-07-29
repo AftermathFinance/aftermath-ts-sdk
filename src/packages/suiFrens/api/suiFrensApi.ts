@@ -347,11 +347,7 @@ export class SuiFrensApi {
 			objectIds: suiFrenIds,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
-			options: {
-				showDisplay: true,
-				showType: true,
-				showContent: true,
-			},
+			withDisplay: true,
 		});
 
 		return this.fetchCompletePartialSuiFrenObjects({
@@ -398,11 +394,7 @@ export class SuiFrensApi {
 				objectFromSuiObjectResponse:
 					Casting.suiFrens
 						.partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
-				options: {
-					showDisplay: true,
-					showType: true,
-					showContent: true,
-				},
+			withDisplay: true,
 			});
 		const suiFrens = await this.fetchCompletePartialSuiFrenObjects({
 			partialSuiFrens: stakedSuiFrenData.map((data) => data.partialSuiFren),
@@ -463,11 +455,7 @@ export class SuiFrensApi {
 			objectIds,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
-			options: {
-				showDisplay: true,
-				showType: true,
-				showContent: true,
-			},
+			withDisplay: true,
 		});
 	};
 

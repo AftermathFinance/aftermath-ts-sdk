@@ -684,67 +684,122 @@ describe("client routing", () => {
 		throw new Error(`unexpected call to client.${name}`);
 	};
 
-	it("fetchObjectGeneral goes through jsonRpcClient", async () => {
+	// @dev: these four were the tripwires plan 247 left behind for exactly this
+	// port ("if one of them is later ported, this test fails"). Plan 251 ported
+	// them, so they are inverted: `jsonRpcClient` now throws, which is the
+	// stronger direction — it fails if a helper is ever routed *back* onto
+	// JSON-RPC as well as if it never left.
+	const throwingJsonRpc = (names: string[]) =>
+		Object.fromEntries(names.map((n) => [n, throwing(`jsonRpcClient.${n}`)]));
+
+	it("fetchObjectGeneral goes through the gRPC client", async () => {
 		let hit = false;
 		const api = mockApi({
-			client: { getObject: throwing("getObject") },
-			jsonRpcClient: {
+			client: {
 				getObject: async () => {
 					hit = true;
-					return { data: { objectId: "0x5" } };
+					return { object: { objectId: "0x5", json: {} } };
 				},
 			},
+			jsonRpcClient: throwingJsonRpc(["getObject"]),
 		});
 		await new ObjectsApiHelpers(api).fetchObjectGeneral({ objectId: "0x5" });
 		expect(hit).toBe(true);
 	});
 
-	it("fetchObjectBatch goes through jsonRpcClient", async () => {
+	it("fetchObjectBatch goes through the gRPC client and drops Error entries", async () => {
 		let hit = false;
 		const api = mockApi({
-			client: { getObjects: throwing("getObjects") },
-			jsonRpcClient: {
-				multiGetObjects: async () => {
+			client: {
+				getObjects: async () => {
 					hit = true;
-					return [];
+					// gRPC's per-object error arm, which `multiGetObjects` had no
+					// equivalent for. The Error must not reach a caster.
+					return {
+						objects: [
+							{ objectId: "0x5", json: {} },
+							new Error("Object 0x6 not found"),
+						],
+					};
 				},
 			},
+			jsonRpcClient: throwingJsonRpc(["multiGetObjects"]),
 		});
-		await new ObjectsApiHelpers(api).fetchObjectBatch({ objectIds: ["0x5"] });
+		const objects = await new ObjectsApiHelpers(api).fetchObjectBatch({
+			objectIds: ["0x5", "0x6"],
+		});
 		expect(hit).toBe(true);
+		expect(objects).toHaveLength(1);
+		expect(objects[0].objectId).toBe("0x5");
+		expect(objects.some((o) => o instanceof Error)).toBe(false);
 	});
 
-	it("fetchOwnedObjects goes through jsonRpcClient", async () => {
-		let hit = false;
+	it("fetchOwnedObjects goes through the gRPC client and paginates on `cursor`", async () => {
+		const pages = [
+			{ objects: [{ objectId: "0x5" }], hasNextPage: true, cursor: "c1" },
+			{ objects: [{ objectId: "0x6" }], hasNextPage: false, cursor: null },
+		];
+		const seenCursors: (string | null | undefined)[] = [];
+		let call = 0;
 		const api = mockApi({
-			client: { listOwnedObjects: throwing("listOwnedObjects") },
-			jsonRpcClient: {
-				getOwnedObjects: async () => {
-					hit = true;
-					return { data: [], hasNextPage: false, nextCursor: null };
+			client: {
+				listOwnedObjects: async (opts: { cursor?: string | null }) => {
+					seenCursors.push(opts.cursor);
+					return pages[call++];
 				},
 			},
+			jsonRpcClient: throwingJsonRpc(["getOwnedObjects"]),
 		});
-		await new ObjectsApiHelpers(api).fetchOwnedObjects({
+		const objects = await new ObjectsApiHelpers(api).fetchOwnedObjects({
 			walletAddress: "0x5",
 		});
-		expect(hit).toBe(true);
+		// Reading `nextCursor` instead of `cursor` would silently stop after the
+		// first page rather than error.
+		expect(objects.map((o) => o.objectId)).toEqual(["0x5", "0x6"]);
+		expect(seenCursors).toEqual([undefined, "c1"]);
 	});
 
-	it("fetchDynamicFieldObject goes through jsonRpcClient", async () => {
-		let hit = false;
+	it("fetchOwnedObjects requests the json view, and display only when asked", async () => {
+		const includes: unknown[] = [];
 		const api = mockApi({
-			client: { getDynamicField: throwing("getDynamicField") },
-			jsonRpcClient: {
-				getDynamicFieldObject: async () => {
-					hit = true;
-					return { data: null };
+			client: {
+				listOwnedObjects: async (opts: { include?: unknown }) => {
+					includes.push(opts.include);
+					return { objects: [], hasNextPage: false, cursor: null };
 				},
 			},
 		});
+		const helpers = new ObjectsApiHelpers(api);
+		await helpers.fetchOwnedObjects({ walletAddress: "0x5" });
+		await helpers.fetchOwnedObjects({ walletAddress: "0x5", withDisplay: true });
+		// gRPC returns `json`/`display` as undefined unless asked, so a dropped
+		// flag is a silently empty field rather than an error.
+		expect(includes).toEqual([
+			{ json: true, display: false },
+			{ json: true, display: true },
+		]);
+	});
+
+	it("fetchDynamicFieldObject goes through gRPC getDynamicObjectField", async () => {
+		let hit = false;
+		const api = mockApi({
+			client: {
+				// @dev: NOT `getDynamicField` — that returns `{ type, bcs }` only,
+				// with no `json` view and no `objectId`, so it cannot feed a caster.
+				getDynamicField: throwing("getDynamicField"),
+			},
+			jsonRpcClient: throwingJsonRpc(["getDynamicFieldObject"]),
+		});
+		// `getDynamicObjectField` lives on `client.core`, not the client root.
+		(api.client as unknown as { core: Record<string, unknown> }).core = {
+			getDynamicObjectField: async () => {
+				hit = true;
+				return { object: { objectId: "0x5", json: {} } };
+			},
+		};
 		await new DynamicFieldsApiHelpers(api).fetchDynamicFieldObject({
 			parentId: "0x5",
-			name: { type: "u64", value: "1" },
+			name: { type: "u64", bcs: new Uint8Array([1]) },
 		});
 		expect(hit).toBe(true);
 	});

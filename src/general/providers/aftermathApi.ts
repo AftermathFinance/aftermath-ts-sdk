@@ -127,18 +127,23 @@ export class AftermathApi {
 		 *   different filter model).
 		 * - `Transactions().fetchTransactionsWithCursor` — `suix_queryTransactionBlocks`
 		 *   has no gRPC equivalent at all (GraphQL or an indexer is required).
-		 * - `Objects().fetchObject` / `fetchObjectGeneral` / `fetchObjectBatch` /
-		 *   `fetchOwnedObjects` — gRPC returns Move object contents as BCS bytes or
-		 *   as a differently-shaped `json` view (UIDs flattened, nested structs
-		 *   unwrapped, `vector<u8>` base64-encoded), so the `content.fields` shape
-		 *   every `objectFromSuiObjectResponse` caster consumes cannot be
-		 *   reproduced.
-		 * - `DynamicFields().fetchDynamicFieldObject` — same reason; gRPC's
-		 *   `getDynamicField` returns the field value as BCS bytes, not an object.
 		 * - `Sui().fetchSystemState` — gRPC has no `SuiSystemStateSummary`
 		 *   equivalent (`core.getCurrentSystemState()` carries no validators, and
 		 *   `ledgerService.getEpoch`'s validator shape omits several summary
-		 *   fields).
+		 *   fields). Already `@deprecated` with no internal callers.
+		 *
+		 * **This list is now exhaustive**, and `grep -rn "jsonRpcClient\." src/`
+		 * returns exactly these three call sites. Neither of the first two is
+		 * reachable from the Aftermath frontend.
+		 *
+		 * The object readers that used to be on this list — `Objects().fetchObject`
+		 * / `fetchObjectGeneral` / `fetchObjectBatch` / `fetchOwnedObjects` and
+		 * `DynamicFields().fetchDynamicFieldObject` — are **on gRPC as of plan
+		 * 251**. gRPC's `json` view does differ in shape from JSON-RPC's
+		 * `content.fields` (UIDs flattened, nested structs unwrapped,
+		 * `vector<u8>` base64-encoded), but that is decidable per read site from
+		 * the `*FieldsOnChain` interface already declared there, so no Move type
+		 * layouts are needed — see `GrpcCasting`'s field-shape primitives.
 		 */
 		public readonly jsonRpcClient: SuiJsonRpcClient
 	) {}
