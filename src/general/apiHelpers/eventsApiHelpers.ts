@@ -67,6 +67,9 @@ export class EventsApiHelpers {
 	 * it would change this helper's semantics, so it still goes through
 	 * JSON-RPC and will stop working when that is removed from fullnodes
 	 * (scheduled for mid-October 2026).
+	 *
+	 * @throws If no `jsonRpcClient` was passed to {@link AftermathApi}, since it
+	 * is optional there.
 	 */
 	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
 		inputs: {
@@ -76,7 +79,11 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventType>> => {
 		const { query, eventFromEventOnChain, cursor, limit } = inputs;
 
-		const fetchedEvents = await this.api.jsonRpcClient.queryEvents({
+		const jsonRpcClient = this.api.requireJsonRpcClient(
+			"Events().fetchCastEventsWithCursor"
+		);
+
+		const fetchedEvents = await jsonRpcClient.queryEvents({
 			query,
 			cursor: cursor
 				? { ...cursor, eventSeq: cursor.eventSeq.toString() }

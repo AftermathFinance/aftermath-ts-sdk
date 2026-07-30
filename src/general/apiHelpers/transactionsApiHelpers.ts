@@ -42,6 +42,9 @@ export class TransactionsApiHelpers {
 	 * {@link AftermathApi.jsonRpcClient} and will stop working when JSON-RPC is
 	 * removed from fullnodes (scheduled for mid-October 2026). Prefer the
 	 * Aftermath API's transaction-history endpoints.
+	 *
+	 * @throws If no `jsonRpcClient` was passed to {@link AftermathApi}, since it
+	 * is optional there.
 	 */
 	public fetchTransactionsWithCursor = async (inputs: {
 		query: SuiTransactionBlockResponseQuery;
@@ -50,8 +53,12 @@ export class TransactionsApiHelpers {
 	}): Promise<TransactionsWithCursor> => {
 		const { query, cursor, limit } = inputs;
 
+		const jsonRpcClient = this.api.requireJsonRpcClient(
+			"Transactions().fetchTransactionsWithCursor"
+		);
+
 		const transactionsWithCursor =
-			await this.api.jsonRpcClient.queryTransactionBlocks({
+			await jsonRpcClient.queryTransactionBlocks({
 				...query,
 				cursor,
 				limit,

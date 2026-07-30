@@ -30,11 +30,13 @@ import { type AftermathApi, AftermathApi as Api, GrpcCasting } from "../src";
 
 const {
 	dynamicFields: DynamicFieldsApiHelpers,
+	events: EventsApiHelpers,
 	inspections: InspectionsApiHelpers,
 	objects: ObjectsApiHelpers,
 	transactions: TransactionsApiHelpers,
 	wallet: WalletApi,
 	coin: CoinApi,
+	sui: SuiApiHelpers,
 } = Api.helpers;
 
 // =============================================================================
@@ -43,16 +45,30 @@ const {
 
 type AnyFn = (...args: never[]) => unknown;
 
-/** Builds a fake `AftermathApi` carrying only the two clients. */
+/**
+ * Builds a fake `AftermathApi` carrying only the two clients.
+ *
+ * `jsonRpcClient` is **optional** on the real class, so `requireJsonRpcClient`
+ * is mirrored here rather than left off — a helper that reaches for JSON-RPC
+ * must fail the same way it would in production.
+ */
 const mockApi = (inputs: {
 	client?: Record<string, AnyFn>;
 	jsonRpcClient?: Record<string, AnyFn>;
-}): AftermathApi =>
-	({
+}): AftermathApi => {
+	const jsonRpcClient = inputs.jsonRpcClient ?? {};
+	return {
 		client: inputs.client ?? {},
-		jsonRpcClient: inputs.jsonRpcClient ?? {},
+		jsonRpcClient,
 		addresses: {},
-	}) as unknown as AftermathApi;
+		requireJsonRpcClient: (methodName: string) => {
+			if (!jsonRpcClient) {
+				throw new Error(`${methodName} requires a \`SuiJsonRpcClient\``);
+			}
+			return jsonRpcClient;
+		},
+	} as unknown as AftermathApi;
+};
 
 const owner = {
 	$kind: "AddressOwner",
@@ -818,5 +834,78 @@ describe("client routing", () => {
 			query: {},
 		});
 		expect(hit).toBe(true);
+	});
+});
+
+// =============================================================================
+//  The optional JSON-RPC client
+// =============================================================================
+
+/**
+ * `AftermathApi`'s third constructor argument is optional: JSON-RPC is a legacy
+ * add-on for three helpers, not a structural dependency. These tests use the
+ * **real** class rather than `mockApi`, since the behaviour under test is the
+ * constructor and `requireJsonRpcClient` themselves.
+ */
+describe("optional jsonRpcClient", () => {
+	const grpcClient = {} as never;
+	const addresses = {} as never;
+
+	it("constructs without a jsonRpcClient", () => {
+		const api = new Api(grpcClient, addresses);
+		expect(api.jsonRpcClient).toBeUndefined();
+		// The gRPC surface must be unaffected by its absence. (Helpers that
+		// validate `addresses` are excluded — that is a separate concern, and
+		// `addresses` is deliberately empty here.)
+		expect(api.Objects()).toBeDefined();
+		expect(api.DynamicFields()).toBeDefined();
+	});
+
+	it("returns the client when one was provided", () => {
+		const jsonRpcClient = { queryEvents: async () => ({}) } as never;
+		const api = new Api(grpcClient, addresses, jsonRpcClient);
+		expect(api.requireJsonRpcClient("Events().fetchCastEventsWithCursor")).toBe(
+			jsonRpcClient
+		);
+	});
+
+	it("throws naming the calling method when absent", () => {
+		const api = new Api(grpcClient, addresses);
+		expect(() => api.requireJsonRpcClient("Sui().fetchSystemState")).toThrow(
+			"Sui().fetchSystemState requires a `SuiJsonRpcClient`"
+		);
+	});
+
+	/**
+	 * Each of the three legacy helpers must surface the throw rather than
+	 * degrading to an empty result — a silent `[]` from a history or events read
+	 * is indistinguishable from "no data" at the call site.
+	 */
+	it.each([
+		[
+			"Events().fetchCastEventsWithCursor",
+			() =>
+				new EventsApiHelpers(
+					new Api(grpcClient, addresses)
+				).fetchCastEventsWithCursor({
+					query: {} as never,
+					eventFromEventOnChain: (e: unknown) => e,
+				}),
+		],
+		[
+			"Transactions().fetchTransactionsWithCursor",
+			() =>
+				new TransactionsApiHelpers(
+					new Api(grpcClient, addresses)
+				).fetchTransactionsWithCursor({ query: {} }),
+		],
+		[
+			"Sui().fetchSystemState",
+			() => new SuiApiHelpers(new Api(grpcClient, addresses)).fetchSystemState(),
+		],
+	])("%s throws when no jsonRpcClient was provided", async (name, call) => {
+		// @dev: asserting on the method name proves the error identifies the
+		// *caller*, which is the whole point of threading it through.
+		await expect(call()).rejects.toThrow(`${name} requires`);
 	});
 });

@@ -143,6 +143,11 @@ export class Aftermath extends Caller {
 		// or the full `SuiSystemStateSummary`. Everything else — including every
 		// Move-object read, which used to need JSON-RPC's parsed `content.fields`
 		// view — goes over gRPC. See `AftermathApi.jsonRpcClient`.
+		//
+		// It is optional on `AftermathApi`, but constructed here so that
+		// `Aftermath.create()` keeps those three helpers working exactly as
+		// before. Constructing it performs no network I/O; only calling one of
+		// the three reaches the deprecated protocol.
 		const jsonRpcClient = new SuiJsonRpcClient({
 			url: fullnodeUrl,
 			network: network.toLowerCase(),

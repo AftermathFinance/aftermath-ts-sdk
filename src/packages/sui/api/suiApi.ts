@@ -39,6 +39,9 @@ export class SuiApi {
 	 * Note `Sui().getSystemState()` — the public method — does not touch the
 	 * fullnode; it reads the Aftermath API. Only this deprecated helper does.
 	 *
+	 * @throws If no `jsonRpcClient` was passed to {@link AftermathApi}, since it
+	 * is optional there.
+	 *
 	 * @example
 	 * ```typescript
 	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
@@ -49,7 +52,11 @@ export class SuiApi {
 	 * console.log(systemState.epoch, systemState.validators);
 	 */
 	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
-		const systemState = await this.api.jsonRpcClient.getLatestSuiSystemState();
+		const jsonRpcClient = this.api.requireJsonRpcClient(
+			"Sui().fetchSystemState"
+		);
+
+		const systemState = await jsonRpcClient.getLatestSuiSystemState();
 
 		const activeValidators = systemState.activeValidators.map((validator) => ({
 			...validator,
