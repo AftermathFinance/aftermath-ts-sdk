@@ -5,6 +5,8 @@ import type { CallerConfig, CoinType, SuiAddress } from "../../types";
 import type {
 	ApiRewardsClaimRequestTxBody,
 	ApiRewardsClaimRequestTxResponse,
+	ApiRewardsExpectedRewardsBody,
+	ApiRewardsExpectedRewardsResponse,
 	ApiRewardsGetClaimableBody,
 	ApiRewardsGetClaimableResponse,
 	ApiRewardsGetHistoryBody,
@@ -54,6 +56,21 @@ export class Rewards extends Caller {
 			ApiRewardsGetClaimableResponse,
 			ApiRewardsGetClaimableBody
 		>("claimable", inputs);
+	}
+
+	/**
+	 * Preview a single account's expected rewards for an epoch, broken down by
+	 * domain (trading, referral, AFLP, integrator) plus totals. Backed by the
+	 * newer `rewards/expectedRewards` endpoint. Provide exactly one of `address`
+	 * or `accountId`; omit `epoch` for the current epoch.
+	 */
+	public async getExpectedRewards(
+		inputs: ApiRewardsExpectedRewardsBody
+	): Promise<ApiRewardsExpectedRewardsResponse> {
+		return this.fetchApi<
+			ApiRewardsExpectedRewardsResponse,
+			ApiRewardsExpectedRewardsBody
+		>("expectedRewards", inputs);
 	}
 
 	// =========================================================================
