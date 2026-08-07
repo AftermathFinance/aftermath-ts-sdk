@@ -36,6 +36,15 @@ import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 export interface PerpetualsSponsorConfig {
 	/** Wallet address to use for gas pool sponsorship. */
 	walletAddress: SuiAddress;
+	/**
+	 * Base64 of the JSON `{"action":"SPONSOR_GAS","date":<unix seconds>}` signed
+	 * by `walletAddress`. Proves who is asking, not what for; the gas pool won't
+	 * hand out a sponsorship without it. Reusable for a day either side of
+	 * `date`, so sign once, cache it, and send it with every sponsored tx.
+	 */
+	bytes?: string;
+	/** `walletAddress`'s signature over `bytes`. */
+	signature?: string;
 }
 
 /**
@@ -49,21 +58,6 @@ export type PerpetualsCapType =
 	| "accountAgent"
 	| "vaultAdmin"
 	| "vaultAgent";
-
-// =========================================================================
-//  Sponsor Config
-// =========================================================================
-
-/**
- * Configuration for gas pool sponsorship on perpetuals transactions.
- *
- * When provided, the transaction will include a gas pool sponsor rebate step
- * that debits the specified wallet's gas pool.
- */
-export interface PerpetualsSponsorConfig {
-	/** Wallet address to use for gas pool sponsorship. */
-	walletAddress: SuiAddress;
-}
 
 /**
  * PTB argument references returned by deferred `create_account` for use
