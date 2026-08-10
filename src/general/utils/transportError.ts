@@ -56,6 +56,7 @@ export class AftermathTransportError extends Error {
 		kind: AftermathTransportErrorKind,
 		options: {
 			message?: string;
+			name?: string;
 			status?: number;
 			retryAfterMs?: number;
 			code?: string;
@@ -63,9 +64,17 @@ export class AftermathTransportError extends Error {
 			abortSource?: AftermathAbortSource;
 		} = {}
 	) {
-		super(options.message ?? defaultMessage(kind, options.status));
+		const causeMessage = getStringProperty(options.cause, "message");
+		super(
+			options.message ??
+				causeMessage ??
+				defaultMessage(kind, options.status)
+		);
 		Object.setPrototypeOf(this, new.target.prototype);
-		this.name = "AftermathTransportError";
+		this.name =
+			options.name ??
+			getStringProperty(options.cause, "name") ??
+			"AftermathTransportError";
 		this.kind = kind;
 
 		if (options.status !== undefined) {
@@ -97,7 +106,10 @@ export function isAftermathTransportError(
 	return error instanceof AftermathTransportError;
 }
 
-function getProperty(value: unknown, property: "code" | "name"): unknown {
+function getProperty(
+	value: unknown,
+	property: "code" | "message" | "name"
+): unknown {
 	if (
 		value === null ||
 		(typeof value !== "object" && typeof value !== "function")
@@ -112,9 +124,16 @@ function getProperty(value: unknown, property: "code" | "name"): unknown {
 	}
 }
 
+function getStringProperty(
+	value: unknown,
+	property: "code" | "message" | "name"
+): string | undefined {
+	const propertyValue = getProperty(value, property);
+	return typeof propertyValue === "string" ? propertyValue : undefined;
+}
+
 function getStringCode(value: unknown): string | undefined {
-	const code = getProperty(value, "code");
-	return typeof code === "string" ? code : undefined;
+	return getStringProperty(value, "code");
 }
 
 function isTimeoutCode(code: string | undefined): boolean {

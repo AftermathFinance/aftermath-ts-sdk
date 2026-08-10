@@ -35,10 +35,12 @@ existing no-network initialization fast path.
 
 Transport failures are exposed as `AftermathTransportError` with structured
 `kind`, optional `status`, `retryAfterMs`, `code`, `cause`, and `abortSource`
-fields. Caller cancellation uses `kind: "abort"` and
-`abortSource: "caller"`; timeout facts use `kind: "timeout"` and
-`abortSource: "timeout"`. Response bodies and arbitrary response headers are
-never exposed.
+fields. These fields are additive: existing error messages and names are
+preserved, including the legacy HTTP format
+`HTTP <status> <statusText>: <body>`. Caller cancellation uses
+`kind: "abort"` and `abortSource: "caller"`; timeout facts use
+`kind: "timeout"` and `abortSource: "timeout"`. Arbitrary response headers
+are not exposed.
 
 ```typescript
 const controller = new AbortController();

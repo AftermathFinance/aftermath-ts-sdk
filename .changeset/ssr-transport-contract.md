@@ -3,6 +3,7 @@
 ---
 
 Add final-positional `AbortSignal` support to Aftermath initialization and
-read methods, plus structured `AftermathTransportError` classification for
-HTTP, network, cancellation, timeout, and decode failures with sanitized HTTP
-error details.
+read methods, plus additive `AftermathTransportError` classification for
+HTTP, network, cancellation, timeout, and decode failures. Existing error
+messages and names remain compatible, including the legacy HTTP error format;
+new structured transport fields are available alongside them.

@@ -67,8 +67,11 @@ export class Caller {
 		if (!response.ok) {
 			const status = response.status;
 			const retryAfterMs = parseRetryAfter(response.headers.get("Retry-After"));
-			await response.text();
+			const statusText = response.statusText;
+			const body = await response.text();
 			throw new AftermathTransportError("http", {
+				message: `HTTP ${status} ${statusText}: ${body}`,
+				name: "Error",
 				retryAfterMs,
 				status,
 			});

@@ -107,31 +107,29 @@ describe("Aftermath transport errors", () => {
 		});
 	}
 
-	it("redacts HTTP bodies and arbitrary headers from the error contract", async () => {
+	it("preserves the legacy HTTP message while adding structured fields", async () => {
 		const secret = "transport-secret-marker";
 		installFetch(() =>
-			makeResponse(secret, 503, {
-				"Retry-After": "2",
-				"X-Secret-Header": secret,
+			new Response(secret, {
+				status: 503,
+				statusText: "Service Unavailable",
+				headers: {
+					"Retry-After": "2",
+					"X-Secret-Header": secret,
+				},
 			})
 		);
 
 		const error = await expectTransportError(makeCaller().call());
-		const enumerable = JSON.stringify(
-			Object.fromEntries(Object.entries(error))
+		expect(error).toBeInstanceOf(Error);
+		expect(error.name).toBe("Error");
+		expect(error.message).toBe(
+			`HTTP 503 Service Unavailable: ${secret}`
 		);
-		const telemetryFixture = JSON.stringify({
-			kind: error.kind,
-			status: error.status,
-			retryAfterMs: error.retryAfterMs,
-			code: error.code,
-			abortSource: error.abortSource,
-		});
-
-		expect(error.message).not.toContain(secret);
-		expect(enumerable).not.toContain(secret);
-		expect(JSON.stringify(error)).not.toContain(secret);
-		expect(telemetryFixture).not.toContain(secret);
+		expect(error.kind).toBe("http");
+		expect(error.status).toBe(503);
+		expect(error.retryAfterMs).toBe(2000);
+		expect(error.message).not.toContain("X-Secret-Header");
 	});
 
 	it("accepts delta-seconds, including zero, and HTTP-date Retry-After values", async () => {
@@ -197,6 +195,8 @@ describe("Aftermath transport errors", () => {
 
 			const error = await expectTransportError(makeCaller().call());
 			expect(error.kind).toBe("network");
+			expect(error.name).toBe("Error");
+			expect(error.message).toBe("network failure");
 			expect(error.code).toBe(code);
 			expect(error.cause).toBe(cause);
 			expect(error.status).toBeUndefined();
@@ -213,6 +213,8 @@ describe("Aftermath transport errors", () => {
 
 		const error = await expectTransportError(makeCaller().call());
 		expect(error.kind).toBe("network");
+		expect(error.name).toBe("Error");
+		expect(error.message).toBe("tls failure");
 		expect(error.code).toBe("ERR_TLS_CERT_ALTNAME_INVALID");
 		expect(error.cause).toBe(cause);
 	});
@@ -276,6 +278,8 @@ describe("Aftermath transport errors", () => {
 		const error = await expectTransportError(makeCaller().call());
 		expect(error.kind).toBe("decode");
 		expect(error.cause).toBeInstanceOf(SyntaxError);
+		expect(error.message).toBe((error.cause as SyntaxError).message);
+		expect(error.name).toBe((error.cause as SyntaxError).name);
 		expect(error.status).toBeUndefined();
 		expect(error.retryAfterMs).toBeUndefined();
 	});
@@ -294,6 +298,8 @@ describe("Aftermath transport errors", () => {
 			const error = await expectTransportError(makeCaller().call());
 			expect(error.kind).toBe("decode");
 			expect(error.cause).toBeInstanceOf(RangeError);
+			expect(error.message).toBe((error.cause as RangeError).message);
+			expect(error.name).toBe((error.cause as RangeError).name);
 			expect(error.status).toBeUndefined();
 			expect(error.retryAfterMs).toBeUndefined();
 		} finally {
@@ -327,6 +333,8 @@ describe("Aftermath transport errors", () => {
 	it("normalizes a missing API base as a network configuration failure", async () => {
 		const error = await expectTransportError(new TestCaller().call());
 		expect(error.kind).toBe("network");
+		expect(error.name).toBe("Error");
+		expect(error.message).toBe("no apiBaseUrl: unable to fetch data");
 		expect(error.status).toBeUndefined();
 		expect(error.retryAfterMs).toBeUndefined();
 		expect(error.cause).toBeInstanceOf(Error);
