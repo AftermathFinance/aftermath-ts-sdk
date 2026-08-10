@@ -61,7 +61,7 @@ export class Rewards extends Caller {
 	/**
 	 * Preview a single account's expected rewards for an epoch, broken down by
 	 * domain (trading, referral, AFLP, integrator) plus totals. Backed by the
-	 * newer `rewards/expectedRewards` endpoint. Provide exactly one of `address`
+	 * newer `rewards/expected-rewards` endpoint. Provide exactly one of `address`
 	 * or `accountId`; omit `epoch` for the current epoch.
 	 */
 	public async getExpectedRewards(
@@ -70,7 +70,7 @@ export class Rewards extends Caller {
 		return this.fetchApi<
 			ApiRewardsExpectedRewardsResponse,
 			ApiRewardsExpectedRewardsBody
-		>("expectedRewards", inputs);
+		>("expected-rewards", inputs);
 	}
 
 	// =========================================================================
