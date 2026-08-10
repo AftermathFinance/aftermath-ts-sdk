@@ -3,7 +3,7 @@ name: Release
 on:
     push:
         branches:
-            - refac/sui-sdk-v2
+            - main
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
