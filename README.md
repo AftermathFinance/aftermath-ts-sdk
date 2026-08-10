@@ -24,6 +24,38 @@ const farms = afSdk.Farms();
 const dca = afSdk.Dca();
 ```
 
+## Cancellation and transport errors
+
+`Aftermath.create(config, abortSignal)` accepts a caller-owned `AbortSignal`
+for cancellation during address discovery. The same final positional
+`abortSignal` is available on the SDK's pool, farm, price, coin metadata, and
+decimal read methods. Signals are runtime inputs and are not serialized into
+configuration or request bodies; supplying `addresses` or `api` keeps the
+existing no-network initialization fast path.
+
+Transport failures are exposed as `AftermathTransportError` with structured
+`kind`, optional `status`, `retryAfterMs`, `code`, `cause`, and `abortSource`
+fields. Caller cancellation uses `kind: "abort"` and
+`abortSource: "caller"`; timeout facts use `kind: "timeout"` and
+`abortSource: "timeout"`. Response bodies and arbitrary response headers are
+never exposed.
+
+```typescript
+const controller = new AbortController();
+const sdk = await Aftermath.create({ network: "MAINNET" }, controller.signal);
+
+try {
+	await sdk.Pools().getAllPools(controller.signal);
+} catch (error) {
+	if (isAftermathTransportError(error)) {
+		if (error.kind === "abort" && error.abortSource === "caller") {
+			return;
+		}
+		console.error(error.kind, error.status, error.retryAfterMs);
+	}
+}
+```
+
 ## Advanced Usage (AftermathApi)
 
 For complex transaction construction, use AftermathApi for direct control:

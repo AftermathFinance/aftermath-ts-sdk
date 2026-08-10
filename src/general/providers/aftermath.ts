@@ -96,9 +96,12 @@ export class Aftermath extends Caller {
 	 * returns a ready-to-use instance. Pass `addresses` or `api` to skip
 	 * the corresponding bootstrap steps.
 	 */
-	static async create(options: AftermathOptions = {}): Promise<Aftermath> {
+	static async create(
+		options: AftermathOptions = {},
+		abortSignal?: AbortSignal
+	): Promise<Aftermath> {
 		const af = new Aftermath(options);
-		await af.bootstrap();
+		await af.bootstrap(abortSignal);
 		return af;
 	}
 
@@ -122,14 +125,15 @@ export class Aftermath extends Caller {
 	 * Resolves addresses and wires up the internal `AftermathApi`. Called
 	 * exactly once by the {@link Aftermath.create} factory.
 	 */
-	private async bootstrap(): Promise<void> {
+	private async bootstrap(abortSignal?: AbortSignal): Promise<void> {
 		if (this.options.api) {
 			this.api = this.options.api;
 			return;
 		}
 
 		const network = this.network;
-		const addresses = this.options.addresses ?? (await this.getAddresses());
+		const addresses =
+			this.options.addresses ?? (await this.getAddresses(abortSignal));
 		const fullnodeUrl =
 			this.options.fullnodeUrl ?? Caller.defaultFullnodeUrl(network);
 
@@ -185,8 +189,8 @@ export class Aftermath extends Caller {
 	 * directly from the API. Typically you don't need to call this — the
 	 * `create` factory handles it. Useful for cache warmers or tooling.
 	 */
-	getAddresses(): Promise<ConfigAddresses> {
-		return this.fetchApi<ConfigAddresses>("addresses");
+	getAddresses(abortSignal?: AbortSignal): Promise<ConfigAddresses> {
+		return this.fetchApi<ConfigAddresses>("addresses", undefined, abortSignal);
 	}
 
 	/**
