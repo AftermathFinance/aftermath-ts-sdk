@@ -1,4 +1,7 @@
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -112,12 +115,10 @@ export class SuiFrensApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.suiFrens;
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.suiFrens;
 		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+			throw new Error("not all required addresses have been set in provider");
 
 		this.addresses = addresses;
 
@@ -164,7 +165,7 @@ export class SuiFrensApi {
 		this.devInspectMixLimitAndLastEpochMixedMulTx({ ...inputs, tx });
 
 		const [mixLimitBytes, lastEpochMixedBytes] =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+			await this.api.Inspections().fetchAllBytesFromTxOutput({
 				tx,
 			});
 
@@ -199,10 +200,11 @@ export class SuiFrensApi {
 
 		this.mixingLimitTx({ tx, ...inputs });
 
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+		const bytes = await this.api.Inspections().fetchFirstBytesFromTxOutput(
+			{
 				tx,
-			});
+			}
+		);
 
 		const unwrapped = bcs.option(bcs.u8()).parse(new Uint8Array(bytes));
 
@@ -222,10 +224,11 @@ export class SuiFrensApi {
 
 		this.lastEpochMixedTx({ tx, ...inputs });
 
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+		const bytes = await this.api.Inspections().fetchFirstBytesFromTxOutput(
+			{
 				tx,
-			});
+			}
+		);
 
 		const unwrapped = bcs.option(bcs.u64()).parse(new Uint8Array(bytes));
 
@@ -243,7 +246,7 @@ export class SuiFrensApi {
 		this.devInspectMetadataObjectIdMulTx({ tx, suiFrenIds });
 
 		const idBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+			await this.api.Inspections().fetchFirstBytesFromTxOutput({
 				tx,
 			});
 
@@ -259,7 +262,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public fetchHarvestSuiFrenFeesEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
+		this.api.Events().fetchCastEventsWithCursor<
 			HarvestSuiFrenFeesEventOnChain,
 			HarvestSuiFrenFeesEvent
 		>({
@@ -272,7 +275,7 @@ export class SuiFrensApi {
 		});
 
 	public fetchMixSuiFrensEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
+		this.api.Events().fetchCastEventsWithCursor<
 			MixSuiFrensEventOnChain,
 			MixSuiFrensEvent
 		>({
@@ -284,7 +287,7 @@ export class SuiFrensApi {
 		});
 
 	public fetchStakeSuiFrenEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
+		this.api.Events().fetchCastEventsWithCursor<
 			StakeSuiFrenEventOnChain,
 			StakeSuiFrenEvent
 		>({
@@ -292,12 +295,11 @@ export class SuiFrensApi {
 			query: {
 				MoveEventType: this.eventTypes.stakeSuiFren,
 			},
-			eventFromEventOnChain:
-				Casting.suiFrens.stakeSuiFrenEventFromOnChain,
+			eventFromEventOnChain: Casting.suiFrens.stakeSuiFrenEventFromOnChain,
 		});
 
 	public fetchUnstakeSuiFrenEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
+		this.api.Events().fetchCastEventsWithCursor<
 			UnstakeSuiFrenEventOnChain,
 			UnstakeSuiFrenEvent
 		>({
@@ -305,8 +307,7 @@ export class SuiFrensApi {
 			query: {
 				MoveEventType: this.eventTypes.unstakeSuiFren,
 			},
-			eventFromEventOnChain:
-				Casting.suiFrens.unstakeSuiFrenEventFromOnChain,
+			eventFromEventOnChain: Casting.suiFrens.unstakeSuiFrenEventFromOnChain,
 		});
 
 	// =========================================================================
@@ -318,7 +319,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public fetchCapyLabsApp = async () => {
-		return this.Provider.Objects().fetchCastObject({
+		return this.api.Objects().fetchCastObject({
 			objectId: this.addresses.objects.capyLabsApp,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.capyLabsAppObjectFromSuiObjectResponse,
@@ -326,7 +327,7 @@ export class SuiFrensApi {
 	};
 
 	public fetchSuiFrenVaultStateV1Object = async () => {
-		return this.Provider.Objects().fetchCastObject({
+		return this.api.Objects().fetchCastObject({
 			objectId: this.addresses.objects.suiFrensVaultStateV1,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.suiFrenVaultStateV1ObjectFromSuiObjectResponse,
@@ -342,17 +343,12 @@ export class SuiFrensApi {
 	}): Promise<SuiFrenObject[]> => {
 		const { suiFrenIds } = inputs;
 
-		const partialSuiFrens =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: suiFrenIds,
-				objectFromSuiObjectResponse:
-					Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
-				options: {
-					showDisplay: true,
-					showType: true,
-					showContent: true,
-				},
-			});
+		const partialSuiFrens = await this.api.Objects().fetchCastObjectBatch({
+			objectIds: suiFrenIds,
+			objectFromSuiObjectResponse:
+				Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
+			withDisplay: true,
+		});
 
 		return this.fetchCompletePartialSuiFrenObjects({
 			partialSuiFrens,
@@ -367,12 +363,11 @@ export class SuiFrensApi {
 
 		const [partialSuiFrenNonBullsharks, partialSuiFrenBullsharks] =
 			await Promise.all([
-				this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 					walletAddress,
 					objectType: this.objectTypes.suiFren,
 					objectFromSuiObjectResponse:
-						Casting.suiFrens
-							.partialSuiFrenObjectFromSuiObjectResponse,
+						Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
 					withDisplay: true,
 				}),
 				this.fetchOwnedPartialSuiFrenBullsharks(inputs),
@@ -394,21 +389,15 @@ export class SuiFrensApi {
 		const { stakedSuiFrenIds } = inputs;
 
 		const stakedSuiFrenData =
-			await this.Provider.Objects().fetchCastObjectBatch({
+			await this.api.Objects().fetchCastObjectBatch({
 				objectIds: stakedSuiFrenIds,
 				objectFromSuiObjectResponse:
 					Casting.suiFrens
 						.partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
-				options: {
-					showDisplay: true,
-					showType: true,
-					showContent: true,
-				},
+			withDisplay: true,
 			});
 		const suiFrens = await this.fetchCompletePartialSuiFrenObjects({
-			partialSuiFrens: stakedSuiFrenData.map(
-				(data) => data.partialSuiFren
-			),
+			partialSuiFrens: stakedSuiFrenData.map((data) => data.partialSuiFren),
 			isStaked: true,
 		});
 
@@ -419,7 +408,7 @@ export class SuiFrensApi {
 	};
 
 	public fetchStakedSuiFrensDynamicFields = (inputs: DynamicFieldsInputs) => {
-		return this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
+		return this.api.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
 				...inputs,
 				parentObjectId:
@@ -438,44 +427,35 @@ export class SuiFrensApi {
 	public fetchAccessoriesForSuiFren = async (inputs: {
 		suiFrenId: ObjectId;
 	}) => {
-		return await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-			{
-				parentObjectId: inputs.suiFrenId,
-				objectsFromObjectIds: (objectIds) =>
-					this.fetchAccessories({ objectIds }),
-				dynamicFieldType: this.objectTypes.suiFrenAccessory,
-			}
-		);
+		return await this.api.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: inputs.suiFrenId,
+			objectsFromObjectIds: (objectIds) => this.fetchAccessories({ objectIds }),
+			dynamicFieldType: this.objectTypes.suiFrenAccessory,
+		});
 	};
 
 	public fetchOwnedAccessories = async (inputs: {
 		walletAddress: SuiAddress;
 	}) => {
 		const { walletAddress } = inputs;
-		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-			{
-				walletAddress,
-				objectType: this.objectTypes.suiFrenAccessory,
-				objectFromSuiObjectResponse:
-					Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
-				withDisplay: true,
-			}
-		);
+		return await this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.suiFrenAccessory,
+			objectFromSuiObjectResponse:
+				Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
+			withDisplay: true,
+		});
 	};
 
 	public fetchAccessories = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<SuiFrenAccessoryObject[]> => {
 		const { objectIds } = inputs;
-		return this.Provider.Objects().fetchCastObjectBatch({
+		return this.api.Objects().fetchCastObjectBatch({
 			objectIds,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
-			options: {
-				showDisplay: true,
-				showType: true,
-				showContent: true,
-			},
+			withDisplay: true,
 		});
 	};
 
@@ -505,10 +485,9 @@ export class SuiFrensApi {
 		};
 
 		const suiFrensWithCursor =
-			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
+			await this.api.DynamicFields().fetchDynamicFieldsUntil({
 				...inputs,
-				fetchFunc: (data) =>
-					this.fetchStakedSuiFrensDynamicFields(data),
+				fetchFunc: (data) => this.fetchStakedSuiFrensDynamicFields(data),
 				isComplete,
 			});
 
@@ -518,14 +497,12 @@ export class SuiFrensApi {
 			),
 			attributes,
 		});
-		const dynamicFieldObjects =
-			suiFrensWithCursor.dynamicFieldObjects.filter((data) =>
+		const dynamicFieldObjects = suiFrensWithCursor.dynamicFieldObjects.filter(
+			(data) =>
 				filteredSuiFrens
 					.slice(0, limit)
-					.some(
-						(suiFren) => suiFren.objectId === data.suiFren.objectId
-					)
-			);
+					.some((suiFren) => suiFren.objectId === data.suiFren.objectId)
+		);
 
 		const resizedSuiFrensWithCursor = {
 			nextCursor:
@@ -544,7 +521,7 @@ export class SuiFrensApi {
 		const { walletAddress } = inputs;
 
 		const stakedPositions =
-			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			await this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.stakedSuiFrenPosition,
 				objectFromSuiObjectResponse:
@@ -608,9 +585,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 				tx.pure(bcs.vector(bcs.Address).serialize(inputs.suiFrenIds)), // suifren_ids
 			],
@@ -679,9 +654,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 
@@ -714,9 +687,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 
@@ -749,9 +720,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 
@@ -790,9 +759,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 				tx.object(inputs.suiFrenId), // SuiFren
@@ -821,9 +788,7 @@ export class SuiFrensApi {
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(
-					this.addresses.objects.suiFrensVaultCapyLabsExtension
-				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVaultCapyLabsExtension), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 				tx.object(inputs.stakedPositionId), // StakedPosition
 			],
@@ -1038,14 +1003,13 @@ export class SuiFrensApi {
 				mixFee2: suiFrenParentTwo.mixFee,
 			});
 
-		const suiPaymentCoinId =
-			await this.Provider.Coin().fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: Coin.constants.suiCoinType,
-				coinAmount: totalFee,
-				isSponsoredTx,
-			});
+		const suiPaymentCoinId = await this.api.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: Coin.constants.suiCoinType,
+			coinAmount: totalFee,
+			isSponsoredTx,
+		});
 
 		const isParentOneStaked = suiFrenParentOne.mixFee !== undefined;
 		const isParentTwoStaked = suiFrenParentTwo.mixFee !== undefined;
@@ -1137,9 +1101,7 @@ export class SuiFrensApi {
 				this.addAccessoryToOwnedSuiFrenTx
 			)(inputs);
 		}
-		return Helpers.transactions.createBuildTxFunc(this.addAccessoryTx)(
-			inputs
-		);
+		return Helpers.transactions.createBuildTxFunc(this.addAccessoryTx)(inputs);
 	};
 
 	public fetchBuildRemoveAccessoryTx = (
@@ -1162,10 +1124,9 @@ export class SuiFrensApi {
 	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
 		const [suiFrenVault, mixSuiFrenEventsWithinTime] = await Promise.all([
 			this.fetchSuiFrenVaultStateV1Object(),
-			this.Provider.Events().fetchEventsWithinTime({
+			this.api.Events().fetchEventsWithinTime({
 				fetchEventsFunc: this.fetchMixSuiFrensEvents,
-				timeUnit: "hour",
-				time: 24,
+				timeMs: 24 * 60 * 60 * 1000,
 			}),
 		]);
 
@@ -1299,11 +1260,11 @@ export class SuiFrensApi {
 		walletAddress: SuiAddress;
 	}): Promise<PartialSuiFrenObject[]> => {
 		const kioskOwnerCaps =
-			await this.Provider.Nfts().fetchOwnedKioskOwnerCaps(inputs);
+			await this.api.Nfts().fetchOwnedKioskOwnerCaps(inputs);
 
 		const allBullsharks = await Promise.all(
 			kioskOwnerCaps.map((kioskOwnerCap) =>
-				this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+				this.api.DynamicFields().fetchCastAllDynamicFieldsOfType({
 					parentObjectId: kioskOwnerCap.kioskObjectId,
 					objectsFromObjectIds: (suiFrenIds) =>
 						this.fetchSuiFrens({ suiFrenIds }),

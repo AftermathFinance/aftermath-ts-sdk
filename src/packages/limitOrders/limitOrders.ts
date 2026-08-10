@@ -1,13 +1,13 @@
-import { CallerConfig, CoinType, ObjectId, SuiAddress } from "../../types";
+import type { Transaction } from "@mysten/sui/transactions";
 import { Caller } from "../../general/utils/caller";
-import {
-	ApiLimitOrdersPastOrdersOwnedBody,
-	ApiLimitOrdersCreateOrderTransactionBody,
-	ApiLimitOrdersCancelOrderTransactionBody,
-	LimitOrderObject,
+import type { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type {
 	ApiLimitOrdersActiveOrdersOwnedBody,
+	ApiLimitOrdersCancelOrderTransactionBody,
+	ApiLimitOrdersCreateOrderTransactionBody,
+	ApiLimitOrdersPastOrdersOwnedBody,
+	LimitOrderObject,
 } from "./limitOrdersTypes";
-import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * The `LimitOrders` class manages creation, cancellation, and querying of
@@ -17,8 +17,7 @@ import { Transaction } from "@mysten/sui/transactions";
  *
  * @example
  * ```typescript
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init(); // initialize provider
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const limitOrders = afSdk.LimitOrders();
  * ```
@@ -96,10 +95,10 @@ export class LimitOrders extends Caller {
 	 * ```
 	 */
 	public async getPastLimitOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<
-			LimitOrderObject[],
-			ApiLimitOrdersPastOrdersOwnedBody
-		>("past", inputs);
+		return this.fetchApi<LimitOrderObject[], ApiLimitOrdersPastOrdersOwnedBody>(
+			"past",
+			inputs
+		);
 	}
 
 	// =========================================================================
@@ -155,7 +154,7 @@ export class LimitOrders extends Caller {
 		inputs: ApiLimitOrdersCancelOrderTransactionBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiLimitOrdersCancelOrderTransactionBody>(
-			`cancel`,
+			"cancel",
 			inputs
 		);
 	}

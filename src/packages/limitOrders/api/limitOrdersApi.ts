@@ -1,6 +1,6 @@
-import { AftermathApi } from "../../../general/providers";
-import { AnyObjectType, LimitAddresses } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import type { AftermathApi } from "../../../general/providers";
+import type { AnyObjectType, LimitAddresses } from "../../../types";
 
 export class LimitOrdersApi {
 	// =========================================================================
@@ -16,12 +16,10 @@ export class LimitOrdersApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.limitOrders;
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.limitOrders;
 		if (!addresses) {
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+			throw new Error("not all required addresses have been set in provider");
 		}
 
 		this.addresses = addresses;
@@ -34,7 +32,7 @@ export class LimitOrdersApi {
 	// Events
 	// =========================================================================
 
-	private createdOrderEventType = () =>
+	private readonly createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			"events",

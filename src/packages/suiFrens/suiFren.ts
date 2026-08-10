@@ -16,7 +16,7 @@ import {
 	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import dayjs from "dayjs";
+import { format } from "date-fns";
 import { Coin } from "..";
 import { AftermathApi } from "../../general/providers";
 
@@ -30,7 +30,7 @@ export class SuiFren extends Caller {
 		config?: CallerConfig,
 		public readonly isStaked: boolean = false,
 		public readonly isOwned: boolean = false,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "sui-frens");
 	}
@@ -51,7 +51,7 @@ export class SuiFren extends Caller {
 			"Main Color": this.suiFren.attributes.main,
 			"Secondary Color": this.suiFren.attributes.secondary,
 			"Birth Location": this.suiFren.birthLocation,
-			Birthday: dayjs(this.suiFren.birthdate).format("MMMM D, YYYY"),
+			Birthday: format(this.suiFren.birthdate, "MMMM d, yyyy"),
 			Cohort: this.suiFren.cohort.toString(),
 			Generation: this.suiFren.generation.toString(),
 			// Genes: this.suiFren.genes.toString(),
@@ -63,13 +63,12 @@ export class SuiFren extends Caller {
 			...(this.suiFren.mixLimit
 				? {
 						"Mixes Remaining": this.suiFren.mixLimit.toString(),
-				  }
+					}
 				: {}),
 			...(this.suiFren.lastEpochMixed
 				? {
-						"Last Epoch Mixed":
-							this.suiFren.lastEpochMixed.toString(),
-				  }
+						"Last Epoch Mixed": this.suiFren.lastEpochMixed.toString(),
+					}
 				: {}),
 		};
 	}
@@ -79,12 +78,7 @@ export class SuiFren extends Caller {
 	}
 
 	public clone(): SuiFren {
-		return new SuiFren(
-			this.suiFren,
-			this.config,
-			this.isStaked,
-			this.isOwned
-		);
+		return new SuiFren(this.suiFren, this.config, this.isStaked, this.isOwned);
 	}
 
 	// public asNft(): Nft {
@@ -154,7 +148,7 @@ export class SuiFren extends Caller {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked suiFren");
 
-		return this.useProvider().fetchStakeTx({
+		return this.suiFrensApi().fetchStakeTx({
 			...inputs,
 			suiFrenType: this.suiFrenType(),
 			suiFrenId: this.suiFren.objectId,
@@ -165,7 +159,7 @@ export class SuiFren extends Caller {
 		accessoryId: ObjectId;
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().fetchBuildAddAccessoryTx({
+		return this.suiFrensApi().fetchBuildAddAccessoryTx({
 			...inputs,
 			isOwned: this.isOwned,
 			suiFrenType: this.suiFrenType(),
@@ -182,7 +176,7 @@ export class SuiFren extends Caller {
 				"unable to remove accessory from suiFren that is not owned by caller"
 			);
 
-		return this.useProvider().fetchBuildRemoveAccessoryTx({
+		return this.suiFrensApi().fetchBuildRemoveAccessoryTx({
 			...inputs,
 			suiFrenType: this.suiFrenType(),
 			suiFrenId: this.suiFren.objectId,
@@ -193,9 +187,11 @@ export class SuiFren extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.SuiFrens();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private suiFrensApi = () => {
+		const suiFrens = this.api?.SuiFrens();
+		if (!suiFrens) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return suiFrens;
 	};
 }

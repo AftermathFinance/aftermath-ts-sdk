@@ -1,5 +1,5 @@
 import { Transaction } from "@mysten/sui/transactions";
-import {
+import type {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
 	CallerConfig,
@@ -13,88 +13,120 @@ import {
 } from "../../types";
 import { Helpers } from "./helpers";
 
-type ResponseWithTxKind = {
+/**
+ * A JSON.stringify replacer that serializes BigInt values as strings
+ * suffixed with "n" (e.g. `123n`), without mutating global prototypes.
+ */
+function bigIntReplacer(_key: string, value: unknown): unknown {
+	if (typeof value === "bigint") {
+		return `${value.toString()}n`;
+	}
+	return value;
+}
+
+interface ResponseWithTxKind {
 	txKind: SerializedTransaction;
 	sponsorSignature?: string;
-} & (Record<string, unknown> | {});
+}
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
 	protected readonly apiEndpoint: Url;
+	config: CallerConfig;
+	private readonly apiUrlPrefix: Url;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public readonly config: CallerConfig = {},
-		private readonly apiUrlPrefix: Url = ""
-	) {
+	constructor(config: CallerConfig = {}, apiUrlPrefix: Url = "") {
+		this.config = config;
+		this.apiUrlPrefix = apiUrlPrefix;
 		this.apiBaseUrl =
-			this.config.network === undefined
+			this.config.baseUrl ??
+			(this.config.network === undefined
 				? undefined
-				: Caller.apiBaseUrlForNetwork(this.config.network);
+				: Caller.apiBaseUrlForNetwork(this.config.network));
 
-		this.apiEndpoint = this.config.network === "INTERNAL" ? "af-fe" : "api";
+		this.apiEndpoint = this.config.apiEndpoint ?? "api";
 	}
 
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
 
-	private static nullToUndefined<T>(value: T): T {
-		// Reviver already converts null -> undefined for object properties,
-		// but this ensures top-level `null` also becomes `undefined`.
-		return value === null ? (undefined as unknown as T) : value;
-	}
-
 	private static async fetchResponseToType<OutputType>(
 		response: Response,
 		disableBigIntJsonParsing: boolean
 	): Promise<OutputType> {
-		if (!response.ok) throw new Error(await response.text());
+		if (!response.ok) {
+			const status = response.status;
+			const body = await response.text();
+			throw new Error(`HTTP ${status} ${response.statusText}: ${body}`);
+		}
 
-		// Keep your existing stringify->parse approach so BigInt parsing stays consistent.
-		const json = JSON.stringify(await response.json());
+		const text = await response.text();
 
 		const output = disableBigIntJsonParsing
-			? JSON.parse(json, (_key, value) =>
-					value === null ? undefined : value
-			  )
-			: Helpers.parseJsonWithBigint(
-					json /* unsafeStringNumberConversion */
-			  );
+			? JSON.parse(text, (_key, value) => (value === null ? undefined : value))
+			: Helpers.parseJsonWithBigint(text);
 
-		// Ensure top-level `null` becomes `undefined` too.
-		return Caller.nullToUndefined(output) as OutputType;
+		return (output ?? undefined) as OutputType;
 	}
 
 	// =========================================================================
 	//  Api Calling
 	// =========================================================================
 
-	private static apiBaseUrlForNetwork(network: SuiNetwork): Url {
-		if (network === "MAINNET") return "https://aftermath.finance";
-		if (network === "TESTNET") return "https://testnet.aftermath.finance";
-		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "LOCAL") return "http://localhost:3000";
-		if (network === "INTERNAL") return "http://";
-		return network;
+	// Regex constants hoisted to avoid re-compilation per call.
+	private static readonly TRAILING_SLASHES_REGEX = /\/+$/;
+	private static readonly HTTP_PROTOCOL_REGEX = /^http(s?):\/\//;
+
+	// Lookup tables for the SDK's well-known networks.
+	private static readonly NETWORK_API_BASE_URLS: Record<SuiNetwork, Url> = {
+		MAINNET: "https://aftermath.finance",
+		TESTNET: "https://testnet.aftermath.finance",
+		DEVNET: "https://devnet.aftermath.finance",
+		LOCAL: "http://localhost:3000",
+	};
+
+	private static readonly NETWORK_FULLNODE_URLS: Record<SuiNetwork, Url> = {
+		MAINNET: "https://fullnode.mainnet.sui.io:443",
+		TESTNET: "https://fullnode.testnet.sui.io:443",
+		DEVNET: "https://fullnode.devnet.sui.io:443",
+		LOCAL: "http://127.0.0.1:9000",
+	};
+
+	/**
+	 * Resolves the canonical Aftermath API base URL for a given network.
+	 * To target a non-canonical host (custom deployment, local backend, etc.)
+	 * pass `baseUrl` on `CallerConfig` instead.
+	 */
+	static apiBaseUrlForNetwork(network: SuiNetwork): Url {
+		return Caller.NETWORK_API_BASE_URLS[network];
 	}
 
-	private urlForApiCall = (url: string): Url => {
-		if (this.apiBaseUrl === undefined)
+	/**
+	 * Resolves the canonical Sui fullnode URL for a given network. Falls back
+	 * to the mainnet fullnode when `network` is undefined.
+	 */
+	static defaultFullnodeUrl(network: SuiNetwork | undefined): Url {
+		return Caller.NETWORK_FULLNODE_URLS[network ?? "MAINNET"];
+	}
+
+	private readonly urlForApiCall = (url: string): Url => {
+		if (this.apiBaseUrl === undefined) {
 			throw new Error("no apiBaseUrl: unable to fetch data");
+		}
 
-		// TODO: handle url prefixing and api calls based on network differently
-
-		// Note: this slash removal is need to avoid double slashes in the url
 		const safeUrl =
 			this.apiBaseUrl.slice(-1) === "/"
 				? this.apiBaseUrl.slice(0, -1)
 				: this.apiBaseUrl;
 
-		return `${safeUrl}/${this.apiEndpoint}/${
+		const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
+
+		return `${safeUrl}/${endpointSegment}${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
@@ -115,14 +147,6 @@ export class Caller {
 			disableBigIntJsonParsing?: boolean;
 		}
 	): Promise<Output> {
-		if (!options?.disableBigIntJsonParsing) {
-			(() => {
-				// this allows BigInt to be JSON serialized (as string)
-				(BigInt.prototype as any).toJSON = function () {
-					return this.toString() + "n";
-				};
-			})();
-		}
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const headers = {
@@ -136,16 +160,15 @@ export class Caller {
 			? fetch(apiCallUrl, { headers, signal })
 			: fetch(apiCallUrl, {
 					method: "POST",
-					body: JSON.stringify(body),
+					body: JSON.stringify(body, bigIntReplacer),
 					headers,
 					signal,
-			  }));
+				}));
 
-		const response = await Caller.fetchResponseToType<Output>(
+		return Caller.fetchResponseToType<Output>(
 			uncastResponse,
 			!!options?.disableBigIntJsonParsing
 		);
-		return response;
 	}
 
 	protected async fetchApiTransaction<BodyType = undefined>(
@@ -175,7 +198,7 @@ export class Caller {
 
 	protected async fetchApiTxObject<
 		BodyType extends object,
-		OutputType extends ResponseWithTxKind
+		OutputType extends ResponseWithTxKind,
 	>(
 		url: Url,
 		body?: BodyType & { walletAddress?: SuiAddress },
@@ -197,16 +220,12 @@ export class Caller {
 			? Transaction.from(response.txKind)
 			: Transaction.fromKind(response.txKind);
 
-		if (body?.walletAddress) {
-			tx.setSender(body.walletAddress);
-		}
-
 		const { txKind, ...rest } = response;
 		type Rest = Omit<Extract<OutputType, ResponseWithTxKind>, "txKind">;
 		return { ...(rest as Rest), tx };
 	}
 
-	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(
+	protected fetchApiEvents<EventType, BodyType = ApiEventsBody>(
 		url: Url,
 		body: BodyType,
 		signal?: AbortSignal,
@@ -224,7 +243,7 @@ export class Caller {
 
 	protected async fetchApiIndexerEvents<
 		EventType,
-		BodyType extends ApiIndexerEventsBody
+		BodyType extends ApiIndexerEventsBody,
 	>(
 		url: Url,
 		body: BodyType,
@@ -268,8 +287,9 @@ export class Caller {
 		const { path, onMessage, onOpen, onError, onClose } = args;
 
 		/**
-		 * Build a WS URL using the same base the HTTP calls use, plus this.apiEndpoint and apiUrlPrefix.
-		 * Mirrors `urlForApiCall`, but swaps http(s) -> ws(s).
+		 * Build a WS URL using the same base the HTTP calls use, plus
+		 * `apiEndpoint` and `apiUrlPrefix`. Mirrors `urlForApiCall`, but
+		 * swaps http(s) -> ws(s).
 		 */
 		const buildWsUrl = (path: string): Url => {
 			if (this.apiBaseUrl === undefined) {
@@ -277,16 +297,24 @@ export class Caller {
 			}
 
 			// Normalize base & path
-			const baseHttp = this.apiBaseUrl.replace(/\/+$/, "");
-			const baseWs = baseHttp.replace(/^http(s?):\/\//, "ws$1://");
+			const baseHttp = this.apiBaseUrl.replace(
+				Caller.TRAILING_SLASHES_REGEX,
+				""
+			);
+			const baseWs = baseHttp.replace(Caller.HTTP_PROTOCOL_REGEX, "ws$1://");
 
-			// Prefix with endpoint + service prefix (same pattern as fetch)
-			const prefix = `${this.apiEndpoint}/${this.apiUrlPrefix}`;
-			const normalizedPrefix = prefix.replace(/\/+$/, "");
+			// Prefix with endpoint + service prefix (same pattern as fetch);
+			// an empty `apiEndpoint` must not introduce a double slash.
+			const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
+			const prefix = `${endpointSegment}${this.apiUrlPrefix}`;
+			const normalizedPrefix = prefix.replace(
+				Caller.TRAILING_SLASHES_REGEX,
+				""
+			);
 			const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
 
 			return `${baseWs}/${normalizedPrefix}${
-				normalizedPath ? "/" + normalizedPath : ""
+				normalizedPath ? `/${normalizedPath}` : ""
 			}`;
 		};
 
@@ -298,47 +326,33 @@ export class Caller {
 		ws.addEventListener("close", (ev) => onClose?.(ev));
 
 		ws.addEventListener("message", (ev) => {
-			// Auto BigInt parsing for any "123n" encountered
 			try {
 				const data = Helpers.parseJsonWithBigint(
 					ev.data as string
 				) as WsResponseMessage;
 				onMessage?.(data);
-			} catch {
-				// Optionally surface raw text here
+			} catch (error) {
+				args.onError?.(
+					new ErrorEvent("message-parse-error", {
+						error,
+						message:
+							error instanceof Error
+								? error.message
+								: "Failed to parse WebSocket message",
+					})
+				);
 			}
 		});
 
-		// Match fetchApi’s BigInt JSON behavior (install on-demand before send)
-		const enableBigIntJson = () => {
-			(() => {
-				(BigInt.prototype as any).toJSON = function () {
-					return this.toString() + "n";
-				};
-			})();
-		};
-
 		const send = (value: WsRequestMessage) => {
-			if (ws.readyState !== WebSocket.OPEN)
+			if (ws.readyState !== WebSocket.OPEN) {
 				throw new Error("WebSocket is not open");
-			enableBigIntJson();
-			ws.send(JSON.stringify(value));
+			}
+			ws.send(JSON.stringify(value, bigIntReplacer));
 		};
-
-		// const sendRaw = (raw: string) => {
-		// 	if (ws.readyState !== WebSocket.OPEN)
-		// 		throw new Error("WebSocket is not open");
-		// 	// If caller already stringified with BigInt, assume they handled JSON shape
-		// 	ws.send(raw);
-		// };
 
 		const close = () => ws.close();
 
-		return {
-			ws,
-			send,
-			// sendRaw,
-			close,
-		};
+		return { ws, send, close };
 	}
 }

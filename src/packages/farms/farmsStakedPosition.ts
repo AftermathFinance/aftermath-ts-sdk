@@ -1,30 +1,19 @@
+import type { AftermathApi } from "../../general/providers";
+import { Helpers } from "../../general/utils";
 import { Caller } from "../../general/utils/caller";
-import {
-	ApiFarmsDepositPrincipalBody,
-	ApiFarmsLockBody,
-	ApiFarmsRenewLockBody,
-	ApiFarmsUnlockBody,
-	ApiFarmsUnstakeBody,
-	ApiHarvestFarmsRewardsBody,
-	Apr,
+import { FixedUtils } from "../../general/utils/fixedUtils";
+import type {
 	Balance,
 	CallerConfig,
-	CoinType,
 	CoinsToBalance,
+	CoinType,
 	FarmsStakedPositionObject,
 	FarmsVersion,
 	SuiAddress,
-	SuiNetwork,
 	Timestamp,
-	Url,
 } from "../../types";
-import { FarmsStakingPool } from "./farmsStakingPool";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Helpers } from "../../general/utils";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
 import { Farms } from "./farms";
-import { AftermathApi } from "../../general/providers";
+import { FarmsStakingPool } from "./farmsStakingPool";
 
 /**
  * The `FarmsStakedPosition` class represents a user's individual staked position
@@ -49,13 +38,13 @@ export class FarmsStakedPosition extends Caller {
 	 * @param stakedPosition - The on-chain data object representing the user's staked position.
 	 * @param trueLastHarvestRewardsTimestamp - Optionally overrides the last harvest time from the on-chain data.
 	 * @param config - Optional configuration for the underlying `Caller`.
-	 * @param Provider - Optional `AftermathApi` instance for transaction building.
+	 * @param api - Optional `AftermathApi` instance for transaction building.
 	 */
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
 		trueLastHarvestRewardsTimestamp: Timestamp | undefined = undefined,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "farms");
 		this.stakedPosition = stakedPosition;
@@ -100,8 +89,7 @@ export class FarmsStakedPosition extends Caller {
 	}): boolean => {
 		const { stakingPool } = inputs;
 		return (
-			this.isLocked({ stakingPool }) &&
-			stakingPool.isStrictLockEnforcement()
+			this.isLocked({ stakingPool }) && stakingPool.isStrictLockEnforcement()
 		);
 	};
 
@@ -116,8 +104,7 @@ export class FarmsStakedPosition extends Caller {
 	}): boolean => {
 		const { stakingPool } = inputs;
 		return (
-			this.isLocked({ stakingPool }) &&
-			stakingPool.isRelaxedLockEnforcement()
+			this.isLocked({ stakingPool }) && stakingPool.isRelaxedLockEnforcement()
 		);
 	};
 
@@ -198,7 +185,9 @@ export class FarmsStakedPosition extends Caller {
 		const foundCoin = this.stakedPosition.rewardCoins.find(
 			(coin) => coin.coinType === inputs.coinType
 		);
-		if (!foundCoin) throw new Error("Invalid coin type");
+		if (!foundCoin) {
+			throw new Error("Invalid coin type");
+		}
 
 		return foundCoin;
 	};
@@ -241,8 +230,9 @@ export class FarmsStakedPosition extends Caller {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
 	}): Balance => {
-		if (inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0))
+		if (inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0)) {
 			return BigInt(0);
+		}
 
 		// this.updatePosition(inputs);
 
@@ -258,8 +248,7 @@ export class FarmsStakedPosition extends Caller {
 		}
 
 		// Additional clamp to handle overshoot beyond actual pool reserves
-		return totalRewards >
-			inputs.stakingPool.rewardCoin(inputs).actualRewards
+		return totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
 			? BigInt(0)
 			: totalRewards;
 	};
@@ -300,8 +289,7 @@ export class FarmsStakedPosition extends Caller {
 
 			this.stakedPosition.stakedAmountWithMultiplier =
 				(this.stakedPosition.stakedAmount *
-					(this.stakedPosition.lockMultiplier -
-						FixedUtils.fixedOneB)) /
+					(this.stakedPosition.lockMultiplier - FixedUtils.fixedOneB)) /
 				FixedUtils.fixedOneB;
 
 			this.stakedPosition.rewardCoins = [
@@ -325,7 +313,7 @@ export class FarmsStakedPosition extends Caller {
 				this.stakedPosition.stakedAmountWithMultiplier;
 		}
 
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 		// Accumulate any newly emitted rewards in the pool’s state
 		stakingPool.emitRewards();
 
@@ -359,22 +347,15 @@ export class FarmsStakedPosition extends Caller {
 			const stakedPositionRewardCoin =
 				this.stakedPosition.rewardCoins[rewardCoinIndex];
 
-			const [
-				totalBaseRewardsFromTimeT0,
-				totalMultiplierRewardsFromTimeT0,
-			] = this.calcTotalRewardsFromTimeT0({
-				rewardsAccumulatedPerShare:
-					rewardCoin.rewardsAccumulatedPerShare,
-				multiplierRewardsDebt:
-					stakedPositionRewardCoin.multiplierRewardsDebt,
-				emissionEndTimestamp:
-					stakingPool.stakingPool.emissionEndTimestamp,
-			});
+			const [totalBaseRewardsFromTimeT0, totalMultiplierRewardsFromTimeT0] =
+				this.calcTotalRewardsFromTimeT0({
+					rewardsAccumulatedPerShare: rewardCoin.rewardsAccumulatedPerShare,
+					multiplierRewardsDebt: stakedPositionRewardCoin.multiplierRewardsDebt,
+					emissionEndTimestamp: stakingPool.stakingPool.emissionEndTimestamp,
+				});
 
 			// Add newly accrued rewards since the last update
-			this.stakedPosition.rewardCoins[
-				rewardCoinIndex
-			].baseRewardsAccumulated =
+			this.stakedPosition.rewardCoins[rewardCoinIndex].baseRewardsAccumulated =
 				totalBaseRewardsFromTimeT0 -
 				stakedPositionRewardCoin.baseRewardsDebt +
 				stakedPositionRewardCoin.baseRewardsAccumulated;
@@ -390,9 +371,8 @@ export class FarmsStakedPosition extends Caller {
 			this.stakedPosition.rewardCoins[rewardCoinIndex].baseRewardsDebt =
 				totalBaseRewardsFromTimeT0;
 
-			this.stakedPosition.rewardCoins[
-				rewardCoinIndex
-			].multiplierRewardsDebt = totalMultiplierRewardsFromTimeT0;
+			this.stakedPosition.rewardCoins[rewardCoinIndex].multiplierRewardsDebt =
+				totalMultiplierRewardsFromTimeT0;
 		}
 
 		// Check if this position’s lock has expired
@@ -429,8 +409,8 @@ export class FarmsStakedPosition extends Caller {
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildDepositPrincipalTxV1(args)
-			: this.useProvider().fetchBuildDepositPrincipalTxV2(args);
+			? this.farmsApi().fetchBuildDepositPrincipalTxV1(args)
+			: this.farmsApi().fetchBuildDepositPrincipalTxV2(args);
 	}
 
 	/**
@@ -453,8 +433,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().buildUnstakeTxV1(args)
-			: this.useProvider().buildUnstakeTxV2(args);
+			? this.farmsApi().buildUnstakeTxV1(args)
+			: this.farmsApi().buildUnstakeTxV2(args);
 	}
 
 	/**
@@ -476,8 +456,8 @@ export class FarmsStakedPosition extends Caller {
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildWithdrawPrincipalTxV1(args)
-			: this.useProvider().buildWithdrawPrincipalTxV2(args);
+			? this.farmsApi().buildWithdrawPrincipalTxV1(args)
+			: this.farmsApi().buildWithdrawPrincipalTxV2(args);
 	}
 
 	// =========================================================================
@@ -501,8 +481,8 @@ export class FarmsStakedPosition extends Caller {
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildLockTxV1(args)
-			: this.useProvider().buildLockTxV2(args);
+			? this.farmsApi().buildLockTxV1(args)
+			: this.farmsApi().buildLockTxV2(args);
 	}
 
 	/**
@@ -511,9 +491,7 @@ export class FarmsStakedPosition extends Caller {
 	 * @param inputs - Contains the `walletAddress`.
 	 * @returns A transaction that can be signed and executed to extend or refresh the lock.
 	 */
-	public async getRenewLockTransaction(inputs: {
-		walletAddress: SuiAddress;
-	}) {
+	public async getRenewLockTransaction(inputs: { walletAddress: SuiAddress }) {
 		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
@@ -521,8 +499,8 @@ export class FarmsStakedPosition extends Caller {
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildRenewLockTxV1(args)
-			: this.useProvider().buildRenewLockTxV2(args);
+			? this.farmsApi().buildRenewLockTxV1(args)
+			: this.farmsApi().buildRenewLockTxV2(args);
 	}
 
 	/**
@@ -539,8 +517,8 @@ export class FarmsStakedPosition extends Caller {
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildUnlockTxV1(args)
-			: this.useProvider().buildUnlockTxV2(args);
+			? this.farmsApi().buildUnlockTxV1(args)
+			: this.farmsApi().buildUnlockTxV2(args);
 	}
 
 	// =========================================================================
@@ -567,8 +545,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().buildHarvestRewardsTxV1(args)
-			: this.useProvider().buildHarvestRewardsTxV2(args);
+			? this.farmsApi().buildHarvestRewardsTxV1(args)
+			: this.farmsApi().buildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================
@@ -597,8 +575,7 @@ export class FarmsStakedPosition extends Caller {
 			emissionEndTimestamp,
 		} = inputs;
 
-		const lastRewardTimestamp =
-			this.stakedPosition.lastHarvestRewardsTimestamp;
+		const lastRewardTimestamp = this.stakedPosition.lastHarvestRewardsTimestamp;
 		const lockEndTimestamp = this.unlockTimestamp();
 
 		const principalStakedAmount = this.stakedPosition.stakedAmount;
@@ -623,9 +600,8 @@ export class FarmsStakedPosition extends Caller {
 						this.stakedPosition.stakedAmountWithMultiplier) /
 					FixedUtils.fixedOneB
 				);
-			} else {
-				return multiplierRewardsDebt;
 			}
+			return multiplierRewardsDebt;
 		})();
 
 		return [baseRewards, multiplierRewards];
@@ -649,11 +625,11 @@ export class FarmsStakedPosition extends Caller {
 	 * Determines if this position is unlocked based on the lock end timestamp, the emission end timestamp,
 	 * or a forced unlock condition in the pool.
 	 */
-	private isUnlocked = (inputs: {
+	private readonly isUnlocked = (inputs: {
 		stakingPool: FarmsStakingPool;
 	}): boolean => {
 		const { stakingPool } = inputs;
-		const currentTime = dayjs().valueOf();
+		const currentTime = Date.now();
 
 		// If lock has expired, the emission has ended, or the pool is forcibly unlocked, then it is unlocked
 		return (
@@ -666,9 +642,11 @@ export class FarmsStakedPosition extends Caller {
 	/**
 	 * Provides access to the `Farms` provider in the `AftermathApi`.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Farms();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly farmsApi = () => {
+		const farms = this.api?.Farms();
+		if (!farms) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return farms;
 	};
 }

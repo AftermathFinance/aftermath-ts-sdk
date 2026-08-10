@@ -1,10 +1,10 @@
-import { CoinMetadata } from "@mysten/sui/client";
-import {
+import type { CoinMetadata } from "@mysten/sui/jsonRpc";
+import type {
 	Balance,
 	ObjectId,
 	Percentage,
 } from "../../general/types/generalTypes";
-import { CoinGeckoCoinApiId } from "../../types";
+import type { CoinGeckoCoinApiId } from "../../types";
 
 /**
  * Represents the decimal precision of a coin (e.g., 9 or 18).

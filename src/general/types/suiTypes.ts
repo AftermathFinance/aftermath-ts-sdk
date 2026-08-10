@@ -2,10 +2,4 @@
 //  Network
 // =========================================================================
 
-export type SuiNetwork =
-	| "DEVNET"
-	| "TESTNET"
-	| "LOCAL"
-	| "MAINNET"
-	| "INTERNAL"
-	| (string & {});
+export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL" | "MAINNET";

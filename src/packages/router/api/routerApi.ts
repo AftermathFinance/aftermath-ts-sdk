@@ -1,17 +1,10 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	UserEventsInputs,
-	RouterTradeEvent,
-	AnyObjectType,
-	RouterAddresses,
-} from "../../../types";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { RouterApiCasting } from "./routerApiCasting";
-import {
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import type {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import type { AnyObjectType, RouterAddresses } from "../../../types";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -52,15 +45,14 @@ export class RouterApi implements MoveErrorsInterface {
 	/**
 	 * Creates an instance of RouterApi.
 	 * @constructor
-	 * @param {AftermathApi} Provider - The Aftermath API instance.
+	 * @param {AftermathApi} api - The Aftermath API instance.
 	 */
-	constructor(private readonly Provider: AftermathApi) {
-		if (!this.Provider.addresses.router)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		if (!this.api.addresses.router) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
-		this.addresses = this.Provider.addresses.router;
+		this.addresses = this.api.addresses.router;
 		this.eventTypes = {
 			routerTrade: this.routerTradeEventType(),
 		};
@@ -114,7 +106,7 @@ export class RouterApi implements MoveErrorsInterface {
 	//  Event Types
 	// =========================================================================
 
-	private routerTradeEventType = () =>
+	private readonly routerTradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.utils,
 			RouterApi.constants.moduleNames.events,

@@ -1,107 +1,90 @@
-import { Caller } from "../../general/utils/caller";
-import {
-	ApiPerpetualsCreateAccountBody,
-	SuiNetwork,
-	Url,
-	PerpetualsMarketState,
-	PerpetualsMarketData,
-	PerpetualsAccountData,
-	PerpetualsMarketId,
-	ApiPerpetualsOwnedAccountCapsBody,
-	PerpetualsPosition,
-	PerpetualsOrderSide,
-	PerpetualsOrderbook,
-	CoinType,
-	PerpetualsOrderId,
-	FilledTakerOrderEvent,
-	Timestamp,
-	PerpetualsMarketCandleDataPoint,
-	ApiPerpetualsMarketCandleHistoryResponse,
-	PerpetualsAccountCap,
-	PerpetualsAccountId,
-	PerpetualsAccountObject,
-	IFixed,
-	MoveErrorCode,
-	CallerConfig,
-	SuiAddress,
-	ObjectId,
-	ApiPerpetualsMarkets24hrStatsResponse,
-	ApiPerpetualsAdminAccountCapsBody,
-	PerpetualsVaultObject,
-	Percentage,
-	Balance,
-	PerpetualsVaultCap,
-	PerpetualsVaultWithdrawRequest,
-	ApiPerpetualsVaultOwnedWithdrawRequestsBody,
-	PerpetualsOrderPrice,
-	ApiTransactionResponse,
-	PerpetualsWsUpdatesSubscriptionMessage,
-	PerpetualsWsUpdatesResponseMessage,
-	PerpetualsWsCandleResponseMessage,
-	ApiPerpetualsCreateVaultBody,
-	ApiPerpetualsCreateVaultCapBody,
-	PerpetualsVaultLpCoin,
-	PerpetualsPartialVaultCap,
-	PerpetualsVaultMetatada,
-	ApiPerpetualsMarketCandleHistoryBody,
-	ApiPerpetualsMarketFundingHistoryBody,
-	ApiPerpetualsMarketFundingHistoryResponse,
-	ApiPerpetualsAdminAccountCapsResponse,
-	ApiPerpetualsOwnedAccountCapsResponse,
-	ApiPerpetualsAccountPositionsResponse,
-	ApiPerpetualsAccountPositionsBody,
-	ApiPerpetualsAllMarketsResponse,
-	ApiPerpetualsAllMarketsBody,
-	ApiPerpetualsMarketsBody,
-	ApiPerpetualsMarketsResponse,
-	ApiPerpetualsMarketsPricesResponse,
-	ApiPerpetualsMarketsPricesBody,
-	ApiPerpetualsVaultLpCoinPricesResponse,
-	ApiPerpetualsVaultLpCoinPricesBody,
-	ApiPerpetualsVaultOwnedLpCoinsResponse,
-	ApiPerpetualsVaultOwnedLpCoinsBody,
-	ApiPerpetualsOwnedVaultCapsBody,
-	ApiPerpetualsOwnedVaultCapsResponse,
-	ApiPerpetualsOwnedVaultAssistantCapsBody,
-	ApiPerpetualsOwnedVaultAssistantCapsResponse,
-	ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
-	ApiPerpetualsVaultsResponse,
-	ApiPerpetualsVaultsBody,
-	SdkTransactionResponse,
-	ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
-	ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
-	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
-	ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse,
-	ApiPerpetualsBuilderCodesIntegratorConfigBody,
-	ApiPerpetualsBuilderCodesIntegratorConfigResponse,
-	ApiPerpetualsBuilderCodesIntegratorVaultsBody,
-	ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
-	ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
-	ApiPerpetualsTransferCapTxBody,
-	PerpetualsSponsorConfig,
-	ApiPerpetualsCurrentRebateRewardsBody,
-	ApiPerpetualsCurrentRebateRewardsResponse,
-	ApiPerpetualsCreateCsvRebatesBody,
-	ApiPerpetualsCreateCsvRebatesResponse,
-	ApiPerpetualsCreateReferralCsvRebatesBody,
-	ApiPerpetualsCreateReferralCsvRebatesResponse,
-	ApiPerpetualsCreateAccountResponse,
-	ApiPerpetualsGrantAgentWalletTxBody,
-	ApiPerpetualsShareAccountBody,
-} from "../../types";
-import { PerpetualsMarket } from "./perpetualsMarket";
-import { PerpetualsAccount } from "./perpetualsAccount";
-import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Casting, Helpers } from "../../general/utils";
-import { PerpetualsOrderUtils } from "./utils";
-import { AftermathApi } from "../../general/providers";
-import { Coin } from "../coin";
 import {
 	Transaction,
-	TransactionObjectArgument,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
+import {
+	type ApiPerpetualsAccountPositionsBody,
+	type ApiPerpetualsAccountPositionsResponse,
+	type ApiPerpetualsAdminAccountCapsBody,
+	type ApiPerpetualsAdminAccountCapsResponse,
+	type ApiPerpetualsAllMarketsBody,
+	type ApiPerpetualsAllMarketsResponse,
+	type ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody,
+	type ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse,
+	type ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody,
+	type ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody,
+	type ApiPerpetualsBuilderCodesIntegratorConfigBody,
+	type ApiPerpetualsBuilderCodesIntegratorConfigResponse,
+	type ApiPerpetualsBuilderCodesIntegratorVaultsBody,
+	type ApiPerpetualsBuilderCodesIntegratorVaultsResponse,
+	type ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+	type ApiPerpetualsCreateAccountBody,
+	type ApiPerpetualsCreateAccountResponse,
+	type ApiPerpetualsCreateCsvRebatesBody,
+	type ApiPerpetualsCreateCsvRebatesResponse,
+	type ApiPerpetualsCreateReferralCsvRebatesBody,
+	type ApiPerpetualsCreateReferralCsvRebatesResponse,
+	type ApiPerpetualsCreateVaultBody,
+	type ApiPerpetualsCreateVaultCapBody,
+	type ApiPerpetualsCurrentRebateRewardsBody,
+	type ApiPerpetualsCurrentRebateRewardsResponse,
+	type ApiPerpetualsGrantAgentWalletTxBody,
+	type ApiPerpetualsMarketCandleHistoryBody,
+	type ApiPerpetualsMarketCandleHistoryResponse,
+	type ApiPerpetualsMarketFundingHistoryBody,
+	type ApiPerpetualsMarketFundingHistoryResponse,
+	type ApiPerpetualsMarkets24hrStatsResponse,
+	type ApiPerpetualsMarketsBody,
+	type ApiPerpetualsMarketsPricesBody,
+	type ApiPerpetualsMarketsPricesResponse,
+	type ApiPerpetualsMarketsResponse,
+	type ApiPerpetualsOwnedAccountCapsBody,
+	type ApiPerpetualsOwnedAccountCapsResponse,
+	type ApiPerpetualsOwnedVaultAssistantCapsBody,
+	type ApiPerpetualsOwnedVaultAssistantCapsResponse,
+	type ApiPerpetualsOwnedVaultCapsBody,
+	type ApiPerpetualsOwnedVaultCapsResponse,
+	type ApiPerpetualsShareAccountBody,
+	type ApiPerpetualsTransferCapTxBody,
+	type ApiPerpetualsVaultLpCoinPricesBody,
+	type ApiPerpetualsVaultLpCoinPricesResponse,
+	type ApiPerpetualsVaultOwnedLpCoinsBody,
+	type ApiPerpetualsVaultOwnedLpCoinsResponse,
+	type ApiPerpetualsVaultOwnedWithdrawRequestsBody,
+	type ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
+	type ApiPerpetualsVaultsBody,
+	type ApiPerpetualsVaultsResponse,
+	type ApiTransactionResponse,
+	type Balance,
+	type CallerConfig,
+	type CoinType,
+	type FilledTakerOrderEvent,
+	type ObjectId,
+	type Percentage,
+	type PerpetualsAccountCap,
+	type PerpetualsAccountId,
+	PerpetualsAccountObject,
+	type PerpetualsCandleResolution,
+	type PerpetualsMarketId,
+	type PerpetualsOrderId,
+	type PerpetualsOrderPrice,
+	PerpetualsOrderSide,
+	type PerpetualsPartialVaultCap,
+	type PerpetualsSponsorConfig,
+	PerpetualsVaultCap,
+	type PerpetualsWsCandleResponseMessage,
+	type PerpetualsWsUpdatesResponseMessage,
+	type PerpetualsWsUpdatesSubscriptionMessage,
+	SdkTransactionResponse,
+	type SuiAddress,
+} from "../../types";
+import { PerpetualsAccount } from "./perpetualsAccount";
+import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsVault } from "./perpetualsVault";
+import { PerpetualsOrderUtils } from "./utils";
 
 /**
  * High-level client for interacting with Aftermath Perpetuals.
@@ -123,8 +106,7 @@ import { PerpetualsVault } from "./perpetualsVault";
  * ```ts
  * import { Aftermath } from "@aftermath/sdk";
  *
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init();
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const perps = afSdk.Perpetuals();
  *
@@ -168,9 +150,9 @@ export class Perpetuals extends Caller {
 	 * Creates a new Perpetuals client.
 	 *
 	 * @param config - Optional caller configuration (network, auth token, etc.).
-	 * @param Provider - Optional shared {@link AftermathApi} provider instance. When
+	 * @param api - Optional shared {@link AftermathApi} provider instance. When
 	 *   provided, transaction-building helpers can derive serialized `txKind`
-	 *   from a {@link Transaction} object via `Provider.Transactions().fetchBase64TxKindFromTx`.
+	 *   from a {@link Transaction} object via `api.Transactions().fetchBase64TxKindFromTx`.
 	 *
 	 * @remarks
 	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning:
@@ -179,7 +161,7 @@ export class Perpetuals extends Caller {
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "perpetuals");
 	}
@@ -216,8 +198,7 @@ export class Perpetuals extends Caller {
 		>("all-markets", inputs);
 		return {
 			markets: res.markets.map(
-				(marketData) =>
-					new PerpetualsMarket(marketData, this.config, this.Provider)
+				(marketData) => new PerpetualsMarket(marketData, this.config, this.api)
 			),
 		};
 	}
@@ -282,7 +263,8 @@ export class Perpetuals extends Caller {
 					new PerpetualsMarket(
 						marketData.market,
 						this.config,
-						this.Provider
+						this.api,
+						marketData.metadata
 					)
 			),
 		};
@@ -314,8 +296,7 @@ export class Perpetuals extends Caller {
 		>("vaults", {});
 		return {
 			vaults: res.vaults.map(
-				(vaultObject) =>
-					new PerpetualsVault(vaultObject, this.config, this.Provider)
+				(vaultObject) => new PerpetualsVault(vaultObject, this.config, this.api)
 			),
 		};
 	}
@@ -354,8 +335,7 @@ export class Perpetuals extends Caller {
 		>("vaults", inputs);
 		return {
 			vaults: res.vaults.map(
-				(vaultObject) =>
-					new PerpetualsVault(vaultObject, this.config, this.Provider)
+				(vaultObject) => new PerpetualsVault(vaultObject, this.config, this.api)
 			),
 		};
 	}
@@ -422,16 +402,15 @@ export class Perpetuals extends Caller {
 		accounts: PerpetualsAccount[];
 	}> {
 		const { accountCaps, marketIds } = inputs;
-		if (accountCaps.length <= 0)
+		if (accountCaps.length <= 0) {
 			return {
 				accounts: [],
 			};
+		}
 
 		const accountObjects = (
 			await this.getAccountObjects({
-				accountIds: accountCaps.map(
-					(accountCap) => accountCap.accountId
-				),
+				accountIds: accountCaps.map((accountCap) => accountCap.accountId),
 				marketIds,
 			})
 		).accounts;
@@ -443,7 +422,7 @@ export class Perpetuals extends Caller {
 						account,
 						accountCaps[index],
 						this.config,
-						this.Provider
+						this.api
 					)
 			),
 		};
@@ -466,10 +445,11 @@ export class Perpetuals extends Caller {
 		inputs: ApiPerpetualsAccountPositionsBody
 	): Promise<ApiPerpetualsAccountPositionsResponse> {
 		const { accountIds, marketIds } = inputs;
-		if (accountIds.length <= 0)
+		if (accountIds.length <= 0) {
 			return {
 				accounts: [],
 			};
+		}
 
 		return this.fetchApi<
 			ApiPerpetualsAccountPositionsResponse,
@@ -503,9 +483,7 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getOwnedAccountCaps(
-		inputs: ApiPerpetualsOwnedAccountCapsBody
-	) {
+	public async getOwnedAccountCaps(inputs: ApiPerpetualsOwnedAccountCapsBody) {
 		const { walletAddress, collateralCoinTypes } = inputs;
 		return this.fetchApi<
 			ApiPerpetualsOwnedAccountCapsResponse,
@@ -598,9 +576,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.accountCapIds - List of account IDs.
 	 * @returns {@link ApiPerpetualsAccountCapsResponse} containing caps.
 	 */
-	public async getAdminAccountCaps(
-		inputs: ApiPerpetualsAdminAccountCapsBody
-	) {
+	public async getAdminAccountCaps(inputs: ApiPerpetualsAdminAccountCapsBody) {
 		return this.fetchApi<
 			ApiPerpetualsAdminAccountCapsResponse,
 			ApiPerpetualsAdminAccountCapsBody
@@ -626,10 +602,8 @@ export class Perpetuals extends Caller {
 	 * relocated to {@link PerpetualsMarket} in the future.
 	 */
 	// TODO: move to market class ?
-	public getMarketCandleHistory(
-		inputs: ApiPerpetualsMarketCandleHistoryBody
-	) {
-		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
+	public getMarketCandleHistory(inputs: ApiPerpetualsMarketCandleHistoryBody) {
+		const { marketId, fromTimestamp, toTimestamp, resolution } = inputs;
 		return this.fetchApi<
 			ApiPerpetualsMarketCandleHistoryResponse,
 			ApiPerpetualsMarketCandleHistoryBody
@@ -637,7 +611,7 @@ export class Perpetuals extends Caller {
 			marketId,
 			fromTimestamp,
 			toTimestamp,
-			intervalMs,
+			resolution,
 		});
 	}
 
@@ -700,10 +674,11 @@ export class Perpetuals extends Caller {
 	public async getPrices(inputs: {
 		marketIds: ObjectId[];
 	}): Promise<ApiPerpetualsMarketsPricesResponse> {
-		if (inputs.marketIds.length <= 0)
+		if (inputs.marketIds.length <= 0) {
 			return {
 				marketsPrices: [],
 			};
+		}
 		return this.fetchApi<
 			ApiPerpetualsMarketsPricesResponse,
 			ApiPerpetualsMarketsPricesBody
@@ -722,10 +697,11 @@ export class Perpetuals extends Caller {
 	public async getLpCoinPrices(
 		inputs: ApiPerpetualsVaultLpCoinPricesBody
 	): Promise<ApiPerpetualsVaultLpCoinPricesResponse> {
-		if (inputs.vaultIds.length <= 0)
+		if (inputs.vaultIds.length <= 0) {
 			return {
 				lpCoinPrices: [],
 			};
+		}
 		return this.fetchApi<
 			ApiPerpetualsVaultLpCoinPricesResponse,
 			ApiPerpetualsVaultLpCoinPricesBody
@@ -765,11 +741,9 @@ export class Perpetuals extends Caller {
 			"transactions/transfer-cap",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -805,9 +779,7 @@ export class Perpetuals extends Caller {
 			"transactions/create-account",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -845,11 +817,9 @@ export class Perpetuals extends Caller {
 			"account/transactions/grant-agent-wallet",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -891,11 +861,9 @@ export class Perpetuals extends Caller {
 			"account/transactions/share",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -998,9 +966,7 @@ export class Perpetuals extends Caller {
 			"vault/transactions/create-vault",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1025,8 +991,6 @@ export class Perpetuals extends Caller {
 	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
 	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
 	 * @param inputs.accountIds - Optional list of account IDs.
-	 * @param inputs.calculationVariables - Coefficients used to compute Q-scores
-	 *   and taker shares.
 	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
 	 *
 	 * @example
@@ -1034,13 +998,6 @@ export class Perpetuals extends Caller {
 	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
 	 *   totalMakerRewards: 10000,
 	 *   totalTakerRewards: 5000,
-	 *   calculationVariables: {
-	 *     qScoreCoefficient: 1,
-	 *     uptimeCoefficient: 1,
-	 *     mmVolumeCoefficient: 1,
-	 *     takerVolumeCoefficient: 1,
-	 *     takerOiCoefficient: 1,
-	 *   },
 	 * });
 	 * ```
 	 */
@@ -1101,8 +1058,8 @@ export class Perpetuals extends Caller {
 	 *
 	 * This endpoint creates a transaction that allows a user to grant permission to an
 	 * integrator to receive fees on orders placed on their behalf. The user specifies
-	 * a maximum taker fee that the integrator can charge. The integrator can then
-	 * include their address and fee (up to the maximum) when placing orders for the user.
+	 * a maximum integrator fee that the integrator can charge. The integrator can then
+	 * include their id and fee (up to the maximum) when placing orders for the user.
 	 *
 	 * The resulting transaction must be signed by the account owner and executed on-chain.
 	 *
@@ -1113,8 +1070,8 @@ export class Perpetuals extends Caller {
 	 * ```ts
 	 * const tx = await perps.getCreateBuilderCodeIntegratorConfigTx({
 	 *   accountId: 123n,
-	 *   integratorAddress: "0x...",
-	 *   maxTakerFee: 0.001, // 0.1% max fee
+	 *   integratorId: 7,
+	 *   maxIntegratorFee: 0.001, // 0.1% max fee
 	 * });
 	 * ```
 	 */
@@ -1132,9 +1089,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-config",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1161,7 +1116,7 @@ export class Perpetuals extends Caller {
 	 * ```ts
 	 * const tx = await perps.getRemoveBuilderCodeIntegratorConfigTx({
 	 *   accountId: 123n,
-	 *   integratorAddress: "0x...",
+	 *   integratorId: 7,
 	 * });
 	 * ```
 	 */
@@ -1179,9 +1134,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/remove-integrator-config",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1191,13 +1144,12 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Build a transaction to initialize an integrator fee vault for a specific market.
+	 * Build a transaction to initialize an integrator's global fee vault.
 	 *
-	 * This endpoint creates a transaction that initializes a vault where an integrator's
-	 * fees will accumulate for a specific market (clearing house). This is a one-time
-	 * setup operation that must be performed before the integrator can claim fees from
-	 * that market. Once created, the vault will automatically collect fees as the
-	 * integrator submits orders on behalf of users in that market.
+	 * This endpoint creates a transaction that initializes the global vault where an
+	 * integrator's fees accumulate across all markets. This is a one-time setup that
+	 * must be performed before the integrator can claim fees. The integrator's identity
+	 * is taken from the transaction sender on-chain.
 	 *
 	 * The resulting transaction must be signed by the integrator and executed on-chain.
 	 *
@@ -1206,10 +1158,7 @@ export class Perpetuals extends Caller {
 	 *
 	 * @example
 	 * ```ts
-	 * const tx = await perps.getCreateBuilderCodeIntegratorVaultTx({
-	 *   marketId: "0x...",
-	 *   integratorAddress: "0x...",
-	 * });
+	 * const tx = await perps.getCreateBuilderCodeIntegratorVaultTx({});
 	 * ```
 	 */
 	public async getCreateBuilderCodeIntegratorVaultTx(
@@ -1226,9 +1175,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/create-integrator-vault",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1241,36 +1188,34 @@ export class Perpetuals extends Caller {
 	 * Build a transaction to claim accumulated integrator fees from a vault.
 	 *
 	 * This endpoint creates a transaction that allows an integrator to claim the fees
-	 * they have earned from orders placed on behalf of users. Fees accumulate in a vault
-	 * specific to each market (clearing house) and can be claimed at any moment by the
-	 * integrator. The fees are proportional to the taker volume generated by the users'
-	 * orders that the integrator submitted.
+	 * they have earned from orders placed on behalf of users. Fees accumulate in the
+	 * integrator's global vault (across all markets) and can be claimed at any moment.
+	 * The fees are proportional to the taker volume generated by the users' orders that
+	 * the integrator submitted.
 	 *
 	 * If a `recipientAddress` is provided, the claimed fees will be automatically
-	 * transferred to that address. Otherwise, the coin output is exposed as a transaction
-	 * argument for further use in the transaction.
+	 * transferred to that address. Otherwise, the coin outputs are exposed as transaction
+	 * arguments for further use in the transaction (one per non-zero collateral balance).
 	 *
 	 * The resulting transaction must be signed by the integrator and executed on-chain.
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody}.
 	 * @returns {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse} containing
-	 *   `txKind` and optionally `coinOutArg`.
+	 *   `txKind` and optionally `coinOutArgs`.
 	 *
 	 * @example
 	 * ```ts
 	 * // Claim with automatic transfer to recipient
 	 * const response = await perps.getClaimBuilderCodeIntegratorVaultFeesTx({
-	 *   marketId: "0x...",
-	 *   integratorAddress: "0x...",
+	 *   integratorId: 7,
 	 *   recipientAddress: "0x...",
 	 * });
 	 *
-	 * // Claim with coin output for further use
+	 * // Claim with coin outputs for further use
 	 * const response = await perps.getClaimBuilderCodeIntegratorVaultFeesTx({
-	 *   marketId: "0x...",
-	 *   integratorAddress: "0x...",
+	 *   integratorId: 7,
 	 * });
-	 * // response.coinOutArg can be used in subsequent transaction commands
+	 * // response.coinOutArgs can be used in subsequent transaction commands
 	 * ```
 	 */
 	public async getClaimBuilderCodeIntegratorVaultFeesTx(
@@ -1287,9 +1232,7 @@ export class Perpetuals extends Caller {
 			"builder-codes/transactions/claim-integrator-vault-fees",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{
@@ -1307,24 +1250,24 @@ export class Perpetuals extends Caller {
 	 *
 	 * This endpoint queries whether an integrator has been approved by an account to collect
 	 * fees on orders placed on behalf of the account. If approved, it returns the maximum
-	 * taker fee the integrator is authorized to charge. This information is useful for:
+	 * integrator fee the integrator is authorized to charge. This information is useful for:
 	 * - Verifying integrator permissions before placing orders
 	 * - Displaying authorized integrators and their fee limits in UIs
 	 * - Validating that an integrator's requested fee doesn't exceed the approved maximum
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorConfigBody}.
 	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorConfigResponse} containing
-	 *   `maxTakerFee` and `exists` flag.
+	 *   `maxIntegratorFee` and `exists` flag.
 	 *
 	 * @example
 	 * ```ts
 	 * const config = await perps.getBuilderCodeIntegratorConfig({
 	 *   accountId: 123n,
-	 *   integratorAddress: "0x...",
+	 *   integratorId: 7,
 	 * });
 	 *
 	 * if (config.exists) {
-	 *   console.log(`Integrator is approved with max fee: ${config.maxTakerFee}`);
+	 *   console.log(`Integrator is approved with max fee: ${config.maxIntegratorFee}`);
 	 * } else {
 	 *   console.log("Integrator is not approved for this account");
 	 * }
@@ -1340,36 +1283,35 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Fetch accumulated integrator vault fees across multiple markets.
+	 * Fetch accumulated integrator vault fees.
 	 *
-	 * This endpoint queries the total fees an integrator has earned and accumulated in their
-	 * vaults across one or more markets (clearing houses). Integrators earn fees proportional
-	 * to the taker volume generated by orders they submit on behalf of users. These fees
-	 * accumulate in per-market vaults and can be claimed at any time using
-	 * {@link getClaimIntegratorVaultFeesTx}.
+	 * This endpoint queries the total fees an integrator has earned and accumulated in
+	 * their global vault, grouped by collateral coin type. Integrators earn fees
+	 * proportional to the taker volume generated by orders they submit on behalf of
+	 * users. These fees can be claimed at any time using
+	 * {@link getClaimBuilderCodeIntegratorVaultFeesTx}.
 	 *
 	 * This information is useful for:
 	 * - Displaying total claimable fees to integrators in dashboards
-	 * - Monitoring fee accrual across different markets
-	 * - Determining which markets have fees ready to be claimed
+	 * - Monitoring fee accrual across collateral types
+	 * - Determining whether fees are ready to be claimed
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorVaultsBody}.
 	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorVaultsResponse} containing
-	 *   a vector of market vault data with accumulated fees.
+	 *   a vector of per-collateral vault data with accumulated fees.
 	 *
 	 * @example
 	 * ```ts
 	 * const vaultFees = await perps.getBuilderCodeIntegratorVaults({
-	 *   marketIds: ["0x...BTCUSD", "0x...SUIUSD"],
-	 *   integratorAddress: "0x...",
+	 *   integratorId: 7,
 	 * });
 	 *
 	 * for (const vault of vaultFees.integratorVaults) {
-	 *   console.log(`Market ${vault.marketId}: ${vault.fees} collateral units claimable`);
+	 *   console.log(`${vault.collateralCoinType}: ${vault.fees} collateral units claimable`);
 	 * }
 	 *
-	 * const totalFees = vaultFees.integratorVaults.reduce((sum, vault) => sum + vault.fees, 0);
-	 * console.log(`Total claimable: ${totalFees}`);
+	 * const totalFeesUsd = vaultFees.integratorVaults.reduce((sum, vault) => sum + vault.feesUsd, 0);
+	 * console.log(`Total claimable (USD): ${totalFeesUsd}`);
 	 * ```
 	 */
 	public async getBuilderCodeIntegratorVaults(
@@ -1430,7 +1372,7 @@ export class Perpetuals extends Caller {
 	}): number {
 		const { orderId } = inputs;
 		const orderPrice = PerpetualsOrderUtils.price(orderId);
-		return this.orderPriceToPrice({ orderPrice });
+		return Perpetuals.orderPriceToPrice({ orderPrice });
 	}
 
 	/**
@@ -1567,11 +1509,7 @@ export class Perpetuals extends Caller {
 		 * Each helper sends a structured subscription message of the form:
 		 * `{ action: "subscribe" | "unsubscribe", subscriptionType: { ... } }`
 		 */
-		const subscribeMarket = ({
-			marketId,
-		}: {
-			marketId: PerpetualsMarketId;
-		}) =>
+		const subscribeMarket = ({ marketId }: { marketId: PerpetualsMarketId }) =>
 			ctl.send({
 				action: "subscribe",
 				subscriptionType: { market: { marketId } },
@@ -1623,11 +1561,7 @@ export class Perpetuals extends Caller {
 				subscriptionType: { user: { accountId, withStopOrders } },
 			});
 
-		const subscribeOracle = ({
-			marketId,
-		}: {
-			marketId: PerpetualsMarketId;
-		}) =>
+		const subscribeOracle = ({ marketId }: { marketId: PerpetualsMarketId }) =>
 			ctl.send({
 				action: "subscribe",
 				subscriptionType: { oracle: { marketId } },
@@ -1763,6 +1697,30 @@ export class Perpetuals extends Caller {
 				},
 			});
 
+		const subscribeMarketCandles = ({
+			marketId,
+			interval,
+		}: {
+			marketId: PerpetualsMarketId;
+			interval: PerpetualsCandleResolution;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { marketCandles: { marketId, interval } },
+			});
+
+		const unsubscribeMarketCandles = ({
+			marketId,
+			interval,
+		}: {
+			marketId: PerpetualsMarketId;
+			interval: PerpetualsCandleResolution;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { marketCandles: { marketId, interval } },
+			});
+
 		return {
 			ws: ctl.ws,
 			subscribeMarket,
@@ -1781,6 +1739,8 @@ export class Perpetuals extends Caller {
 			unsubscribeUserCollateralChanges,
 			subscribeTopOfOrderbook,
 			unsubscribeTopOfOrderbook,
+			subscribeMarketCandles,
+			unsubscribeMarketCandles,
 			close: ctl.close,
 		};
 	}
@@ -1812,26 +1772,34 @@ export class Perpetuals extends Caller {
 	 */
 	public openMarketCandlesWebsocketStream(args: {
 		marketId: PerpetualsMarketId;
-		intervalMs: number;
+		interval: PerpetualsCandleResolution;
 		onMessage: (msg: PerpetualsWsCandleResponseMessage) => void;
 		onOpen?: (ev: Event) => void;
 		onError?: (ev: Event) => void;
 		onClose?: (ev: CloseEvent) => void;
 	}) {
-		const { marketId, intervalMs, onMessage, onOpen, onError, onClose } =
-			args;
-
-		const path = `ws/market-candles/${encodeURIComponent(
-			marketId
-		)}/${intervalMs}`;
+		const { marketId, interval, onMessage, onOpen, onError, onClose } = args;
 
 		const ctl = this.openWsStream<
-			undefined,
-			PerpetualsWsCandleResponseMessage
+			PerpetualsWsUpdatesSubscriptionMessage,
+			PerpetualsWsUpdatesResponseMessage
 		>({
-			path,
-			onMessage,
-			onOpen,
+			path: "ws/updates",
+			onMessage: (env) => {
+				if ("marketCandles" in env) {
+					onMessage({
+						marketId: env.marketCandles.marketId,
+						lastCandle: env.marketCandles.lastCandle,
+					});
+				}
+			},
+			onOpen: (ev) => {
+				ctl.send({
+					action: "subscribe",
+					subscriptionType: { marketCandles: { marketId, interval } },
+				});
+				onOpen?.(ev);
+			},
 			onError,
 			onClose,
 		});

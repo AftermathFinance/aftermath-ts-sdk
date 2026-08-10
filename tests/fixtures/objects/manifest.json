@@ -1,0 +1,15 @@
+{
+	"pool": "0x0235f7d73eb5974bf9cbf518763d60893f0942a7f0deb76fb30eae9147926c48",
+	"daoFeePoolOwnerCap": "0x680c802a272ec193f389a3fae2a24aa5e1d0107a5dc01312ec50809dd4797646",
+	"stakedSuiVaultState": "0x55486449e41d89cfbdb20e005c1c5c1007858ad5b4d5d7c047d2b3b592fe8791",
+	"validatorOperationCap": "0xdaf45d76f6158ebd94fc847b6983f5a8862859079ac252ff80824bc4096cb6eb",
+	"farmsStakedPositionV1": "0x55cb8cc38f23ec1bb13a4264c070c815937765e28ce10ad9641ecc106f195a45",
+	"farmsStakedPositionV2": "0x24b39515b018b4a3cbf9c6bceab70e59810c36c7441fb870f181a0bd872f7677",
+	"farmsOwnerCapV1": "0xc7a4d84c92f25444987dafe68727c797e0d8eb1c43f4e7c96741326472963788",
+	"farmsOwnerCapV2": "0x64e666dc35f414fe47454abad90458b3eca6e9c1e12ed308234f295c77186ef8",
+	"farmsOneTimeAdminCapV1": "0x6ca4c03612566acfaa4101cc989bcbbdae7707861b3c3df9c7d85d5fcf4b696a",
+	"farmsOneTimeAdminCapV2": "0xcd9bb7bd01c7be37d345b039c229f61b27a4b7a4a4318e20b147ee7e940f0b74",
+	"kioskOwnerCap": "0x00466232fba63744db59a9fcf51ed7a15bdc3406c8ed2d061724aefcad5907f3",
+	"personalKioskCap": "0x63872ab2d39a51669c0a7e6373456d3b3d48b6f99136bfc14fe879ae8e296dce",
+	"nftWithDisplay": "0xf81a80fa791159b4bac8f416d976fd6ceac706c9edf294d9e878649405dcf8a1"
+}

@@ -1,6 +1,5 @@
-import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { CallerConfig, SuiAddress, SuiNetwork, Url } from "../../types";
+import type { CallerConfig, SuiAddress } from "../../types";
 
 /**
  * The `ReferralVault` class provides functionality for querying and managing
@@ -30,7 +29,7 @@ export class ReferralVault extends Caller {
 	 *
 	 * @deprecated Use `Referral` class instead
 	 * @param config - Optional caller configuration, including Sui network and access token.
-	 * @param Provider - An optional `AftermathApi` provider instance for referral-specific methods.
+	 * @param api - An optional `AftermathApi` provider instance for referral-specific methods.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "referral-vault");
@@ -49,8 +48,7 @@ export class ReferralVault extends Caller {
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const referralVault = afSdk.ReferralVault();
 	 *

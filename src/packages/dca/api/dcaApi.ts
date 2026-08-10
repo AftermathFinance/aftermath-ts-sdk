@@ -1,13 +1,16 @@
-import { AftermathApi } from "../../../general/providers";
-import {
+import type {
+	Transaction,
+	TransactionArgument,
+} from "@mysten/sui/transactions";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import type { AftermathApi } from "../../../general/providers";
+import { Helpers } from "../../../general/utils";
+import type {
 	AnyObjectType,
 	CoinType,
 	DcaAddresses,
 	ObjectId,
 } from "../../../types";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { Helpers } from "../../../general/utils";
-import { Transaction, TransactionArgument } from "@mysten/sui/transactions";
 
 export class DcaApi {
 	// =========================================================================
@@ -44,12 +47,11 @@ export class DcaApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.dca;
-		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.dca;
+		if (!addresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = addresses;
 		this.eventTypes = {
@@ -87,28 +89,28 @@ export class DcaApi {
 	// Events
 	// =========================================================================
 
-	private createdOrderEventType = () =>
+	private readonly createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrder
 		);
 
-	private createdOrderEventTypeV2 = () =>
+	private readonly createdOrderEventTypeV2 = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.eventsV2,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrderV2
 		);
 
-	private closedOrderEventType = () =>
+	private readonly closedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.closedOrder
 		);
 
-	private executedOrderEventType = () =>
+	private readonly executedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,

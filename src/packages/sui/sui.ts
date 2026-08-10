@@ -1,4 +1,4 @@
-import { SuiSystemStateSummary } from "@mysten/sui/client";
+import type { SuiSystemStateSummary } from "@mysten/sui/jsonRpc";
 import { Caller } from "../../general/utils/caller";
 import { CallerConfig, CoinType, SuiNetwork, Url } from "../../types";
 import { AftermathApi } from "../../general/providers";
@@ -40,11 +40,11 @@ export class Sui extends Caller {
 	 * Creates a new instance of the `Sui` class for fetching chain-level info.
 	 *
 	 * @param config - Optional configuration, including the Sui network and an access token.
-	 * @param Provider - An optional `AftermathApi` instance for advanced transaction building or data fetching.
+	 * @param api - An optional `AftermathApi` instance for advanced transaction building or data fetching.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "sui");
 	}
@@ -61,8 +61,7 @@ export class Sui extends Caller {
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const sui = afSdk.Sui();
 	 *

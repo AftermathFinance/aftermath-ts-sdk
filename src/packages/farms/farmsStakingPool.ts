@@ -1,35 +1,28 @@
-import {
+import type { AftermathApi } from "../../general/providers";
+import { Casting, Helpers } from "../../general/utils";
+import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
+import type {
 	Apr,
 	Balance,
 	CallerConfig,
-	CoinType,
 	CoinsToDecimals,
 	CoinsToPrice,
+	CoinType,
 	ObjectId,
 	SuiAddress,
-	SuiNetwork,
 	Timestamp,
-	Url,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import {
+import { Coin } from "../coin/coin";
+import { Farms } from "./farms";
+import type {
 	ApiFarmsGrantOneTimeAdminCapBody,
-	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
-	ApiFarmsInitializeStakingPoolRewardBody,
-	ApiFarmsTopUpStakingPoolRewardsBody,
 	FarmOwnerOrOneTimeAdminCap,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
 	FarmsVersion,
 } from "./farmsTypes";
-import { Casting, Helpers } from "../../general/utils";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Coin } from "../coin/coin";
-import { AftermathApi } from "../../general/providers";
-import { Farms } from "./farms";
 
 /**
  * The `FarmsStakingPool` class represents a staking pool (also referred
@@ -44,12 +37,12 @@ export class FarmsStakingPool extends Caller {
 	 *
 	 * @param stakingPool - The on-chain data object describing the pool.
 	 * @param config - An optional `CallerConfig` for network settings.
-	 * @param Provider - An optional `AftermathApi` for transaction building.
+	 * @param api - An optional `AftermathApi` for transaction building.
 	 */
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "farms");
 		this.stakingPool = stakingPool;
@@ -75,7 +68,7 @@ export class FarmsStakingPool extends Caller {
 	 * ```
 	 */
 	public async getTVL(): Promise<number> {
-		return new Farms(this.config, this.Provider).getTVL({
+		return new Farms(this.config, this.api).getTVL({
 			farmIds: [this.stakingPool.objectId],
 		});
 	}
@@ -92,7 +85,7 @@ export class FarmsStakingPool extends Caller {
 	 * ```
 	 */
 	public async getRewardsTVL(): Promise<number> {
-		return new Farms(this.config, this.Provider).getRewardsTVL({
+		return new Farms(this.config, this.api).getRewardsTVL({
 			farmIds: [this.stakingPool.objectId],
 		});
 	}
@@ -159,7 +152,9 @@ export class FarmsStakingPool extends Caller {
 		const foundCoin = this.stakingPool.rewardCoins.find(
 			(coin) => coin.coinType === inputs.coinType
 		);
-		if (!foundCoin) throw new Error("Invalid coin type");
+		if (!foundCoin) {
+			throw new Error("Invalid coin type");
+		}
 
 		return foundCoin;
 	};
@@ -174,7 +169,7 @@ export class FarmsStakingPool extends Caller {
 		return Math.max(
 			Math.min(
 				this.stakingPool.maxLockDurationMs,
-				this.stakingPool.emissionEndTimestamp - dayjs().valueOf()
+				this.stakingPool.emissionEndTimestamp - Date.now()
 			),
 			0
 		);
@@ -196,10 +191,12 @@ export class FarmsStakingPool extends Caller {
 	 * ```
 	 */
 	public emitRewards = () => {
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// If no staked amount, no distribution
-		if (this.stakingPool.stakedAmount === BigInt(0)) return;
+		if (this.stakingPool.stakedAmount === BigInt(0)) {
+			return;
+		}
 
 		const rewardCoins = Helpers.deepCopy(this.stakingPool.rewardCoins);
 
@@ -208,12 +205,15 @@ export class FarmsStakingPool extends Caller {
 			if (
 				currentTimestamp <
 				rewardCoin.lastRewardTimestamp + rewardCoin.emissionSchedulesMs
-			)
+			) {
 				continue;
+			}
 
 			// iia. Calculate how many rewards have to be emitted.
 			const rewardsToEmit = this.calcRewardsToEmit({ rewardCoin });
-			if (rewardsToEmit === BigInt(0)) continue;
+			if (rewardsToEmit === BigInt(0)) {
+				continue;
+			}
 
 			// iii. Increase the amount of rewards emitted per share.
 			this.increaseRewardsAccumulatedPerShare({
@@ -249,13 +249,17 @@ export class FarmsStakingPool extends Caller {
 		tvlUsd: number;
 	}): Apr => {
 		const { coinType, price, decimals, tvlUsd } = inputs;
-		if (price <= 0 || tvlUsd <= 0) return 0;
+		if (price <= 0 || tvlUsd <= 0) {
+			return 0;
+		}
 
 		const rewardCoin = this.rewardCoin({ coinType });
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// If the current emission rate is below the actual supply, or if the pool hasn't started or is ended, yield 0
-		if (rewardCoin.emissionRate > rewardCoin.actualRewards) return 0;
+		if (rewardCoin.emissionRate > rewardCoin.actualRewards) {
+			return 0;
+		}
 		if (
 			rewardCoin.emissionStartTimestamp > currentTimestamp ||
 			currentTimestamp > this.stakingPool.emissionEndTimestamp
@@ -267,8 +271,7 @@ export class FarmsStakingPool extends Caller {
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(emissionRateTokens, decimals) * price;
 
-		dayjs.extend(duration);
-		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+		const oneYearMs = 365 * 24 * 60 * 60 * 1000;
 		const rewardsUsdOneYear =
 			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
 
@@ -278,7 +281,7 @@ export class FarmsStakingPool extends Caller {
 			tvlUsd /
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
 
-		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
+		return apr < 0 ? 0 : Number.isNaN(apr) ? 0 : apr;
 	};
 
 	/**
@@ -321,23 +324,17 @@ export class FarmsStakingPool extends Caller {
 			inputs.lockDurationMs > this.stakingPool.maxLockDurationMs
 				? this.stakingPool.maxLockDurationMs
 				: inputs.lockDurationMs < this.stakingPool.minLockDurationMs
-				? this.stakingPool.minLockDurationMs
-				: inputs.lockDurationMs;
+					? this.stakingPool.minLockDurationMs
+					: inputs.lockDurationMs;
 
 		const totalPossibleLockDurationMs =
-			this.stakingPool.maxLockDurationMs -
-			this.stakingPool.minLockDurationMs;
+			this.stakingPool.maxLockDurationMs - this.stakingPool.minLockDurationMs;
 
 		const newMultiplier =
 			1 +
 			((lockDurationMs - this.stakingPool.minLockDurationMs) /
-				(totalPossibleLockDurationMs <= 0
-					? 1
-					: totalPossibleLockDurationMs)) *
-				(Casting.bigIntToFixedNumber(
-					this.stakingPool.maxLockMultiplier
-				) -
-					1);
+				(totalPossibleLockDurationMs <= 0 ? 1 : totalPossibleLockDurationMs)) *
+				(Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier) - 1);
 
 		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
 		return multiplier < FixedUtils.fixedOneB
@@ -372,10 +369,10 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildStakeTxV1(args)
-			: this.useProvider().fetchBuildStakeTxV2({
+			? this.farmsApi().fetchBuildStakeTxV1(args)
+			: this.farmsApi().fetchBuildStakeTxV2({
 					...args,
-			  });
+				});
 	}
 
 	// =========================================================================
@@ -399,8 +396,8 @@ export class FarmsStakingPool extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(),
 		};
 		return this.version() === 1
-			? this.useProvider().buildHarvestRewardsTxV1(args)
-			: this.useProvider().buildHarvestRewardsTxV2(args);
+			? this.farmsApi().buildHarvestRewardsTxV1(args)
+			: this.farmsApi().buildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================
@@ -428,12 +425,8 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV1(
-					args
-			  )
-			: this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV2(
-					args
-			  );
+			? this.farmsApi().buildIncreaseStakingPoolRewardsEmissionsTxV1(args)
+			: this.farmsApi().buildIncreaseStakingPoolRewardsEmissionsTxV2(args);
 	}
 
 	/**
@@ -453,8 +446,50 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildSetStakingPoolMinStakeAmountTxV1(args)
-			: this.useProvider().buildSetStakingPoolMinStakeAmountTxV2(args);
+			? this.farmsApi().buildSetStakingPoolMinStakeAmountTxV1(args)
+			: this.farmsApi().buildSetStakingPoolMinStakeAmountTxV2(args);
+	}
+
+	/**
+	 * Builds a transaction to set the pool's minimum lock duration (ms).
+	 * Owner-cap only. V2 pools only — V1 vaults do not expose this entry.
+	 */
+	public getSetMinLockDurationMsTransaction(inputs: {
+		ownerCapId: ObjectId;
+		lockDurationMs: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		if (this.version() === 1) {
+			throw new Error(
+				"set_min_lock_duration_ms is not supported on V1 staking pools"
+			);
+		}
+		return this.farmsApi().buildSetStakingPoolMinLockDurationMsTxV2({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
+	}
+
+	/**
+	 * Builds a transaction to set the pool's maximum lock duration (ms).
+	 * Owner-cap only. V2 pools only.
+	 */
+	public getSetMaxLockDurationMsTransaction(inputs: {
+		ownerCapId: ObjectId;
+		lockDurationMs: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		if (this.version() === 1) {
+			throw new Error(
+				"set_max_lock_duration_ms is not supported on V1 staking pools"
+			);
+		}
+		return this.farmsApi().buildSetStakingPoolMaxLockDurationMsTxV2({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
 	}
 
 	/**
@@ -468,8 +503,8 @@ export class FarmsStakingPool extends Caller {
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
 	) {
 		return this.version() === 1
-			? this.useProvider().buildGrantOneTimeAdminCapTxV1(inputs)
-			: this.useProvider().buildGrantOneTimeAdminCapTxV2(inputs);
+			? this.farmsApi().buildGrantOneTimeAdminCapTxV1(inputs)
+			: this.farmsApi().buildGrantOneTimeAdminCapTxV2(inputs);
 	}
 
 	// =========================================================================
@@ -500,10 +535,8 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildInitializeStakingPoolRewardTxV1(args)
-			: this.useProvider().fetchBuildInitializeStakingPoolRewardTxV2(
-					args
-			  );
+			? this.farmsApi().fetchBuildInitializeStakingPoolRewardTxV1(args)
+			: this.farmsApi().fetchBuildInitializeStakingPoolRewardTxV2(args);
 	}
 
 	/**
@@ -529,8 +562,8 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildTopUpStakingPoolRewardsTxV1(args)
-			: this.useProvider().fetchBuildTopUpStakingPoolRewardsTxV2(args);
+			? this.farmsApi().fetchBuildTopUpStakingPoolRewardsTxV1(args)
+			: this.farmsApi().fetchBuildTopUpStakingPoolRewardsTxV2(args);
 	}
 
 	/**
@@ -573,8 +606,8 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().buildRemoveStakingPoolRewardTxV1(args)
-			: this.useProvider().buildRemoveStakingPoolRewardTxV2(args);
+			? this.farmsApi().buildRemoveStakingPoolRewardTxV1(args)
+			: this.farmsApi().buildRemoveStakingPoolRewardTxV2(args);
 	}
 
 	// =========================================================================
@@ -596,21 +629,23 @@ export class FarmsStakingPool extends Caller {
 		rewardCoinIndex: number;
 	}) {
 		const { rewardsToEmit, rewardCoinIndex } = inputs;
-		const stakedWithMultiplier =
-			this.stakingPool.stakedAmountWithMultiplier;
+		const stakedWithMultiplier = this.stakingPool.stakedAmountWithMultiplier;
 
-		if (stakedWithMultiplier === BigInt(0)) return;
+		if (stakedWithMultiplier === BigInt(0)) {
+			return;
+		}
 
 		// Distribute proportionally
 		const newRewardsAccumulatedPerShare =
 			(rewardsToEmit * BigInt(1_000_000_000_000_000_000)) /
 			stakedWithMultiplier;
 
-		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
+		if (newRewardsAccumulatedPerShare === BigInt(0)) {
+			return;
+		}
 
-		this.stakingPool.rewardCoins[
-			rewardCoinIndex
-		].rewardsAccumulatedPerShare += newRewardsAccumulatedPerShare;
+		this.stakingPool.rewardCoins[rewardCoinIndex].rewardsAccumulatedPerShare +=
+			newRewardsAccumulatedPerShare;
 	}
 
 	/**
@@ -621,7 +656,7 @@ export class FarmsStakingPool extends Caller {
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
 		const { rewardCoin } = inputs;
-		const currentTimestamp = dayjs().valueOf();
+		const currentTimestamp = Date.now();
 
 		// Calculate the number of rewards that have been emitted since the last time this reward was emitted.
 		const rewardsToEmit = this.calcRewardsEmittedFromTimeTmToTn({
@@ -632,9 +667,7 @@ export class FarmsStakingPool extends Caller {
 		const { rewardsRemaining } = rewardCoin;
 
 		// IMPORTANT: Cap the amount of rewards to emit by the amount of remaining rewards.
-		return rewardsRemaining < rewardsToEmit
-			? rewardsRemaining
-			: rewardsToEmit;
+		return rewardsRemaining < rewardsToEmit ? rewardsRemaining : rewardsToEmit;
 	}
 
 	/**
@@ -668,9 +701,11 @@ export class FarmsStakingPool extends Caller {
 	/**
 	 * Provides access to the farm-specific provider methods for building transactions.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Farms();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly farmsApi = () => {
+		const farms = this.api?.Farms();
+		if (!farms) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return farms;
 	};
 }

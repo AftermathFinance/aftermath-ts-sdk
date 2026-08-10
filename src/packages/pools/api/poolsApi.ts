@@ -1,81 +1,46 @@
-import {
-	TransactionObjectArgument,
-	Transaction,
-} from "@mysten/sui/transactions";
-import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	CoinDecimal,
-	CoinType,
-	CoinsToBalance,
-	CoinsToDecimals,
-	CoinsToPrice,
-} from "../../coin/coinTypes";
-import {
-	Balance,
-	PoolDepositEvent,
-	PoolStats,
-	PoolTradeEvent,
-	PoolWithdrawEvent,
-	Slippage,
-	PoolCreationLpCoinMetadata,
-	PoolName,
-	PoolDataPoint,
-	PoolTradeFee,
-	PoolGraphDataTimeframeKey,
-	Percentage,
-	AnyObjectType,
-	ReferralVaultAddresses,
-	PoolsAddresses,
-	PoolGraphDataTimeframe,
-	PoolCreationCoinInfo,
-	PoolFlatness,
-	PoolWeight,
-	PoolWithdrawFee,
-	PoolDepositFee,
-	PoolCoins,
-	EventsInputs,
-	Url,
-	ApiIndexerEventsBody,
-	ObjectId,
-	SuiAddress,
-	ApiPublishLpCoinBody,
-	PoolLpInfo,
-	CoinGeckoTickerData,
-	CoinGeckoHistoricalTradeData,
-	Timestamp,
-	UniqueId,
-	PoolObject,
-	DaoFeePoolsAddresses,
-	ApiCreatePoolBody,
-	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
-	DaoFeePoolOwnerCapObject,
-} from "../../../types";
-import {
-	DaoFeePoolFieldsOnChain,
-	PoolDepositEventOnChain,
-	PoolFieldsOnChain,
-	PoolTradeEventOnChain,
-	PoolTradeEventOnChainFields,
-	PoolWithdrawEventOnChain,
-} from "./poolsApiCastingTypes";
-import { Casting } from "../../../general/utils/casting";
-import { Pool } from "../pool";
-import { Pools } from "../pools";
-import { Aftermath } from "../../../general/providers";
-import { Helpers } from "../../../general/utils";
-import { Coin } from "../../coin";
-import dayjs, { ManipulateType } from "dayjs";
-import { PoolsApiCasting } from "./poolsApiCasting";
-import duration, { DurationUnitType } from "dayjs/plugin/duration";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
 import {
+	Transaction,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import { fromBase64, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import type {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import { Helpers } from "../../../general/utils";
+import { Casting } from "../../../general/utils/casting";
+import type {
+	AnyObjectType,
+	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	ApiPublishLpCoinBody,
+	Balance,
+	DaoFeePoolOwnerCapObject,
+	DaoFeePoolsAddresses,
+	ObjectId,
+	PoolCreationLpCoinMetadata,
+	PoolDepositFee,
+	PoolFlatness,
+	PoolName,
+	PoolsAddresses,
+	PoolTradeFee,
+	PoolWeight,
+	PoolWithdrawFee,
+	ReferralVaultAddresses,
+	Slippage,
+	SuiAddress,
+	Url,
+} from "../../../types";
+import { Coin } from "../../coin";
+import type {
+	CoinDecimal,
+	CoinsToBalance,
+	CoinType,
+} from "../../coin/coinTypes";
+import type { Pool } from "../pool";
+import { Pools } from "../pools";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -116,8 +81,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			depositV2: "DepositEventV2",
 			withdrawV2: "WithdrawEventV2",
 		},
-		defaultLpCoinIconImageUrl:
-			"https://aftermath.finance/coins/lp/af_lp.svg",
+		defaultLpCoinIconImageUrl: "https://aftermath.finance/coins/lp/af_lp.svg",
 	};
 
 	// =========================================================================
@@ -127,17 +91,17 @@ export class PoolsApi implements MoveErrorsInterface {
 	/**
 	 * Object containing the addresses of various contracts.
 	 */
-	public readonly addresses: {
+	readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
 		daoFeePools?: DaoFeePoolsAddresses;
 	};
-	public readonly objectTypes: {
+	readonly objectTypes: {
 		pool: AnyObjectType;
 		daoFeePool?: AnyObjectType;
 		daoFeePoolOwnerCap?: AnyObjectType;
 	};
-	public readonly eventTypes: {
+	readonly eventTypes: {
 		trade: AnyObjectType;
 		deposit: AnyObjectType;
 		withdraw: AnyObjectType;
@@ -145,7 +109,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		depositV2: AnyObjectType;
 		withdrawV2: AnyObjectType;
 	};
-	public readonly moveErrors: MoveErrors;
+	readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -153,18 +117,17 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	/**
 	 * Creates an instance of PoolsApi.
-	 * @param {AftermathApi} Provider - An instance of AftermathApi.
+	 * @param {AftermathApi} api - An instance of AftermathApi.
 	 * @throws {Error} Throws an error if not all required addresses have been set in AfSdk
 	 */
-	constructor(private readonly Provider: AftermathApi) {
-		const pools = Provider.addresses.pools;
-		const referralVault = Provider.addresses.referralVault;
-		const daoFeePools = Provider.addresses.daoFeePools;
+	constructor(private readonly api: AftermathApi) {
+		const pools = api.addresses.pools;
+		const referralVault = api.addresses.referralVault;
+		const daoFeePools = api.addresses.daoFeePools;
 
-		if (!pools || !referralVault)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+		if (!(pools && referralVault)) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = {
 			pools,
@@ -322,7 +285,7 @@ export class PoolsApi implements MoveErrorsInterface {
 								1: "Version Object Already Created",
 							},
 						},
-				  }
+					}
 				: {}),
 		};
 	}
@@ -335,17 +298,16 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Objects
 	// =========================================================================
 
-	public fetchOwnedDaoFeePoolOwnerCaps = async (
+	fetchOwnedDaoFeePoolOwnerCaps = (
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	): Promise<DaoFeePoolOwnerCapObject[]> => {
 		const { walletAddress } = inputs;
 
-		if (!this.objectTypes.daoFeePoolOwnerCap)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.objectTypes.daoFeePoolOwnerCap) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+		return this.api.Objects().fetchCastObjectsOwnedByAddressOfType({
 			walletAddress,
 			objectType: this.objectTypes.daoFeePoolOwnerCap,
 			objectFromSuiObjectResponse:
@@ -362,7 +324,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the necessary inputs for the trade transaction.
 	 * @returns A `TransactionObjectArgument` representing the trade transaction.
 	 */
-	public tradeTx = (inputs: {
+	tradeTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId;
 		coinInId: ObjectId | TransactionObjectArgument;
@@ -416,7 +378,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary parameters for the deposit transaction.
 	 * @returns A transaction object argument representing the deposit transaction.
 	 */
-	public multiCoinDepositTx = (inputs: {
+	multiCoinDepositTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId;
 		coinIds: ObjectId[] | TransactionObjectArgument[];
@@ -471,7 +433,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the necessary parameters for the transaction.
 	 * @returns A TransactionObjectArgument representing the transaction.
 	 */
-	public multiCoinWithdrawTx = (inputs: {
+	multiCoinWithdrawTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId;
 		lpCoinId: ObjectId | TransactionObjectArgument;
@@ -517,11 +479,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
-						.serialize(
-							expectedAmountsOut.map((amount) =>
-								amount.toString()
-							)
-						)
+						.serialize(expectedAmountsOut.map((amount) => amount.toString()))
 				),
 				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
@@ -539,7 +497,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs.withTransfer - Whether or not to include a transfer.
 	 * @returns An array of transaction objects.
 	 */
-	public allCoinWithdrawTx = (inputs: {
+	allCoinWithdrawTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId;
 		lpCoinId: ObjectId | TransactionObjectArgument;
@@ -580,26 +538,27 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
 	 * @returns A promise that resolves to the result of the transaction publishing.
 	 */
-	public publishLpCoinTx = (inputs: {
+	publishLpCoinTx = (inputs: {
 		tx: Transaction;
 		lpCoinDecimals: CoinDecimal;
 	}) => {
 		const compilations =
 			this.addresses.pools.other?.createLpCoinPackageCompilations;
-		if (!compilations)
+		if (!compilations) {
 			throw new Error(
 				"not all required addresses have been set in provider for lp coin publishing (requires package compilations)"
 			);
+		}
 
 		const { tx, lpCoinDecimals } = inputs;
 		const compiledModulesAndDeps = JSON.parse(compilations[lpCoinDecimals]);
 
 		return tx.publish({
-			modules: compiledModulesAndDeps.modules.map((m: any) =>
-				Array.from(fromB64(m))
+			modules: compiledModulesAndDeps.modules.map((m: string) =>
+				Array.from(fromBase64(m))
 			),
-			dependencies: compiledModulesAndDeps.dependencies.map(
-				(addr: string) => normalizeSuiObjectId(addr)
+			dependencies: compiledModulesAndDeps.dependencies.map((addr: string) =>
+				normalizeSuiObjectId(addr)
 			),
 		});
 	};
@@ -610,7 +569,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
 	 */
-	public createPoolTx = (inputs: {
+	createPoolTx = (inputs: {
 		tx: Transaction;
 		lpCoinType: CoinType;
 		coinsInfo: {
@@ -673,9 +632,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					bcs
 						.vector(bcs.u8())
 						.serialize(
-							Casting.u8VectorFromString(
-								lpCoinMetadata.name.toString()
-							)
+							Casting.u8VectorFromString(lpCoinMetadata.name.toString())
 						)
 				),
 				tx.pure(
@@ -690,9 +647,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.pure(
 					bcs
 						.vector(bcs.u8())
-						.serialize(
-							Casting.u8VectorFromString(lpCoinDescription)
-						)
+						.serialize(Casting.u8VectorFromString(lpCoinDescription))
 				),
 				tx.pure(
 					bcs
@@ -700,9 +655,7 @@ export class PoolsApi implements MoveErrorsInterface {
 						.serialize(Casting.u8VectorFromString(lpCoinIconUrl))
 				), // lp_icon_url
 				tx.pure(
-					bcs
-						.vector(bcs.u64())
-						.serialize(coinsInfo.map((coin) => coin.weight))
+					bcs.vector(bcs.u64()).serialize(coinsInfo.map((coin) => coin.weight))
 				),
 				tx.pure.u64(inputs.poolFlatness),
 				tx.pure(
@@ -726,17 +679,13 @@ export class PoolsApi implements MoveErrorsInterface {
 						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
 				),
 				...coinsInfo.map((coin) =>
-					typeof coin.coinId === "string"
-						? tx.object(coin.coinId)
-						: coin.coinId
+					typeof coin.coinId === "string" ? tx.object(coin.coinId) : coin.coinId
 				),
 				tx.pure(
 					bcs
 						.option(bcs.vector(bcs.u8()))
 						.serialize(
-							decimals.includes(undefined)
-								? undefined
-								: (decimals as number[])
+							decimals.includes(undefined) ? undefined : (decimals as number[])
 						)
 				), // decimals
 				tx.pure.bool(inputs.respectDecimals), // respect_decimals
@@ -750,7 +699,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the transaction block and LP coin type.
 	 * @returns The pool object ID.
 	 */
-	public poolObjectIdForLpCoinTypeTx = (inputs: {
+	poolObjectIdForLpCoinTypeTx = (inputs: {
 		tx: Transaction;
 		lpCoinType: CoinType;
 	}) => {
@@ -767,7 +716,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public daoFeePoolNewTx = (inputs: {
+	daoFeePoolNewTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId | TransactionObjectArgument;
 		feeBps: bigint;
@@ -775,10 +724,9 @@ export class PoolsApi implements MoveErrorsInterface {
 		lpCoinType: CoinType;
 	}) /* (DaoFeePool, OwnerCap) */ => {
 		const { tx, poolId } = inputs;
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -796,7 +744,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public daoFeePoolUpdateFeeBpsTx = (inputs: {
+	daoFeePoolUpdateFeeBpsTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolOwnerCapId: ObjectId;
 		daoFeePoolId: ObjectId;
@@ -804,10 +752,9 @@ export class PoolsApi implements MoveErrorsInterface {
 		lpCoinType: CoinType;
 	}) => {
 		const { tx } = inputs;
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -825,7 +772,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public daoFeePoolUpdateFeeRecipientTx = (inputs: {
+	daoFeePoolUpdateFeeRecipientTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolOwnerCapId: ObjectId;
 		daoFeePoolId: ObjectId;
@@ -833,10 +780,9 @@ export class PoolsApi implements MoveErrorsInterface {
 		lpCoinType: CoinType;
 	}) => {
 		const { tx } = inputs;
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -859,7 +805,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the necessary inputs for the trade transaction.
 	 * @returns A `TransactionObjectArgument` representing the trade transaction.
 	 */
-	public daoFeePoolTradeTx = (inputs: {
+	daoFeePoolTradeTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolId: ObjectId;
 		coinInId: ObjectId | TransactionObjectArgument;
@@ -880,10 +826,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			slippage,
 		} = inputs;
 
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -913,7 +858,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary parameters for the deposit transaction.
 	 * @returns A transaction object argument representing the deposit transaction.
 	 */
-	public daoFeePoolMultiCoinDepositTx = (inputs: {
+	daoFeePoolMultiCoinDepositTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolId: ObjectId;
 		coinIds: ObjectId[] | TransactionObjectArgument[];
@@ -932,10 +877,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			slippage,
 		} = inputs;
 
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		const poolSize = coinTypes.length;
 
@@ -973,7 +917,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs.coinTypes - An array of coin types.
 	 * @returns An array of transaction objects.
 	 */
-	public daoFeePoolAllCoinWithdrawTx = (inputs: {
+	daoFeePoolAllCoinWithdrawTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolId: ObjectId;
 		lpCoinId: ObjectId | TransactionObjectArgument;
@@ -982,10 +926,9 @@ export class PoolsApi implements MoveErrorsInterface {
 	}): TransactionObjectArgument[] => {
 		const { tx, daoFeePoolId, lpCoinId, coinTypes, lpCoinType } = inputs;
 
-		if (!this.addresses.daoFeePools)
-			throw new Error(
-				"dao fee pool addresses have not been set in provider"
-			);
+		if (!this.addresses.daoFeePools) {
+			throw new Error("dao fee pool addresses have not been set in provider");
+		}
 
 		const poolSize = coinTypes.length;
 
@@ -1026,7 +969,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
 	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
-	public fetchBuildTradeTx = async (inputs: {
+	fetchBuildTradeTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		coinInType: CoinType;
@@ -1050,11 +993,12 @@ export class PoolsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
 		const amountOut = pool.getTradeAmountOut({
 			coinInAmount,
@@ -1063,7 +1007,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			referral: referrer !== undefined,
 		});
 
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const coinInId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: coinInType,
@@ -1100,7 +1044,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public fetchAddTradeTx = async (inputs: {
+	fetchAddTradeTx = (inputs: {
 		tx: Transaction;
 		coinInId: ObjectId | TransactionObjectArgument;
 		coinInType: CoinType;
@@ -1109,7 +1053,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		slippage: Slippage;
 		pool: Pool;
 		referrer?: SuiAddress;
-	}): Promise<TransactionObjectArgument> /* Coin */ => {
+	}): TransactionObjectArgument /* Coin */ => {
 		const {
 			tx,
 			coinInId,
@@ -1151,7 +1095,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
 	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
-	public fetchBuildDepositTx = async (inputs: {
+	fetchBuildDepositTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		amountsIn: CoinsToBalance;
@@ -1171,11 +1115,12 @@ export class PoolsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsIn);
@@ -1188,7 +1133,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		// TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
+		const coinIds = await this.api.Coin().fetchCoinsWithAmountTx({
 			...inputs,
 			tx,
 			coinTypes,
@@ -1234,7 +1179,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
 	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
-	public fetchBuildWithdrawTx = async (inputs: {
+	fetchBuildWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		amountsOutDirection: CoinsToBalance;
@@ -1254,11 +1199,12 @@ export class PoolsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
 		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
 			lpCoinAmountIn: lpCoinAmount,
@@ -1273,7 +1219,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsOut);
 
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const lpCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: pool.pool.lpCoinType,
@@ -1289,7 +1235,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				poolId: pool.pool.objectId,
 				lpCoinType: pool.pool.lpCoinType,
 				expectedAmountsOut: coinAmounts,
-				coinTypes: coinTypes,
+				coinTypes,
 				lpCoinId,
 				slippage,
 				withTransfer: true,
@@ -1304,7 +1250,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
 	 * @returns A promise that resolves to a Transaction object.
 	 */
-	public fetchBuildAllCoinWithdrawTx = async (inputs: {
+	fetchBuildAllCoinWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		lpCoinAmount: Balance;
@@ -1315,13 +1261,14 @@ export class PoolsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const lpCoinId = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: pool.pool.lpCoinType,
@@ -1361,9 +1308,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - The input parameters for the transaction.
 	 * @returns The built transaction block.
 	 */
-	public buildPublishLpCoinTx = (
-		inputs: ApiPublishLpCoinBody
-	): Transaction => {
+	buildPublishLpCoinTx = (inputs: ApiPublishLpCoinBody): Transaction => {
 		const { lpCoinDecimals } = inputs;
 
 		const tx = new Transaction();
@@ -1375,54 +1320,54 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public buildDaoFeePoolUpdateFeeBpsTx =
-		Helpers.transactions.createBuildTxFunc(this.daoFeePoolUpdateFeeBpsTx);
+	buildDaoFeePoolUpdateFeeBpsTx = Helpers.transactions.createBuildTxFunc(
+		this.daoFeePoolUpdateFeeBpsTx
+	);
 
-	public buildDaoFeePoolUpdateFeeRecipientTx =
-		Helpers.transactions.createBuildTxFunc(
-			this.daoFeePoolUpdateFeeRecipientTx
-		);
+	buildDaoFeePoolUpdateFeeRecipientTx = Helpers.transactions.createBuildTxFunc(
+		this.daoFeePoolUpdateFeeRecipientTx
+	);
 
 	// =========================================================================
 	//  Event Types
 	// =========================================================================
 
-	private tradeEventType = () =>
+	private readonly tradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.swap
 		);
 
-	private depositEventType = () =>
+	private readonly depositEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.deposit
 		);
 
-	private withdrawEventType = () =>
+	private readonly withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.withdraw
 		);
 
-	private tradeV2EventType = () =>
+	private readonly tradeV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.swapV2
 		);
 
-	private depositV2EventType = () =>
+	private readonly depositV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.depositV2
 		);
 
-	private withdrawV2EventType = () =>
+	private readonly withdrawV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
 			PoolsApi.constants.moduleNames.events,

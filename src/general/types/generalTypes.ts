@@ -1,10 +1,20 @@
-import {
+import type {
 	DynamicFieldInfo,
 	EventId,
 	SuiTransactionBlockResponse,
-} from "@mysten/sui/client";
-import { SuiNetwork } from "./suiTypes";
-import { Transaction } from "@mysten/sui/transactions";
+} from "@mysten/sui/jsonRpc";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { SuiNetwork } from "./suiTypes";
+
+/**
+ * An object type with no properties.
+ */
+export type EmptyObject = Record<string, never>;
+
+/**
+ * The union of a const object's value types.
+ */
+export type ValueOf<T> = T[keyof T];
 
 /**
  * Represents a token or currency balance in the system, defined as a bigint.
@@ -42,6 +52,11 @@ export type Slippage = number;
  * Represents an unscaled percentage (e.g., 0.01 = 1%).
  */
 export type Percentage = number;
+
+/**
+ * Represents basis points, expressed as an integer hundredth of a percent (e.g., 2000 = 20%, 50 = 0.5%).
+ */
+export type Bps = number;
 
 /**
  * Annual percentage rate (APR), expressed as a `number` (e.g., 0.01 = 1%).
@@ -387,13 +402,27 @@ export interface IndexerDataWithCursorQueryParams {
  */
 export interface CallerConfig {
 	/**
-	 * The target Sui network (e.g., "MAINNET", "TESTNET").
+	 * The target Sui network (e.g., "MAINNET", "TESTNET"). Determines the
+	 * default API host when `baseUrl` is not supplied.
 	 */
 	network?: SuiNetwork;
+	/**
+	 * Explicit override for the API host (e.g. `"http://localhost:8080"`).
+	 * Takes precedence over the network-derived default. Use this to point
+	 * the SDK at a custom or local backend.
+	 */
+	baseUrl?: string;
 	/**
 	 * Access token used for authenticated requests, if required.
 	 */
 	accessToken?: string;
+	/**
+	 * URL path segment placed between the host and the package prefix when
+	 * building API call URLs (`{host}/{apiEndpoint}/{package}/...`).
+	 * Defaults to `"api"`. Override only when targeting a backend that
+	 * mounts the Aftermath API under a different path.
+	 */
+	apiEndpoint?: string;
 }
 
 export interface ApiTransactionResponse {

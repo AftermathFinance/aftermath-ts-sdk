@@ -1,0 +1,26 @@
+{
+	"data": {
+		"objectId": "0xc7a4d84c92f25444987dafe68727c797e0d8eb1c43f4e7c96741326472963788",
+		"version": "524047132",
+		"digest": "FcTpyVfjTKC3HbxY7o5Vq3Wv3zkY8U8tAzHjhYiL9Vmf",
+		"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::afterburner_vault::OwnerCap",
+		"owner": {
+			"AddressOwner": "0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::afterburner_vault::OwnerCap",
+			"hasPublicTransfer": true,
+			"fields": {
+				"afterburner_vault_id": "0xbcd906d21ffdda84f9121b3227b22b74edd435326764123f8613ee538d13eb86",
+				"id": {
+					"id": "0xc7a4d84c92f25444987dafe68727c797e0d8eb1c43f4e7c96741326472963788"
+				}
+			}
+		}
+	}
+}

@@ -2,11 +2,11 @@
 	"include": ["src/**/*"],
 	"exclude": ["node_modules"],
 	"compilerOptions": {
-		"target": "ES6",
+		"target": "ES2021",
 		"declaration": true,
 		"outDir": "dist",
 		"declarationMap": true,
-		"moduleResolution": "Node16",
+		"moduleResolution": "Bundler",
 		"lib": ["es2021", "dom"],
 		"skipLibCheck": true,
 		"strict": true,
@@ -14,6 +14,7 @@
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"module": "NodeNext"
+		"module": "ESNext",
+		"noEmit": true
 	}
 }

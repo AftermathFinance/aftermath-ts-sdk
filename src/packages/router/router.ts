@@ -1,22 +1,19 @@
-import {
-	ApiRouterCompleteTradeRouteBody,
-	ApiRouterTransactionForCompleteTradeRouteBody,
-	CoinType,
-	RouterCompleteTradeRoute,
-	SuiNetwork,
-	ApiRouterTradeEventsBody,
-	RouterTradeEvent,
-	Balance,
-	ApiRouterPartialCompleteTradeRouteBody,
+import { Transaction } from "@mysten/sui/transactions";
+import { Caller } from "../../general/utils/caller";
+import type {
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
-	ModuleName,
-	Slippage,
-	ApiIndexerEventsBody,
+	ApiRouterCompleteTradeRouteBody,
+	ApiRouterPartialCompleteTradeRouteBody,
+	ApiRouterTradeEventsBody,
+	ApiRouterTransactionForCompleteTradeRouteBody,
+	Balance,
 	CallerConfig,
+	CoinType,
+	RouterCompleteTradeRoute,
+	RouterTradeEvent,
+	Slippage,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * The `Router` class provides a collection of methods to interact with Aftermath's
@@ -27,7 +24,7 @@ import { Transaction } from "@mysten/sui/transactions";
  * @example
  * ```typescript
  * // Create provider
- * const router = (new Aftermath("MAINNET")).Router();
+ * const router = (await Aftermath.create({ network: "MAINNET" })).Router();
  * // Retrieve 24h volume
  * const volume24h = await router.getVolume24hrs();
  * // Get supported coins
@@ -64,8 +61,7 @@ export class Router extends Caller {
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const router = afSdk.Router();
 	 * ```

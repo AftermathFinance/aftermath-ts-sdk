@@ -1,82 +1,86 @@
-import { Caller } from "../../general/utils/caller";
 import {
-	ApiPerpetualsDepositCollateralBody,
-	ApiPerpetualsLimitOrderBody,
-	ApiPerpetualsMarketOrderBody,
-	ApiPerpetualsScaleOrderBody,
-	ApiPerpetualsPreviewPlaceOrderResponse,
-	ApiPerpetualsWithdrawCollateralBody,
-	Balance,
-	PerpetualsAccountCap,
-	PerpetualsAccountObject,
-	PerpetualsMarketId,
-	PerpetualsOrderId,
-	PerpetualsPosition,
-	SdkPerpetualsPlaceLimitOrderInputs,
-	SdkPerpetualsPlaceMarketOrderInputs,
-	SuiAddress,
-	ApiPerpetualsTransferCollateralBody,
-	ObjectId,
-	ApiPerpetualsCancelOrdersBody,
-	Percentage,
-	ApiDataWithCursorBody,
-	Timestamp,
-	ApiPerpetualsAccountCollateralHistoryResponse,
-	ApiPerpetualsAccountOrderHistoryResponse,
-	PerpetualsAccountId,
+	Transaction,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
+import { Casting, Helpers } from "../../general/utils";
+import { Caller } from "../../general/utils/caller";
+import type {
 	ApiPerpetualsAccountCollateralHistoryBody,
+	ApiPerpetualsAccountCollateralHistoryResponse,
+	ApiPerpetualsAccountMarginHistoryBody,
+	ApiPerpetualsAccountMarginHistoryResponse,
 	ApiPerpetualsAccountOrderHistoryBody,
-	ApiPerpetualsPreviewCancelOrdersBody,
-	ApiPerpetualsPreviewCancelOrdersResponse,
+	ApiPerpetualsAccountOrderHistoryResponse,
 	// ApiPerpetualsPreviewReduceOrderBody,
 	// ApiPerpetualsPreviewReduceOrderResponse,
 	ApiPerpetualsAllocateCollateralBody,
+	ApiPerpetualsCancelAndPlaceOrdersBody,
+	ApiPerpetualsCancelOrdersBody,
+	ApiPerpetualsCancelStopOrdersBody,
+	ApiPerpetualsCancelTwapOrdersBody,
+	ApiPerpetualsCreateTwapOrdersBody,
 	ApiPerpetualsDeallocateCollateralBody,
+	ApiPerpetualsDepositCollateralBody,
+	ApiPerpetualsEditStopOrdersBody,
+	ApiPerpetualsEditTwapOrdersBody,
+	ApiPerpetualsGrantAgentWalletTxBody,
+	ApiPerpetualsLimitOrderBody,
+	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsPlaceSlTpOrdersBody,
+	ApiPerpetualsPlaceStopOrdersBody,
+	ApiPerpetualsPreviewCancelOrdersBody,
+	ApiPerpetualsPreviewCancelOrdersResponse,
+	ApiPerpetualsPreviewEditCollateralBody,
+	ApiPerpetualsPreviewEditCollateralResponse,
+	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsPreviewPlaceMarketOrderBody,
+	ApiPerpetualsPreviewPlaceOrderResponse,
+	ApiPerpetualsPreviewPlaceScaleOrderBody,
 	// ApiPerpetualsReduceOrderBody,
 	ApiPerpetualsPreviewSetLeverageBody,
 	ApiPerpetualsPreviewSetLeverageResponse,
+	ApiPerpetualsRevokeAgentWalletTxBody,
+	ApiPerpetualsScaleOrderBody,
 	ApiPerpetualsSetLeverageTxBody,
-	CallerConfig,
-	SdkPerpetualsCancelOrdersPreviewInputs,
 	ApiPerpetualsStopOrderDatasBody,
-	PerpetualsStopOrderData,
-	ApiPerpetualsCancelStopOrdersBody,
-	ApiPerpetualsPlaceStopOrdersBody,
-	SdkPerpetualsPlaceStopOrdersInputs,
-	ApiPerpetualsEditStopOrdersBody,
-	SdkPerpetualsPlaceSlTpOrdersInputs,
-	ApiPerpetualsPlaceSlTpOrdersBody,
+	ApiPerpetualsStopOrderDatasResponse,
+	ApiPerpetualsTransferCollateralBody,
+	ApiPerpetualsTwapOrderDatasBody,
+	ApiPerpetualsTwapOrderDatasResponse,
+	ApiPerpetualsWithdrawCollateralBody,
 	// ApiPerpetualsAccountMarginHistoryBody,
 	ApiPerpetualsWithdrawCollateralResponse,
-	SdkPerpetualsPlaceMarketOrderPreviewInputs,
+	ApiTransactionResponse,
+	Balance,
+	CallerConfig,
+	ObjectId,
+	PerpetualsAccountCap,
+	PerpetualsAccountId,
+	PerpetualsAccountObject,
+	PerpetualsMarketId,
+	PerpetualsOrderData,
+	PerpetualsOrderId,
+	PerpetualsPartialVaultCap,
+	PerpetualsPosition,
+	PerpetualsSponsorConfig,
+	PerpetualsStopOrderData,
+	SdkPerpetualsCancelAndPlaceOrdersInputs,
+	SdkPerpetualsCancelOrdersPreviewInputs,
+	SdkPerpetualsCancelTwapOrdersInputs,
+	SdkPerpetualsCreateTwapOrdersInputs,
+	SdkPerpetualsEditTwapOrdersInputs,
+	SdkPerpetualsPlaceLimitOrderInputs,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	SdkPerpetualsPlaceMarketOrderInputs,
+	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 	SdkPerpetualsPlaceScaleOrderInputs,
 	SdkPerpetualsPlaceScaleOrderPreviewInputs,
-	SdkPerpetualsCancelAndPlaceOrdersInputs,
-	ApiPerpetualsCancelAndPlaceOrdersBody,
-	ApiPerpetualsPreviewPlaceMarketOrderBody,
-	ApiPerpetualsPreviewPlaceLimitOrderBody,
-	ApiPerpetualsPreviewPlaceScaleOrderBody,
-	ApiTransactionResponse,
-	ApiPerpetualsPreviewEditCollateralResponse,
-	ApiPerpetualsPreviewEditCollateralBody,
-	ApiPerpetualsAccountMarginHistoryBody,
-	PerpetualsVaultCap,
-	PerpetualsPartialVaultCap,
-	ApiPerpetualsAccountMarginHistoryResponse,
-	ApiPerpetualsStopOrderDatasResponse,
-	ApiPerpetualsGrantAgentWalletTxBody,
-	ApiPerpetualsRevokeAgentWalletTxBody,
-	PerpetualsOrderData,
-	PerpetualsSponsorConfig,
+	SdkPerpetualsPlaceSlTpOrdersInputs,
+	SdkPerpetualsPlaceStopOrdersInputs,
+	SuiAddress,
 } from "../../types";
-import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { AftermathApi } from "../../general/providers";
 
 /**
  * Note on “refreshing” account state:
@@ -114,8 +118,7 @@ import { AftermathApi } from "../../general/providers";
  * fetch all required on-chain data and wrap it for you:
  *
  * ```ts
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init();
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const perps = afSdk.Perpetuals();
  * const [accountCap] = await perps.getOwnedAccountCaps({
@@ -156,7 +159,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param accountCap - Account cap or partial vault cap object containing
 	 *   ownership and collateral metadata.
 	 * @param config - Optional {@link CallerConfig} (network, auth, etc.).
-	 * @param Provider - Optional shared {@link AftermathApi} provider instance
+	 * @param api - Optional shared {@link AftermathApi} provider instance
 	 *   used to derive serialized transaction kinds (`txKind`) from
 	 *   {@link Transaction} objects.
 	 */
@@ -166,10 +169,9 @@ export class PerpetualsAccount extends Caller {
 			| PerpetualsAccountCap
 			| PerpetualsPartialVaultCap,
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
-		const vaultId =
-			"vaultId" in accountCap ? accountCap.vaultId : undefined;
+		const vaultId = "vaultId" in accountCap ? accountCap.vaultId : undefined;
 		super(config, "perpetuals");
 		this.vaultId = vaultId;
 	}
@@ -225,10 +227,11 @@ export class PerpetualsAccount extends Caller {
 	) {
 		const { tx, ...otherInputs } = inputs;
 
-		if ("vaultId" in this.accountCap)
+		if ("vaultId" in this.accountCap) {
 			throw new Error(
 				"`getDepositCollateralTx` not supported by vault accounts, please use method `getAdminDepositTx` on class `PerpetualsVault` instead"
 			);
+		}
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsDepositCollateralBody,
@@ -241,11 +244,9 @@ export class PerpetualsAccount extends Caller {
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountId: this.accountCap.accountId,
 				accountCapId: this.accountCap.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -287,10 +288,11 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { tx: txFromInputs, ...otherInputs } = inputs;
 
-		if (this.vaultId)
+		if (this.vaultId) {
 			throw new Error(
 				"this method is not supported for vaults, please use method `getAdminWithdrawTx` on class `PerpetualsVault` instead"
 			);
+		}
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsWithdrawCollateralBody,
@@ -301,11 +303,9 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				accountId: this.accountCap.accountId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: txFromInputs ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: txFromInputs ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -345,16 +345,16 @@ export class PerpetualsAccount extends Caller {
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 				walletAddress: this.ownerAddress(),
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx: tx ?? new Transaction() }
-				),
+				txKind: await this.api
+					?.Transactions()
+					.fetchBase64TxKindFromTx({ tx: tx ?? new Transaction() }),
 			},
 			undefined,
 			{
@@ -394,16 +394,16 @@ export class PerpetualsAccount extends Caller {
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 				walletAddress: this.ownerAddress(),
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx: tx ?? new Transaction() }
-				),
+				txKind: await this.api
+					?.Transactions()
+					.fetchBase64TxKindFromTx({ tx: tx ?? new Transaction() }),
 			},
 			undefined,
 			{
@@ -432,10 +432,11 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { tx, ...otherInputs } = inputs;
 
-		if ("vaultId" in this.accountCap)
+		if ("vaultId" in this.accountCap) {
 			throw new Error(
 				"`getTransferCollateralTx` not supported by vault accounts"
 			);
+		}
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsTransferCollateralBody,
@@ -448,9 +449,9 @@ export class PerpetualsAccount extends Caller {
 				walletAddress: this.ownerAddress(),
 				fromAccountId: this.accountCap.accountId,
 				fromAccountCapId: this.accountCap.objectId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx: tx ?? new Transaction() }
-				),
+				txKind: await this.api
+					?.Transactions()
+					.fetchBase64TxKindFromTx({ tx: tx ?? new Transaction() }),
 			},
 			undefined,
 			{
@@ -514,20 +515,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-market-order",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 				// hasPosition:
 				// 	this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -570,20 +569,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-limit-order",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 				// hasPosition:
 				// 	this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -620,20 +617,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-scale-order",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -668,20 +663,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/cancel-and-place-orders",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -725,24 +718,21 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsCancelOrdersBody,
 			ApiTransactionResponse
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"transactions/cancel-orders",
+			`${this.vaultId ? "vault" : "account"}/transactions/cancel-orders`,
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -776,20 +766,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/cancel-stop-orders",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -829,20 +817,18 @@ export class PerpetualsAccount extends Caller {
 				"transactions/place-stop-orders",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -873,7 +859,9 @@ export class PerpetualsAccount extends Caller {
 		const { tx: txFromInputs, marketId, ...otherInputs } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
-		if (!position) throw new Error("you have no position for this market");
+		if (!position) {
+			throw new Error("you have no position for this market");
+		}
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.ownerAddress());
@@ -887,20 +875,18 @@ export class PerpetualsAccount extends Caller {
 			{
 				...otherInputs,
 				marketId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 				positionSide: Perpetuals.positionSide({
 					baseAssetAmount: position.baseAssetAmount,
 				}),
@@ -948,26 +934,180 @@ export class PerpetualsAccount extends Caller {
 				"transactions/edit-stop-orders",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
 				txKind: true,
 			}
 		);
+	}
+
+	/**
+	 * Build a `create-twap-orders` transaction for this account.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsCreateTwapOrdersInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCreateTwapOrdersTx(
+		inputs: SdkPerpetualsCreateTwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/create-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build an `edit-twap-orders` transaction for this account.
+	 * `newTwapOrders` maps each TWAP order object id to the edit to apply.
+	 *
+	 * @param inputs.newTwapOrders - Map of TWAP order id to the edit to apply.
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getEditTwapOrdersTx(inputs: SdkPerpetualsEditTwapOrdersInputs) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsEditTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/edit-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `cancel-twap-orders` transaction for this account.
+	 * This cancels TWAP order objects by their object IDs.
+	 *
+	 * @param inputs.tx - Optional transaction to extend.
+	 * @param inputs.twapOrderIds - Array of TWAP order object IDs to cancel.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCancelTwapOrdersTx(
+		inputs: SdkPerpetualsCancelTwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCancelTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Fetch TWAP-order data for this account, using an off-chain signed payload.
+	 *
+	 * @param inputs.bytes - Serialized message that was signed.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @param inputs.marketIds - Optional subset of markets to filter results by.
+	 *
+	 * @returns {@link ApiPerpetualsTwapOrderDatasResponse} containing `twapOrderDatas`.
+	 */
+	public async getTwapOrderDatas(inputs: {
+		bytes: string;
+		signature: string;
+		marketIds?: PerpetualsMarketId[];
+	}) {
+		const { bytes, signature, marketIds } = inputs;
+
+		return await this.fetchApi<
+			ApiPerpetualsTwapOrderDatasResponse,
+			ApiPerpetualsTwapOrderDatasBody
+		>(`${this.vaultId ? "vault" : "account"}/twap-order-datas`, {
+			bytes,
+			signature,
+			walletAddress: this.ownerAddress(),
+			marketIds: marketIds ?? [],
+			...("vaultId" in this.accountCap
+				? {
+						vaultId: this.accountCap.vaultId,
+					}
+				: {
+						accountId: this.accountCap.accountId,
+					}),
+		});
 	}
 
 	// public async getReduceOrderTx(inputs: {
@@ -987,7 +1127,7 @@ export class PerpetualsAccount extends Caller {
 	// 			"transactions/reduce-order",
 	// 		{
 	// 			...otherInputs,
-	// 			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+	// 			txKind: await this.api?.Transactions().fetchBase64TxKindFromTx(
 	// 				{ tx }
 	// 			),
 	// 			walletAddress: this.ownerAddress(),
@@ -1039,24 +1179,21 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsSetLeverageTxBody,
 			ApiTransactionResponse
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"transactions/set-leverage",
+			`${this.vaultId ? "vault" : "account"}/transactions/set-leverage`,
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 				walletAddress: this.ownerAddress(),
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			undefined,
 			{
@@ -1121,9 +1258,7 @@ export class PerpetualsAccount extends Caller {
 	} {
 		return {
 			action: "GET_STOP_ORDERS",
-			account_id: this.accountCap.accountId
-				.toString()
-				.replaceAll("n", ""),
+			account_id: this.accountCap.accountId.toString().replaceAll("n", ""),
 			clearing_house_ids: inputs?.marketIds ?? [],
 		};
 	}
@@ -1186,20 +1321,19 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceMarketOrderBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"previews/place-market-order",
+			`${this.vaultId ? "vault" : "account"}/previews/place-market-order`,
 			{
 				...inputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1227,20 +1361,19 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceLimitOrderBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"previews/place-limit-order",
+			`${this.vaultId ? "vault" : "account"}/previews/place-limit-order`,
 			{
 				...inputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1269,20 +1402,19 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceScaleOrderBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"previews/place-scale-order",
+			`${this.vaultId ? "vault" : "account"}/previews/place-scale-order`,
 			{
 				...inputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1311,28 +1443,29 @@ export class PerpetualsAccount extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<ApiPerpetualsPreviewCancelOrdersResponse> {
 		// NOTE: should this case return an error instead ?
-		if (Object.keys(inputs.marketIdsToData).length <= 0)
+		if (Object.keys(inputs.marketIdsToData).length <= 0) {
 			return {
 				marketIdsToData: {},
 			};
+		}
 
 		return this.fetchApi<
 			ApiPerpetualsPreviewCancelOrdersResponse,
 			ApiPerpetualsPreviewCancelOrdersBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` + "previews/cancel-orders",
+			`${this.vaultId ? "vault" : "account"}/previews/cancel-orders`,
 			{
 				...inputs,
 				...("vaultId" in this.accountCap
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1412,7 +1545,7 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewSetLeverageResponse,
 			ApiPerpetualsPreviewSetLeverageBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` + "previews/set-leverage",
+			`${this.vaultId ? "vault" : "account"}/previews/set-leverage`,
 			{
 				marketId,
 				leverage,
@@ -1420,12 +1553,12 @@ export class PerpetualsAccount extends Caller {
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1470,8 +1603,7 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewEditCollateralResponse,
 			ApiPerpetualsPreviewEditCollateralBody
 		>(
-			`${this.vaultId ? "vault" : "account"}/` +
-				"previews/edit-collateral",
+			`${this.vaultId ? "vault" : "account"}/previews/edit-collateral`,
 			{
 				marketId,
 				collateralChange,
@@ -1479,12 +1611,12 @@ export class PerpetualsAccount extends Caller {
 					? {
 							vaultId: this.accountCap.vaultId,
 							accountId: undefined,
-					  }
+						}
 					: {
 							accountId: this.accountCap.accountId,
 							accountCapId: this.accountCap.objectId,
 							vaultId: undefined,
-					  }),
+						}),
 			},
 			abortSignal
 		);
@@ -1552,7 +1684,7 @@ export class PerpetualsAccount extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsStopOrderDatasResponse,
 			ApiPerpetualsStopOrderDatasBody
-		>(`${this.vaultId ? "vault" : "account"}/` + "stop-order-datas", {
+		>(`${this.vaultId ? "vault" : "account"}/stop-order-datas`, {
 			bytes,
 			signature,
 			walletAddress: this.ownerAddress(),
@@ -1561,12 +1693,12 @@ export class PerpetualsAccount extends Caller {
 				? {
 						vaultId: this.accountCap.vaultId,
 						accountId: undefined,
-				  }
+					}
 				: {
 						accountId: this.accountCap.accountId,
 						accountCapId: this.accountCap.objectId,
 						vaultId: undefined,
-				  }),
+					}),
 		});
 	}
 
@@ -1649,7 +1781,7 @@ export class PerpetualsAccount extends Caller {
 	// public async getOwnedWithdrawRequests() {
 	// 	return new Perpetuals(
 	// 		this.config,
-	// 		this.Provider
+	// 		this.api
 	// 	).getOwnedWithdrawRequests({
 	// 		walletAddress: this.ownerAddress(),
 	// 	});
@@ -1675,10 +1807,11 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { tx, recipientAddress } = inputs;
 
-		if ("vaultId" in this.accountCap)
+		if ("vaultId" in this.accountCap) {
 			throw new Error(
 				"`getGrantAgentWalletTx` not supported by vault accounts"
 			);
+		}
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsGrantAgentWalletTxBody,
@@ -1688,11 +1821,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				recipientAddress,
 				accountId: this.accountCap.accountId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -1717,10 +1848,11 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { tx, accountCapId } = inputs;
 
-		if ("vaultId" in this.accountCap)
+		if ("vaultId" in this.accountCap) {
 			throw new Error(
 				"`getRevokeAgentWalletTx` not supported by vault accounts"
 			);
+		}
 
 		return this.fetchApiTxObject<
 			ApiPerpetualsRevokeAgentWalletTxBody,
@@ -1730,11 +1862,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				accountCapId,
 				accountId: this.accountCap.accountId,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{
@@ -1760,7 +1890,7 @@ export class PerpetualsAccount extends Caller {
 			return this.account.positions.find(
 				(pos) => pos.marketId === inputs.marketId
 			)!;
-		} catch (e) {
+		} catch (_e) {
 			return undefined;
 		}
 	}
@@ -1834,7 +1964,9 @@ export class PerpetualsAccount extends Caller {
 		for (const limitOrderId of Helpers.uniqueArray(
 			stopOrderDatas.map((stopOrder) => stopOrder.slTp?.limitOrderId)
 		)) {
-			if (limitOrderId === undefined) continue;
+			if (limitOrderId === undefined) {
+				continue;
+			}
 
 			const { fullSlTpOrder, partialSlTpOrders } =
 				this.slTpStopOrderDatasForLimitOrder({
@@ -1866,20 +1998,24 @@ export class PerpetualsAccount extends Caller {
 		const { marketId, stopOrderDatas } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
-		if (!position) return undefined;
+		if (!position) {
+			return undefined;
+		}
 
 		const { fullSlTpOrder, partialSlTpOrders } =
 			this.slTpStopOrderDatasForPosition(inputs);
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
-				!stopOrder.limitOrder &&
-				![
-					...(fullSlTpOrder ? [fullSlTpOrder] : []),
-					...(partialSlTpOrders ?? []),
-				]
-					.map((slTpOrder) => JSON.stringify(slTpOrder))
-					.includes(JSON.stringify(stopOrder))
+				!(
+					stopOrder.limitOrder ||
+					[
+						...(fullSlTpOrder ? [fullSlTpOrder] : []),
+						...(partialSlTpOrders ?? []),
+					]
+						.map((slTpOrder) => JSON.stringify(slTpOrder))
+						.includes(JSON.stringify(stopOrder))
+				)
 		);
 		return stopOrders.length <= 0 ? undefined : stopOrders;
 	}
@@ -1893,7 +2029,7 @@ export class PerpetualsAccount extends Caller {
 	 * - Market ID matches the input market.
 	 * - `slTp` field is present.
 	 * - Order side is opposite of the position side.
-	 * - At least a `stopLossIndexPrice` or `takeProfitIndexPrice` is set.
+	 * - At least a `stopLossPrice` or `takeProfitPrice` is set.
 	 *
 	 * Notes on matching:
 	 * - The side comparison uses the current position side derived from the account snapshot.
@@ -1923,7 +2059,7 @@ export class PerpetualsAccount extends Caller {
 			};
 		}
 
-		const side = !position ? undefined : Perpetuals.positionSide(position);
+		const side = position ? Perpetuals.positionSide(position) : undefined;
 
 		/**
 		 * Implementation note:
@@ -1939,23 +2075,20 @@ export class PerpetualsAccount extends Caller {
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
-					(order.slTp.stopLossIndexPrice ||
-						order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt &&
 					!order.limitOrder
 			);
 
-		const partialSlTpOrders: PerpetualsStopOrderData[] =
-			stopOrderDatas.filter(
-				(order) =>
-					order.marketId === marketId &&
-					order.slTp &&
-					order.side !== side &&
-					(order.slTp.stopLossIndexPrice ||
-						order.slTp.takeProfitIndexPrice) &&
-					order.size < Casting.i64MaxBigInt &&
-					!order.limitOrder
-			);
+		const partialSlTpOrders: PerpetualsStopOrderData[] = stopOrderDatas.filter(
+			(order) =>
+				order.marketId === marketId &&
+				order.slTp &&
+				order.side !== side &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
+				order.size < Casting.i64MaxBigInt &&
+				!order.limitOrder
+		);
 
 		return {
 			fullSlTpOrder,
@@ -1986,20 +2119,17 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.slTp &&
 					order.slTp.limitOrderId === limitOrderId &&
-					(order.slTp.stopLossIndexPrice ||
-						order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt
 			);
 
-		const partialSlTpOrders: PerpetualsStopOrderData[] =
-			stopOrderDatas.filter(
-				(order) =>
-					order.slTp &&
-					order.slTp.limitOrderId === limitOrderId &&
-					(order.slTp.stopLossIndexPrice ||
-						order.slTp.takeProfitIndexPrice) &&
-					order.size < Casting.i64MaxBigInt
-			);
+		const partialSlTpOrders: PerpetualsStopOrderData[] = stopOrderDatas.filter(
+			(order) =>
+				order.slTp &&
+				order.slTp.limitOrderId === limitOrderId &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
+				order.size < Casting.i64MaxBigInt
+		);
 
 		return {
 			fullSlTpOrder,
@@ -2071,7 +2201,7 @@ export class PerpetualsAccount extends Caller {
 	public ownerAddress(): SuiAddress {
 		return "walletAddress" in this.accountCap
 			? // NOTE: direct accounts expose `walletAddress`; vault accounts expose `ownerAddress`.
-			  this.accountCap.walletAddress
+				this.accountCap.walletAddress
 			: this.accountCap.ownerAddress;
 	}
 
@@ -2108,10 +2238,9 @@ export class PerpetualsAccount extends Caller {
 	 * @returns {@link ObjectId} of the account cap.
 	 */
 	public accountCapId(): ObjectId {
-		if ("vaultId" in this.accountCap)
-			throw new Error(
-				"not account cap id present on vault owned account"
-			);
+		if ("vaultId" in this.accountCap) {
+			throw new Error("not account cap id present on vault owned account");
+		}
 		return this.accountCap.objectId;
 	}
 

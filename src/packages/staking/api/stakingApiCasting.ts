@@ -1,4 +1,3 @@
-import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	ValidatorConfigObject,
 	ValidatorOperationCapObject,
@@ -20,7 +19,11 @@ import {
 	UnstakedEventOnChain,
 	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
-import { Helpers } from "../../../general/utils";
+import {
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class StakingApiCasting {
@@ -29,7 +32,7 @@ export class StakingApiCasting {
 	// =========================================================================
 
 	public static validatorOperationCapObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): ValidatorOperationCapObject => {
 		const objectType = Helpers.getObjectType(data);
 		const fields = Helpers.getObjectFields(
@@ -46,7 +49,7 @@ export class StakingApiCasting {
 	};
 
 	public static stakedSuiVaultStateObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakedSuiVaultStateObject => {
 		const objectId = Helpers.getObjectId(data);
 		const objectType = Helpers.getObjectType(data);
@@ -54,24 +57,28 @@ export class StakingApiCasting {
 			data
 		) as StakedSuiVaultStateV1FieldsOnChain;
 
+		// @dev: the deepest nested read in the SDK. JSON-RPC wrapped every nested
+		// struct in `{ type, fields }`; gRPC's `json` view returns them bare. Unwrap
+		// at **every** level — `protocol_config` and, inside it,
+		// `atomic_unstake_protocol_fee`. A missed level reads `undefined` and
+		// `BigInt(undefined)` throws, but a missed level on a *sibling* read would
+		// not, so both levels are asserted in `tests/objectCasters.test.ts`.
+		const protocolConfig = GrpcCasting.unwrapStructField(
+			fields.protocol_config
+		);
+		const atomicUnstakeProtocolFee = GrpcCasting.unwrapStructField(
+			protocolConfig.atomic_unstake_protocol_fee
+		);
+
 		return {
 			objectId,
 			objectType,
 			atomicUnstakeSuiReservesTargetValue: BigInt(
-				fields.protocol_config.fields
-					.atomic_unstake_sui_reserves_target_value
+				protocolConfig.atomic_unstake_sui_reserves_target_value
 			),
-			atomicUnstakeSuiReserves: BigInt(
-				fields.atomic_unstake_sui_reserves
-			),
-			minAtomicUnstakeFee: BigInt(
-				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
-					.min_fee
-			),
-			maxAtomicUnstakeFee: BigInt(
-				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
-					.max_fee
-			),
+			atomicUnstakeSuiReserves: BigInt(fields.atomic_unstake_sui_reserves),
+			minAtomicUnstakeFee: BigInt(atomicUnstakeProtocolFee.min_fee),
+			maxAtomicUnstakeFee: BigInt(atomicUnstakeProtocolFee.max_fee),
 			totalSuiAmount: BigInt(fields.total_sui_amount),
 			totalRewardsAmount: BigInt(fields.total_rewards_amount),
 			activeEpoch: BigInt(fields.active_epoch),

@@ -1,0 +1,15 @@
+{
+	"objectId": "0xdaf45d76f6158ebd94fc847b6983f5a8862859079ac252ff80824bc4096cb6eb",
+	"version": "32696040",
+	"digest": "AEd9xkSaqBgxC4o5b6ZpRNr7uqzjxVfWJ4q3tPxvHDBz",
+	"owner": {
+		"AddressOwner": "0xd30018ec3f5ff1a3c75656abf927a87d7f0529e6dc89c7ddd1bd27ecb05e3db2",
+		"$kind": "AddressOwner"
+	},
+	"type": "0x7f6ce7ade63857c4fd16ef7783fed2dfc4d7fb7e40615abdb653030b76aef0c6::validator::UnverifiedValidatorOperationCap",
+	"json": {
+		"authorizer_validator_address": "0xd30018ec3f5ff1a3c75656abf927a87d7f0529e6dc89c7ddd1bd27ecb05e3db2",
+		"id": "0xdaf45d76f6158ebd94fc847b6983f5a8862859079ac252ff80824bc4096cb6eb"
+	},
+	"display": null
+}

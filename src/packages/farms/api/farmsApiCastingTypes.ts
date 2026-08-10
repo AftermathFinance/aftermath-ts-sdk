@@ -1,10 +1,11 @@
-import { BigIntAsString, CoinType, ObjectId } from "../../../types";
-import {
+import type {
 	EventOnChain,
+	MoveStructOnChain,
 	TableOnChain,
+	UidOnChain,
 	WrappedEventOnChain,
 } from "../../../general/types/castingTypes";
-import { SuiObjectData } from "@mysten/sui/client";
+import type { BigIntAsString, CoinType, ObjectId } from "../../../types";
 
 // =========================================================================
 //  Objects
@@ -68,13 +69,17 @@ export interface FarmsStakingPoolOwnerCapFieldsOnChainV1 {
 	afterburner_vault_id: ObjectId;
 }
 
+/**
+ * An `authority::AuthorityCap<VAULT<ADMIN>>`'s own Move fields.
+ *
+ * @remarks Named `…FieldsOnChainV2["fields"]` historically; the envelope that
+ * name referred to is JSON-RPC's and no longer exists on the gRPC `json` view,
+ * so the fields are declared directly. Wrap in {@link MoveStructOnChain} at the
+ * sites where this cap appears as a *nested* field.
+ */
 export interface FarmsStakingPoolOwnerCapFieldsOnChainV2 {
-	fields: {
-		for: ObjectId;
-		id: {
-			id: ObjectId;
-		};
-	};
+	for: ObjectId;
+	id: UidOnChain;
 }
 
 export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1 {
@@ -82,7 +87,7 @@ export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1 {
 }
 
 export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2 {
-	cap: FarmsStakingPoolOwnerCapFieldsOnChainV2;
+	cap: MoveStructOnChain<FarmsStakingPoolOwnerCapFieldsOnChainV2>;
 }
 
 // =========================================================================

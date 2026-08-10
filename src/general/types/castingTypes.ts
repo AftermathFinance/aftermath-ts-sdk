@@ -1,5 +1,4 @@
-import { CoinType } from "../..";
-import {
+import type {
 	AnyObjectType,
 	BigIntAsString,
 	ModuleName,
@@ -60,22 +59,51 @@ export type IndexerEventOnChain<Fields> = {
 	txnDigest: TransactionDigest;
 } & Fields;
 
-export interface TableOnChain {
-	type: AnyObjectType;
-	fields: {
-		id: {
-			id: ObjectId;
+/**
+ * A **nested** Move struct as it arrives from either fullnode protocol.
+ *
+ * gRPC's `json` object view returns nested structs bare; JSON-RPC wrapped them
+ * in a `{ type, fields }` envelope. Read one through
+ * `GrpcCasting.unwrapStructField`, which resolves either arm.
+ *
+ * ⚠️ The envelope's `type` is **not** present on the gRPC arm. Where a caster
+ * needs the nested struct's Move type, take it from the enclosing object's own
+ * type parameters via `Helpers.getObjectType` instead.
+ */
+export type MoveStructOnChain<Fields> =
+	| Fields
+	| {
+			type?: AnyObjectType;
+			fields: Fields;
 		};
-		size: BigIntAsString;
-	};
+
+/**
+ * A Move `UID` as it arrives from either protocol: a bare id string under gRPC,
+ * `{ id }` (or `{ id: { id } }` one level up) under JSON-RPC. Read one through
+ * `GrpcCasting.unwrapUid`.
+ */
+export type UidOnChain = ObjectId | { id: ObjectId } | { id: { id: ObjectId } };
+
+/**
+ * A Move `vector<u8>` as it arrives from either protocol: base64 under gRPC, a
+ * number array under JSON-RPC. Read one through
+ * `GrpcCasting.bytesFieldToNumbers` — indexing it directly yields a
+ * one-character string under gRPC, and `Number(...)` of that is silently `NaN`.
+ */
+export type BytesOnChain = string | number[];
+
+export interface TableFieldsOnChain {
+	id: UidOnChain;
+	size: BigIntAsString;
 }
 
-export interface SupplyOnChain {
-	type: AnyObjectType;
-	fields: {
-		value: BigIntAsString;
-	};
+export type TableOnChain = MoveStructOnChain<TableFieldsOnChain>;
+
+export interface SupplyFieldsOnChain {
+	value: BigIntAsString;
 }
+
+export type SupplyOnChain = MoveStructOnChain<SupplyFieldsOnChain>;
 
 // export interface TypeNameOnChain {
 // 	type: AnyObjectType;

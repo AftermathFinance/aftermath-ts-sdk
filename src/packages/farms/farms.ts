@@ -1,35 +1,25 @@
-import {
-	EventsInputs,
-	SuiNetwork,
-	Url,
-	ObjectId,
-	SuiAddress,
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import type {
 	ApiIndexerEventsBody,
 	CallerConfig,
+	ObjectId,
+	SuiAddress,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import {
+import { FarmsStakedPosition } from "./farmsStakedPosition";
+import { FarmsStakingPool } from "./farmsStakingPool";
+import type {
 	ApiFarmsCreateStakingPoolBody,
 	ApiFarmsCreateStakingPoolBodyV1,
 	ApiFarmsOwnedStakedPositionsBody,
 	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
-	FarmsDepositedPrincipalEvent,
-	FarmsHarvestedRewardsEvent,
-	FarmsLockedEvent,
-	FarmsStakedEvent,
 	FarmsStakedPositionObject,
-	FarmsStakedRelaxedEvent,
 	FarmsStakingPoolObject,
-	FarmsUnlockedEvent,
-	FarmsWithdrewPrincipalEvent,
 	FarmUserEvent,
 	StakingPoolOneTimeAdminCapObject,
 	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
-import { FarmsStakingPool } from "./farmsStakingPool";
-import { FarmsStakedPosition } from "./farmsStakedPosition";
-import { AftermathApi } from "../../general/providers";
 
 /**
  * The `Farms` class provides high-level methods for interacting with
@@ -67,11 +57,11 @@ export class Farms extends Caller {
 	 * farm-related transactions.
 	 *
 	 * @param config - Optional configuration, including network and access token.
-	 * @param Provider - An optional `AftermathApi` instance for advanced transaction building.
+	 * @param api - An optional `AftermathApi` instance for advanced transaction building.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "farms");
 	}
@@ -102,7 +92,7 @@ export class Farms extends Caller {
 		const stakingPool = await this.fetchApi<FarmsStakingPoolObject>(
 			inputs.objectId
 		);
-		return new FarmsStakingPool(stakingPool, this.config, this.Provider);
+		return new FarmsStakingPool(stakingPool, this.config, this.api);
 	}
 
 	/**
@@ -131,8 +121,7 @@ export class Farms extends Caller {
 			farmIds: inputs.objectIds,
 		});
 		return stakingPools.map(
-			(stakingPool) =>
-				new FarmsStakingPool(stakingPool, this.config, this.Provider)
+			(stakingPool) => new FarmsStakingPool(stakingPool, this.config, this.api)
 		);
 	}
 
@@ -148,12 +137,9 @@ export class Farms extends Caller {
 	 * ```
 	 */
 	public async getAllStakingPools() {
-		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi(
-			"",
-			{}
-		);
+		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi("", {});
 		return stakingPools.map(
-			(pool) => new FarmsStakingPool(pool, this.config, this.Provider)
+			(pool) => new FarmsStakingPool(pool, this.config, this.api)
 		);
 	}
 
@@ -179,13 +165,7 @@ export class Farms extends Caller {
 			ApiFarmsOwnedStakedPositionsBody
 		>("owned-staked-positions", inputs);
 		return positions.map(
-			(pool) =>
-				new FarmsStakedPosition(
-					pool,
-					undefined,
-					this.config,
-					this.Provider
-				)
+			(pool) => new FarmsStakedPosition(pool, undefined, this.config, this.api)
 		);
 	}
 
@@ -292,7 +272,7 @@ export class Farms extends Caller {
 	public async getCreateStakingPoolTransactionV1(
 		inputs: ApiFarmsCreateStakingPoolBodyV1
 	) {
-		return this.useProvider().buildCreateStakingPoolTxV1(inputs);
+		return this.farmsApi().buildCreateStakingPoolTxV1(inputs);
 	}
 
 	/**
@@ -317,7 +297,7 @@ export class Farms extends Caller {
 	public async getCreateStakingPoolTransactionV2(
 		inputs: ApiFarmsCreateStakingPoolBody
 	) {
-		return this.useProvider().buildCreateStakingPoolTxV2(inputs);
+		return this.farmsApi().buildCreateStakingPoolTxV2(inputs);
 	}
 
 	// =========================================================================
@@ -361,9 +341,11 @@ export class Farms extends Caller {
 	 * Retrieves an instance of the `Farms` provider from the passed `AftermathApi`,
 	 * throwing an error if not available.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Farms();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly farmsApi = () => {
+		const farms = this.api?.Farms();
+		if (!farms) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return farms;
 	};
 }

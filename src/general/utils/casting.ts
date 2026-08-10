@@ -1,20 +1,18 @@
-import { BcsType, bcs } from "@mysten/sui/bcs";
-import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
+import { type BcsType, bcs } from "@mysten/sui/bcs";
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import { Helpers } from "../..";
+import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
+import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
-import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, IFixed, Percentage, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
+import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
+import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
+import { NftsApiCasting } from "../nfts/nftsApiCasting";
+import type { Byte, Percentage, SuiAddress } from "../types";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
-import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
-import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
-import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
-import { Helpers } from "../..";
-import { BcsTypeName } from "../types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui/client";
-import { NftsApiCasting } from "../nfts/nftsApiCasting";
 
 /**
  * A central utility class for casting and conversion routines across
@@ -42,10 +40,7 @@ export class Casting {
 	 * Casting utilities for staking-related data (positions, pools, etc.).
 	 */
 	public static staking = StakingApiCasting;
-	/**
-	 * Casting utilities for leveraged staking data structures.
-	 */
-	public static leveragedStaking = LeveragedStakingApiCasting;
+
 	/**
 	 * Casting utilities for NFT AMM objects and events.
 	 */
@@ -142,7 +137,7 @@ export class Casting {
 	 */
 	public static percentageToBps(percentage: Percentage): bigint {
 		// Convert decimal percentage to basis points
-		const bps = percentage * 10000;
+		const bps = percentage * 10_000;
 		// Convert basis points to bigint
 		return BigInt(Math.round(bps));
 	}
@@ -158,7 +153,7 @@ export class Casting {
 		// Convert bigint basis points to number
 		const bpsNumber = Number(bps);
 		// Convert basis points to decimal percentage
-		const percentage = bpsNumber / 10000;
+		const percentage = bpsNumber / 10_000;
 		return percentage;
 	}
 
@@ -199,9 +194,7 @@ export class Casting {
 	 * @returns A normalized Sui address string (e.g., "0x000123...").
 	 */
 	public static addressFromBcsBytes = (bytes: Byte[]): SuiAddress =>
-		Helpers.addLeadingZeroesToType(
-			bcs.Address.parse(new Uint8Array(bytes))
-		);
+		Helpers.addLeadingZeroesToType(bcs.Address.parse(new Uint8Array(bytes)));
 
 	/**
 	 * Converts an array of bytes directly to a Sui address string in "0x..." format,
@@ -216,7 +209,7 @@ export class Casting {
 				bytes
 					.map((byte) => {
 						const hex = byte.toString(16);
-						return hex.length === 1 ? "0" + hex : hex;
+						return hex.length === 1 ? `0${hex}` : hex;
 					})
 					.join("")
 		);
@@ -316,7 +309,9 @@ export class Casting {
 		suiObjectResponse: SuiObjectResponse
 	): string {
 		const rawData = suiObjectResponse.data?.bcs;
-		if (rawData && "bcsBytes" in rawData) return rawData.bcsBytes;
+		if (rawData && "bcsBytes" in rawData) {
+			return rawData.bcsBytes;
+		}
 		throw new Error(
 			`no bcs bytes found on object: ${suiObjectResponse.data?.objectId}`
 		);

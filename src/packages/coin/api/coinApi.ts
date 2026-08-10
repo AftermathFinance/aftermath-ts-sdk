@@ -1,13 +1,15 @@
-import {
+import type { SuiClientTypes } from "@mysten/sui/client";
+import type { CoinStruct } from "@mysten/sui/jsonRpc";
+import type {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { Coin } from "../coin";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
-import { Helpers } from "../../../general/utils/helpers";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import { GrpcCasting } from "../../../general/utils/grpcCasting";
+import { Helpers } from "../../../general/utils/helpers";
+import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
+import { Coin } from "../coin";
 // import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
@@ -15,7 +17,7 @@ export class CoinApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Transaction Builders
@@ -28,8 +30,7 @@ export class CoinApi {
 		coinAmount: Balance;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument> => {
-		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } =
-			inputs;
+		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } = inputs;
 
 		tx.setSender(walletAddress);
 
@@ -50,8 +51,7 @@ export class CoinApi {
 		coinAmounts: Balance[];
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument[]> => {
-		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } =
-			inputs;
+		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } = inputs;
 
 		tx.setSender(walletAddress);
 
@@ -87,41 +87,46 @@ export class CoinApi {
 		coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined = undefined;
+		let cursor: string | null | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
-					...inputs,
+			// @dev: `getCoins` -> `listCoins`; `res.data` -> `res.objects` and
+			// `res.nextCursor` -> `res.cursor`. See `GrpcCasting` for the
+			// per-coin reshape.
+			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
+				await this.api.client.listCoins({
+					coinType: inputs.coinType,
 					owner: inputs.walletAddress,
 					cursor,
 				});
 
-			const coinData = paginatedCoins.data;
+			const coinData = paginatedCoins.objects.map(
+				GrpcCasting.coinStructFromGrpcCoin
+			);
 			allCoinData = [...allCoinData, ...coinData];
 
 			if (
-				paginatedCoins.data.length === 0 ||
+				paginatedCoins.objects.length === 0 ||
 				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.nextCursor
+				!paginatedCoins.cursor
 			) {
 				allCoinData.sort((b, a) =>
 					Number(BigInt(a.balance) - BigInt(b.balance))
 				);
 
-				let coinDatas: CoinStruct[] = [];
+				const coinDatas: CoinStruct[] = [];
 				let sum = BigInt(0);
 				for (const coinData of allCoinData) {
 					coinDatas.push(coinData);
 					sum += BigInt(coinData.balance);
 
-					if (sum >= inputs.coinAmount) return coinDatas;
+					if (sum >= inputs.coinAmount) {
+						return coinDatas;
+					}
 				}
-				throw new Error(
-					"wallet does not have coins of sufficient balance"
-				);
+				throw new Error("wallet does not have coins of sufficient balance");
 			}
 
-			cursor = paginatedCoins.nextCursor;
+			cursor = paginatedCoins.cursor;
 		} while (true);
 	};
 
@@ -132,19 +137,21 @@ export class CoinApi {
 		// coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined = undefined;
+		let cursor: string | null | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
-					...inputs,
+			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
+				await this.api.client.listCoins({
+					coinType: inputs.coinType,
 					owner: inputs.walletAddress,
 					cursor,
 				});
 
-			// const coinData = paginatedCoins.data.filter(
+			// const coinData = paginatedCoins.objects.filter(
 			// 	(data) => BigInt(data.balance) > BigInt(0)
 			// );
-			const coinData = paginatedCoins.data;
+			const coinData = paginatedCoins.objects.map(
+				GrpcCasting.coinStructFromGrpcCoin
+			);
 			allCoinData = [...allCoinData, ...coinData];
 
 			// const totalAmount = Helpers.sumBigInt(
@@ -153,15 +160,16 @@ export class CoinApi {
 			// if (totalAmount >= inputs.coinAmount) return allCoinData;
 
 			if (
-				paginatedCoins.data.length === 0 ||
+				paginatedCoins.objects.length === 0 ||
 				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.nextCursor
-			)
+				!paginatedCoins.cursor
+			) {
 				return allCoinData.sort((b, a) =>
 					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
 				);
+			}
 
-			cursor = paginatedCoins.nextCursor;
+			cursor = paginatedCoins.cursor;
 		} while (true);
 	};
 
@@ -178,16 +186,18 @@ export class CoinApi {
 	}): TransactionObjectArgument => {
 		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
-		if (coinData.length <= 0)
+		if (coinData.length <= 0) {
 			throw new Error("wallet does not have coins of sufficient balance");
+		}
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
 		const totalCoinBalance = Helpers.sumBigInt(
 			coinData.map((data) => BigInt(data.balance))
 		);
-		if (totalCoinBalance < coinAmount)
+		if (totalCoinBalance < coinAmount) {
 			throw new Error("wallet does not have coins of sufficient balance");
+		}
 
 		if (!isSponsoredTx && isSuiCoin) {
 			tx.setGasPayment(
@@ -220,17 +230,13 @@ export class CoinApi {
 					MergeCoins: {
 						destination: tx.object(mergedCoinObjectId),
 						sources: [
-							...coinObjectIds
-								.slice(1)
-								.map((coinId) => tx.object(coinId)),
+							...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
 						],
 					},
 				});
 			} else {
 				tx.mergeCoins(tx.object(mergedCoinObjectId), [
-					...coinObjectIds
-						.slice(1)
-						.map((coinId) => tx.object(coinId)),
+					...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
 				]);
 			}
 		}
@@ -246,7 +252,7 @@ export class CoinApi {
 					coinId: mergedCoinObjectId,
 					amount: coinAmount,
 					coinType,
-			  })
+				})
 			: tx.splitCoins(mergedCoinObjectId, [coinAmount]);
 	};
 }

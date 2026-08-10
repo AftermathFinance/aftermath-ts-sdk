@@ -1,5 +1,5 @@
-import { BigIntAsString, CoinType, SuiAddress } from "../../../types";
-import { EventOnChain } from "../../../general/types/castingTypes";
+import type { EventOnChain } from "../../../general/types/castingTypes";
+import type { BigIntAsString, CoinType, SuiAddress } from "../../../types";
 
 // =========================================================================
 //  Events

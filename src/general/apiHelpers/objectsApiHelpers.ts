@@ -1,17 +1,32 @@
-import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Helpers } from "../utils/helpers";
-import {
-	SuiObjectDataFilter,
-	SuiObjectDataOptions,
-	SuiObjectResponse,
-} from "@mysten/sui/client";
-import { BcsTypeName } from "../types/castingTypes";
-import {
+import type { BcsType } from "@mysten/sui/bcs";
+import type { SuiClientTypes } from "@mysten/sui/client";
+import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
+import type {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { BcsType } from "@mysten/sui/bcs";
+import type {
+	AnyObjectType,
+	ObjectId,
+	PackageId,
+	SuiAddress,
+} from "../../types";
+import type { AftermathApi } from "../providers/aftermathApi";
+import { GrpcCasting, type SuiObjectView } from "../utils/grpcCasting";
+import { Helpers } from "../utils/helpers";
+
+/**
+ * What to ask gRPC for when fetching an object destined for a caster.
+ *
+ * ⚠️ **Load-bearing.** gRPC returns `json` and `display` as `undefined` unless
+ * the flag is set — a missing flag surfaces as `undefined` downstream, not as an
+ * error. A caster that starts reading a new part of the object must widen this.
+ */
+const casterInclude = (withDisplay?: boolean) =>
+	({
+		json: true,
+		display: withDisplay === true,
+	}) as { json: true; display: true };
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -26,7 +41,7 @@ export class ObjectsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -37,8 +52,15 @@ export class ObjectsApiHelpers {
 	// =========================================================================
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
-		const object = await this.Provider.provider.getObject({ id: objectId });
-		return object.error === undefined;
+		// @dev: JSON-RPC answered a missing object with `{ error: { code:
+		// "notExists" } }`; gRPC **throws**. Verified live against both the
+		// Aftermath and public fullnodes.
+		try {
+			await this.api.client.getObject({ objectId });
+			return true;
+		} catch (_e) {
+			return false;
+		}
 	};
 
 	public fetchIsObjectOwnedByAddress = async (inputs: {
@@ -49,19 +71,26 @@ export class ObjectsApiHelpers {
 
 		const object = await this.fetchObject({ objectId });
 
-		const objectOwner = object.data?.owner;
-		if (!objectOwner || typeof objectOwner !== "object") return false;
+		// @dev: gRPC's owner is a `$kind`-discriminated union carrying the same
+		// `AddressOwner` / `ObjectOwner` keys JSON-RPC used, so the checks below
+		// are unchanged — only the path to it is (`data.owner` -> `owner`).
+		const objectOwner = object.owner;
+		if (!objectOwner || typeof objectOwner !== "object") {
+			return false;
+		}
 
 		if (
 			"AddressOwner" in objectOwner &&
 			objectOwner.AddressOwner === walletAddress
-		)
+		) {
 			return true;
+		}
 		if (
 			"ObjectOwner" in objectOwner &&
 			objectOwner.ObjectOwner === walletAddress
-		)
+		) {
 			return true;
+		}
 
 		return false;
 	};
@@ -70,130 +99,132 @@ export class ObjectsApiHelpers {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
 		withDisplay?: boolean;
-		options?: SuiObjectDataOptions;
-	}): Promise<SuiObjectResponse[]> => {
-		return this.fetchOwnedObjects({
-			...inputs,
-			filter: {
-				StructType: Helpers.stripLeadingZeroesFromType(
-					inputs.objectType
-				),
-			},
-		});
+		include?: SuiClientTypes.ObjectInclude;
+	}): Promise<SuiObjectView[]> => {
+		// @dev: JSON-RPC's `filter: { StructType }` becomes gRPC's `type`. The
+		// leading-zero strip is gone: gRPC accepts the padded and the abbreviated
+		// form and was measured to return identical results for both, including
+		// inside generic parameters.
+		return this.fetchOwnedObjects(inputs);
 	};
 
 	public fetchOwnedObjects = async (inputs: {
 		walletAddress: SuiAddress;
-		filter?: SuiObjectDataFilter;
+		objectType?: AnyObjectType;
 		withDisplay?: boolean;
-		options?: SuiObjectDataOptions;
-	}): Promise<SuiObjectResponse[]> => {
-		const { walletAddress, withDisplay, filter } = inputs;
+		include?: SuiClientTypes.ObjectInclude;
+	}): Promise<SuiObjectView[]> => {
+		const { walletAddress, withDisplay, objectType } = inputs;
 
-		let allObjectData: SuiObjectResponse[] = [];
-		let cursor: string | undefined = undefined;
+		let allObjectData: SuiObjectView[] = [];
+		let cursor: string | null | undefined;
 		do {
-			const paginatedObjects =
-				await this.Provider.provider.getOwnedObjects({
-					owner: walletAddress,
-					options: inputs.options ?? {
-						showContent: true,
-						showDisplay: withDisplay,
-						showOwner: true,
-						showType: true,
-					},
-					limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
-					cursor,
-					filter,
-				});
+			// @dev: `res.data` -> `res.objects`, `res.nextCursor` -> `res.cursor`.
+			// Neither rename is a typecheck or lint failure when botched — reading
+			// `nextCursor` off this response yields `undefined`, which silently ends
+			// pagination after the first page. Covered in `tests/grpcMigration.test.ts`.
+			const paginatedObjects = await this.api.client.listOwnedObjects({
+				owner: walletAddress,
+				type: objectType,
+				include: casterInclude(withDisplay),
+				limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
+				cursor,
+			});
 
-			const objectData = paginatedObjects.data;
-			allObjectData = [...allObjectData, ...objectData];
+			allObjectData = [...allObjectData, ...paginatedObjects.objects];
 
 			if (
-				paginatedObjects.data.length === 0 ||
+				paginatedObjects.objects.length === 0 ||
 				!paginatedObjects.hasNextPage ||
-				!paginatedObjects.nextCursor
-			)
+				!paginatedObjects.cursor
+			) {
 				return allObjectData;
+			}
 
-			cursor = paginatedObjects.nextCursor;
+			cursor = paginatedObjects.cursor;
 		} while (true);
 	};
 
 	public fetchObject = async (inputs: {
 		objectId: ObjectId;
 		withDisplay?: boolean;
-	}): Promise<SuiObjectResponse> => {
+	}): Promise<SuiObjectView> => {
 		const { objectId, withDisplay } = inputs;
 		return await this.fetchObjectGeneral({
 			objectId,
-			options: {
-				showContent: true,
-				showDisplay: withDisplay,
-				showOwner: true,
-				showType: true,
-			},
+			include: casterInclude(withDisplay),
 		});
 	};
 
 	public fetchObjectGeneral = async (inputs: {
 		objectId: ObjectId;
-		options?: SuiObjectDataOptions;
-	}): Promise<SuiObjectResponse> => {
-		const { objectId, options } = inputs;
+		include?: SuiClientTypes.ObjectInclude;
+	}): Promise<SuiObjectView> => {
+		const { objectId, include } = inputs;
 
-		const object = await this.Provider.provider.getObject({
-			id: objectId,
-			options,
-		});
-		if (object.error !== undefined)
+		// @dev: JSON-RPC answered a missing object with `{ error: { code } }`;
+		// gRPC **throws**. The message is rebuilt so callers that matched on the
+		// old prefix keep working.
+		try {
+			const { object } = await this.api.client.getObject({
+				objectId,
+				include: (include ?? casterInclude()) as ReturnType<
+					typeof casterInclude
+				>,
+			});
+			return object as SuiObjectView;
+		} catch (e) {
 			throw new Error(
-				`an error occured fetching object: ${object.error?.code}`
+				`an error occured fetching object: ${e instanceof Error ? e.message : String(e)}`
 			);
-		return object;
+		}
 	};
 
 	public fetchCastObject = async <ObjectType>(inputs: {
 		objectId: ObjectId;
-		objectFromSuiObjectResponse: (
-			SuiObjectResponse: SuiObjectResponse
-		) => ObjectType;
+		objectFromSuiObjectResponse: (object: SuiObjectView) => ObjectType;
 		withDisplay?: boolean;
 	}): Promise<ObjectType> => {
-		return inputs.objectFromSuiObjectResponse(
-			await this.fetchObject(inputs)
-		);
+		return inputs.objectFromSuiObjectResponse(await this.fetchObject(inputs));
 	};
 
 	public fetchCastObjectGeneral = async <ObjectType>(inputs: {
 		objectId: ObjectId;
-		objectFromSuiObjectResponse: (
-			SuiObjectResponse: SuiObjectResponse
-		) => ObjectType;
-		options?: SuiObjectDataOptions;
+		objectFromSuiObjectResponse: (object: SuiObjectView) => ObjectType;
+		include?: SuiClientTypes.ObjectInclude;
 	}): Promise<ObjectType> => {
-		const { objectId, objectFromSuiObjectResponse, options } = inputs;
+		const { objectId, objectFromSuiObjectResponse, include } = inputs;
 		return objectFromSuiObjectResponse(
-			await this.fetchObjectGeneral({ objectId, options })
+			await this.fetchObjectGeneral({ objectId, include })
 		);
 	};
 
+	/**
+	 * @remarks gRPC's `getObjects` returns `(Object | Error)[]` — a **per-object
+	 * error arm JSON-RPC's `multiGetObjects` did not have**, delivered as real
+	 * `Error` instances. Those entries are dropped rather than handed to a caster:
+	 * spreading one into `objectFromSuiObjectResponse` would throw deep inside the
+	 * cast with a message that names neither the batch nor the missing id.
+	 *
+	 * This is a deliberate behaviour change and the more forgiving one. Previously
+	 * a single missing object in a batch threw from inside the caster and lost the
+	 * whole batch; now the surviving objects are returned. `nftsFromSuiObjects`
+	 * already filtered its input, so the app-visible result is unchanged.
+	 */
 	public fetchObjectBatch = async (inputs: {
 		objectIds: ObjectId[];
-		options?: SuiObjectDataOptions;
-	}): Promise<SuiObjectResponse[]> => {
-		const { objectIds, options } = inputs;
+		include?: SuiClientTypes.ObjectInclude;
+		withDisplay?: boolean;
+	}): Promise<SuiObjectView[]> => {
+		const { objectIds, include, withDisplay } = inputs;
 
-		let objectIdsBatches: ObjectId[][] = [];
+		const objectIdsBatches: ObjectId[][] = [];
 		let endIndex = 0;
 		while (true) {
 			const newEndIndex =
 				endIndex + ObjectsApiHelpers.constants.maxObjectFetchingLimit;
 			if (newEndIndex >= objectIds.length) {
-				objectIdsBatches.push(
-					objectIds.slice(endIndex, objectIds.length)
-				);
+				objectIdsBatches.push(objectIds.slice(endIndex, objectIds.length));
 				break;
 			}
 
@@ -203,61 +234,44 @@ export class ObjectsApiHelpers {
 		}
 
 		const objectBatches = await Promise.all(
-			objectIdsBatches.map((objectIds) =>
-				this.Provider.provider.multiGetObjects({
-					ids: objectIds,
-					options:
-						options === undefined
-							? {
-									showContent: true,
-									showOwner: true,
-									showType: true,
-							  }
-							: options,
+			objectIdsBatches.map((batchIds) =>
+				this.api.client.getObjects({
+					objectIds: batchIds,
+					include: (include ?? casterInclude(withDisplay)) as ReturnType<
+						typeof casterInclude
+					>,
 				})
 			)
 		);
-		const objectBatch = objectBatches.reduce(
-			(acc, objects) => [...acc, ...objects],
-			[]
+
+		return objectBatches.flatMap((batch) =>
+			batch.objects.filter(
+				(object): object is SuiObjectView => !(object instanceof Error)
+			)
 		);
-
-		// const objectDataResponses = objectBatch.filter(
-		// 	(data) => data.error !== undefined
-		// );
-
-		// REVIEW: throw error on any objects that don't exist ?
-		// or don't throw any errors and return empty array ?
-		return objectBatch;
 	};
 
 	public fetchCastObjectBatch = async <ObjectType>(inputs: {
 		objectIds: ObjectId[];
-		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType;
-		options?: SuiObjectDataOptions;
+		objectFromSuiObjectResponse: (object: SuiObjectView) => ObjectType;
+		include?: SuiClientTypes.ObjectInclude;
+		withDisplay?: boolean;
 	}): Promise<ObjectType[]> => {
-		return (await this.fetchObjectBatch(inputs)).map(
-			(SuiObjectResponse: SuiObjectResponse) => {
-				return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
-			}
+		return (await this.fetchObjectBatch(inputs)).map((object) =>
+			inputs.objectFromSuiObjectResponse(object)
 		);
 	};
 
 	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(inputs: {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
-		objectFromSuiObjectResponse: (
-			SuiObjectResponse: SuiObjectResponse
-		) => ObjectType;
+		objectFromSuiObjectResponse: (object: SuiObjectView) => ObjectType;
 		withDisplay?: boolean;
-		options?: SuiObjectDataOptions;
+		include?: SuiClientTypes.ObjectInclude;
 	}): Promise<ObjectType[]> => {
-		const objects = (
-			await this.fetchObjectsOfTypeOwnedByAddress(inputs)
-		).map((SuiObjectResponse: SuiObjectResponse) => {
-			return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
-		});
-		return objects;
+		return (await this.fetchObjectsOfTypeOwnedByAddress(inputs)).map((object) =>
+			inputs.objectFromSuiObjectResponse(object)
+		);
 	};
 
 	// =========================================================================
@@ -267,15 +281,22 @@ export class ObjectsApiHelpers {
 	public fetchObjectBcs = async (
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.Provider.provider.getObject({
-			id: objectId,
-			options: { showBcs: true },
-		});
-		if (objectResponse.error !== undefined)
+		// @dev: `options: { showBcs: true }` -> `include: { content: true }`. The
+		// bytes are the BCS of the object's Move struct in both protocols and were
+		// verified byte-identical across a `SuiSystemState`, three Aftermath pools
+		// and three `Coin<SUI>` objects. gRPC throws instead of returning
+		// `{ error }`, so the error message is rebuilt here.
+		try {
+			const { object } = await this.api.client.getObject({
+				objectId,
+				include: { content: true },
+			});
+			return GrpcCasting.suiObjectResponseFromGrpcObjectBcs(object);
+		} catch (e) {
 			throw new Error(
-				`an error occured fetching object: ${objectResponse.error?.code}`
+				`an error occured fetching object: ${e instanceof Error ? e.message : String(e)}`
 			);
-		return objectResponse;
+		}
 	};
 
 	public fetchCastObjectBcs = async <T, U>(inputs: {
@@ -284,13 +305,11 @@ export class ObjectsApiHelpers {
 		fromDeserialized: (deserialized: U) => T;
 	}): Promise<T> => {
 		const { objectId } = inputs;
-		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
-			objectId
-		);
+		const suiObjectResponse = await this.api.Objects().fetchObjectBcs(objectId);
 		const { Casting } = await import("../utils/casting.js");
 		return Casting.castObjectBcs({
 			...inputs,
-			suiObjectResponse: suiObjectResponse,
+			suiObjectResponse,
 		});
 	};
 

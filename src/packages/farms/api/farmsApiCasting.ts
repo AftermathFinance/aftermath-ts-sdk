@@ -1,45 +1,14 @@
 import {
-	FarmsAddedRewardEventOnChainV1,
-	FarmsAfterburnerVaultFieldsOnChain,
-	FarmsCreatedVaultEventOnChainV1,
-	FarmsDepositedPrincipalEventOnChainV1,
-	FarmsDestroyedStakedPositionEventOnChainV1,
-	FarmsHarvestedRewardsEventOnChainV1,
-	FarmsIncreasedEmissionsEventOnChainV1,
-	FarmsInitializedRewardEventOnChainV1,
-	FarmsJoinedEventOnChainV1,
-	FarmsLockedEventOnChainV1,
-	FarmsSplitEventOnChainV1,
-	FarmsStakedEventOnChainV1,
-	FarmsStakedRelaxedEventOnChainV1,
-	FarmsStakedPositionFieldsOnChainV1,
-	FarmsStakingPoolOwnerCapFieldsOnChainV1,
-	FarmsUnlockedEventOnChainV1,
-	FarmsWithdrewPrincipalEventOnChainV1,
-	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1,
-	FarmsStakedPositionFieldsOnChainV2,
-	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2,
-	FarmsStakingPoolOwnerCapFieldsOnChainV2,
-	FarmsStakedEventOnChainV2,
-	FarmsWithdrewPrincipalEventOnChainV2,
-	FarmsUnlockedEventOnChainV2,
-	FarmsSplitEventOnChainV2,
-	FarmsLockedEventOnChainV2,
-	FarmsJoinedEventOnChainV2,
-	FarmsInitializedRewardEventOnChainV2,
-	FarmsUpdatedEmissionsEventOnChainV2,
-	FarmsHarvestedRewardsEventOnChainV2,
-	FarmsDestroyedStakedPositionEventOnChainV2,
-	FarmsDepositedPrincipalEventOnChainV2,
-	FarmsCreatedVaultEventOnChainV2,
-	FarmsAddedRewardEventOnChainV2,
-} from "./farmsApiCastingTypes";
-import {
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
+import { Coin } from "../../coin/coin";
+import type {
 	FarmsAddedRewardEvent,
 	FarmsCreatedVaultEvent,
 	FarmsDepositedPrincipalEvent,
 	FarmsDestroyedStakedPositionEvent,
-	FarmsStakingPoolObject,
 	FarmsHarvestedRewardsEvent,
 	FarmsIncreasedEmissionsEvent,
 	FarmsInitializedRewardEvent,
@@ -50,13 +19,45 @@ import {
 	FarmsStakedRelaxedEvent,
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
-	StakingPoolOwnerCapObject,
 	PartialFarmsStakedPositionObject,
 	StakingPoolOneTimeAdminCapObject,
+	StakingPoolOwnerCapObject,
 } from "../farmsTypes";
-import { Coin } from "../../coin/coin";
-import { Helpers } from "../../../general/utils";
-import { SuiObjectResponse } from "@mysten/sui/client";
+import type {
+	FarmsAddedRewardEventOnChainV1,
+	FarmsAddedRewardEventOnChainV2,
+	FarmsCreatedVaultEventOnChainV1,
+	FarmsCreatedVaultEventOnChainV2,
+	FarmsDepositedPrincipalEventOnChainV1,
+	FarmsDepositedPrincipalEventOnChainV2,
+	FarmsDestroyedStakedPositionEventOnChainV1,
+	FarmsDestroyedStakedPositionEventOnChainV2,
+	FarmsHarvestedRewardsEventOnChainV1,
+	FarmsHarvestedRewardsEventOnChainV2,
+	FarmsIncreasedEmissionsEventOnChainV1,
+	FarmsInitializedRewardEventOnChainV1,
+	FarmsInitializedRewardEventOnChainV2,
+	FarmsJoinedEventOnChainV1,
+	FarmsJoinedEventOnChainV2,
+	FarmsLockedEventOnChainV1,
+	FarmsLockedEventOnChainV2,
+	FarmsSplitEventOnChainV1,
+	FarmsSplitEventOnChainV2,
+	FarmsStakedEventOnChainV1,
+	FarmsStakedEventOnChainV2,
+	FarmsStakedPositionFieldsOnChainV1,
+	FarmsStakedPositionFieldsOnChainV2,
+	FarmsStakedRelaxedEventOnChainV1,
+	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1,
+	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2,
+	FarmsStakingPoolOwnerCapFieldsOnChainV1,
+	FarmsStakingPoolOwnerCapFieldsOnChainV2,
+	FarmsUnlockedEventOnChainV1,
+	FarmsUnlockedEventOnChainV2,
+	FarmsUpdatedEmissionsEventOnChainV2,
+	FarmsWithdrewPrincipalEventOnChainV1,
+	FarmsWithdrewPrincipalEventOnChainV2,
+} from "./farmsApiCastingTypes";
 
 export class FarmsApiCasting {
 	// =========================================================================
@@ -64,7 +65,7 @@ export class FarmsApiCasting {
 	// =========================================================================
 
 	public static partialStakedPositionObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -85,9 +86,7 @@ export class FarmsApiCasting {
 			lockStartTimestamp: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			lastHarvestRewardsTimestamp: Number(
-				fields.last_reward_timestamp_ms
-			),
+			lastHarvestRewardsTimestamp: Number(fields.last_reward_timestamp_ms),
 			rewardCoins: fields.base_rewards_accumulated.map(
 				(baseRewardsAccumulated, index) => ({
 					baseRewardsAccumulated: BigInt(baseRewardsAccumulated),
@@ -95,9 +94,7 @@ export class FarmsApiCasting {
 					multiplierRewardsAccumulated: BigInt(
 						fields.multiplier_rewards_accumulated[index]
 					),
-					multiplierRewardsDebt: BigInt(
-						fields.multiplier_rewards_debt[index]
-					),
+					multiplierRewardsDebt: BigInt(fields.multiplier_rewards_debt[index]),
 				})
 			),
 			version: 1,
@@ -105,7 +102,7 @@ export class FarmsApiCasting {
 	};
 
 	public static partialStakedPositionObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -126,9 +123,7 @@ export class FarmsApiCasting {
 			lockStartTimestamp: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			lastHarvestRewardsTimestamp: Number(
-				fields.last_reward_timestamp_ms
-			),
+			lastHarvestRewardsTimestamp: Number(fields.last_reward_timestamp_ms),
 			rewardCoins: fields.base_rewards_accumulated.map(
 				(baseRewardsAccumulated, index) => ({
 					baseRewardsAccumulated: BigInt(baseRewardsAccumulated),
@@ -136,9 +131,7 @@ export class FarmsApiCasting {
 					multiplierRewardsAccumulated: BigInt(
 						fields.multiplier_rewards_accumulated[index]
 					),
-					multiplierRewardsDebt: BigInt(
-						fields.multiplier_rewards_debt[index]
-					),
+					multiplierRewardsDebt: BigInt(fields.multiplier_rewards_debt[index]),
 				})
 			),
 			version: 2,
@@ -146,7 +139,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -162,13 +155,13 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOwnerCapFieldsOnChainV2["fields"];
+		) as FarmsStakingPoolOwnerCapFieldsOnChainV2;
 
 		return {
 			objectType,
@@ -178,7 +171,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -194,7 +187,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -202,11 +195,17 @@ export class FarmsApiCasting {
 			data
 		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2;
 
+		// @dev: `cap` is a nested `AuthorityCap` struct, so it arrived wrapped in
+		// JSON-RPC's `{ type, fields }` envelope and arrives bare over gRPC. The
+		// sibling `…OwnerCapV2` caster needs no unwrap because *its* `AuthorityCap`
+		// is the top-level object rather than a nested field.
+		const cap = GrpcCasting.unwrapStructField(fields.cap);
+
 		// TODO: add reward coin type ?
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			stakingPoolId: fields.cap.fields.for,
+			stakingPoolId: cap.for,
 		};
 	};
 
@@ -220,9 +219,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			rewardAmount: BigInt(fields.reward_amount),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -236,9 +233,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson.pos0;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			rewardAmount: BigInt(fields.reward_amount),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -252,7 +247,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			minLockDurationMs: Number(fields.min_lock_duration_ms),
 			maxLockDurationMs: Number(fields.max_lock_duration_ms),
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
@@ -269,7 +264,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson.pos0;
 		return {
 			vaultId: fields.vault_id,
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			minLockDurationMs: Number(fields.min_lock_duration_ms),
 			maxLockDurationMs: Number(fields.max_lock_duration_ms),
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
@@ -288,7 +283,7 @@ export class FarmsApiCasting {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -303,7 +298,7 @@ export class FarmsApiCasting {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -341,11 +336,9 @@ export class FarmsApiCasting {
 		return {
 			vaultId: fields.afterburner_vault_id,
 			rewardTypes: fields.reward_types.map((rewardType) =>
-				Helpers.addLeadingZeroesToType("0x" + rewardType)
+				Helpers.addLeadingZeroesToType(`0x${rewardType}`)
 			),
-			rewardAmounts: fields.reward_amounts.map((amount) =>
-				BigInt(amount)
-			),
+			rewardAmounts: fields.reward_amounts.map((amount) => BigInt(amount)),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -359,11 +352,9 @@ export class FarmsApiCasting {
 		return {
 			vaultId: fields.afterburner_vault_id,
 			rewardTypes: fields.reward_types.map((rewardType) =>
-				Helpers.addLeadingZeroesToType("0x" + rewardType)
+				Helpers.addLeadingZeroesToType(`0x${rewardType}`)
 			),
-			rewardAmounts: fields.reward_amounts.map((amount) =>
-				BigInt(amount)
-			),
+			rewardAmounts: fields.reward_amounts.map((amount) => BigInt(amount)),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -376,9 +367,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			emissionScheduleMs: Number(fields.emission_schedule_ms),
 			emissionRate: BigInt(fields.emission_rate),
 			timestamp: Number(eventOnChain.timestampMs),
@@ -393,9 +382,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson.pos0;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			emissionScheduleMs: Number(fields.emission_schedule_ms),
 			emissionRate: BigInt(fields.emission_rate),
 			timestamp: Number(eventOnChain.timestampMs),
@@ -410,9 +397,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			rewardAmount: BigInt(fields.reward_amount),
 			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
@@ -428,9 +413,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson.pos0;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.reward_type
-			),
+			rewardType: Helpers.addLeadingZeroesToType(`0x${fields.reward_type}`),
 			rewardAmount: BigInt(fields.reward_amount),
 			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
@@ -473,9 +456,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
@@ -493,9 +474,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
@@ -539,9 +518,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			multipliedStakedAmount: BigInt(fields.multiplied_staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
@@ -560,9 +537,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			multipliedStakedAmount: BigInt(fields.multiplier_staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
@@ -581,9 +556,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockEndTimestampMs: Number(fields.lock_end_timestamp_ms),
@@ -600,9 +573,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -617,9 +588,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.staked_type
-			),
+			stakedType: Helpers.addLeadingZeroesToType(`0x${fields.staked_type}`),
 			stakedAmount: BigInt(fields.staked_amount),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
@@ -635,7 +604,7 @@ export class FarmsApiCasting {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -650,7 +619,7 @@ export class FarmsApiCasting {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
-			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
+			stakeType: Helpers.addLeadingZeroesToType(`0x${fields.stake_type}`),
 			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

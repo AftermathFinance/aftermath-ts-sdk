@@ -1,6 +1,6 @@
 import { Caller } from "../../general/utils/caller";
-import { CallerConfig } from "../../types";
-import {
+import type { CallerConfig } from "../../types";
+import type {
 	ApiUserDataCreateUserBody,
 	ApiUserDataPublicKeyBody,
 } from "./userDataTypes";
@@ -36,8 +36,7 @@ export class UserData extends Caller {
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // initialize provider
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
 	 * const userData = afSdk.UserData();
 	 *
@@ -51,7 +50,7 @@ export class UserData extends Caller {
 		inputs: ApiUserDataPublicKeyBody
 	): Promise<string | undefined> {
 		return this.fetchApi<string | undefined, ApiUserDataPublicKeyBody>(
-			`public-key`,
+			"public-key",
 			inputs
 		);
 	}
@@ -77,7 +76,7 @@ export class UserData extends Caller {
 		inputs: ApiUserDataCreateUserBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiUserDataCreateUserBody>(
-			`save-public-key`,
+			"save-public-key",
 			inputs
 		);
 	}
@@ -98,7 +97,7 @@ export class UserData extends Caller {
 	 */
 	public createUserAccountMessageToSign() {
 		return {
-			action: `CREATE_USER_ACCOUNT`,
+			action: "CREATE_USER_ACCOUNT",
 		};
 	}
 
@@ -120,7 +119,7 @@ export class UserData extends Caller {
 		action: string;
 	} {
 		return {
-			action: `SIGN_TERMS_AND_CONDITIONS`,
+			action: "SIGN_TERMS_AND_CONDITIONS",
 		};
 	}
 }

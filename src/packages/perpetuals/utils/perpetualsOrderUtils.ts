@@ -1,6 +1,9 @@
+import { type PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
 import { Perpetuals } from "..";
-import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
-const BN = require("bn.js");
+
+const MASK_64 = (BigInt(1) << BigInt(64)) - BigInt(1);
+const MASK_128 = (BigInt(1) << BigInt(128)) - BigInt(1);
+const ASK_THRESHOLD = BigInt(1) << BigInt(127);
 
 export class PerpetualsOrderUtils {
 	// Return order_id given price, counter and side
@@ -9,8 +12,10 @@ export class PerpetualsOrderUtils {
 		counter: bigint,
 		side: PerpetualsOrderSide
 	): PerpetualsOrderId => {
-		if (Boolean(side)) return this.orderIdAsk(price, counter);
-		else return this.orderIdBid(price, counter);
+		if (side) {
+			return this.orderIdAsk(price, counter);
+		}
+		return this.orderIdBid(price, counter);
 	};
 
 	// Return order_id for ask order, given price, counter
@@ -19,9 +24,7 @@ export class PerpetualsOrderUtils {
 		price: bigint,
 		counter: bigint
 	): PerpetualsOrderId => {
-		let priceBn = new BN(price, 10);
-		let counterBn = new BN(counter, 10);
-		return BigInt(priceBn.shln(64).or(counterBn).toString());
+		return (price << BigInt(64)) | counter;
 	};
 
 	// Return order_id for bid order, given price, counter and side
@@ -30,41 +33,33 @@ export class PerpetualsOrderUtils {
 		price: bigint,
 		counter: bigint
 	): PerpetualsOrderId => {
-		let priceBn = new BN(price, 10);
-		let counterBn = new BN(counter, 10);
-		let mask_bn = new BN(`ffffffffffffffff`, 16);
-		return BigInt(priceBn.xor(mask_bn).shln(64).or(counterBn).toString());
+		return ((price ^ MASK_64) << BigInt(64)) | counter;
 	};
 
 	// Return price of given `order_id`, (works for ask or bid)
 	public static price = (orderId: PerpetualsOrderId): bigint => {
 		const side = Perpetuals.orderIdToSide(orderId);
-		if (side === PerpetualsOrderSide.Ask) return this.priceAsk(orderId);
-		else return this.priceBid(orderId);
+		if (side === PerpetualsOrderSide.Ask) {
+			return this.priceAsk(orderId);
+		}
+		return this.priceBid(orderId);
 	};
 
 	// Returns price of a given ask `order_id`.
 	private static priceAsk = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		return BigInt(orderIdBn.shrn(64).toString());
+		return orderId >> BigInt(64);
 	};
 
 	// Returns price of a given bid `order_id`.
 	private static priceBid = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		let mask_bn = new BN(`ffffffffffffffff`, 16);
-		return BigInt(orderIdBn.shrn(64).xor(mask_bn).toString());
+		return (orderId >> BigInt(64)) ^ MASK_64;
 	};
 
 	public static counter = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId, 10);
-		let mask_bn = new BN(`0000000000000000ffffffffffffffff`, 16);
-		return BigInt(orderIdBn.and(mask_bn).toString());
+		return orderId & MASK_128;
 	};
 
 	public static isAsk = (orderId: PerpetualsOrderId): boolean => {
-		return new BN(orderId, 10).lt(
-			new BN(`80000000000000000000000000000000`, 16)
-		);
+		return orderId < ASK_THRESHOLD;
 	};
 }

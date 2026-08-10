@@ -1,10 +1,12 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { AftermathApi } from "../../general/providers";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import type { CallerConfig, CoinType, SuiAddress } from "../../types";
 import type {
 	ApiRewardsClaimRequestTxBody,
 	ApiRewardsClaimRequestTxResponse,
+	ApiRewardsExpectedRewardsBody,
+	ApiRewardsExpectedRewardsResponse,
 	ApiRewardsGetClaimableBody,
 	ApiRewardsGetClaimableResponse,
 	ApiRewardsGetHistoryBody,
@@ -20,7 +22,7 @@ export class Rewards extends Caller {
 
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "rewards");
 	}
@@ -32,10 +34,10 @@ export class Rewards extends Caller {
 	public async getPoints(
 		inputs: ApiRewardsGetPointsBody
 	): Promise<ApiRewardsGetPointsResponse> {
-		return this.fetchApi<
-			ApiRewardsGetPointsResponse,
-			ApiRewardsGetPointsBody
-		>("points", inputs);
+		return this.fetchApi<ApiRewardsGetPointsResponse, ApiRewardsGetPointsBody>(
+			"points",
+			inputs
+		);
 	}
 
 	public async getHistory(
@@ -54,6 +56,21 @@ export class Rewards extends Caller {
 			ApiRewardsGetClaimableResponse,
 			ApiRewardsGetClaimableBody
 		>("claimable", inputs);
+	}
+
+	/**
+	 * Preview a single account's expected rewards for an epoch, broken down by
+	 * domain (trading, referral, AFLP, integrator) plus totals. Backed by the
+	 * newer `rewards/expectedRewards` endpoint. Provide exactly one of `address`
+	 * or `accountId`; omit `epoch` for the current epoch.
+	 */
+	public async getExpectedRewards(
+		inputs: ApiRewardsExpectedRewardsBody
+	): Promise<ApiRewardsExpectedRewardsResponse> {
+		return this.fetchApi<
+			ApiRewardsExpectedRewardsResponse,
+			ApiRewardsExpectedRewardsBody
+		>("expectedRewards", inputs);
 	}
 
 	// =========================================================================
@@ -75,11 +92,9 @@ export class Rewards extends Caller {
 			"transactions/claim",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{
-						tx: tx ?? new Transaction(),
-					}
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
 			},
 			undefined,
 			{ txKind: true }

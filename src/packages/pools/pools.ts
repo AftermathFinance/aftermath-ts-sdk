@@ -1,34 +1,28 @@
-import {
+import type { AftermathApi } from "../../general/providers";
+import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
+import { Helpers } from "../../general/utils/helpers";
+import { Coin } from "../../packages/coin/coin";
+import type {
 	ApiCreatePoolBody,
-	ApiEventsBody,
+	ApiIndexerEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
+	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	ApiPoolsStatsBody,
 	ApiPublishLpCoinBody,
 	Balance,
+	CallerConfig,
 	CoinType,
+	ObjectId,
 	PoolDepositEvent,
+	PoolLpInfo,
 	PoolObject,
-	PoolTradeEvent,
-	PoolTradeFee,
+	PoolStats,
 	PoolWithdrawEvent,
 	Slippage,
-	SuiNetwork,
-	Url,
-	ObjectId,
-	PoolStats,
-	ApiPoolsStatsBody,
-	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
-	PoolLpInfo,
 	SuiAddress,
-	ApiIndexerEventsBody,
-	CallerConfig,
 } from "../../types";
 import { Pool } from "./pool";
-import { Coin } from "../../packages/coin/coin";
-import { Caller } from "../../general/utils/caller";
-import { Helpers } from "../../general/utils/helpers";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { AftermathApi } from "../../general/providers";
-import { PoolsApi } from "./api/poolsApi";
 
 /**
  * The `Pools` class provides a high-level interface for interacting with
@@ -38,8 +32,7 @@ import { PoolsApi } from "./api/poolsApi";
  *
  * @example
  * ```typescript
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init(); // initialize provider
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const pools = afSdk.Pools();
  *
@@ -70,7 +63,7 @@ export class Pools extends Caller {
 			 * The total fraction (as a decimal) of trades charged by the protocol.
 			 * e.g., 0.00005 => 0.005%.
 			 */
-			totalProtocol: 0.00005,
+			totalProtocol: 0.000_05,
 			/**
 			 * The fraction of `totalProtocol` allocated to the treasury.
 			 */
@@ -149,11 +142,11 @@ export class Pools extends Caller {
 	 * Creates a new `Pools` instance for querying and managing AMM pools on Aftermath.
 	 *
 	 * @param config - Optional configuration object specifying network or access token.
-	 * @param Provider - An optional `AftermathApi` instance providing advanced transaction building.
+	 * @param api - An optional `AftermathApi` instance providing advanced transaction building.
 	 */
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "pools");
 	}
@@ -180,7 +173,7 @@ export class Pools extends Caller {
 	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
-		return new Pool(pool, this.config, this.Provider);
+		return new Pool(pool, this.config, this.api);
 	}
 
 	/**
@@ -204,7 +197,7 @@ export class Pools extends Caller {
 		>("", {
 			poolIds: inputs.objectIds,
 		});
-		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
+		return pools.map((pool) => new Pool(pool, this.config, this.api));
 	}
 
 	/**
@@ -220,7 +213,7 @@ export class Pools extends Caller {
 	 */
 	public async getAllPools() {
 		const pools: PoolObject[] = await this.fetchApi("", {});
-		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
+		return pools.map((pool) => new Pool(pool, this.config, this.api));
 	}
 
 	/**
@@ -228,7 +221,7 @@ export class Pools extends Caller {
 	 * This indicates the user's liquidity positions across multiple pools.
 	 *
 	 * @param inputs - An object containing the `walletAddress`.
-	 * @returns A `PoolLpInfo` object summarizing the user's LP balances.
+	 * @returns An array of `PoolLpInfo` objects summarizing the user's LP balances.
 	 *
 	 * @example
 	 * ```typescript
@@ -238,7 +231,7 @@ export class Pools extends Caller {
 	 */
 	public async getOwnedLpCoins(inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<PoolLpInfo> {
+	}): Promise<PoolLpInfo[]> {
 		return this.fetchApi("owned-lp-coins", inputs);
 	}
 
@@ -262,7 +255,7 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.useProvider().buildPublishLpCoinTx(inputs);
+		return this.poolsApi().buildPublishLpCoinTx(inputs);
 	}
 
 	/**
@@ -319,9 +312,7 @@ export class Pools extends Caller {
 	 * console.log(poolId);
 	 * ```
 	 */
-	public getPoolObjectIdForLpCoinType = (inputs: {
-		lpCoinType: CoinType;
-	}) => {
+	public getPoolObjectIdForLpCoinType = (inputs: { lpCoinType: CoinType }) => {
 		return this.getPoolObjectIdsForLpCoinTypes({
 			lpCoinTypes: [inputs.lpCoinType],
 		});
@@ -358,13 +349,11 @@ export class Pools extends Caller {
 	 * @param inputs - Contains the `lpCoinType` to check.
 	 * @returns `true` if the coin is an LP token, `false` otherwise.
 	 */
-	public isLpCoinType = async (inputs: { lpCoinType: CoinType }) => {
-		try {
-			await this.getPoolObjectIdForLpCoinType(inputs);
-			return true;
-		} catch (e) {
-			return false;
-		}
+	public isLpCoinType = async (inputs: {
+		lpCoinType: CoinType;
+	}): Promise<boolean> => {
+		const result = await this.getPoolObjectIdForLpCoinType(inputs);
+		return result.some((id) => id !== undefined);
 	};
 
 	/**
@@ -411,9 +400,7 @@ export class Pools extends Caller {
 	 * console.log(stats[0].volume, stats[1].tvl);
 	 * ```
 	 */
-	public async getPoolsStats(
-		inputs: ApiPoolsStatsBody
-	): Promise<PoolStats[]> {
+	public async getPoolsStats(inputs: ApiPoolsStatsBody): Promise<PoolStats[]> {
 		return this.fetchApi("stats", inputs);
 	}
 
@@ -435,7 +422,7 @@ export class Pools extends Caller {
 	public async getOwnedDaoFeePoolOwnerCaps(
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	) {
-		return this.useProvider().fetchOwnedDaoFeePoolOwnerCaps(inputs);
+		return this.poolsApi().fetchOwnedDaoFeePoolOwnerCaps(inputs);
 	}
 
 	// =========================================================================
@@ -493,16 +480,14 @@ export class Pools extends Caller {
 	}) => {
 		const referralDiscount = inputs.withReferral
 			? this.constants.feePercentages.totalProtocol *
-			  this.constants.feePercentages.treasury *
-			  this.constants.referralPercentages.discount
+				this.constants.feePercentages.treasury *
+				this.constants.referralPercentages.discount
 			: 0;
 
 		return BigInt(
 			Math.floor(
 				Number(inputs.amount) *
-					(1 -
-						(this.constants.feePercentages.totalProtocol -
-							referralDiscount))
+					(1 - (this.constants.feePercentages.totalProtocol - referralDiscount))
 			)
 		);
 	};
@@ -521,8 +506,8 @@ export class Pools extends Caller {
 	}) => {
 		const referralDiscount = inputs.withReferral
 			? this.constants.feePercentages.totalProtocol *
-			  this.constants.feePercentages.treasury *
-			  this.constants.referralPercentages.discount
+				this.constants.feePercentages.treasury *
+				this.constants.referralPercentages.discount
 			: 0;
 
 		return BigInt(
@@ -530,8 +515,7 @@ export class Pools extends Caller {
 				Number(inputs.amount) *
 					(1 /
 						(1 -
-							(this.constants.feePercentages.totalProtocol -
-								referralDiscount)))
+							(this.constants.feePercentages.totalProtocol - referralDiscount)))
 			)
 		);
 	};
@@ -558,12 +542,12 @@ export class Pools extends Caller {
 	 * @returns A string representation for display, e.g. "Af_lp_abc" => "Abc LP".
 	 */
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		Coin.getCoinTypeSymbol(lpCoinType)
+		`${Coin.getCoinTypeSymbol(lpCoinType)
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")
 			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
-			.join(" ") + " LP";
+			.join(" ")} LP`;
 
 	// =========================================================================
 	//  Helpers
@@ -593,9 +577,11 @@ export class Pools extends Caller {
 	 * Provides a typed reference to the `Pools` part of the `AftermathApi`,
 	 * throwing an error if not defined.
 	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Pools();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+	private readonly poolsApi = () => {
+		const pools = this.api?.Pools();
+		if (!pools) {
+			throw new Error("missing AftermathApi instance");
+		}
+		return pools;
 	};
 }

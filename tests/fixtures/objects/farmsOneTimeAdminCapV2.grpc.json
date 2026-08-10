@@ -1,0 +1,18 @@
+{
+	"objectId": "0xcd9bb7bd01c7be37d345b039c229f61b27a4b7a4a4318e20b147ee7e940f0b74",
+	"version": "699565492",
+	"digest": "8acXhETcDq6XXau4npzskJCnN8ECVgFtiGnv6kTXRbX4",
+	"owner": {
+		"AddressOwner": "0xa5baf65df7ab89f0277c8e3eb80814c72778296bdb43f941889ba7ccf874db1d",
+		"$kind": "AddressOwner"
+	},
+	"type": "0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::vault::OneTime<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::VAULT<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::ADMIN>,0x84dceae5f9c275970a6560ae3da6e23d75a9d7ecf70fefad5277594c1b9c9517::strategy::STRATEGY>",
+	"json": {
+		"cap": {
+			"for": "0xea8c7ef2269f99b35b7b6ae47dadc428fad9198fdf3efa442547be2a619a7c1e",
+			"id": "0xea3ae2b2814d95b004980ccf49a0c1c9302e22a797648ccb08ac0c681eed3058"
+		},
+		"id": "0xcd9bb7bd01c7be37d345b039c229f61b27a4b7a4a4318e20b147ee7e940f0b74"
+	},
+	"display": null
+}

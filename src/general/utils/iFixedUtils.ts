@@ -1,4 +1,4 @@
-import { Byte, IFixed } from "../types";
+import type { Byte, IFixed } from "../types";
 import { Casting } from "./casting";
 
 /**
@@ -46,7 +46,9 @@ export class IFixedUtils {
 	 */
 	public static iFixedFromNumber = (value: number): IFixed => {
 		const newValue = BigInt(Math.floor(Math.abs(value) * Number(this.ONE)));
-		if (value < 0) return this.neg(newValue);
+		if (value < 0) {
+			return this.neg(newValue);
+		}
 		return newValue;
 	};
 
@@ -58,7 +60,9 @@ export class IFixedUtils {
 	 * @returns The absolute value in IFixed.
 	 */
 	public static abs = (value: IFixed): IFixed => {
-		if (value >= this.GREATEST_BIT) return this.neg(value);
+		if (value >= this.GREATEST_BIT) {
+			return this.neg(value);
+		}
 		return value;
 	};
 
@@ -72,8 +76,12 @@ export class IFixedUtils {
 	 * @returns `-1`, `0`, or `1` based on the sign.
 	 */
 	public static sign = (value: IFixed): number => {
-		if (value >= this.GREATEST_BIT) return -1;
-		if (value === BigInt(0)) return 0;
+		if (value >= this.GREATEST_BIT) {
+			return -1;
+		}
+		if (value === BigInt(0)) {
+			return 0;
+		}
 		return 1;
 	};
 
@@ -84,9 +92,7 @@ export class IFixedUtils {
 	 * @returns The negated IFixed number as a bigint.
 	 */
 	public static neg = (value: IFixed): IFixed => {
-		return (
-			((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^ this.GREATEST_BIT
-		);
+		return ((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^ this.GREATEST_BIT;
 	};
 
 	/**

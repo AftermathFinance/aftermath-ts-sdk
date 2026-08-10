@@ -1,10 +1,10 @@
-import {
+import { Helpers } from "../../../general/utils";
+import { Coin } from "../../coin";
+import type { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
+import type {
 	FaucetAddCoinEventOnChain,
 	FaucetMintCoinEventOnChain,
 } from "./faucetApiCastingTypes";
-import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
-import { Helpers } from "../../../general/utils";
-import { Coin } from "../../coin";
 
 export class FaucetApiCasting {
 	// =========================================================================
@@ -31,7 +31,7 @@ export class FaucetApiCasting {
 	public static faucetAddCoinEventFromOnChain = (
 		eventOnChain: FaucetAddCoinEventOnChain
 	): FaucetAddCoinEvent => {
-		const fields = eventOnChain.parsedJson;
+		const _fields = eventOnChain.parsedJson;
 		const coinType = Helpers.addLeadingZeroesToType(
 			new Coin(eventOnChain.type).innerCoinType
 		);

@@ -1,11 +1,11 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	NftAmmInterfaceGenericTypes,
-	NftAmmMarketObject,
-} from "../nftAmmTypes";
-import { NftAmmApiCasting } from "./nftAmmApiCasting";
-import { NftAmmMarket } from "../nftAmmMarket";
-import {
+	Transaction,
+	type TransactionArgument,
+	type TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import { Casting, Helpers } from "../../../general/utils";
+import type {
 	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
@@ -15,14 +15,14 @@ import {
 	Slippage,
 	SuiAddress,
 } from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../../pools/pools";
-import {
-	TransactionArgument,
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
+import type { NftAmmMarket } from "../nftAmmMarket";
+import type {
+	NftAmmInterfaceGenericTypes,
+	NftAmmMarketObject,
+} from "../nftAmmTypes";
+import { NftAmmApiCasting } from "./nftAmmApiCasting";
 
 export class NftAmmApi {
 	// =========================================================================
@@ -47,12 +47,11 @@ export class NftAmmApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.nftAmm;
-		if (!addresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const addresses = this.api.addresses.nftAmm;
+		if (!addresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.addresses = addresses;
 	}
@@ -70,33 +69,31 @@ export class NftAmmApi {
 		cursor?: ObjectId;
 		limit?: number;
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
-			{
+		return await this.api
+			.DynamicFields()
+			.fetchCastDynamicFieldsOfTypeWithCursor({
 				...inputs,
 				parentObjectId: inputs.marketTableObjectId,
 				objectsFromObjectIds: (objectIds) =>
-					this.Provider.Nfts().fetchNfts({ objectIds }),
-			}
-		);
+					this.api.Nfts().fetchNfts({ objectIds }),
+			});
 	};
 
 	public fetchMarket = async (inputs: {
 		objectId: ObjectId;
 	}): Promise<NftAmmMarketObject> => {
-		return this.Provider.Objects().fetchCastObject({
+		return this.api.Objects().fetchCastObject({
 			...inputs,
-			objectFromSuiObjectResponse:
-				NftAmmApiCasting.marketObjectFromSuiObject,
+			objectFromSuiObjectResponse: NftAmmApiCasting.marketObjectFromSuiObject,
 		});
 	};
 
 	public fetchMarkets = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<NftAmmMarketObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch({
+		return this.api.Objects().fetchCastObjectBatch({
 			...inputs,
-			objectFromSuiObjectResponse:
-				NftAmmApiCasting.marketObjectFromSuiObject,
+			objectFromSuiObjectResponse: NftAmmApiCasting.marketObjectFromSuiObject,
 		});
 	};
 
@@ -122,7 +119,7 @@ export class NftAmmApi {
 			referral: inputs.referrer !== undefined,
 		});
 
-		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const assetCoin = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: marketObject.assetCoinType,
@@ -195,7 +192,7 @@ export class NftAmmApi {
 		// // TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const assetCoin = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: marketObject.assetCoinType,
@@ -240,7 +237,7 @@ export class NftAmmApi {
 		});
 		const expectedAssetCoinAmountOut = coinAmountsOut[0];
 
-		const lpCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const lpCoin = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: marketObject.lpCoinType,
@@ -290,9 +287,7 @@ export class NftAmmApi {
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
 				tx.object(this.addresses.objects.referralVault),
-				typeof assetCoin === "string"
-					? tx.object(assetCoin)
-					: assetCoin,
+				typeof assetCoin === "string" ? tx.object(assetCoin) : assetCoin,
 				tx.makeMoveVec({
 					elements: nftObjectIds.map((id) => tx.object(id)),
 					type: "ID",
@@ -366,9 +361,7 @@ export class NftAmmApi {
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
 				tx.object(this.addresses.objects.referralVault),
-				typeof assetCoin === "string"
-					? tx.object(assetCoin)
-					: assetCoin,
+				typeof assetCoin === "string" ? tx.object(assetCoin) : assetCoin,
 				tx.makeMoveVec({
 					elements: Helpers.isArrayOfStrings(nfts)
 						? nfts.map((nft) => tx.object(nft))
@@ -432,7 +425,7 @@ export class NftAmmApi {
 		lpCoinType: CoinType,
 		fractionalizedCoinType: CoinType,
 		assetCoinType: CoinType,
-		nftType: CoinType
+		nftType: CoinType,
 	] => {
 		const marketObject = inputs.market.market;
 		return [

@@ -1,14 +1,14 @@
-import { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type { Transaction } from "@mysten/sui/transactions";
 import { Caller } from "../../general/utils/caller";
-import {
+import type { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type {
 	ApiDCAsOwnedBody,
-	ApiDcaTransactionForCreateOrderBody,
+	ApiDcaCreateUserBody,
 	ApiDcaTransactionForCloseOrderBody,
+	ApiDcaTransactionForCreateOrderBody,
 	DcaOrderObject,
 	DcaOrdersObject,
-	ApiDcaCreateUserBody,
 } from "./dcaTypes";
-import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * The `Dca` class provides functionality for automating Dollar-Cost Averaging
@@ -18,8 +18,7 @@ import { Transaction } from "@mysten/sui/transactions";
  *
  * @example
  * ```typescript
- * const afSdk = new Aftermath("MAINNET");
- * await afSdk.init(); // initialize provider
+ * const afSdk = await Aftermath.create({ network: "MAINNET" });
  *
  * const dca = afSdk.Dca();
  * ```
@@ -74,10 +73,7 @@ export class Dca extends Caller {
 	 * ```
 	 */
 	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
-		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>(
-			"orders",
-			inputs
-		);
+		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("orders", inputs);
 	}
 
 	/**
@@ -93,10 +89,7 @@ export class Dca extends Caller {
 	 * ```
 	 */
 	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"active",
-			inputs
-		);
+		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>("active", inputs);
 	}
 
 	/**
@@ -112,10 +105,7 @@ export class Dca extends Caller {
 	 * ```
 	 */
 	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"past",
-			inputs
-		);
+		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>("past", inputs);
 	}
 
 	// =========================================================================
@@ -172,7 +162,7 @@ export class Dca extends Caller {
 		inputs: ApiDcaTransactionForCloseOrderBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
-			`cancel`,
+			"cancel",
 			inputs
 		);
 	}
@@ -245,7 +235,7 @@ export class Dca extends Caller {
 			{
 				walletAddress: SuiAddress;
 			}
-		>(`user/get`, inputs);
+		>("user/get", inputs);
 	}
 
 	/**
@@ -259,9 +249,6 @@ export class Dca extends Caller {
 	public async createUserPublicKey(
 		inputs: ApiDcaCreateUserBody
 	): Promise<boolean> {
-		return this.fetchApi<boolean, ApiDcaCreateUserBody>(
-			`/user/add`,
-			inputs
-		);
+		return this.fetchApi<boolean, ApiDcaCreateUserBody>("/user/add", inputs);
 	}
 }

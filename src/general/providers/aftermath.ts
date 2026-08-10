@@ -1,19 +1,13 @@
-import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
-import {
-	Auth,
-	LeveragedStaking,
-	NftAmm,
-	ReferralVault,
-	Router,
-	Sui,
-} from "../../packages";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import { Auth, NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { Coin } from "../../packages/coin/coin";
 import { Dca } from "../../packages/dca/dca";
 import { Farms } from "../../packages/farms/farms";
 import { Faucet } from "../../packages/faucet/faucet";
+import { GasPools } from "../../packages/gasPools";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { Multisig } from "../../packages/multisig/multisig";
-import { GasPools } from "../../packages/gasPools";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Pools } from "../../packages/pools/pools";
 import { Referrals } from "../../packages/referrals/referrals";
@@ -26,6 +20,7 @@ import type {
 	ConfigAddresses,
 	SuiAddress,
 	SuiNetwork,
+	TranslatedMoveError,
 	Url,
 } from "../../types";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
@@ -37,267 +32,267 @@ import { Wallet } from "../wallet/wallet";
 import { AftermathApi } from "./aftermathApi";
 
 /**
- * The `Aftermath` class serves as the primary entry point for interacting with
+ * Options accepted by {@link Aftermath.create}. All fields are optional —
+ * pass `{}` for the canonical mainnet setup.
+ */
+export interface AftermathOptions {
+	/**
+	 * The target Sui network. Determines the canonical API host and
+	 * Sui fullnode URL when no explicit overrides are supplied.
+	 * @default "MAINNET"
+	 */
+	network?: SuiNetwork;
+	/**
+	 * Explicit override for the Aftermath API host (e.g.
+	 * `"http://localhost:8080"`). Useful for staging or local backends.
+	 */
+	baseUrl?: Url;
+	/**
+	 * Explicit override for the Sui fullnode URL.
+	 */
+	fullnodeUrl?: Url;
+	/**
+	 * Override for the API path segment between host and package prefix.
+	 * Defaults to `"api"`. Override only when targeting a backend that
+	 * mounts the Aftermath API under a different path.
+	 */
+	apiEndpoint?: string;
+	/**
+	 * Preloaded on-chain addresses. When supplied, `create` skips the
+	 * network round-trip that normally fetches them.
+	 */
+	addresses?: ConfigAddresses;
+	/**
+	 * Pre-built `AftermathApi` instance. When supplied, `create` uses it
+	 * directly and skips address discovery and Sui client setup entirely.
+	 */
+	api?: AftermathApi;
+}
+
+/**
+ * The `Aftermath` class is the primary entry point for interacting with
  * the Aftermath Finance protocols and utilities on the Sui blockchain.
- * It provides various sub-providers (e.g. `Router`, `Staking`, `Farms`)
- * initialized under the specified network environment (MAINNET, TESTNET, etc).
+ * It exposes sub-providers (e.g. `Router`, `Staking`, `Farms`) configured
+ * for the chosen network.
+ *
+ * Instances are created through the async {@link Aftermath.create} factory
+ * — direct construction is not supported.
  *
  * @example
  * ```typescript
- * // Create provider
- * const aftermath = new Aftermath("MAINNET");
- * // Create package provider
- * const router = aftermath.Router();
- * // Call sdk from package provider
- * const supportedCoins = await router.getSupportedCoins();
- *
- * // Or do it all in one go
- * const supportedCoins = await (new Aftermath("MAINNET")).Router().getSupportedCoins();
+ * const aftermath = await Aftermath.create({ network: "MAINNET" });
+ * const supportedCoins = await aftermath.Router().getSupportedCoins();
  * ```
  */
 export class Aftermath extends Caller {
 	// =========================================================================
-	//  Constructor
+	//  Factory
 	// =========================================================================
 
 	/**
-	 * Creates an `Aftermath` provider instance to call the Aftermath Finance APIs
-	 * and interact with Sui-based protocols.
+	 * Constructs and fully initializes an `Aftermath` instance.
 	 *
-	 * @param network - The target Sui network ("MAINNET", "TESTNET", "DEVNET", or "LOCAL").
-	 * @param Provider - Optionally pass a custom `AftermathApi` instance if you already have one.
+	 * Resolves on-chain addresses, configures the Sui fullnode client, and
+	 * returns a ready-to-use instance. Pass `addresses` or `api` to skip
+	 * the corresponding bootstrap steps.
 	 */
-	constructor(
-		private readonly network?: SuiNetwork,
-		private Provider?: AftermathApi
-	) {
+	static async create(options: AftermathOptions = {}): Promise<Aftermath> {
+		const af = new Aftermath(options);
+		await af.bootstrap();
+		return af;
+	}
+
+	// =========================================================================
+	//  Construction (private — use Aftermath.create)
+	// =========================================================================
+
+	private readonly options: AftermathOptions;
+
+	private constructor(options: AftermathOptions) {
 		super({
-			network,
+			network: options.network ?? "MAINNET",
+			baseUrl: options.baseUrl,
+			apiEndpoint: options.apiEndpoint,
 			accessToken: undefined,
 		});
+		this.options = options;
 	}
 
-	// =========================================================================
-	//  Public Methods
-	// =========================================================================
-
 	/**
-	 * Initializes the Aftermath provider by fetching addresses from the backend
-	 * and configuring the Sui fullnode client. This method must be called before
-	 * performing many API operations.
-	 *
-	 * @param inputs - Optional object allowing you to override the default `fullnodeUrl`.
-	 * @example
-	 * ```typescript
-	 * const afSdk = new Aftermath("MAINNET");
-	 * await afSdk.init(); // sets up internal providers
-	 * ```
+	 * Resolves addresses and wires up the internal `AftermathApi`. Called
+	 * exactly once by the {@link Aftermath.create} factory.
 	 */
-	public async init(inputs?: { fullnodeUrl: Url }) {
-		const addresses = await this.getAddresses();
+	private async bootstrap(): Promise<void> {
+		if (this.options.api) {
+			this.api = this.options.api;
+			return;
+		}
 
-		// Determine the fullnode URL based on the chosen network or user override
+		const network = this.network;
+		const addresses = this.options.addresses ?? (await this.getAddresses());
 		const fullnodeUrl =
-			inputs?.fullnodeUrl ??
-			(this.network === "LOCAL"
-				? "http://127.0.0.1:9000"
-				: this.network === "DEVNET"
-				? "https://fullnode.devnet.sui.io:443"
-				: this.network === "TESTNET"
-				? "https://fullnode.testnet.sui.io:443"
-				: "https://fullnode.mainnet.sui.io:443");
+			this.options.fullnodeUrl ?? Caller.defaultFullnodeUrl(network);
 
-		// Create a new AftermathApi provider
-		this.Provider = new AftermathApi(
-			new SuiClient({
-				transport: new SuiHTTPTransport({
-					url: fullnodeUrl,
-				}),
-			}),
-			addresses
-		);
+		const client = new SuiGrpcClient({
+			network: network.toLowerCase(),
+			baseUrl: fullnodeUrl,
+		});
+
+		// @dev: the remaining JSON-RPC surface, now down to three call sites:
+		// `SuiGrpcClient` cannot express `queryEvents`, `queryTransactionBlocks`,
+		// or the full `SuiSystemStateSummary`. Everything else — including every
+		// Move-object read, which used to need JSON-RPC's parsed `content.fields`
+		// view — goes over gRPC. See `AftermathApi.jsonRpcClient`.
+		//
+		// It is optional on `AftermathApi`, but constructed here so that
+		// `Aftermath.create()` keeps those three helpers working exactly as
+		// before. Constructing it performs no network I/O; only calling one of
+		// the three reaches the deprecated protocol.
+		const jsonRpcClient = new SuiJsonRpcClient({
+			url: fullnodeUrl,
+			network: network.toLowerCase(),
+		});
+
+		this.api = new AftermathApi(client, addresses, jsonRpcClient);
 	}
 
 	/**
-	 * Retrieves the Aftermath-specific on-chain addresses (object IDs, packages, etc.).
-	 *
-	 * @returns A `ConfigAddresses` object containing relevant addresses for the protocol.
-	 *
-	 * @example
-	 * ```typescript
-	 * const addresses = await aftermath.getAddresses();
-	 * console.log(addresses); // { routerPackageId: "...", someOtherPackageId: "..." }
-	 * ```
+	 * The fully-bootstrapped low-level API provider. Set by `bootstrap()`
+	 * before any accessor is callable.
 	 */
-	public async getAddresses() {
+	private api!: AftermathApi;
+
+	// =========================================================================
+	//  Public Accessors
+	// =========================================================================
+
+	/**
+	 * The Sui network this provider is configured for (e.g. "MAINNET").
+	 */
+	get network(): SuiNetwork {
+		return (this.config.network as SuiNetwork) ?? "MAINNET";
+	}
+
+	/**
+	 * The resolved API base URL for this instance.
+	 */
+	getApiBaseUrl(): Url | undefined {
+		return this.apiBaseUrl;
+	}
+
+	/**
+	 * Fetches the Aftermath on-chain addresses (object IDs, packages, etc.)
+	 * directly from the API. Typically you don't need to call this — the
+	 * `create` factory handles it. Useful for cache warmers or tooling.
+	 */
+	getAddresses(): Promise<ConfigAddresses> {
 		return this.fetchApi<ConfigAddresses>("addresses");
 	}
 
 	/**
-	 * Returns the base URL used for Aftermath API calls.
+	 * Attempts to decode a raw Move abort/error string into a structured
+	 * error code, package ID, module name, and human-readable message.
+	 * Returns `undefined` when no registered package recognizes the error.
 	 *
-	 * @returns The base URL for this instance's API.
-	 *
-	 * @example
-	 * ```typescript
-	 * const apiBaseUrl = aftermath.getApiBaseUrl();
-	 * console.log(apiBaseUrl); // "https://api.after..."
-	 * ```
+	 * Thin pass-through to the underlying {@link AftermathApi} so consumers
+	 * don't need to reach into the private `api` field.
 	 */
-	public getApiBaseUrl() {
-		return this.apiBaseUrl;
+	translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+	}): TranslatedMoveError | undefined {
+		return this.api.translateMoveErrorMessage(inputs);
 	}
-
-	// =========================================================================
-	//  Class Object Creation
-	// =========================================================================
 
 	// =========================================================================
 	//  Packages
 	// =========================================================================
 
-	/**
-	 * Returns an instance of the `Pools` class, which handles DEX pool operations
-	 * within the Aftermath platform (if supported).
-	 */
-	public Pools = () => new Pools(this.config, this.Provider);
+	/** DEX pool operations. */
+	Pools = () => new Pools(this.config, this.api);
+
+	/** Liquid staking and unstaking. */
+	Staking = () => new Staking(this.config, this.api);
+
+	/** SuiFrens — specialized social/utility package. */
+	SuiFrens = () => new SuiFrens(this.config, this.api);
+
+	/** Test-network faucet for dispensing tokens. */
+	Faucet = () => new Faucet(this.config, this.api);
+
+	/** Smart order router across DEX protocols. */
+	Router = () => new Router(this.config);
+
+	/** NFT AMM operations. */
+	NftAmm = () => new NftAmm(this.config, this.api);
 
 	/**
-	 * Returns an instance of the `Staking` class for Aftermath's staking and unstaking features.
+	 * Referral vault interactions.
+	 * @deprecated Use `Referrals` instead.
 	 */
-	public Staking = () => new Staking(this.config, this.Provider);
+	ReferralVault = () => new ReferralVault(this.config);
 
-	/**
-	 * Returns an instance of `LeveragedStaking` for advanced leveraged staking workflows (if supported).
-	 */
-	public LeveragedStaking = () => new LeveragedStaking(this.config);
+	/** Referral-program interactions. */
+	Referrals = () => new Referrals(this.config);
 
-	/**
-	 * Returns an instance of `SuiFrens`, a specialized package for social or utility services.
-	 */
-	public SuiFrens = () => new SuiFrens(this.config, this.Provider);
+	/** Shared gas pool interactions. */
+	GasPools = () => new GasPools(this.config, this.api);
 
-	/**
-	 * Returns an instance of `Faucet`, allowing test/dev networks to dispense tokens.
-	 */
-	public Faucet = () => new Faucet(this.config, this.Provider);
+	/** Perpetual / futures contracts. */
+	Perpetuals = () => new Perpetuals(this.config, this.api);
 
-	/**
-	 * Returns an instance of the `Router` class, which handles smart order routing
-	 * across multiple DEX protocols.
-	 */
-	public Router = () => new Router(this.config);
-	/**
-	 * Returns an instance of `NftAmm`, which supports NFT AMM (automated market maker) features.
-	 */
-	public NftAmm = () => new NftAmm(this.config, this.Provider);
+	/** User reward-point queries. */
+	Rewards = () => new Rewards(this.config, this.api);
 
-	/**
-	 * Returns an instance of `ReferralVault` for referral-based interactions in the protocol.
-	 * @deprecated Use `Referrals` instead
-	 */
-	public ReferralVault = () => new ReferralVault(this.config);
+	/** Yield farming / liquidity mining. */
+	Farms = () => new Farms(this.config, this.api);
 
-	/**
-	 * Returns an instance of `Referrals` for referral-based interactions in the protocol.
-	 */
-	public Referrals = () => new Referrals(this.config);
+	/** Dollar-cost averaging. */
+	Dca = () => new Dca(this.config);
 
-	/**
-	 * Returns an instance of `GasPools` for shared gas pool interactions.
-	 */
-	public GasPools = () => new GasPools(this.config, this.Provider);
+	/** Multi-signature address creation and management. */
+	Multisig = () => new Multisig(this.config, this.api);
 
-	/**
-	 * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.
-	 */
-	public Perpetuals = () => new Perpetuals(this.config, this.Provider);
+	/** Limit orders on supported DEX protocols. */
+	LimitOrders = () => new LimitOrders(this.config);
 
-	/**
-	 * Returns an instance of `Rewards` for querying user reward points.
-	 */
-	public Rewards = () => new Rewards(this.config, this.Provider);
-
-	/**
-	 * Returns an instance of `Farms` for yield farming or liquidity mining functionalities.
-	 */
-	public Farms = () => new Farms(this.config, this.Provider);
-
-	/**
-	 * Returns an instance of the `Dca` class, supporting dollar-cost averaging logic.
-	 */
-	public Dca = () => new Dca(this.config);
-
-	/**
-	 * Returns an instance of `Multisig`, enabling multi-signature address creation and management.
-	 */
-	public Multisig = () => new Multisig(this.config, this.Provider);
-
-	/**
-	 * Returns an instance of `LimitOrders`, supporting limit order placement on certain DEX protocols.
-	 */
-	public LimitOrders = () => new LimitOrders(this.config);
-
-	/**
-	 * Returns an instance of `UserData` for creating and managing user-specific data or key storage.
-	 */
-	public UserData = () => new UserData(this.config);
+	/** User-specific data / key storage. */
+	UserData = () => new UserData(this.config);
 
 	// =========================================================================
 	//  General
 	// =========================================================================
 
-	/**
-	 * Returns an instance of `Sui` for low-level Sui chain information and utilities.
-	 */
-	public Sui = () => new Sui(this.config, this.Provider);
+	/** Low-level Sui chain utilities. */
+	Sui = () => new Sui(this.config, this.api);
+
+	/** Coin price feeds. */
+	Prices = () => new Prices(this.config);
 
 	/**
-	 * Returns an instance of `Prices`, which provides coin price data from external or internal feeds.
+	 * Creates a `Wallet` instance scoped to a specific user address.
+	 * @param address - The Sui address (e.g., `"0x..."`).
 	 */
-	public Prices = () => new Prices(this.config);
+	Wallet = (address: SuiAddress) => new Wallet(address, this.config, this.api);
 
 	/**
-	 * Creates a new `Wallet` instance for a specific user address, enabling you to fetch balances,
-	 * transaction history, etc.
-	 *
-	 * @param address - The Sui address of the wallet (e.g., "0x<32_byte_hex>").
+	 * Returns a `Coin` helper for the given coin type. Pass `undefined`
+	 * for generic coin-metadata utilities.
 	 */
-	public Wallet = (address: SuiAddress) =>
-		new Wallet(address, this.config, this.Provider);
+	Coin = (coinType?: CoinType) => new Coin(coinType, this.config, this.api);
 
-	/**
-	 * Returns an instance of the `Coin` class, which handles coin metadata, decimal conversions,
-	 * and other coin-related utilities for a specified `CoinType`.
-	 *
-	 * @param coinType - Optionally specify a coin type for immediate usage in coin methods.
-	 */
-	public Coin = (coinType?: CoinType) =>
-		new Coin(coinType, this.config, this.Provider);
+	/** Dynamic gas-object assignment for sponsored transactions. */
+	DynamicGas = () => new DynamicGas(this.config);
 
-	/**
-	 * Returns an instance of `DynamicGas`, enabling dynamic assignment of gas
-	 * objects or sponsored transactions for user operations.
-	 */
-	public DynamicGas = () => new DynamicGas(this.config);
-
-	/**
-	 * Returns an instance of `Auth`, handling user authentication or token-based flows (if applicable).
-	 */
-	public Auth = () => new Auth(this.config);
+	/** Authentication / token-based flows. */
+	Auth = () => new Auth(this.config);
 
 	// =========================================================================
-	//  Utils
+	//  Static utilities
 	// =========================================================================
 
-	/**
-	 * Exposes a set of helper functions for general-purpose usage across
-	 * the Aftermath ecosystem. Includes utilities for math, logging, etc.
-	 */
-	public static helpers = Helpers;
+	/** General-purpose helpers (math, logging, etc.). */
+	static helpers = Helpers;
 
-	/**
-	 * Exposes a set of casting utilities for data type conversions (e.g., BigInt <-> fixed).
-	 */
-	public static casting = Casting;
+	/** Casting utilities for data type conversions (BigInt <-> IFixed, etc.). */
+	static casting = Casting;
 }

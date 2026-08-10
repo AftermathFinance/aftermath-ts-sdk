@@ -1,14 +1,10 @@
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { AftermathApi } from "../../general/providers";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import {
+import type {
 	ApiTransactionResponse,
 	CallerConfig,
 	SdkTransactionResponse,
-	SuiAddress,
 } from "../../types";
 import type {
 	ApiGasPoolBody,
@@ -20,6 +16,7 @@ import type {
 	ApiGasPoolRevokeBody,
 	ApiGasPoolShareBody,
 	ApiGasPoolSponsorBody,
+	ApiGasPoolSponsorResponse,
 	ApiGasPoolWithdrawBody,
 	ApiGasPoolWithdrawResponse,
 } from "./gasPoolsTypes";
@@ -53,7 +50,7 @@ export class GasPools extends Caller {
 
 	constructor(
 		config?: CallerConfig,
-		public readonly Provider?: AftermathApi
+		public readonly api?: AftermathApi
 	) {
 		super(config, "gas-pool");
 	}
@@ -69,10 +66,7 @@ export class GasPools extends Caller {
 	 * @returns {@link ApiGasPoolResponse} containing pool ID, balance, and whitelisted addresses.
 	 */
 	public async getPool(inputs: ApiGasPoolBody): Promise<ApiGasPoolResponse> {
-		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>(
-			"pool",
-			inputs
-		);
+		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>("pool", inputs);
 	}
 
 	// =========================================================================
@@ -103,9 +97,7 @@ export class GasPools extends Caller {
 			"transactions/create",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -132,16 +124,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolDepositBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolDepositBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolDepositBody, ApiTransactionResponse>(
 			"transactions/deposit",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -173,9 +160,7 @@ export class GasPools extends Caller {
 			"transactions/withdraw",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -183,31 +168,29 @@ export class GasPools extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to sponsor (rebate) the transaction sender
-	 * using SUI from the gas pool.
+	 * Requests a gas-pool-sponsored transaction. Returns a complete transaction
+	 * with the gas payment and epoch bound attached, the sponsor's signature, and
+	 * the digest both signatures commit to — the caller signs `transaction` as the
+	 * sender and submits it together with `sponsorSignature`.
 	 *
-	 * @param inputs.walletAddress - Wallet address submitting the sponsor transaction.
-	 * @param inputs.amount - Amount of SUI to rebate in MIST.
-	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @param inputs.walletAddress - Wallet address requesting the sponsorship.
+	 * @param inputs.bytes - Base64 of the signed `SPONSOR_GAS` auth message.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @param inputs.tx - Optional transaction to sponsor (appended as a tx kind).
+	 * @returns {@link ApiGasPoolSponsorResponse}.
 	 */
-	public async getSponsorTx(
+	public async getSponsoredTransaction(
 		inputs: Omit<ApiGasPoolSponsorBody, "txKind"> & { tx?: Transaction }
-	): Promise<SdkTransactionResponse> {
+	): Promise<ApiGasPoolSponsorResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolSponsorBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApi<ApiGasPoolSponsorResponse, ApiGasPoolSponsorBody>(
 			"transactions/sponsor",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
-			},
-			undefined,
-			{ txKind: true }
+				txKind: tx
+					? await this.api?.Transactions().fetchBase64TxKindFromTx({ tx })
+					: undefined,
+			}
 		);
 	}
 
@@ -224,16 +207,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolGrantBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolGrantBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolGrantBody, ApiTransactionResponse>(
 			"transactions/grant",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -252,16 +230,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolRevokeBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolRevokeBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolRevokeBody, ApiTransactionResponse>(
 			"transactions/revoke",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }
@@ -283,16 +256,11 @@ export class GasPools extends Caller {
 		inputs: Omit<ApiGasPoolShareBody, "txKind"> & { tx?: Transaction }
 	): Promise<SdkTransactionResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<
-			ApiGasPoolShareBody,
-			ApiTransactionResponse
-		>(
+		return this.fetchApiTxObject<ApiGasPoolShareBody, ApiTransactionResponse>(
 			"transactions/share",
 			{
 				...otherInputs,
-				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-					{ tx }
-				),
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
 			},
 			undefined,
 			{ txKind: true }

@@ -1,22 +1,15 @@
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	type TransactionArgument,
+} from "@mysten/sui/transactions";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	StakeEvent,
-	StakingPosition,
-	UnstakePosition,
-	UnstakedEvent,
-	isStakePosition,
-	isUnstakePosition,
-	isStakeEvent,
-	isUnstakeEvent,
-	ApiStakeStakedSuiBody,
-	ApiUnstakeBody,
-	ApiStakeBody,
-	ApiUpdateValidatorFeeBody,
-	UnstakeEvent,
-	UnstakeRequestedEvent,
-} from "../stakingTypes";
-import {
+import type {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
+import { Casting, Helpers } from "../../../general/utils";
+import type {
 	AnyObjectType,
 	Balance,
 	CoinType,
@@ -25,15 +18,25 @@ import {
 	StakingAddresses,
 	SuiAddress,
 } from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { Staking } from "../..";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { Staking } from "../..";
 import {
-	MoveErrors,
-	MoveErrorsInterface,
-} from "../../../general/types/moveErrorsInterface";
+	type ApiStakeBody,
+	type ApiStakeStakedSuiBody,
+	type ApiUnstakeBody,
+	type ApiUpdateValidatorFeeBody,
+	isStakeEvent,
+	isStakePosition,
+	isUnstakeEvent,
+	isUnstakePosition,
+	type StakeEvent,
+	type StakingPosition,
+	type UnstakedEvent,
+	type UnstakeEvent,
+	type UnstakePosition,
+	type UnstakeRequestedEvent,
+} from "../stakingTypes";
 
 export class StakingApi implements MoveErrorsInterface {
 	// =========================================================================
@@ -82,13 +85,12 @@ export class StakingApi implements MoveErrorsInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		if (!this.Provider.addresses.staking)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		if (!this.api.addresses.staking) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
-		this.addresses = this.Provider.addresses.staking;
+		this.addresses = this.api.addresses.staking;
 		this.eventTypes = {
 			staked: this.stakedEventType(),
 			unstakeRequested: this.unstakeRequestedEventType(),
@@ -192,7 +194,7 @@ export class StakingApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake" + (withTransfer ? "_and_keep" : "")
+				`request_stake${withTransfer ? "_and_keep" : ""}`
 			),
 			typeArguments: [],
 			arguments: [
@@ -227,9 +229,7 @@ export class StakingApi implements MoveErrorsInterface {
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
 				tx.object(this.addresses.objects.safe), // Safe
-				typeof afSuiCoin === "string"
-					? tx.object(afSuiCoin)
-					: afSuiCoin,
+				typeof afSuiCoin === "string" ? tx.object(afSuiCoin) : afSuiCoin,
 			],
 		});
 	};
@@ -250,7 +250,7 @@ export class StakingApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_unstake_atomic" + (withTransfer ? "_and_keep" : "")
+				`request_unstake_atomic${withTransfer ? "_and_keep" : ""}`
 			),
 			typeArguments: [],
 			arguments: [
@@ -258,9 +258,7 @@ export class StakingApi implements MoveErrorsInterface {
 				tx.object(this.addresses.objects.safe), // Safe
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				tx.object(this.addresses.objects.treasury), // Treasury
-				typeof afSuiCoin === "string"
-					? tx.object(afSuiCoin)
-					: afSuiCoin,
+				typeof afSuiCoin === "string" ? tx.object(afSuiCoin) : afSuiCoin,
 			],
 		});
 	};
@@ -287,8 +285,7 @@ export class StakingApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake_staked_sui_vec" +
-					(withTransfer ? "_and_keep" : "")
+				`request_stake_staked_sui_vec${withTransfer ? "_and_keep" : ""}`
 			),
 			typeArguments: [],
 			arguments: [
@@ -457,18 +454,21 @@ export class StakingApi implements MoveErrorsInterface {
 	): Promise<Transaction> => {
 		const { referrer, externalFee } = inputs;
 
-		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
+		if (externalFee) {
+			StakingApi.assertValidExternalFee(externalFee);
+		}
 
 		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
-		const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const suiCoin = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: Coin.constants.suiCoinType,
@@ -478,9 +478,7 @@ export class StakingApi implements MoveErrorsInterface {
 
 		if (externalFee) {
 			const feeAmount = BigInt(
-				Math.floor(
-					Number(inputs.suiStakeAmount) * externalFee.feePercentage
-				)
+				Math.floor(Number(inputs.suiStakeAmount) * externalFee.feePercentage)
 			);
 			const suiFeeCoin = tx.splitCoins(suiCoin, [feeAmount]);
 			tx.transferObjects([suiFeeCoin], externalFee.recipient);
@@ -507,18 +505,21 @@ export class StakingApi implements MoveErrorsInterface {
 	): Promise<Transaction> => {
 		const { referrer, externalFee } = inputs;
 
-		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
+		if (externalFee) {
+			StakingApi.assertValidExternalFee(externalFee);
+		}
 
 		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
-		const afSuiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const afSuiCoin = await this.api.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: this.coinTypes.afSui,
@@ -528,8 +529,7 @@ export class StakingApi implements MoveErrorsInterface {
 		if (externalFee) {
 			const feeAmount = BigInt(
 				Math.floor(
-					Number(inputs.afSuiUnstakeAmount) *
-						externalFee.feePercentage
+					Number(inputs.afSuiUnstakeAmount) * externalFee.feePercentage
 				)
 			);
 			const afSuiFeeCoin = tx.splitCoins(afSuiCoin, [feeAmount]);
@@ -568,11 +568,12 @@ export class StakingApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
+		if (referrer) {
+			this.api.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
+		}
 
 		// TODO: add external fee here
 		const afSuiCoinId = this.requestStakeStakedSuiVecTx({
@@ -612,28 +613,28 @@ export class StakingApi implements MoveErrorsInterface {
 	//  Event Types
 	// =========================================================================
 
-	private stakedEventType = () =>
+	private readonly stakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.staked
 		);
 
-	private unstakeRequestedEventType = () =>
+	private readonly unstakeRequestedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstakeRequested
 		);
 
-	private unstakedEventType = () =>
+	private readonly unstakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstaked
 		);
 
-	private epochWasChangedEventType = () =>
+	private readonly epochWasChangedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
@@ -665,7 +666,7 @@ export class StakingApi implements MoveErrorsInterface {
 			? this.updateUnstakePositionsFromEvent({
 					event,
 					unstakePositions,
-			  })
+				})
 			: unstakePositions;
 
 		const stakePositions = positions.filter(isStakePosition);
@@ -675,9 +676,7 @@ export class StakingApi implements MoveErrorsInterface {
 
 		newPositions = [...newUnstakes, ...newStakes];
 
-		return newPositions.sort(
-			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
-		);
+		return newPositions.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
 	};
 
 	// =========================================================================
@@ -688,14 +687,16 @@ export class StakingApi implements MoveErrorsInterface {
 		if (
 			externalFee.feePercentage >=
 			Staking.constants.bounds.maxExternalFeePercentage
-		)
+		) {
 			throw new Error(
 				`external fee percentage exceeds max of ${
 					Staking.constants.bounds.maxExternalFeePercentage * 100
 				}%`
 			);
-		if (externalFee.feePercentage <= 0)
-			throw new Error(`external fee percentage must be greater than 0`);
+		}
+		if (externalFee.feePercentage <= 0) {
+			throw new Error("external fee percentage must be greater than 0");
+		}
 	};
 
 	// =========================================================================
@@ -711,10 +712,8 @@ export class StakingApi implements MoveErrorsInterface {
 		);
 		if (foundPositionIndex < 0) {
 			if (
-				inputs.event.type.includes(
-					this.constants.eventNames.unstakeRequested
-				)
-			)
+				inputs.event.type.includes(this.constants.eventNames.unstakeRequested)
+			) {
 				return [
 					{
 						...(inputs.event as UnstakeRequestedEvent),
@@ -722,6 +721,7 @@ export class StakingApi implements MoveErrorsInterface {
 					},
 					...inputs.unstakePositions,
 				];
+			}
 
 			// unstaked event
 			return [
@@ -735,28 +735,30 @@ export class StakingApi implements MoveErrorsInterface {
 
 		const foundStakePosition = inputs.unstakePositions[foundPositionIndex];
 
-		let position: UnstakePosition | undefined = undefined;
-		if (inputs.event.type.includes(this.constants.eventNames.unstaked))
+		let position: UnstakePosition | undefined;
+		if (inputs.event.type.includes(this.constants.eventNames.unstaked)) {
 			position = {
 				...(inputs.event as UnstakedEvent),
 				state: "SUI_MINTED",
 				epoch: foundStakePosition.epoch,
 			};
+		}
 
 		if (
-			inputs.event.type.includes(
-				this.constants.eventNames.unstakeRequested
-			)
-		)
+			inputs.event.type.includes(this.constants.eventNames.unstakeRequested)
+		) {
 			position = {
 				...(inputs.event as UnstakeRequestedEvent),
 				state: "REQUEST",
 				epoch: foundStakePosition.epoch,
 			};
+		}
 
-		if (!position) return inputs.unstakePositions;
+		if (!position) {
+			return inputs.unstakePositions;
+		}
 
-		let newStakePositions = [...inputs.unstakePositions];
+		const newStakePositions = [...inputs.unstakePositions];
 		newStakePositions[foundPositionIndex] = position;
 
 		return newStakePositions;

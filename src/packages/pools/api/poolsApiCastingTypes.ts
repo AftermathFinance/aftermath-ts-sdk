@@ -1,17 +1,15 @@
-import {
-	AnyObjectType,
-	Balance,
-	BigIntAsString,
-	CoinType,
-	PoolName,
-	ObjectId,
-	SuiAddress,
-} from "../../../types";
-import {
+import type {
+	BytesOnChain,
 	EventOnChain,
-	IndexerEventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
+import type {
+	BigIntAsString,
+	CoinType,
+	ObjectId,
+	PoolName,
+	SuiAddress,
+} from "../../../types";
 
 // =========================================================================
 //  Objects
@@ -33,7 +31,7 @@ export interface PoolFieldsOnChain {
 	decimal_scalars: BigIntAsString[];
 	lp_decimals: BigIntAsString;
 	lp_decimal_scalar: BigIntAsString;
-	coin_decimals?: BigIntAsString[];
+	coin_decimals?: BytesOnChain;
 }
 
 export interface DaoFeePoolFieldsOnChain {

@@ -1,4 +1,4 @@
-import {
+import type {
 	Balance,
 	Event,
 	Object,
@@ -9,9 +9,8 @@ import {
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ManipulateType } from "dayjs";
-import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { UniqueId } from "../router/routerTypes";
+import type { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
+import type { UniqueId } from "../router/routerTypes";
 
 /**
  * Name or label used to identify a pool. e.g., "My Stable Pool" or "SUI-COIN LP".
@@ -346,12 +345,48 @@ export interface PoolDataPoint {
 export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
 
 /**
- * An optional object or approach to define timeframe windows, using
- * dayjs manipulation. Not always used directly.
+ * Unit of time used to describe a timeframe window (e.g. "day", "week").
+ *
+ * Mirrors dayjs's `ManipulateType` surface (long, plural, and short forms)
+ * so consumers upgrading from pre-2.0 keep compiling.
+ */
+export type PoolGraphDataTimeUnit =
+	// long forms
+	| "millisecond"
+	| "second"
+	| "minute"
+	| "hour"
+	| "day"
+	| "week"
+	| "month"
+	| "year"
+	// plurals
+	| "milliseconds"
+	| "seconds"
+	| "minutes"
+	| "hours"
+	| "days"
+	| "weeks"
+	| "months"
+	| "years"
+	// short forms
+	| "ms"
+	| "s"
+	| "m"
+	| "h"
+	| "d"
+	| "D"
+	| "M"
+	| "y"
+	| "w";
+
+/**
+ * An optional object or approach to define timeframe windows.
+ * Not always used directly.
  */
 export interface PoolGraphDataTimeframe {
 	time: Timestamp;
-	timeUnit: ManipulateType;
+	timeUnit: PoolGraphDataTimeUnit;
 }
 
 // =========================================================================

@@ -1,18 +1,18 @@
 import { Caller } from "../../general/utils/caller";
-import {
+import type {
 	ApiReferralsCreateReferralLinkBody,
 	ApiReferralsCreateReferralLinkResponse,
-	ApiReferralsGetRefereesBody,
-	ApiReferralsGetRefereesResponse,
+	ApiReferralsGetLinkedRefCodeBody,
+	ApiReferralsGetLinkedRefCodeResponse,
 	ApiReferralsGetRefCodeBody,
 	ApiReferralsGetRefCodeResponse,
+	ApiReferralsGetRefereesBody,
+	ApiReferralsGetRefereesResponse,
+	ApiReferralsIsRefCodeTakenBody,
+	ApiReferralsIsRefCodeTakenResponse,
 	ApiReferralsSetReferrerBody,
 	ApiReferralsSetReferrerResponse,
 	CallerConfig,
-	ApiReferralsIsRefCodeTakenBody,
-	ApiReferralsIsRefCodeTakenResponse,
-	ApiReferralsGetLinkedRefCodeBody,
-	ApiReferralsGetLinkedRefCodeResponse,
 	SuiAddress,
 	Timestamp,
 } from "../../types";
@@ -61,8 +61,7 @@ export class Referrals extends Caller {
 		} = await this.fetchApi("linked-ref-code", inputs);
 		return {
 			...res,
-			linkedRefCode:
-				res.linkedRefCode === null ? undefined : res.linkedRefCode,
+			linkedRefCode: res.linkedRefCode === null ? undefined : res.linkedRefCode,
 			linkedAt: res.linkedAt === null ? undefined : res.linkedAt,
 		};
 	}

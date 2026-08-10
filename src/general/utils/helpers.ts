@@ -1,44 +1,47 @@
-import {
-	DisplayFieldsResponse,
-	SuiMoveObject,
-	SuiObjectResponse,
-} from "@mysten/sui/client";
-import {
+import { decodeSuiPrivateKey, type Keypair } from "@mysten/sui/cryptography";
+import type { DisplayFieldsResponse } from "@mysten/sui/jsonRpc";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
+import type {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
+import { isValidSuiAddress } from "@mysten/sui/utils";
+import type {
 	AnyObjectType,
 	Balance,
-	SuiNetwork,
-	CoinsToDecimals,
-	CoinsToPrice,
-	ObjectId,
-	Slippage,
-	ModuleName,
-	PackageId,
-	MoveErrorCode,
-	SuiAddress,
-	CoinType,
 	CoinGeckoChain,
+	CoinType,
+	ModuleName,
+	MoveErrorCode,
+	ObjectId,
+	PackageId,
+	Slippage,
+	SuiAddress,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { GrpcCasting, type SuiObjectView } from "./grpcCasting";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { MoveErrors } from "../types/moveErrorsInterface";
-import { isValidSuiAddress } from "@mysten/sui/utils";
-import { decodeSuiPrivateKey, Keypair } from "@mysten/sui/cryptography";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
-import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
+import type {
+	MoveErrors,
+	ParsedMoveError,
+	TranslatedMoveError,
+} from "../types/moveErrorsInterface";
+
+const NUMERIC_STRING_REGEX = /^\d*\.?\d*$/;
+const BIGINT_STRING_REGEX = /^-?\d+n$/;
+const HEX_STRING_REGEX = /^(0x)?[0-9A-F]+$/i;
 
 /**
  * A utility class containing various helper functions for general use across
  * the Aftermath TS ecosystem. This includes numeric operations, object field
  * extraction, array transformations, slippage adjustments, and Move error parsing.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: public API — used as `Helpers.x(...)` across many consumers; converting to a namespace would be a breaking change
 export class Helpers {
 	// =========================================================================
 	//  Api Helpers (Static References)
@@ -48,31 +51,31 @@ export class Helpers {
 	 * Static reference to the `DynamicFieldsApiHelpers`, providing utility methods
 	 * for working with dynamic fields in Sui objects.
 	 */
-	public static readonly dynamicFields = DynamicFieldsApiHelpers;
+	static readonly dynamicFields = DynamicFieldsApiHelpers;
 
 	/**
 	 * Static reference to the `EventsApiHelpers`, providing methods for
 	 * querying and filtering Sui events.
 	 */
-	public static readonly events = EventsApiHelpers;
+	static readonly events = EventsApiHelpers;
 
 	/**
 	 * Static reference to the `InspectionsApiHelpers`, used for reading
 	 * Summaries or inspection data from objects.
 	 */
-	public static readonly inspections = InspectionsApiHelpers;
+	static readonly inspections = InspectionsApiHelpers;
 
 	/**
 	 * Static reference to the `ObjectsApiHelpers`, providing direct
 	 * retrieval or manipulation of on-chain Sui objects.
 	 */
-	public static readonly objects = ObjectsApiHelpers;
+	static readonly objects = ObjectsApiHelpers;
 
 	/**
 	 * Static reference to the `TransactionsApiHelpers`, enabling easier
 	 * queries for transaction data by digest or other criteria.
 	 */
-	public static readonly transactions = TransactionsApiHelpers;
+	static readonly transactions = TransactionsApiHelpers;
 
 	// =========================================================================
 	//  Type Manipulation
@@ -85,9 +88,8 @@ export class Helpers {
 	 * @param type - The hex string to process, potentially including "::" module syntax.
 	 * @returns The same string with unnecessary leading zeroes stripped out.
 	 */
-	public static stripLeadingZeroesFromType = (
-		type: AnyObjectType
-	): AnyObjectType => type.replaceAll(/x0+/g, "x");
+	static stripLeadingZeroesFromType = (type: AnyObjectType): AnyObjectType =>
+		type.replaceAll(/x0+/g, "x");
 
 	/**
 	 * Ensures the given Sui address or object type is zero-padded to 64 hex digits
@@ -97,9 +99,7 @@ export class Helpers {
 	 * @returns A new string normalized to a 64-hex-digit address or object ID.
 	 * @throws If the address portion is already longer than 64 hex digits.
 	 */
-	public static addLeadingZeroesToType = (
-		type: AnyObjectType
-	): AnyObjectType => {
+	static addLeadingZeroesToType = (type: AnyObjectType): AnyObjectType => {
 		const EXPECTED_TYPE_LENGTH = 64;
 
 		let strippedType = type.replace("0x", "");
@@ -109,18 +109,19 @@ export class Helpers {
 			const splitType = strippedType.replace("0x", "").split("::");
 			typeSuffix = splitType
 				.slice(1)
-				.reduce((acc, str) => acc + "::" + str, "");
+				.reduce((acc, str) => `${acc}::${str}`, "");
 			strippedType = splitType[0];
 		}
 
 		const typeLength = strippedType.length;
-		if (typeLength > EXPECTED_TYPE_LENGTH)
+		if (typeLength > EXPECTED_TYPE_LENGTH) {
 			throw new Error("invalid type length");
+		}
 
 		const zerosNeeded = EXPECTED_TYPE_LENGTH - typeLength;
-		const zeroString = Array(zerosNeeded).fill("0").join("");
+		const zeroString = "0".repeat(zerosNeeded);
 
-		const newType = "0x" + zeroString + strippedType;
+		const newType = `0x${zeroString}${strippedType}`;
 		return newType + typeSuffix;
 	};
 
@@ -131,14 +132,16 @@ export class Helpers {
 	 * @param coin - The coin string, which may look like `"bsc:0x<...>"` or just `"0x<...>"`.
 	 * @returns An object with the `chain` (e.g. "bsc") and the `coinType`.
 	 */
-	public static splitNonSuiCoinType = (
+	static splitNonSuiCoinType = (
 		coin: CoinType
 	): {
 		chain: CoinGeckoChain;
 		coinType: CoinType;
 	} => {
 		const [uncastChain, coinType] = coin.split(":");
-		if (!uncastChain || !coinType) return { coinType: coin, chain: "sui" };
+		if (!(uncastChain && coinType)) {
+			return { coinType: coin, chain: "sui" };
+		}
 		const chain = uncastChain as Exclude<CoinGeckoChain, "sui">;
 		return { chain, coinType };
 	};
@@ -153,7 +156,7 @@ export class Helpers {
 	 * @param str - The string to test.
 	 * @returns `true` if it's a valid numeric string, otherwise `false`.
 	 */
-	public static isNumber = (str: string): boolean => /^\d*\.?\d*$/g.test(str);
+	static isNumber = (str: string): boolean => NUMERIC_STRING_REGEX.test(str);
 
 	/**
 	 * Sums an array of floating-point numbers, returning the numeric total.
@@ -161,8 +164,7 @@ export class Helpers {
 	 * @param arr - The array of numbers to sum.
 	 * @returns The total as a float.
 	 */
-	public static sum = (arr: number[]) =>
-		arr.reduce((prev, cur) => prev + cur, 0);
+	static sum = (arr: number[]) => arr.reduce((prev, cur) => prev + cur, 0);
 
 	/**
 	 * Sums an array of bigints, returning the total as a bigint.
@@ -170,7 +172,7 @@ export class Helpers {
 	 * @param arr - The array of bigints to sum.
 	 * @returns The resulting total as a bigint.
 	 */
-	public static sumBigInt = (arr: bigint[]) =>
+	static sumBigInt = (arr: bigint[]) =>
 		arr.reduce((prev, cur) => prev + cur, BigInt(0));
 
 	/**
@@ -182,7 +184,7 @@ export class Helpers {
 	 * @param tolerance - A fraction representing the max allowed difference relative to max(a, b).
 	 * @returns `true` if within tolerance, otherwise `false`.
 	 */
-	public static closeEnough = (a: number, b: number, tolerance: number) =>
+	static closeEnough = (a: number, b: number, tolerance: number) =>
 		Math.abs(a - b) <= tolerance * Math.max(a, b);
 
 	/**
@@ -194,11 +196,8 @@ export class Helpers {
 	 * @param tolerance - A fraction representing the max allowed difference relative to max(a, b).
 	 * @returns `true` if within tolerance, otherwise `false`.
 	 */
-	public static closeEnoughBigInt = (
-		a: bigint,
-		b: bigint,
-		tolerance: number
-	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
+	static closeEnoughBigInt = (a: bigint, b: bigint, tolerance: number) =>
+		Helpers.closeEnough(Number(a), Number(b), tolerance);
 
 	/**
 	 * Checks whether the integer divisions of `a` and `b` (by `fixedOne`) differ
@@ -210,7 +209,7 @@ export class Helpers {
 	 * @param fixedOne - The scaling factor representing 1.0 in the same scale as `a` and `b`.
 	 * @returns `true` if the integer parts differ by <= 1, otherwise `false`.
 	 */
-	public static veryCloseInt = (a: number, b: number, fixedOne: number) =>
+	static veryCloseInt = (a: number, b: number, fixedOne: number) =>
 		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
 
 	/**
@@ -218,7 +217,7 @@ export class Helpers {
 	 * mixed numeric types (number vs. bigint). This is primarily for
 	 * internal usage in advanced math scenarios.
 	 */
-	public static blendedOperations = {
+	static blendedOperations = {
 		/**
 		 * Multiply two floating-point numbers.
 		 */
@@ -234,8 +233,7 @@ export class Helpers {
 		/**
 		 * Multiply a float and a bigint, returning a bigint (floor).
 		 */
-		mulNBB: (a: number, b: bigint): bigint =>
-			BigInt(Math.floor(a * Number(b))),
+		mulNBB: (a: number, b: bigint): bigint => BigInt(Math.floor(a * Number(b))),
 		/**
 		 * Multiply two bigints, returning a float.
 		 */
@@ -252,7 +250,7 @@ export class Helpers {
 	 * @param args - The bigints to compare.
 	 * @returns The largest bigint.
 	 */
-	public static maxBigInt = (...args: bigint[]) =>
+	static maxBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e > m ? e : m));
 
 	/**
@@ -261,7 +259,7 @@ export class Helpers {
 	 * @param args - The bigints to compare.
 	 * @returns The smallest bigint.
 	 */
-	public static minBigInt = (...args: bigint[]) =>
+	static minBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e < m ? e : m));
 
 	/**
@@ -270,7 +268,7 @@ export class Helpers {
 	 * @param num - The input bigint.
 	 * @returns A bigint representing the absolute value of `num`.
 	 */
-	public static absBigInt = (num: bigint) => (num < BigInt(0) ? -num : num);
+	static absBigInt = (num: bigint) => (num < BigInt(0) ? -num : num);
 
 	// =========================================================================
 	//  Display
@@ -283,7 +281,7 @@ export class Helpers {
 	 * @param str - The input string to transform.
 	 * @returns The resulting string with the first character in uppercase and the rest in lowercase.
 	 */
-	public static capitalizeOnlyFirstLetter = (str: string) =>
+	static capitalizeOnlyFirstLetter = (str: string) =>
 		str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
 	// =========================================================================
@@ -298,23 +296,25 @@ export class Helpers {
 	 * @param unsafeStringNumberConversion - If `true`, all numeric strings (e.g., "123") will also become BigInts.
 	 * @returns The parsed JSON object with BigInt conversions where applicable.
 	 */
-	public static parseJsonWithBigint = (
+	static parseJsonWithBigint = (
 		json: string,
 		unsafeStringNumberConversion = false
 	) =>
-		JSON.parse(json, (key, value) => {
+		JSON.parse(json, (_key, value) => {
 			// convert null -> undefined everywhere
-			if (value === null) return undefined;
+			if (value === null) {
+				return undefined;
+			}
 
 			// handles bigint casting
-			if (typeof value === "string" && /^-?\d+n$/.test(value)) {
+			if (typeof value === "string" && BIGINT_STRING_REGEX.test(value)) {
 				return BigInt(value.slice(0, -1));
 			}
 
 			if (
 				unsafeStringNumberConversion &&
 				typeof value === "string" &&
-				this.isNumber(value)
+				Helpers.isNumber(value)
 			) {
 				return BigInt(value);
 			}
@@ -332,27 +332,21 @@ export class Helpers {
 	 * @param target - The data to clone deeply.
 	 * @returns A new object/array/date structure mirroring `target`.
 	 */
-	public static deepCopy = <T>(target: T): T => {
+	static deepCopy = <T>(target: T): T => {
 		if (target === null) {
 			return target;
 		}
 		if (target instanceof Date) {
-			return new Date(target.getTime()) as any;
+			return new Date(target.getTime()) as T;
 		}
 		if (Array.isArray(target)) {
-			const cp = [] as any[];
-			(target as any[]).forEach((v) => {
-				cp.push(v);
-			});
-			return cp.map((n: any) => this.deepCopy<any>(n)) as any;
+			return target.map((v) => Helpers.deepCopy(v)) as T;
 		}
 		if (typeof target === "object") {
-			const cp = { ...(target as { [key: string]: any }) } as {
-				[key: string]: any;
-			};
-			Object.keys(cp).forEach((k) => {
-				cp[k] = this.deepCopy<any>(cp[k]);
-			});
+			const cp: Record<string, unknown> = {};
+			for (const k of Object.keys(target)) {
+				cp[k] = Helpers.deepCopy((target as Record<string, unknown>)[k]);
+			}
 			return cp as T;
 		}
 		return target;
@@ -364,19 +358,19 @@ export class Helpers {
 	 * @param arr - The input array.
 	 * @returns The index of the maximum value, or -1 if the array is empty.
 	 */
-	public static indexOfMax = (arr: any[]) => {
-		if (arr.length === 0) return -1;
-
-		let max = arr[0];
-		let maxIndex = 0;
-
-		for (let i = 1; i < arr.length; i++) {
-			if (arr[i] > max) {
-				maxIndex = i;
-				max = arr[i];
-			}
+	static indexOfMax = <T extends number | bigint | string | Date>(
+		arr: T[]
+	): number => {
+		if (arr.length === 0) {
+			return -1;
 		}
 
+		let maxIndex = 0;
+		for (let i = 1; i < arr.length; i++) {
+			if (arr[i] > arr[maxIndex]) {
+				maxIndex = i;
+			}
+		}
 		return maxIndex;
 	};
 
@@ -399,12 +393,15 @@ export class Helpers {
 	 * @param arr - The original array.
 	 * @returns An array of unique items.
 	 */
-	public static uniqueArray = <T>(arr: T[]): T[] =>
-		arr.length <= 0
-			? []
-			: typeof arr[0] === "object"
-			? Helpers.uniqueObjectArray(arr)
-			: [...new Set(arr)];
+	static uniqueArray = <T>(arr: T[]): T[] => {
+		if (arr.length === 0) {
+			return [];
+		}
+		if (typeof arr[0] === "object") {
+			return Helpers.uniqueObjectArray(arr);
+		}
+		return [...new Set(arr)];
+	};
 
 	/**
 	 * Returns a Promise that resolves after a specified number of milliseconds.
@@ -412,14 +409,14 @@ export class Helpers {
 	 * @param ms - The delay time in milliseconds.
 	 * @returns A promise that resolves after `ms` milliseconds.
 	 */
-	public static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+	static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	/**
 	 * Creates a unique ID-like string by combining the current timestamp and random base36 digits.
 	 *
 	 * @returns A short random string (base36) that can serve as a unique identifier.
 	 */
-	public static createUid = () =>
+	static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
 
 	/**
@@ -430,7 +427,7 @@ export class Helpers {
 	 * @param func - The function used to test each element.
 	 * @returns A tuple containing two arrays: `[elements that pass, elements that fail]`.
 	 */
-	public static bifilter = <ArrayType>(
+	static bifilter = <ArrayType>(
 		array: ArrayType[],
 		func: (item: ArrayType, index: number, arr: ArrayType[]) => boolean
 	): [trues: ArrayType[], falses: ArrayType[]] => {
@@ -439,8 +436,11 @@ export class Helpers {
 
 		for (let index = 0; index < array.length; index++) {
 			const item = array[index];
-			if (func(item, index, array)) trues[trues.length] = item;
-			else falses[falses.length] = item;
+			if (func(item, index, array)) {
+				trues[trues.length] = item;
+			} else {
+				falses[falses.length] = item;
+			}
 		}
 
 		return [trues, falses];
@@ -454,16 +454,12 @@ export class Helpers {
 	 * @param func - An async function returning `true` or `false`.
 	 * @returns A tuple `[trues, falses]` after asynchronous evaluation.
 	 */
-	public static bifilterAsync = async <ArrayType>(
+	static bifilterAsync = async <ArrayType>(
 		array: ArrayType[],
-		func: (
-			item: ArrayType,
-			index: number,
-			arr: ArrayType[]
-		) => Promise<boolean>
+		func: (item: ArrayType, index: number, arr: ArrayType[]) => Promise<boolean>
 	): Promise<[trues: ArrayType[], falses: ArrayType[]]> => {
 		const predicates = await Promise.all(array.map(func));
-		return this.bifilter(array, (_, index) => predicates[index]);
+		return Helpers.bifilter(array, (_, index) => predicates[index]);
 	};
 
 	/**
@@ -475,18 +471,13 @@ export class Helpers {
 	 * @param predicate - A function taking `(key, value)` and returning a boolean.
 	 * @returns A new object with only the entries that pass the predicate.
 	 */
-	public static filterObject = <Value>(
+	static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean
 	): Record<string, Value> =>
-		Object.keys(obj).reduce((acc, key) => {
-			const val = obj[key];
-			if (!predicate(key, val)) return acc;
-			return {
-				...acc,
-				[key]: val,
-			};
-		}, {} as Record<string, Value>);
+		Object.fromEntries(
+			Object.entries(obj).filter(([key, value]) => predicate(key, value))
+		);
 
 	/**
 	 * Applies downward slippage to a bigint amount by subtracting `slippage * amount`.
@@ -496,19 +487,8 @@ export class Helpers {
 	 * @param slippage - An integer percent (e.g., 1 => 1%).
 	 * @returns The adjusted bigint after subtracting the slippage portion.
 	 */
-	public static applySlippageBigInt = (
-		amount: Balance,
-		slippage: Slippage
-	) => {
-		return (
-			amount -
-			BigInt(
-				Math.floor(
-					(slippage / 100) *
-						Number(amount)
-				)
-			)
-		);
+	static applySlippageBigInt = (amount: Balance, slippage: Slippage) => {
+		return amount - BigInt(Math.floor((slippage / 100) * Number(amount)));
 	};
 
 	/**
@@ -519,7 +499,7 @@ export class Helpers {
 	 * @param slippage - An integer percent (e.g., 1 => 1%).
 	 * @returns The float after applying slippage.
 	 */
-	public static applySlippage = (amount: number, slippage: Slippage) => {
+	static applySlippage = (amount: number, slippage: Slippage) => {
 		return amount - (slippage / 100) * amount;
 	};
 
@@ -531,12 +511,9 @@ export class Helpers {
 	 * @param lastCollection - The second array.
 	 * @returns An array of `[firstCollection[i], lastCollection[i]]` pairs.
 	 */
-	public static zip<S1, S2>(
-		firstCollection: Array<S1>,
-		lastCollection: Array<S2>
-	): Array<[S1, S2]> {
+	static zip<S1, S2>(firstCollection: S1[], lastCollection: S2[]): [S1, S2][] {
 		const length = Math.min(firstCollection.length, lastCollection.length);
-		const zipped: Array<[S1, S2]> = [];
+		const zipped: [S1, S2][] = [];
 		for (let index = 0; index < length; index++) {
 			zipped.push([firstCollection[index], lastCollection[index]]);
 		}
@@ -551,12 +528,10 @@ export class Helpers {
 	 * @param seen - Internal usage to track references that have already been visited.
 	 * @returns A structure that can be safely JSON-stringified.
 	 */
-	public static removeCircularReferences<T>(
+	static removeCircularReferences<T>(
 		obj: T,
 		seen: WeakSet<object> = new WeakSet()
 	): T | undefined {
-		type AnyObject = { [key: string]: any };
-
 		if (obj && typeof obj === "object") {
 			if (seen.has(obj as object)) {
 				return undefined;
@@ -565,17 +540,13 @@ export class Helpers {
 
 			if (Array.isArray(obj)) {
 				return obj.map((item) =>
-					this.removeCircularReferences(item, seen)
+					Helpers.removeCircularReferences(item, seen)
 				) as unknown as T;
-			} else {
-				const entries = Object.entries(obj as AnyObject).map(
-					([key, value]) => [
-						key,
-						this.removeCircularReferences(value, seen),
-					]
-				);
-				return Object.fromEntries(entries) as unknown as T;
 			}
+			const entries = Object.entries(obj as Record<string, unknown>).map(
+				([key, value]) => [key, Helpers.removeCircularReferences(value, seen)]
+			);
+			return Object.fromEntries(entries) as unknown as T;
 		}
 		return obj;
 	}
@@ -590,10 +561,9 @@ export class Helpers {
 	 * @param value - The value to check.
 	 * @returns `true` if `value` is a string array, otherwise `false`.
 	 */
-	public static isArrayOfStrings(value: unknown): value is string[] {
+	static isArrayOfStrings(value: unknown): value is string[] {
 		return (
-			Array.isArray(value) &&
-			value.every((item) => typeof item === "string")
+			Array.isArray(value) && value.every((item) => typeof item === "string")
 		);
 	}
 
@@ -604,7 +574,7 @@ export class Helpers {
 	 * @param str - The string to validate.
 	 * @returns `true` if it meets the minimum structure, otherwise `false`.
 	 */
-	public static isValidType = (str: string): boolean => {
+	static isValidType = (str: string): boolean => {
 		// TODO: use regex
 		const trimmedStr = str.trim();
 		return (
@@ -622,75 +592,126 @@ export class Helpers {
 	 * @param hexString - The string to check.
 	 * @returns `true` if `hexString` is a valid hex, otherwise `false`.
 	 */
-	public static isValidHex = (hexString: string): boolean => {
-		const hexPattern = /^(0x)?[0-9A-F]+$/i;
-		return hexPattern.test(hexString);
-	};
+	static isValidHex = (hexString: string): boolean =>
+		HEX_STRING_REGEX.test(hexString);
 
 	// =========================================================================
 	//  Sui Object Parsing
 	// =========================================================================
 
 	/**
-	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a `SuiObjectResponse`,
-	 * normalizing it with leading zeroes if necessary.
+	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a
+	 * gRPC object view, normalizing it with leading zeroes if necessary.
 	 *
-	 * @param data - The object response from Sui.
+	 * ⚠️ **Not byte-invariant across protocols when the type has generic
+	 * parameters.** Measured on real mainnet objects:
+	 * - For a type with **no** generic parameters the two protocols agree after
+	 *   normalization: gRPC serves `0x0000…0002::kiosk::KioskOwnerCap` and
+	 *   JSON-RPC serves `0x2::kiosk::KioskOwnerCap`, and
+	 *   {@link Helpers.addLeadingZeroesToType} maps both to the same string.
+	 * - **Inside** a generic parameter they differ: gRPC fully zero-pads every
+	 *   address (`OneTimeAdminCap<0x0000…0002::sui::SUI>`) where JSON-RPC echoes
+	 *   the node's abbreviated form (`OneTimeAdminCap<0x2::sui::SUI>`), and gRPC
+	 *   emits no space after a generic's comma. `addLeadingZeroesToType`
+	 *   normalizes only the **outer** address — and separately strips `0x` from
+	 *   the first generic parameter — so the difference survives into this
+	 *   accessor's output.
+	 *
+	 * That divergence is **cosmetic and accepted**: it is purely address padding
+	 * and comma spacing, semantically the same Move type. It is pinned by
+	 * `tests/objectCasters.test.ts` ("FINDING: generic `objectType` differs
+	 * across protocols"). The underlying `addLeadingZeroesToType` generics bug
+	 * pre-dates the gRPC migration and is filed as its own plan — do not fix it
+	 * here.
+	 *
+	 * Still **load-bearing**, and still safe for it: the type's *semantic* content
+	 * is protocol-invariant, which is what lets a caster recover the `type` of a
+	 * nested struct that gRPC's `json` view drops (see
+	 * {@link GrpcCasting.unwrapStructField}) from the enclosing object's own type
+	 * parameters — as `poolObjectFromSuiObject` does for its LP coin.
+	 *
+	 * @param data - The object view from Sui.
 	 * @returns The normalized object type string.
 	 * @throws If the type is not found.
 	 */
-	public static getObjectType(data: SuiObjectResponse): ObjectId {
-		const objectType = data.data?.type;
-		if (objectType) return Helpers.addLeadingZeroesToType(objectType);
+	static getObjectType(data: SuiObjectView): ObjectId {
+		const objectType = data?.type;
+		if (objectType) {
+			return Helpers.addLeadingZeroesToType(objectType);
+		}
 
-		throw new Error("no object type found on " + data.data?.objectId);
+		throw new Error(`no object type found on ${data?.objectId}`);
 	}
 
 	/**
-	 * Extracts the object ID from a `SuiObjectResponse`, normalizing it with leading zeroes.
+	 * Extracts the object ID from a gRPC object view, normalizing it with
+	 * leading zeroes.
 	 *
-	 * @param data - The object response from Sui.
+	 * @param data - The object view from Sui.
 	 * @returns A zero-padded `ObjectId`.
 	 * @throws If the objectId is not found.
 	 */
-	public static getObjectId(data: SuiObjectResponse): ObjectId {
-		const objectId = data.data?.objectId;
-		if (objectId) return Helpers.addLeadingZeroesToType(objectId);
+	static getObjectId(data: SuiObjectView): ObjectId {
+		const objectId = data?.objectId;
+		if (objectId) {
+			return Helpers.addLeadingZeroesToType(objectId);
+		}
 
-		throw new Error("no object id found on " + data.data?.type);
+		throw new Error(`no object id found on ${data?.type}`);
 	}
 
 	/**
-	 * Retrieves the fields of a Move object from a `SuiObjectResponse`.
+	 * Retrieves the Move fields of an object from a gRPC object view.
 	 *
-	 * @param data - The Sui object response containing a Move object.
+	 * ⚠️ This is the gRPC **`json` view**, which is *not* shape-identical to
+	 * JSON-RPC's `content.fields`: nested structs arrive without their
+	 * `{ type, fields }` envelope, `vector<u8>` arrives base64-encoded, and
+	 * `UID` arrives as a bare string. Route those through
+	 * {@link GrpcCasting.unwrapStructField}, {@link GrpcCasting.bytesFieldToNumbers}
+	 * and {@link GrpcCasting.unwrapUid} respectively.
+	 *
+	 * ⚠️ The return type is `Record<string, any>`, so **no field read below this
+	 * point is typechecked**. A wrong read is a silently wrong value, not a
+	 * build error. `tests/objectCasters.test.ts` is the only guard.
+	 *
+	 * `json` is `undefined` unless `include: { json: true }` was passed at the
+	 * fetch site.
+	 *
+	 * @param data - The Sui object view containing a Move object.
 	 * @returns A record of fields for that object.
 	 * @throws If no fields are found.
 	 */
-	public static getObjectFields(
-		data: SuiObjectResponse
-	): Record<string, any> {
-		try {
-			const content = data.data?.content as SuiMoveObject;
-			return content.fields;
-		} catch (e) {
-			throw new Error("no object fields found on " + data.data?.objectId);
+	// biome-ignore lint/suspicious/noExplicitAny: Move fields are dynamic — callers access nested properties directly; typing as `unknown` would cascade casts through dozens of call sites
+	static getObjectFields(data: SuiObjectView): Record<string, any> {
+		const fields = data?.json;
+		if (fields) {
+			return fields;
 		}
+		throw new Error(`no object fields found on ${data?.objectId}`);
 	}
 
 	/**
-	 * Retrieves display metadata from a Sui object response, if present.
+	 * Retrieves display metadata from a gRPC object view, if present.
 	 *
-	 * @param data - The Sui object response.
+	 * Reshaped onto JSON-RPC's `DisplayFieldsResponse` so the display casters are
+	 * unaffected by the transport change — see
+	 * {@link GrpcCasting.displayFieldsResponseFromGrpcDisplay} for the two
+	 * semantic differences that reshape absorbs.
+	 *
+	 * `display` is `undefined` unless `include: { display: true }` was passed at
+	 * the fetch site (`withDisplay` on the `ObjectsApiHelpers` fetchers), and
+	 * `null` when the object's type has no Display template.
+	 *
+	 * @param data - The Sui object view.
 	 * @returns The display fields for that object.
-	 * @throws If display fields are not found.
+	 * @throws If display was not requested at the fetch site.
 	 */
-	public static getObjectDisplay(
-		data: SuiObjectResponse
-	): DisplayFieldsResponse {
-		const display = data.data?.display;
-		if (display) return display;
-		throw new Error("no object display found on " + data.data?.objectId);
+	static getObjectDisplay(data: SuiObjectView): DisplayFieldsResponse {
+		const display = data?.display;
+		if (display === undefined) {
+			throw new Error(`no object display found on ${data?.objectId}`);
+		}
+		return GrpcCasting.displayFieldsResponseFromGrpcDisplay(display);
 	}
 
 	// =========================================================================
@@ -707,7 +728,7 @@ export class Helpers {
 	 * @param object - Either an `ObjectId` or a `TransactionObjectArgument`.
 	 * @returns A `TransactionObjectArgument` referencing the provided object.
 	 */
-	public static addTxObject = (
+	static addTxObject = (
 		tx: Transaction,
 		object: ObjectId | TransactionObjectArgument
 	): TransactionObjectArgument => {
@@ -725,13 +746,15 @@ export class Helpers {
 	 * @param address - The Sui address to validate.
 	 * @returns `true` if valid, `false` otherwise.
 	 */
-	public static isValidSuiAddress = (address: SuiAddress) =>
+	static isValidSuiAddress = (address: SuiAddress) =>
 		isValidSuiAddress(
 			(() => {
-				if (!address.startsWith("0x") || address.length < 3) return "";
+				if (!address.startsWith("0x") || address.length < 3) {
+					return "";
+				}
 				try {
 					return Helpers.addLeadingZeroesToType(address);
-				} catch (e) {
+				} catch {
 					return "";
 				}
 			})()
@@ -748,15 +771,13 @@ export class Helpers {
 	 * @param inputs - The object containing the raw `errorMessage` from Sui.
 	 * @returns A partial structure of the error details or undefined.
 	 */
-	public static parseMoveErrorMessage(inputs: { errorMessage: string }):
-		| {
-				errorCode: MoveErrorCode;
-				packageId: ObjectId;
-				module: ModuleName;
-		  }
-		| undefined {
+	static parseMoveErrorMessage(
+		inputs: { errorMessage: string }
+	): ParsedMoveError | undefined {
 		const { errorMessage } = inputs;
-		if (!errorMessage.toLowerCase().includes("moveabort")) return undefined;
+		if (!errorMessage.toLowerCase().includes("moveabort")) {
+			return undefined;
+		}
 
 		/*
 			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
@@ -764,72 +785,69 @@ export class Helpers {
 			MoveAbort(MoveLocation { module: ModuleId { address: 7c995f9c0c0553c0f3bfac7cf3c8b85716f0ca522305586bd0168ca20aeed277, name: Identifier("clearing_house") }, function: 37, instruction: 17, function_name: Some("place_limit_order") }, 1) in command 1
 		*/
 
-		const moveErrorCode = (inputs: {
-			errorMessage: string;
-		}): MoveErrorCode | undefined => {
-			const { errorMessage } = inputs;
-			const startIndex = errorMessage.lastIndexOf(",");
-			const endIndex = errorMessage.lastIndexOf(")");
-			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+		const moveErrorCode = (errorMsg: string): MoveErrorCode | undefined => {
+			const startIndex = errorMsg.lastIndexOf(",");
+			const endIndex = errorMsg.lastIndexOf(")");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex) {
 				return undefined;
+			}
 
 			try {
-				const errorCode = parseInt(
-					errorMessage.slice(startIndex + 1, endIndex)
+				const errorCode = Number.parseInt(
+					errorMsg.slice(startIndex + 1, endIndex),
+					10
 				);
-				if (Number.isNaN(errorCode)) return undefined;
+				if (Number.isNaN(errorCode)) {
+					return undefined;
+				}
 				return errorCode;
 			} catch {
 				return undefined;
 			}
 		};
 
-		const moveErrorPackageId = (inputs: {
-			errorMessage: string;
-		}): PackageId | undefined => {
-			const { errorMessage } = inputs;
-
-			const startIndex = errorMessage.toLowerCase().indexOf("address:");
-			const endIndex = errorMessage.indexOf(", name:");
-			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+		const moveErrorPackageId = (errorMsg: string): PackageId | undefined => {
+			const startIndex = errorMsg.toLowerCase().indexOf("address:");
+			const endIndex = errorMsg.indexOf(", name:");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex) {
 				return undefined;
+			}
 
 			try {
-				const pkgStr = errorMessage
+				const pkgStr = errorMsg
 					.slice(startIndex + 8, endIndex)
 					.trim()
 					.replaceAll("0x", "");
-				const packageId = Helpers.addLeadingZeroesToType("0x" + pkgStr);
-				if (!this.isValidHex(packageId)) return undefined;
+				const packageId = Helpers.addLeadingZeroesToType(`0x${pkgStr}`);
+				if (!Helpers.isValidHex(packageId)) {
+					return undefined;
+				}
 				return packageId;
 			} catch {
 				return undefined;
 			}
 		};
 
-		const moveErrorModule = (inputs: {
-			errorMessage: string;
-		}): ModuleName | undefined => {
-			const { errorMessage } = inputs;
-
-			const startIndex = errorMessage
-				.toLowerCase()
-				.indexOf('identifier("');
-			const endIndex = errorMessage.indexOf('")');
-			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+		const moveErrorModule = (errorMsg: string): ModuleName | undefined => {
+			const startIndex = errorMsg.toLowerCase().indexOf('identifier("');
+			const endIndex = errorMsg.indexOf('")');
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex) {
 				return undefined;
+			}
 
 			try {
-				return errorMessage.slice(startIndex + 12, endIndex).trim();
+				return errorMsg.slice(startIndex + 12, endIndex).trim();
 			} catch {
 				return undefined;
 			}
 		};
 
-		const errorCode = moveErrorCode({ errorMessage });
-		const packageId = moveErrorPackageId({ errorMessage });
-		const module = moveErrorModule({ errorMessage });
-		if (errorCode === undefined || !packageId || !module) return undefined;
+		const errorCode = moveErrorCode(errorMessage);
+		const packageId = moveErrorPackageId(errorMessage);
+		const module = moveErrorModule(errorMessage);
+		if (errorCode === undefined || !packageId || !module) {
+			return undefined;
+		}
 
 		return { errorCode, packageId, module };
 	}
@@ -842,35 +860,31 @@ export class Helpers {
 	 * @param inputs - Includes the raw `errorMessage` and a `moveErrors` object keyed by package, module, and code.
 	 * @returns A structure with `errorCode`, `packageId`, `module`, and a human-readable `error` string, or `undefined`.
 	 */
-	public static translateMoveErrorMessage(inputs: {
+	static translateMoveErrorMessage(inputs: {
 		errorMessage: string;
 		moveErrors: MoveErrors;
-	}):
-		| {
-				errorCode: MoveErrorCode;
-				packageId: ObjectId;
-				module: ModuleName;
-				error: string;
-		  }
-		| undefined {
+	}): TranslatedMoveError | undefined {
 		const { errorMessage, moveErrors } = inputs;
 
-		const parsed = this.parseMoveErrorMessage({ errorMessage });
-		if (!parsed || !(parsed.packageId in moveErrors)) return undefined;
+		const parsed = Helpers.parseMoveErrorMessage({ errorMessage });
+		if (!(parsed && parsed.packageId in moveErrors)) {
+			return undefined;
+		}
 
 		let error: string;
 		if (
 			parsed.module in moveErrors[parsed.packageId] &&
 			parsed.errorCode in moveErrors[parsed.packageId][parsed.module]
 		) {
-			error =
-				moveErrors[parsed.packageId][parsed.module][parsed.errorCode];
+			error = moveErrors[parsed.packageId][parsed.module][parsed.errorCode];
 		} else if (
 			"ANY" in moveErrors[parsed.packageId] &&
-			parsed.errorCode in moveErrors[parsed.packageId]["ANY"]
+			parsed.errorCode in moveErrors[parsed.packageId].ANY
 		) {
-			error = moveErrors[parsed.packageId]["ANY"][parsed.errorCode];
-		} else return undefined;
+			error = moveErrors[parsed.packageId].ANY[parsed.errorCode];
+		} else {
+			return undefined;
+		}
 
 		return {
 			...parsed,
@@ -891,9 +905,9 @@ export class Helpers {
 	 * @returns A new `Keypair` instance for signing transactions.
 	 * @throws If the schema is unsupported.
 	 */
-	public static keypairFromPrivateKey = (privateKey: string): Keypair => {
+	static keypairFromPrivateKey = (privateKey: string): Keypair => {
 		const parsedKeypair = decodeSuiPrivateKey(privateKey);
-		switch (parsedKeypair.schema) {
+		switch (parsedKeypair.scheme) {
 			case "ED25519":
 				return Ed25519Keypair.fromSecretKey(parsedKeypair.secretKey);
 			case "Secp256k1":
@@ -901,9 +915,7 @@ export class Helpers {
 			case "Secp256r1":
 				return Secp256r1Keypair.fromSecretKey(parsedKeypair.secretKey);
 			default:
-				throw new Error(
-					`unsupported schema \`${parsedKeypair.schema}\``
-				);
+				throw new Error(`unsupported scheme \`${parsedKeypair.scheme}\``);
 		}
 	};
 }

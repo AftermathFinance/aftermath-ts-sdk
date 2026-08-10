@@ -1,10 +1,11 @@
-import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
-import {
+import type {
 	Balance,
+	Bps,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
+import type { ObjectId, SuiAddress } from "../../types";
+import type { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Common Types
@@ -18,7 +19,7 @@ export interface LimitOrdersIntegratorFeeData {
 	/**
 	 * The integrator fee percentage in basis points (bps), e.g., 100 => 1%.
 	 */
-	feeBps: number;
+	feeBps: Bps;
 	/**
 	 * The recipient address for fee collection.
 	 */

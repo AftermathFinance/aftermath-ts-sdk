@@ -1,26 +1,25 @@
-import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { SharedCustodyAddresses } from "../../../types";
-import { MultiSigPublicKey } from "@mysten/sui/multisig";
 import { Ed25519PublicKey } from "@mysten/sui/keypairs/ed25519";
-import { ApiMultisigUserBody, MultisigData } from "../multisigTypes";
+import { MultiSigPublicKey } from "@mysten/sui/multisig";
+import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import type { SharedCustodyAddresses } from "../../../types";
+import type { ApiMultisigUserBody, MultisigData } from "../multisigTypes";
 
 export class MultisigApi {
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
 
-	public readonly sharedCustodyAddresses: SharedCustodyAddresses;
+	readonly sharedCustodyAddresses: SharedCustodyAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const sharedCustodyAddresses = this.Provider.addresses.sharedCustody;
-		if (!sharedCustodyAddresses)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
+	constructor(private readonly api: AftermathApi) {
+		const sharedCustodyAddresses = this.api.addresses.sharedCustody;
+		if (!sharedCustodyAddresses) {
+			throw new Error("not all required addresses have been set in provider");
+		}
 
 		this.sharedCustodyAddresses = sharedCustodyAddresses;
 	}
@@ -29,7 +28,7 @@ export class MultisigApi {
 	//  Fetch
 	// =========================================================================
 
-	public getMultisigForUser(inputs: ApiMultisigUserBody): MultisigData {
+	getMultisigForUser(inputs: ApiMultisigUserBody): MultisigData {
 		const afPublicKeyBuffer = Buffer.from(
 			this.sharedCustodyAddresses.publicKey || "",
 			"base64"

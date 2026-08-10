@@ -1,5 +1,11 @@
 import {
-	DaoFeePoolObject,
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
+import type { ObjectId } from "../../../types";
+import { Coin } from "../../coin";
+import type {
 	DaoFeePoolOwnerCapObject,
 	PoolCoins,
 	PoolDepositEvent,
@@ -7,23 +13,14 @@ import {
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 } from "../poolsTypes";
-import {
-	PoolCreateEventOnChain,
-	PoolFieldsOnChain,
-	PoolTradeEventOnChainFields,
-	PoolDepositEventFieldsOnChain,
-	PoolWithdrawEventFieldsOnChain,
-	PoolTradeEventOnChain,
-	PoolDepositEventOnChain,
-	PoolWithdrawEventOnChain,
-	DaoFeePoolFieldsOnChain,
+import type {
 	DaoFeePoolOwnerCapFieldsOnChain,
+	PoolCreateEventOnChain,
+	PoolDepositEventOnChain,
+	PoolFieldsOnChain,
+	PoolTradeEventOnChain,
+	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Coin } from "../../coin";
-import { Helpers } from "../../../general/utils";
-import { AnyObjectType, ObjectId } from "../../../types";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class PoolsApiCasting {
 	// =========================================================================
@@ -31,7 +28,7 @@ export class PoolsApiCasting {
 	// =========================================================================
 
 	public static poolObjectFromSuiObject = (
-		suiObject: SuiObjectResponse
+		suiObject: SuiObjectView
 	): PoolObject => {
 		const objectId = Helpers.getObjectId(suiObject);
 		const objectType = Helpers.getObjectType(suiObject);
@@ -40,14 +37,28 @@ export class PoolsApiCasting {
 			suiObject
 		) as PoolFieldsOnChain;
 
+		// @dev: the LP coin type used to come from the nested `Supply<L>` struct's
+		// own `type`, which gRPC's `json` view drops. It is recoverable from the
+		// pool's own type instead: the pool is `Pool<L>` where `L` **is** the LP
+		// coin (see the `/* (Pool<L>, Coin<L>) */` annotation in `poolsApi.ts`).
+		// Verified to yield the byte-identical type string on a real mainnet pool.
 		const lpCoinType = Helpers.addLeadingZeroesToType(
-			Coin.getInnerCoinType(poolFieldsOnChain.lp_supply.type)
+			Coin.getInnerCoinType(objectType)
 		);
+
+		// @dev: `coin_decimals` is a `vector<u8>`, which gRPC base64-encodes.
+		// Indexing it undecoded yields a one-character string, so `Number(...)`
+		// of it is NaN — a pool would render with broken decimals rather than
+		// throwing. Decode once, up front.
+		const coinDecimals =
+			poolFieldsOnChain.coin_decimals === undefined
+				? undefined
+				: GrpcCasting.bytesFieldToNumbers(poolFieldsOnChain.coin_decimals);
 
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
 			(acc, cur, index) => ({
 				...acc,
-				[Helpers.addLeadingZeroesToType("0x" + cur)]: {
+				[Helpers.addLeadingZeroesToType(`0x${cur}`)]: {
 					weight: BigInt(poolFieldsOnChain.weights[index]),
 					balance:
 						BigInt(poolFieldsOnChain.normalized_balances[index]) /
@@ -59,16 +70,8 @@ export class PoolsApiCasting {
 					normalizedBalance: BigInt(
 						poolFieldsOnChain.normalized_balances[index]
 					),
-					decimalsScalar: BigInt(
-						poolFieldsOnChain.decimal_scalars[index]
-					),
-					...(poolFieldsOnChain.coin_decimals
-						? {
-								decimals: Number(
-									poolFieldsOnChain.coin_decimals[index]
-								),
-						  }
-						: {}),
+					decimalsScalar: BigInt(poolFieldsOnChain.decimal_scalars[index]),
+					...(coinDecimals ? { decimals: coinDecimals[index] } : {}),
 				},
 			}),
 			{}
@@ -80,7 +83,9 @@ export class PoolsApiCasting {
 			lpCoinType,
 			name: poolFieldsOnChain.name,
 			creator: poolFieldsOnChain.creator,
-			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+			lpCoinSupply: BigInt(
+				GrpcCasting.unwrapStructField(poolFieldsOnChain.lp_supply).value
+			),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
 			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
@@ -89,7 +94,7 @@ export class PoolsApiCasting {
 	};
 
 	public static daoFeePoolOwnerCapObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): DaoFeePoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -100,9 +105,7 @@ export class PoolsApiCasting {
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			daoFeePoolId: Helpers.addLeadingZeroesToType(
-				fields.dao_fee_pool_id
-			),
+			daoFeePoolId: Helpers.addLeadingZeroesToType(fields.dao_fee_pool_id),
 		};
 	};
 
@@ -125,11 +128,11 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			trader: fields.issuer,
 			typesIn: fields.types_in.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			amountsIn: fields.amounts_in.map((amount) => BigInt(amount)),
 			typesOut: fields.types_out.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			amountsOut: fields.amounts_out.map((amount) => BigInt(amount)),
 			timestamp: Number(eventOnChain.timestampMs),
@@ -146,7 +149,7 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			depositor: fields.issuer,
 			types: fields.types.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			deposits: fields.deposits.map((deposit) => BigInt(deposit)),
 			lpMinted: BigInt(fields.lp_coins_minted),
@@ -164,7 +167,7 @@ export class PoolsApiCasting {
 			poolId: fields.pool_id,
 			withdrawer: fields.issuer,
 			types: fields.types.map((type) =>
-				Helpers.addLeadingZeroesToType("0x" + type)
+				Helpers.addLeadingZeroesToType(`0x${type}`)
 			),
 			withdrawn: fields.withdrawn.map((withdraw) => BigInt(withdraw)),
 			lpBurned: BigInt(fields.lp_coins_burned),

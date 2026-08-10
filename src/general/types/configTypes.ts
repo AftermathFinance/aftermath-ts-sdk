@@ -1,7 +1,5 @@
-import { Sui } from "../../packages";
-import { CoinType } from "../../types";
-import { CoinDecimal } from "../../types";
-import { ObjectId, SuiAddress } from "./generalTypes";
+import type { CoinDecimal } from "../../types";
+import type { ObjectId, SuiAddress } from "./generalTypes";
 
 // =========================================================================
 //  Name Only
@@ -27,7 +25,7 @@ export interface ConfigAddresses {
 	farms?: FarmsAddresses;
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
-	leveragedStaking?: LeveragedStakingAddresses;
+
 	dca?: DcaAddresses;
 	limitOrders?: LimitAddresses;
 	sharedCustody?: SharedCustodyAddresses;
@@ -45,6 +43,7 @@ export interface FaucetAddresses {
 	};
 	objects: {
 		faucet: ObjectId;
+		config: ObjectId;
 		suiFrensMint: ObjectId;
 	};
 }
@@ -63,17 +62,6 @@ export interface StakingAddresses {
 		referralVault: ObjectId;
 		validatorConfigsTable: ObjectId;
 		aftermathValidator: ObjectId;
-	};
-}
-
-export interface LeveragedStakingAddresses {
-	packages: {
-		leveragedAfSui: SuiAddress;
-		leveragedAfSuiInitial: SuiAddress;
-	};
-	objects: {
-		leveragedAfSuiState: ObjectId;
-		afSuiSuiPoolId: ObjectId;
 	};
 }
 

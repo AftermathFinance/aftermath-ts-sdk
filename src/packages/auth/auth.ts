@@ -1,17 +1,16 @@
-import {
+import { Helpers } from "../../general/utils";
+import { Caller } from "../../general/utils/caller";
+import type {
 	CallerConfig,
 	SignMessageCallback,
 	SuiAddress,
-	SuiNetwork,
 } from "../../types";
-import { Caller } from "../../general/utils/caller";
-import {
+import type {
 	ApiCreateAuthAccountBody,
 	ApiGetAccessTokenBody,
 	ApiGetAccessTokenResponse,
 	RateLimit,
 } from "./authTypes";
-import { Helpers } from "../../general/utils";
 
 /**
  * The `Auth` class manages creation and refreshing of access tokens
@@ -95,13 +94,17 @@ export class Auth extends Caller {
 		this.isCanceled = false; // Mark as active
 
 		const startRefresh = async () => {
-			if (this.isCanceled) return; // No-op if canceled
+			if (this.isCanceled) {
+				return; // No-op if canceled
+			}
 
 			const { accessToken, expirationTimestamp } =
 				await this.getAccessToken(inputs);
 			this.setAccessToken(accessToken);
 
-			if (this.isCanceled) return; // Double-check after token fetch
+			if (this.isCanceled) {
+				return; // Double-check after token fetch
+			}
 
 			// Provide a margin by refreshing before actual expiration
 			const TIMEOUT_REDUCTION_RATIO = 0.9;
@@ -260,22 +263,18 @@ export class Auth extends Caller {
 			rate_limits: RateLimit[];
 		}>("AccountCreate", {
 			sub: accountName,
-			wallet_address:
-				Helpers.addLeadingZeroesToType(accountWalletAddress),
+			wallet_address: Helpers.addLeadingZeroesToType(accountWalletAddress),
 			rate_limits: rateLimits,
 		});
 		const message = new TextEncoder().encode(serializedJson);
 
 		const { signature } = await signMessageCallback({ message });
 
-		return this.fetchApi<boolean, ApiCreateAuthAccountBody>(
-			"create-account",
-			{
-				signature,
-				serializedJson,
-				walletAddress: Helpers.addLeadingZeroesToType(walletAddress),
-			}
-		);
+		return this.fetchApi<boolean, ApiCreateAuthAccountBody>("create-account", {
+			signature,
+			serializedJson,
+			walletAddress: Helpers.addLeadingZeroesToType(walletAddress),
+		});
 	}
 
 	// =========================================================================

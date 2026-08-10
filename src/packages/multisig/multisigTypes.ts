@@ -1,4 +1,4 @@
-import { MultiSigPublicKey } from "@mysten/sui/multisig";
+import type { MultiSigPublicKey } from "@mysten/sui/multisig";
 
 /**
  * Represents the body needed to request a multisig setup for a user by sending
