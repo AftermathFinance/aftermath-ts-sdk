@@ -67,10 +67,13 @@ export class FarmsStakingPool extends Caller {
 	 * console.log(poolTvl);
 	 * ```
 	 */
-	public async getTVL(): Promise<number> {
-		return new Farms(this.config, this.api).getTVL({
-			farmIds: [this.stakingPool.objectId],
-		});
+	public async getTVL(abortSignal?: AbortSignal): Promise<number> {
+		return new Farms(this.config, this.api).getTVL(
+			{
+				farmIds: [this.stakingPool.objectId],
+			},
+			abortSignal
+		);
 	}
 
 	/**
@@ -84,10 +87,13 @@ export class FarmsStakingPool extends Caller {
 	 * console.log(rewardTvl);
 	 * ```
 	 */
-	public async getRewardsTVL(): Promise<number> {
-		return new Farms(this.config, this.api).getRewardsTVL({
-			farmIds: [this.stakingPool.objectId],
-		});
+	public async getRewardsTVL(abortSignal?: AbortSignal): Promise<number> {
+		return new Farms(this.config, this.api).getRewardsTVL(
+			{
+				farmIds: [this.stakingPool.objectId],
+			},
+			abortSignal
+		);
 	}
 
 	// =========================================================================

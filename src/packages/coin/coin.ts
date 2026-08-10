@@ -153,11 +153,12 @@ export class Coin extends Caller {
 	 * console.log(decimals); // { "0x2::sui::SUI": 9, "0x<...>": 6 }
 	 * ```
 	 */
-	public async getCoinsToDecimals(inputs: {
-		coins: CoinType[];
-	}): Promise<CoinsToDecimals> {
+	public async getCoinsToDecimals(
+		inputs: { coins: CoinType[] },
+		abortSignal?: AbortSignal
+	): Promise<CoinsToDecimals> {
 		const { coins } = inputs;
-		const metadatas = await this.getCoinMetadatas(inputs);
+		const metadatas = await this.getCoinMetadatas(inputs, abortSignal);
 
 		const coinsToDecimals: Record<CoinType, CoinDecimal> = metadatas
 			.map((data) => data.decimals)
@@ -181,7 +182,10 @@ export class Coin extends Caller {
 	 * console.log(metadata.name, metadata.symbol, metadata.decimals);
 	 * ```
 	 */
-	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadaWithInfo> {
+	public async getCoinMetadata(
+		coin?: CoinType,
+		abortSignal?: AbortSignal
+	): Promise<CoinMetadaWithInfo> {
 		if (this.metadata) {
 			return this.metadata;
 		}
@@ -191,7 +195,10 @@ export class Coin extends Caller {
 			throw new Error("no valid coin type");
 		}
 
-		const [metadata] = await this.getCoinMetadatas({ coins: [coinType] });
+		const [metadata] = await this.getCoinMetadatas(
+			{ coins: [coinType] },
+			abortSignal
+		);
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}
@@ -211,14 +218,16 @@ export class Coin extends Caller {
 	 * console.log(metas[0].symbol, metas[1].symbol);
 	 * ```
 	 */
-	public async getCoinMetadatas(inputs: {
-		coins: CoinType[];
-	}): Promise<CoinMetadaWithInfo[]> {
+	public async getCoinMetadatas(
+		inputs: { coins: CoinType[] },
+		abortSignal?: AbortSignal
+	): Promise<CoinMetadaWithInfo[]> {
 		return this.fetchApi<CoinMetadaWithInfo[], { coins: CoinType[] }>(
 			"metadata",
 			{
 				coins: inputs.coins.map((coin) => Helpers.addLeadingZeroesToType(coin)),
-			}
+			},
+			abortSignal
 		);
 	}
 
@@ -245,7 +254,10 @@ export class Coin extends Caller {
 	 * console.log(priceInfo.price, priceInfo.priceChange24HoursPercentage);
 	 * ```
 	 */
-	public async getPrice(coin?: CoinType): Promise<CoinPriceInfo> {
+	public async getPrice(
+		coin?: CoinType,
+		abortSignal?: AbortSignal
+	): Promise<CoinPriceInfo> {
 		if (this.priceInfo !== undefined) {
 			return this.priceInfo;
 		}
@@ -255,9 +267,12 @@ export class Coin extends Caller {
 			throw new Error("no valid coin type");
 		}
 
-		const priceInfo = await new Prices(this.config).getCoinPriceInfo({
-			coin: coinType,
-		});
+		const priceInfo = await new Prices(this.config).getCoinPriceInfo(
+			{
+				coin: coinType,
+			},
+			abortSignal
+		);
 
 		// NOTE: do we want this here ? (unexpected behavior)
 		// if (price <= 0) throw new Error("No price found.")
