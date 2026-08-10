@@ -5,7 +5,9 @@ import type {
 import type {
 	AnyObjectType,
 	Balance,
+	Bps,
 	Byte,
+	EmptyObject,
 	Event,
 	ObjectDigest,
 	ObjectId,
@@ -17,6 +19,7 @@ import type {
 	SuiAddress,
 	Timestamp,
 	TransactionDigest,
+	ValueOf,
 } from "../../general/types/generalTypes";
 import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
@@ -33,6 +36,15 @@ import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 export interface PerpetualsSponsorConfig {
 	/** Wallet address to use for gas pool sponsorship. */
 	walletAddress: SuiAddress;
+	/**
+	 * Base64 of the JSON `{"action":"SPONSOR_GAS","date":<unix seconds>}` signed
+	 * by `walletAddress`. Proves who is asking, not what for; the gas pool won't
+	 * hand out a sponsorship without it. Reusable for a day either side of
+	 * `date`, so sign once, cache it, and send it with every sponsored tx.
+	 */
+	bytes?: string;
+	/** `walletAddress`'s signature over `bytes`. */
+	signature?: string;
 }
 
 /**
@@ -46,21 +58,6 @@ export type PerpetualsCapType =
 	| "accountAgent"
 	| "vaultAdmin"
 	| "vaultAgent";
-
-// =========================================================================
-//  Sponsor Config
-// =========================================================================
-
-/**
- * Configuration for gas pool sponsorship on perpetuals transactions.
- *
- * When provided, the transaction will include a gas pool sponsor rebate step
- * that debits the specified wallet's gas pool.
- */
-export interface PerpetualsSponsorConfig {
-	/** Wallet address to use for gas pool sponsorship. */
-	walletAddress: SuiAddress;
-}
 
 /**
  * PTB argument references returned by deferred `create_account` for use
@@ -120,6 +117,15 @@ export type PerpetualsOrderId = bigint;
 export type PerpetualsOrderIdAsString = string;
 
 /**
+ * Optional client-managed order id (`u64`) used to tag an order at post time.
+ *
+ * It is scoped to a `(marketId, accountId)` pair and is not unique on-chain.
+ * Callers can later track or cancel an order by this id instead of the on-chain
+ * order id. Serialized on the wire as a BigInt-style string (e.g. `"123n"`).
+ */
+export type PerpetualsClientOrderId = bigint;
+
+/**
  * Price type for orders, represented as a fixed-point `bigint` in the
  * on-chain format (e.g., scaled by `1e9`).
  */
@@ -135,10 +141,12 @@ export type PerpetualsOrderPrice = bigint;
  * - `Bid` (0): Long-side orders / buyers.
  * - `Ask` (1): Short-side orders / sellers.
  */
-export enum PerpetualsOrderSide {
-	Ask = 1, // true
-	Bid = 0, // false
-}
+export const PerpetualsOrderSide = {
+	Ask: 1, // true
+	Bid: 0, // false
+} as const;
+
+export type PerpetualsOrderSide = ValueOf<typeof PerpetualsOrderSide>;
 
 /**
  * Order execution and posting behavior.
@@ -148,12 +156,14 @@ export enum PerpetualsOrderSide {
  * - `PostOnly`: Only posts to the book; will not take liquidity.
  * - `ImmediateOrCancel`: Fills as much as possible immediately; remainder is canceled.
  */
-export enum PerpetualsOrderType {
-	Standard = 0,
-	FillOrKill = 1,
-	PostOnly = 2,
-	ImmediateOrCancel = 3,
-}
+export const PerpetualsOrderType = {
+	Standard: 0,
+	FillOrKill: 1,
+	PostOnly: 2,
+	ImmediateOrCancel: 3,
+} as const;
+
+export type PerpetualsOrderType = ValueOf<typeof PerpetualsOrderType>;
 
 /**
  * Stop order mode.
@@ -163,24 +173,31 @@ export enum PerpetualsOrderType {
  * - `Standalone`: Independent stop order that can both reduce or increase
  *   the position, potentially requiring additional allocated collateral.
  */
-export enum PerpetualsStopOrderType {
-	/**
-	 * Stop Loss / Take Profit stop order. Can to be placed to close (fully or partially)
-	 * the position.
-	 */
-	SlTp = 0,
-	/**
-	 * Stop order that can be both reduce or increase the position's size. May require
-	 * some collateral to be allocated to be able to be placed.
-	 */
-	Standalone = 1,
-}
+export const PerpetualsStopOrderType = {
+	SlTp: 0,
+	Standalone: 1,
+} as const;
+
+export type PerpetualsStopOrderType = ValueOf<typeof PerpetualsStopOrderType>;
+
+/**
+ * Which on-chain price a stop order's trigger is evaluated against.
+ */
+export const PerpetualsStopOrderTriggerPriceType = {
+	IndexPrice: 0,
+	BookMidPrice: 1,
+	MarkPrice: 2,
+} as const;
+
+export type PerpetualsStopOrderTriggerPriceType = ValueOf<
+	typeof PerpetualsStopOrderTriggerPriceType
+>;
 
 /**
  * Execution details for a stop order that has been executed.
  */
 export type PerpetualsExecutionInfo =
-	| { notSpecified: {} }
+	| { notSpecified: EmptyObject }
 	| {
 			standaloneExecuted: {
 				executionPrice: number;
@@ -201,18 +218,18 @@ export type PerpetualsExecutionInfo =
  * Current state of a stop order in its lifecycle.
  */
 export type PerpetualsOrderState =
-	| { unknown: {} }
+	| { unknown: EmptyObject }
 	| {
 			invalid: {
 				error: string;
 			};
 	  }
-	| { pending: {} }
-	| { active: {} }
+	| { pending: EmptyObject }
+	| { active: EmptyObject }
 	| { executed: PerpetualsExecutionInfo }
-	| { cancelled: {} }
-	| { inExecution: {} }
-	| { toCancel: {} };
+	| { cancelled: EmptyObject }
+	| { inExecution: EmptyObject }
+	| { toCancel: EmptyObject };
 
 // =========================================================================
 //  Market
@@ -356,11 +373,9 @@ export interface PerpetualsPosition {
 		currentSize: bigint;
 		/** Initial size of the order in base units (scaled as bigint). */
 		initialSize: bigint;
+		/** Client-managed order id this order was tagged with, if any. */
+		clientOrderId?: PerpetualsClientOrderId;
 	}[];
-	/** Maker fee rate applied to this position (as a fraction). */
-	makerFee: Percentage;
-	/** Taker fee rate applied to this position (as a fraction). */
-	takerFee: Percentage;
 	/** Effective leverage applied to the position. */
 	leverage: number;
 	/** Collateral value in USD. */
@@ -407,10 +422,10 @@ export interface PerpetualsMarketParams {
 	marginRatioMaintenance: number;
 	/** Symbol of the underlying asset. */
 	baseAssetSymbol: CoinSymbol;
-	/** On-chain ID of the oracle providing the base asset price. */
-	basePriceFeedId: ObjectId;
-	/** On-chain ID of the oracle providing the collateral asset price. */
-	collateralPriceFeedId: ObjectId;
+	/** Numeric price-feed storage id of the base asset's oracle feed. */
+	basePriceFeedId: number;
+	/** Numeric price-feed storage id of the collateral asset's oracle feed. */
+	collateralPriceFeedId: number;
 	/** Funding interval duration in milliseconds. */
 	fundingFrequencyMs: bigint;
 	/** Funding period used for calculations in milliseconds. */
@@ -423,16 +438,12 @@ export interface PerpetualsMarketParams {
 	spreadTwapFrequencyMs: bigint;
 	/** TWAP period for the spread in milliseconds. */
 	spreadTwapPeriodMs: bigint;
-	/** TWAP period for gas price in milliseconds. */
-	gasPriceTwapPeriodMs: bigint;
 	/** Maker fee rate (fraction) charged for providing liquidity. */
 	makerFee: Percentage;
 	/** Taker fee rate (fraction) charged for taking liquidity. */
 	takerFee: Percentage;
 	/** Liquidation fee rate (fraction) charged on liquidations. */
 	liquidationFee: Percentage;
-	/** Fee rate (fraction) for forced cancellation. */
-	forceCancelFee: Percentage;
 	/** Fraction of fees directed to the insurance fund. */
 	insuranceFundFee: Percentage;
 	/** Minimum notional order value in USD. */
@@ -443,10 +454,12 @@ export interface PerpetualsMarketParams {
 	tickSize: bigint;
 	/** Scaling factor used in internal fixed-point conversions. */
 	scalingFactor: number;
-	/** Additional taker fee that depends on gas cost. */
-	gasPriceTakerFee: Percentage;
-	/** Z-score threshold used for outlier detection in pricing. */
-	zScoreThreshold: number;
+	/**
+	 * Additional taker fee charged when the transaction is submitted with a gas
+	 * price above the epoch reference gas price. `undefined` means priority-gas
+	 * transactions are rejected on-chain; a value means the surcharge applies.
+	 */
+	priorityTakerFee: Percentage | undefined;
 	/** Maximum open interest (notional or base) allowed in the market. */
 	maxPendingOrders: bigint;
 	/** Oracle tolerance for the base asset price (scaled bigint). */
@@ -599,21 +612,21 @@ export interface PerpetualsOrderData {
  */
 export interface PerpetualsBuilderCodeParamaters {
 	/**
-	 * Sui address of the integrator who will receive the fee.
+	 * Numeric integrator id (as assigned by the registry) of the integrator who
+	 * will receive the fee.
 	 *
-	 * This integrator must have been previously approved by the account owner,
-	 * and must have a vault created for the market where the order is being placed.
+	 * This integrator must have been previously approved by the account owner.
 	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 
 	/**
-	 * Taker fee (as a decimal) to be charged on this order's taker volume.
+	 * Integrator fee (as a decimal) to be charged on this order's taker volume.
 	 *
 	 * For example, 0.0005 represents a 0.05% fee. This value must not exceed
-	 * the maximum taker fee that the user approved for this integrator.
+	 * the maximum integrator fee that the user approved for this integrator.
 	 * The fee is only applied to taker volume (not maker volume).
 	 */
-	takerFee: Percentage;
+	integratorFee: Percentage;
 }
 
 /**
@@ -645,22 +658,28 @@ export interface PerpetualsStopOrderData {
 	};
 	/** Stop loss / take profit configuration. */
 	slTp?: {
-		/** Index price at which to trigger a stop loss. */
-		stopLossIndexPrice?: number;
-		/** Index price at which to take profit. */
-		takeProfitIndexPrice?: number;
+		/** Price at which to trigger a stop loss (interpreted per `triggerPriceType`). */
+		stopLossPrice?: number;
+		/** Price at which to take profit (interpreted per `triggerPriceType`). */
+		takeProfitPrice?: number;
+		/** Which on-chain price the trigger uses: 0 = index, 1 = book, 2 = mark. */
+		triggerPriceType: PerpetualsStopOrderTriggerPriceType;
 		/** Unique order identifier for limit order sl/tp is tied to. */
 		limitOrderId?: PerpetualsOrderId;
 	};
 	/** Non-SL/TP standalone stop configuration. */
 	nonSlTp?: {
-		/** Index price threshold used for triggering. */
+		/** Price threshold used for triggering (interpreted per `triggerPriceType`). */
 		stopIndexPrice: number;
-		/** If true, triggers when index >= threshold, otherwise index <= threshold. */
+		/** If true, triggers when price >= threshold, otherwise price <= threshold. */
 		triggerIfGeStopIndexPrice: boolean;
 		/** Whether the stop can only reduce an existing position. */
 		reduceOnly: boolean;
+		/** Which on-chain price the trigger uses: 0 = index, 1 = book, 2 = mark. */
+		triggerPriceType: PerpetualsStopOrderTriggerPriceType;
 	};
+	/** Optional integrator fee configuration applied when this stop order fires. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
 }
 
 /**
@@ -773,7 +792,7 @@ export interface PerpetualsVaultObject {
 	 * Supply of LP coins from a `TreasuryCap` for liquidity integrity.
 	 *
 	 * This is the total minted supply of the vault's LP token. Together with
-	 * `tvlUsd` and `totalCollateral`, this is used to derive LP share price.
+	 * `tvlUsd`, this is used to derive LP share price.
 	 */
 	lpSupply: Balance;
 	/**
@@ -792,26 +811,10 @@ export interface PerpetualsVaultObject {
 	 */
 	idleCollateralUsd: number;
 	/**
-	 * Total collateral owned by the vault in native units.
-	 *
-	 * This is the sum of:
-	 * - idle collateral held directly by the vault, and
-	 * - collateral currently allocated across clearing houses/positions.
-	 */
-	totalCollateral: Balance;
-	/**
-	 * USD valuation of `totalCollateral` at query time.
-	 *
-	 * This is typically derived from `totalCollateral` and the collateral oracle
-	 * price used by the vault.
-	 */
-	totalCollateralUsd: number;
-	/**
 	 * Total value locked in USD for this vault.
 	 *
-	 * Depending on protocol accounting, this may match `totalCollateralUsd`, or
-	 * may incorporate additional adjustments. It is the primary headline number
-	 * used for ranking and display.
+	 * Includes idle collateral plus the value of all open positions. It is the
+	 * primary headline number used for ranking and display.
 	 */
 	tvlUsd: number;
 	/**
@@ -838,17 +841,16 @@ export interface PerpetualsVaultObject {
 		 */
 		forceWithdrawDelayMs: bigint;
 		/**
-		 * Price feed storage id idetifying the oracle price for `C`
+		 * Numeric price-feed storage id identifying the oracle price for `C`.
 		 */
-		collateralPriceFeedStorageId: ObjectId;
+		collateralPriceFeedStorageId: number;
 		/**
-		 * Source object ID for the collateral price feed storage.
-		 *
-		 * Some oracle integrations separate the "storage object" from the "source"
-		 * (e.g., an aggregator or publisher object). This field identifies the
-		 * upstream source used to populate `collateralPriceFeedStorageId`.
+		 * Numeric source id of the collateral price feed (the oracle
+		 * provider/source: pyth, stork, etc.). Together with
+		 * `collateralPriceFeedStorageId` it identifies the feed in the oracle
+		 * aggregator registry.
 		 */
-		collateralPriceFeedStorageSourceId: ObjectId;
+		collateralPriceFeedStorageSourceId: number;
 		/**
 		 * Maximum tolerated deviation for the collateral oracle price.
 		 *
@@ -1044,7 +1046,6 @@ export interface PerpetualsAccountCollateralChange {
 		| {
 				netFeesUsd: number;
 				liquidationFeesUsd: number;
-				forceCancelFeesUsd: number;
 				insuranceFundFeesUsd: number;
 		  }
 		| {
@@ -1114,9 +1115,9 @@ export interface PerpetualsAccountOrderHistoryData {
 	/** Optional stop-loss / take-profit data. */
 	slTp?: {
 		/** Optional stop-loss trigger price based on the index price. */
-		stopLossIndexPrice?: number;
+		stopLossPrice?: number;
 		/** Optional take-profit trigger price based on the index price. */
-		takeProfitIndexPrice?: number;
+		takeProfitPrice?: number;
 		/** Unique order identifier for limit order sl/tp is tied to. */
 		limitOrderId?: PerpetualsOrderId;
 	};
@@ -1266,8 +1267,6 @@ export interface LiquidatedEvent extends Event {
 	liqeePnlUsd: number;
 	/** Liquidation fee paid in USD. */
 	liquidationFeesUsd: number;
-	/** Force-cancel fees collected in USD. */
-	forceCancelFeesUsd: number;
 	/** Fees directed to the insurance fund in USD. */
 	insuranceFundFeesUsd: number;
 }
@@ -1915,6 +1914,11 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	// collateralCoinType: CoinType;
 	/** Optional leverage override for the preview. */
 	leverage?: number;
+	/**
+	 * If true, the preview includes deallocating free collateral (margin not
+	 * backing a position) back to the wallet. Defaults to false.
+	 */
+	shouldDeallocateFreeCollateral?: boolean;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
 } & (
@@ -1946,6 +1950,11 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	// collateralCoinType: CoinType;
 	/** Optional leverage override for the preview. */
 	leverage?: number;
+	/**
+	 * If true, the preview includes deallocating free collateral (margin not
+	 * backing a position) back to the wallet. Defaults to false.
+	 */
+	shouldDeallocateFreeCollateral?: boolean;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
 } & (
@@ -1985,6 +1994,11 @@ export type ApiPerpetualsPreviewPlaceScaleOrderBody = {
 	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Optional expiration timestamp in milliseconds since epoch. */
 	expiryTimestamp?: bigint;
+	/**
+	 * If true, the preview includes deallocating free collateral (margin not
+	 * backing a position) back to the wallet. Defaults to false.
+	 */
+	shouldDeallocateFreeCollateral?: boolean;
 } & (
 	| {
 			// TODO: remove eventually ?
@@ -2009,6 +2023,16 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
 			orderIds: PerpetualsOrderId[];
 		}
 	>;
+	/**
+	 * If true, also deallocate free collateral (margin not backing a position)
+	 * back to the wallet. Defaults to false.
+	 */
+	shouldDeallocateFreeCollateral?: boolean;
+	/**
+	 * If true, abort the preview when any given order ID is not found on-chain.
+	 * If false (default), missing IDs are tolerated.
+	 */
+	shouldAbortOnMissingId?: boolean;
 } & (
 	| {
 			accountId: PerpetualsAccountId;
@@ -2215,11 +2239,26 @@ export interface ApiPerpetualsMarketCandleHistoryBody {
 	toTimestamp: Timestamp;
 
 	/**
-	 * Candle interval / resolution in **milliseconds** (e.g. 60_000 for 1m,
-	 * 300_000 for 5m).
+	 * Candle resolution as a CCXT-style timeframe label (e.g. `"1m"`, `"1h"`, `"1d"`).
 	 */
-	intervalMs: number;
+	resolution: PerpetualsCandleResolution;
 }
+
+/**
+ * Candle resolution as a CCXT-style timeframe label.
+ */
+export type PerpetualsCandleResolution =
+	| "1m"
+	| "5m"
+	| "15m"
+	| "30m"
+	| "1h"
+	| "4h"
+	| "12h"
+	| "1d"
+	| "3d"
+	| "1w"
+	| "1mo";
 
 /**
  * Response type for historical market candle data.
@@ -2338,6 +2377,238 @@ export interface ApiPerpetualsStopOrderDatasResponse {
 }
 
 // =========================================================================
+//  TWAP Orders
+// =========================================================================
+
+/**
+ * Per-order TWAP (time-weighted-average-price) request payload.
+ */
+export interface PerpetualsTwapOrderDetails {
+	/** Market (clearing house) ID this TWAP order targets. */
+	marketId: PerpetualsMarketId;
+	/** Position side: `0` for bid (long), `1` for ask (short). */
+	side: PerpetualsOrderSide;
+	/** Total base-asset size to execute across all chunks (scaled base units). */
+	size: bigint;
+	/** Whether the order may only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Number of child executions to split the order into. */
+	chunksAmount: number;
+	/** Target spacing between chunk executions, in milliseconds. */
+	executionGapMs: number;
+	/** Allowed jitter around each scheduled execution time, in milliseconds. */
+	executionTimeUncertaintyMs: number;
+	/** Optional deadline for the first execution (ms since epoch). */
+	firstRunExpireTimestamp?: bigint;
+	/** Optional overall expiry for the TWAP order (ms since epoch). */
+	expireTimestamp?: bigint;
+	/** How long to keep retrying a failed chunk execution, in milliseconds. */
+	timeForRetryMs: number;
+	/** Allowed deviation of a chunk's size from its target, in basis points. */
+	amountUncertaintyBps: Bps;
+	/** Cap on a single execution's size, as basis points of total size. */
+	maxOneExecutionAmountBps: Bps;
+	/**
+	 * Threshold below which a small trailing remainder is merged into the final
+	 * chunk, in basis points.
+	 */
+	smallTailMergeThresholdBps: Bps;
+	/** Max slippage tolerated per chunk execution, in basis points. */
+	maxSlippageBps: Bps;
+	/** Optional integrator fee configuration (friendly fractional fee). */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+}
+
+/**
+ * Lifecycle state of a TWAP order.
+ */
+export type PerpetualsTwapOrderState =
+	| "unknown"
+	| "invalid"
+	| "pending"
+	| "active"
+	| "reservedForProcessing"
+	| "executing"
+	| "completed"
+	| "spoiled"
+	| "cancelled"
+	| "toCancel"
+	| "finalized";
+
+/**
+ * Per-order TWAP details as returned by the read endpoint.
+ *
+ * Same fields as {@link PerpetualsTwapOrderDetails} minus `builderCode`, which
+ * the read response does not include.
+ */
+export type PerpetualsTwapOrderDetailsData = Omit<
+	PerpetualsTwapOrderDetails,
+	"builderCode"
+>;
+
+/**
+ * A TWAP order as surfaced to clients by the read endpoint.
+ */
+export interface PerpetualsTwapOrderData {
+	/** ID of the TWAP order object on-chain. */
+	twapOrderObjectId: ObjectId;
+	/** Collateral coin type backing the order. */
+	collateralType: CoinType;
+	/** Current lifecycle state of the TWAP order. */
+	orderState: PerpetualsTwapOrderState;
+	/** Reason the order is invalid, when `orderState === "invalid"`. */
+	invalidReason?: string;
+	/** Free-form status message about the order, if any. */
+	statusMessage?: string;
+	/** Order details. */
+	details: PerpetualsTwapOrderDetailsData;
+	/** Base-asset amount already executed (scaled base units). */
+	processedAmount: bigint;
+	/** Base-asset amount currently reserved for execution (scaled base units). */
+	scheduledAmount: bigint;
+	/** Timestamp (ms since epoch) of the most recent chunk execution. */
+	lastExecutionTimestampMs: Timestamp;
+}
+
+/**
+ * Edit to apply to an existing TWAP order. Any field left undefined is unchanged.
+ */
+export interface PerpetualsTwapOrderEdit {
+	/** Replacement order details (full set). */
+	newDetails?: PerpetualsTwapOrderDetails;
+	/** Replacement set of authorized executor addresses. */
+	newExecutors?: string[];
+}
+
+/**
+ * Body fields the SDK fills in automatically, so callers omit them from every
+ * `Sdk*Inputs` type.
+ */
+export type PerpetualsServerInjectedTxFields =
+	| "txKind"
+	| "walletAddress"
+	| "accountId"
+	| "accountCapId";
+
+/**
+ * SDK-level inputs for creating one or more TWAP orders — the request body
+ * without the auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCreateTwapOrdersInputs = Omit<
+	ApiPerpetualsCreateTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for creating TWAP orders via the API, for an
+ * account or vault.
+ */
+export type ApiPerpetualsCreateTwapOrdersBody = {
+	walletAddress: SuiAddress;
+	twapOrders: PerpetualsTwapOrderDetails[];
+	gasCoinArg?: TransactionObjectArgument;
+	txKind?: SerializedTransaction;
+	isSponsoredTx?: boolean;
+	sponsor?: PerpetualsSponsorConfig;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * Request body for editing existing TWAP orders via the API.
+ *
+ * `newTwapOrders` maps each TWAP order object id to the edit to apply.
+ */
+export type ApiPerpetualsEditTwapOrdersBody = {
+	walletAddress: SuiAddress;
+	newTwapOrders: Record<ObjectId, PerpetualsTwapOrderEdit>;
+	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * SDK-level inputs for editing existing TWAP orders — the request body without
+ * the auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsEditTwapOrdersInputs = Omit<
+	ApiPerpetualsEditTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for canceling TWAP orders identified by object IDs, for an
+ * account or vault.
+ */
+export type ApiPerpetualsCancelTwapOrdersBody = {
+	walletAddress: SuiAddress;
+	twapOrderIds: ObjectId[];
+	txKind?: SerializedTransaction;
+	sponsor?: PerpetualsSponsorConfig;
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+			accountCapId?: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * SDK-level inputs for canceling TWAP orders — the request body without the
+ * auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCancelTwapOrdersInputs = Omit<
+	ApiPerpetualsCancelTwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	tx?: Transaction;
+};
+
+/**
+ * Request body for fetching the TWAP orders of an account, validated using a
+ * wallet signature.
+ */
+export type ApiPerpetualsTwapOrderDatasBody = {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+	marketIds?: PerpetualsMarketId[];
+} & (
+	| {
+			accountId: PerpetualsAccountId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * Response payload for TWAP-order queries.
+ */
+export interface ApiPerpetualsTwapOrderDatasResponse {
+	twapOrderDatas: PerpetualsTwapOrderData[];
+}
+
+// =========================================================================
 //  Transactions
 // =========================================================================
 
@@ -2428,19 +2699,20 @@ export interface ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody {
 	accountId: PerpetualsAccountId;
 
 	/**
-	 * Sui address of the integrator being approved.
-	 *
-	 * Must be a valid Sui object ID.
+	 * Numeric integrator id (as assigned by the registry) of the integrator
+	 * being approved.
 	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 
 	/**
-	 * Maximum taker fee (as a decimal) that the integrator can charge per order.
+	 * Maximum integrator fee (as a decimal) that the integrator can charge per
+	 * order.
 	 *
-	 * For example, 0.001 represents a 0.1% maximum fee. The integrator can set
+	 * For example, 0.001 represents a 0.1% maximum fee. The service converts
+	 * this to the on-chain scaled format internally. The integrator can set
 	 * any fee up to this maximum when placing orders on behalf of the user.
 	 */
-	maxTakerFee: Percentage;
+	maxIntegratorFee: Percentage;
 
 	/**
 	 * Optional existing transaction kind (base64-encoded) to extend.
@@ -2467,11 +2739,10 @@ export interface ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody {
 	accountId: PerpetualsAccountId;
 
 	/**
-	 * Sui address of the integrator whose permissions are being revoked.
-	 *
-	 * Must be a valid Sui object ID.
+	 * Numeric integrator id (as assigned by the registry) of the integrator
+	 * whose permissions are being revoked.
 	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 
 	/**
 	 * Optional existing transaction kind (base64-encoded) to extend.
@@ -2485,25 +2756,11 @@ export interface ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody {
 /**
  * Request payload for creating a transaction to initialize an integrator fee vault.
  *
- * Before an integrator can claim fees from a specific market, they must first create
- * a vault for that market. This is a one-time setup per integrator per market.
+ * Before an integrator can claim fees, they must first create a global vault.
+ * This is a one-time setup per integrator and applies across all markets. The
+ * integrator's identity (address) is taken from the transaction sender on-chain.
  */
 export interface ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody {
-	/**
-	 * Market (clearing house) ID where the integrator vault will be created.
-	 *
-	 * Must be a valid Sui object ID.
-	 */
-	marketId: PerpetualsMarketId;
-
-	/**
-	 * Sui address of the integrator creating the vault.
-	 *
-	 * Must be a valid Sui object ID.
-	 * This integrator will be able to claim fees from this vault.
-	 */
-	integratorAddress: SuiAddress;
-
 	/**
 	 * Optional existing transaction kind (base64-encoded) to extend.
 	 *
@@ -2517,31 +2774,23 @@ export interface ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody {
  * Request payload for creating a transaction to claim accumulated integrator fees from a vault.
  *
  * Integrators earn fees on taker volume generated by orders they submit on behalf of users.
- * These fees accumulate in a vault per market (clearing house), and can be claimed at any time
- * by the integrator.
+ * These fees accumulate in a global vault per integrator and can be claimed at any time.
  */
 export interface ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody {
 	/**
-	 * Market (clearing house) ID where the integrator fees were earned.
+	 * Numeric integrator id (as assigned by the registry).
 	 *
-	 * Must be a valid Sui object ID.
+	 * Only the integrator who earned the fees can claim them. Integrator vaults
+	 * are global across markets, so no clearing-house id is required.
 	 */
-	marketId: PerpetualsMarketId;
-
-	/**
-	 * Sui address of the integrator claiming their fees.
-	 *
-	 * Must be a valid Sui object ID.
-	 * Only the integrator who earned the fees can claim them.
-	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 
 	/**
 	 * Optional recipient address for the claimed fees.
 	 *
-	 * When provided, the transaction will include an on-chain transfer of the
-	 * claimed coin to this address. When omitted, the claimed coin is exposed
-	 * as a transaction argument that can be used in subsequent commands.
+	 * When provided, the transaction will include on-chain transfers of all
+	 * claimed coins to this address. When omitted, the claimed coins are exposed
+	 * as transaction arguments that can be used in subsequent commands.
 	 */
 	recipientAddress?: SuiAddress;
 
@@ -2556,7 +2805,7 @@ export interface ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody {
 /**
  * Response payload for claim integrator vault fees transaction.
  *
- * Contains the transaction kind and optionally a coin output argument when
+ * Contains the transaction kind and optionally the coin output arguments when
  * no recipient address was provided.
  */
 export interface ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse {
@@ -2567,11 +2816,12 @@ export interface ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse {
 	txKind: SerializedTransaction;
 
 	/**
-	 * When `recipientAddress` is omitted, this contains a readable argument
-	 * pointing to the claimed coin output, so callers can wire it into
-	 * subsequent steps.
+	 * When `recipientAddress` is omitted, this contains readable arguments
+	 * pointing to each claimed coin output (one per non-zero collateral balance
+	 * held by the integrator's global vault), so callers can wire them into
+	 * subsequent steps. Empty if the vault holds no balances.
 	 */
-	coinOutArg?: TransactionObjectArgument;
+	coinOutArgs?: TransactionObjectArgument[];
 }
 
 /**
@@ -2589,27 +2839,27 @@ export interface ApiPerpetualsBuilderCodesIntegratorConfigBody {
 	accountId: PerpetualsAccountId;
 
 	/**
-	 * Sui address of the integrator whose configuration is being queried.
-	 *
-	 * Must be a valid Sui object ID.
+	 * Numeric integrator id (as assigned by the registry) whose configuration is
+	 * being queried.
 	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 }
 
 /**
  * Response payload containing integrator configuration details.
  *
- * Returns whether an integrator configuration exists and the maximum taker fee
- * if the integrator has been approved.
+ * Returns whether an integrator configuration exists and the maximum integrator
+ * fee if the integrator has been approved.
  */
 export interface ApiPerpetualsBuilderCodesIntegratorConfigResponse {
 	/**
-	 * Maximum taker fee (as a decimal) that the integrator is authorized to charge.
+	 * Maximum integrator fee (as a decimal) that the integrator is authorized to
+	 * charge.
 	 *
 	 * For example, 0.001 represents a 0.1% maximum fee. This value is only meaningful
 	 * if `exists` is true.
 	 */
-	maxTakerFee: Percentage | undefined;
+	maxIntegratorFee: Percentage | undefined;
 
 	/**
 	 * Whether an integrator configuration exists for this account-integrator pair.
@@ -2621,25 +2871,19 @@ export interface ApiPerpetualsBuilderCodesIntegratorConfigResponse {
 }
 
 /**
- * Individual integrator vault data for a specific market.
+ * Accumulated integrator vault fees for a single collateral coin type.
  *
- * Contains the market ID and the accumulated fees available to claim from that market's vault.
+ * Integrator vaults are global (one per integrator across all markets), so fees
+ * are grouped by collateral coin type rather than by market.
  */
 export interface PerpetualsIntegratorVaultData {
 	/**
-	 * Market (clearing house) object ID.
-	 */
-	marketId: PerpetualsMarketId;
-
-	/**
-	 * The collateral coin type used by this market.
+	 * The collateral coin type these fees are denominated in.
 	 */
 	collateralCoinType: CoinType;
 
 	/**
-	 * Total accumulated fees in the market's collateral currency that are available to claim.
-	 *
-	 * Fees are denominated in the collateral coin type used by the market.
+	 * Total accumulated fees in the collateral currency that are available to claim.
 	 */
 	fees: number;
 
@@ -2650,40 +2894,30 @@ export interface PerpetualsIntegratorVaultData {
 }
 
 /**
- * Request payload for fetching integrator vault fees across multiple markets.
+ * Request payload for fetching integrator vault fees.
  *
- * This endpoint returns the accumulated fees an integrator has earned in their vaults
- * across one or more markets (clearing houses). These fees are generated from taker
- * volume on orders the integrator submitted on behalf of users.
+ * This endpoint returns the accumulated fees an integrator has earned in their
+ * global vault, grouped by collateral coin type. Vaults are global per integrator
+ * (not per market), so a single request covers all markets.
  */
 export interface ApiPerpetualsBuilderCodesIntegratorVaultsBody {
 	/**
-	 * List of market (clearing house) IDs to query for integrator vault fees.
-	 *
-	 * Each market ID must be a valid Sui object ID.
+	 * Numeric integrator id (as assigned by the registry) whose vault fees are
+	 * being queried.
 	 */
-	marketIds: PerpetualsMarketId[];
-
-	/**
-	 * Sui address of the integrator whose vault fees are being queried.
-	 *
-	 * Must be a valid Sui object ID.
-	 */
-	integratorAddress: SuiAddress;
+	integratorId: number;
 }
 
 /**
- * Response payload containing accumulated fees per market for an integrator.
+ * Response payload containing accumulated fees per collateral type for an integrator.
  *
- * Returns a vector of integrator vault data, one entry per market queried.
- * Markets where the integrator has no vault may be omitted or have zero fees.
+ * Returns a vector of integrator vault data, one entry per collateral coin type
+ * with a non-zero balance in the integrator's global vault.
  */
 export interface ApiPerpetualsBuilderCodesIntegratorVaultsResponse {
 	/**
-	 * Vector of integrator vault data containing market IDs and their accumulated fees.
-	 *
-	 * Each entry represents a market where the integrator has a vault and potentially
-	 * claimable fees. The order matches the order of market IDs in the request.
+	 * Vector of integrator vault data containing collateral coin types and their
+	 * accumulated fees.
 	 */
 	integratorVaults: PerpetualsIntegratorVaultData[];
 }
@@ -2869,10 +3103,16 @@ export interface SdkPerpetualsPlaceSlTpOrdersInputs {
 	marketId: PerpetualsMarketId;
 	/** Optional target size for SL/TP orders (scaled base units). */
 	size?: bigint;
-	/** Index price at which to trigger stop loss. */
-	stopLossIndexPrice?: number;
-	/** Index price at which to trigger take profit. */
-	takeProfitIndexPrice?: number;
+	/** Price at which to trigger stop loss (interpreted per `triggerPriceType`). */
+	stopLossPrice?: number;
+	/** Price at which to trigger take profit (interpreted per `triggerPriceType`). */
+	takeProfitPrice?: number;
+	/**
+	 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+	 */
+	triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+	/** Optional integrator fee configuration applied when the SL/TP fires. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Unique order identifier for limit order sl/tp is tied to. */
 	limitOrderId?: PerpetualsOrderId;
 	/** Optional transaction to embed in. */
@@ -2886,14 +3126,14 @@ export interface SdkPerpetualsPlaceSlTpOrdersInputs {
 }
 // & (
 // 	| {
-// 			stopLossIndexPrice: number;
-// 			takeProfitIndexPrice: number;
+// 			stopLossPrice: number;
+// 			takeProfitPrice: number;
 // 	  }
 // 	| {
-// 			stopLossIndexPrice: number;
+// 			stopLossPrice: number;
 // 	  }
 // 	| {
-// 			takeProfitIndexPrice: number;
+// 			takeProfitPrice: number;
 // 	  }
 // );
 
@@ -2905,8 +3145,14 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	walletAddress: SuiAddress;
 	positionSide: PerpetualsOrderSide;
 	size?: bigint;
-	stopLossIndexPrice?: number;
-	takeProfitIndexPrice?: number;
+	stopLossPrice?: number;
+	takeProfitPrice?: number;
+	/**
+	 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+	 */
+	triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+	/** Optional integrator fee configuration applied when the SL/TP fires. */
+	builderCode?: PerpetualsBuilderCodeParamaters;
 	limitOrderId?: PerpetualsOrderId;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
@@ -2924,14 +3170,14 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 );
 // & (
 // 	| {
-// 			stopLossIndexPrice: number;
-// 			takeProfitIndexPrice: number;
+// 			stopLossPrice: number;
+// 			takeProfitPrice: number;
 // 	  }
 // 	| {
-// 			stopLossIndexPrice: number;
+// 			stopLossPrice: number;
 // 	  }
 // 	| {
-// 			takeProfitIndexPrice: number;
+// 			takeProfitPrice: number;
 // 	  }
 // );
 
@@ -2988,19 +3234,25 @@ export type ApiPerpetualsMarketOrderBody = {
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
-		stopLossIndexPrice?: number;
-		takeProfitIndexPrice?: number;
+		stopLossPrice?: number;
+		takeProfitPrice?: number;
+		/**
+		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+		 */
+		triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+		/** Optional integrator fee configuration applied when the SL/TP fires. */
+		builderCode?: PerpetualsBuilderCodeParamaters;
 	};
 	// & (
 	// 	| {
-	// 			stopLossIndexPrice: number;
-	// 			takeProfitIndexPrice: number;
+	// 			stopLossPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLossIndexPrice: number;
+	// 			stopLossPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfitIndexPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// );
 
@@ -3056,19 +3308,25 @@ export type ApiPerpetualsLimitOrderBody = {
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
-		stopLossIndexPrice?: number;
-		takeProfitIndexPrice?: number;
+		stopLossPrice?: number;
+		takeProfitPrice?: number;
+		/**
+		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+		 */
+		triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+		/** Optional integrator fee configuration applied when the SL/TP fires. */
+		builderCode?: PerpetualsBuilderCodeParamaters;
 	};
 	// & (
 	// 	| {
-	// 			stopLossIndexPrice: number;
-	// 			takeProfitIndexPrice: number;
+	// 			stopLossPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLossIndexPrice: number;
+	// 			stopLossPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfitIndexPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// );
 
@@ -3081,6 +3339,11 @@ export type ApiPerpetualsLimitOrderBody = {
 	 * maximum fee the user approved for that integrator.
 	 */
 	builderCode?: PerpetualsBuilderCodeParamaters;
+	/**
+	 * Optional client-managed order id to tag this limit order with. Resolve or
+	 * cancel by this id later instead of the on-chain order id.
+	 */
+	clientOrderId?: PerpetualsClientOrderId;
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
@@ -3128,6 +3391,12 @@ export type ApiPerpetualsScaleOrderBody = {
 	sizeSkew?: number;
 	/** Optional integrator fee configuration. */
 	builderCode?: PerpetualsBuilderCodeParamaters;
+	/**
+	 * Optional client-managed order ids to tag the scale ladder with. When
+	 * provided, the length should match `numberOfOrders`; the id at each index
+	 * tags the corresponding ladder order.
+	 */
+	clientOrderIds?: PerpetualsClientOrderId[];
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
@@ -3151,6 +3420,8 @@ export interface ApiPerpetualsOrderToPlace {
 	price: bigint;
 	/** Order size in scaled base units. */
 	size: bigint;
+	/** Optional client-managed order id to tag this placed order with. */
+	clientOrderId?: PerpetualsClientOrderId;
 }
 
 /**
@@ -3176,6 +3447,21 @@ export type ApiPerpetualsCancelAndPlaceOrdersBody = {
 	hasPosition: boolean;
 	/** Optional integrator fee configuration. */
 	builderCode?: PerpetualsBuilderCodeParamaters;
+	/**
+	 * If true, also deallocate free collateral (margin not backing a position)
+	 * back to the wallet in the same transaction. Defaults to false.
+	 */
+	shouldDeallocateFreeCollateral?: boolean;
+	/**
+	 * If true, abort the transaction when any ID in `orderIdsToCancel` is not
+	 * found on-chain. If false (default), missing IDs are tolerated.
+	 */
+	shouldAbortOnMissingId?: boolean;
+	/**
+	 * Optional client-managed order ids to cancel (in addition to
+	 * `orderIdsToCancel`).
+	 */
+	clientOrderIdsToCancel?: PerpetualsClientOrderId[];
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
 } & (
@@ -3198,10 +3484,20 @@ export type ApiPerpetualsCancelOrdersBody = {
 		PerpetualsMarketId,
 		{
 			orderIds: PerpetualsOrderId[];
+			/**
+			 * Optional client-managed order ids to cancel in this market (in
+			 * addition to `orderIds`).
+			 */
+			clientOrderIds?: PerpetualsClientOrderId[];
 			/** Collateral change associated with canceling these orders. */
 			collateralChange: number;
 		}
 	>;
+	/**
+	 * If true, abort the transaction when any given order ID is not found
+	 * on-chain. If false (default), missing IDs are tolerated.
+	 */
+	shouldAbortOnMissingId?: boolean;
 	txKind?: SerializedTransaction;
 	sponsor?: PerpetualsSponsorConfig;
 } & (
@@ -3357,13 +3653,34 @@ export interface ApiPerpetualsMarketsBody {
 }
 
 /**
+ * Display metadata for a market: ticker symbols, label, artwork and
+ * category.
+ *
+ * Presentation data only — none of it affects pricing, margin or execution.
+ */
+export interface PerpetualsMarketMetadata {
+	/** Base asset ticker, e.g. `"BTC"` (not the `"BTCUSD"` pair symbol). */
+	symbol: string;
+	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
+	displayName?: string;
+	/** Grouping label, e.g. `"Crypto"`, `"Commodities"`, `"Equities"`. */
+	category: string;
+	/** Icon location for the market, e.g. `"/markets/btc.png"`. */
+	image: string;
+	/** Collateral asset ticker, e.g. `"USDC"`. */
+	collateralSymbol: string;
+}
+
+/**
  * Response payload for {@link ApiPerpetualsMarketsBody}.
  *
- * Each item includes the market data.
+ * Each item includes the market data, plus display metadata when it is
+ * available for that market.
  */
 export interface ApiPerpetualsMarketsResponse {
 	marketDatas: {
 		market: PerpetualsMarketData;
+		metadata?: PerpetualsMarketMetadata | null;
 	}[];
 }
 
@@ -4173,19 +4490,25 @@ export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
-		stopLossIndexPrice?: number;
-		takeProfitIndexPrice?: number;
+		stopLossPrice?: number;
+		takeProfitPrice?: number;
+		/**
+		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+		 */
+		triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+		/** Optional integrator fee configuration applied when the SL/TP fires. */
+		builderCode?: PerpetualsBuilderCodeParamaters;
 	};
 	// & (
 	// 	| {
-	// 			stopLossIndexPrice: number;
-	// 			takeProfitIndexPrice: number;
+	// 			stopLossPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLossIndexPrice: number;
+	// 			stopLossPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfitIndexPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// );
 };
@@ -4202,19 +4525,25 @@ export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		size?: bigint;
-		stopLossIndexPrice?: number;
-		takeProfitIndexPrice?: number;
+		stopLossPrice?: number;
+		takeProfitPrice?: number;
+		/**
+		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
+		 */
+		triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
+		/** Optional integrator fee configuration applied when the SL/TP fires. */
+		builderCode?: PerpetualsBuilderCodeParamaters;
 	};
 	// & (
 	// 	| {
-	// 			stopLossIndexPrice: number;
-	// 			takeProfitIndexPrice: number;
+	// 			stopLossPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLossIndexPrice: number;
+	// 			stopLossPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfitIndexPrice: number;
+	// 			takeProfitPrice: number;
 	// 	  }
 	// );
 };
@@ -4299,7 +4628,8 @@ export interface PerpetualsWsUpdatesMarketSubscriptionType {
 
 /**
  * Websocket subscription payload for subscribing to user/account updates,
- * optionally including stop-order data (via signature).
+ * optionally including special-order (stop and TWAP order) data (via
+ * signature).
  */
 export interface PerpetualsWsUpdatesUserSubscriptionType {
 	user: {
@@ -4382,7 +4712,18 @@ export type PerpetualsWsUpdatesSubscriptionType =
 	| PerpetualsWsUpdatesMarketOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserOrdersSubscriptionType
 	| PerpetualsWsUpdatesUserCollateralChangesSubscriptionType
-	| PerpetualsWsUpdatesTopOfOrderbookSubscriptionType;
+	| PerpetualsWsUpdatesTopOfOrderbookSubscriptionType
+	| PerpetualsWsUpdatesMarketCandlesSubscriptionType;
+
+/**
+ * Websocket subscription type for market candle (OHLCV) updates.
+ */
+export interface PerpetualsWsUpdatesMarketCandlesSubscriptionType {
+	marketCandles: {
+		marketId: PerpetualsMarketId;
+		interval: PerpetualsCandleResolution;
+	};
+}
 
 /**
  * Websocket payload for oracle price updates.
@@ -4458,11 +4799,13 @@ export interface PerpetualsWsUpdatesTopOfOrderbookPayload {
 }
 
 /**
- * Websocket payload for user account and stop-order updates.
+ * Websocket payload for user account and special-order (stop and TWAP order)
+ * updates.
  */
 export interface PerpetualsWsUpdatesUserPayload {
 	account: PerpetualsAccountObject;
 	stopOrders: PerpetualsStopOrderData[] | undefined;
+	twapOrders: PerpetualsTwapOrderData[] | undefined;
 }
 
 /**
@@ -4489,7 +4832,8 @@ export type PerpetualsWsUpdatesResponseMessage =
 	| {
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
 	  }
-	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload };
+	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload }
+	| { marketCandles: PerpetualsWsUpdatesMarketCandlesPayload };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 
@@ -4500,4 +4844,14 @@ export type PerpetualsWsUpdatesResponseMessage =
 export interface PerpetualsWsCandleResponseMessage {
 	marketId: PerpetualsMarketId;
 	lastCandle: PerpetualsMarketCandleDataPoint | undefined;
+}
+
+/**
+ * Websocket payload for market candle (OHLCV) updates delivered over the
+ * general `/perpetuals/ws/updates` stream via a `marketCandles` subscription.
+ */
+export interface PerpetualsWsUpdatesMarketCandlesPayload {
+	marketId: PerpetualsMarketId;
+	interval: PerpetualsCandleResolution;
+	lastCandle: PerpetualsMarketCandleDataPoint;
 }

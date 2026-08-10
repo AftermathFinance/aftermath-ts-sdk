@@ -16,6 +16,7 @@ import type {
 	ApiGasPoolRevokeBody,
 	ApiGasPoolShareBody,
 	ApiGasPoolSponsorBody,
+	ApiGasPoolSponsorResponse,
 	ApiGasPoolWithdrawBody,
 	ApiGasPoolWithdrawResponse,
 } from "./gasPoolsTypes";
@@ -167,26 +168,29 @@ export class GasPools extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to sponsor (rebate) the transaction sender
-	 * using SUI from the gas pool.
+	 * Requests a gas-pool-sponsored transaction. Returns a complete transaction
+	 * with the gas payment and epoch bound attached, the sponsor's signature, and
+	 * the digest both signatures commit to — the caller signs `transaction` as the
+	 * sender and submits it together with `sponsorSignature`.
 	 *
-	 * @param inputs.walletAddress - Wallet address submitting the sponsor transaction.
-	 * @param inputs.amount - Amount of SUI to rebate in MIST.
-	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @param inputs.walletAddress - Wallet address requesting the sponsorship.
+	 * @param inputs.bytes - Base64 of the signed `SPONSOR_GAS` auth message.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @param inputs.tx - Optional transaction to sponsor (appended as a tx kind).
+	 * @returns {@link ApiGasPoolSponsorResponse}.
 	 */
-	public async getSponsorTx(
+	public async getSponsoredTransaction(
 		inputs: Omit<ApiGasPoolSponsorBody, "txKind"> & { tx?: Transaction }
-	): Promise<SdkTransactionResponse> {
+	): Promise<ApiGasPoolSponsorResponse> {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTxObject<ApiGasPoolSponsorBody, ApiTransactionResponse>(
+		return this.fetchApi<ApiGasPoolSponsorResponse, ApiGasPoolSponsorBody>(
 			"transactions/sponsor",
 			{
 				...otherInputs,
-				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
-			},
-			undefined,
-			{ txKind: true }
+				txKind: tx
+					? await this.api?.Transactions().fetchBase64TxKindFromTx({ tx })
+					: undefined,
+			}
 		);
 	}
 

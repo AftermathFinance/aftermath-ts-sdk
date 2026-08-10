@@ -1,3 +1,4 @@
+import type { Transaction } from "@mysten/sui/transactions";
 import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import type {
@@ -8,14 +9,6 @@ import type {
 } from "../../types";
 
 export class Faucet extends Caller {
-	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	public static readonly constants = {
-		defaultRequestAmountUsd: 10,
-	};
-
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -31,25 +24,21 @@ export class Faucet extends Caller {
 	//  Inspections
 	// =========================================================================
 
-	public async getSupportedCoins(): Promise<CoinType[]> {
+	public getSupportedCoins(): Promise<CoinType[]> {
 		return this.fetchApi("supported-coins");
 	}
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	// TODO: add mint coin event getter ?
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
+	public getRequestCoinTransaction(inputs: ApiFaucetRequestBody): Transaction {
 		return this.faucetApi().buildRequestCoinTx(inputs);
 	}
 
-	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {
+	public getMintSuiFrenTransaction(
+		inputs: ApiFaucetMintSuiFrenBody
+	): Promise<Transaction> {
 		return this.faucetApi().fetchBuildMintSuiFrenTx(inputs);
 	}
 

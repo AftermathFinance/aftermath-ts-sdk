@@ -1,4 +1,5 @@
-import type { DynamicFieldInfo, DynamicFieldName } from "@mysten/sui/jsonRpc";
+import type { SuiClientTypes } from "@mysten/sui/client";
+import type { DynamicFieldInfo } from "@mysten/sui/jsonRpc";
 import type {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
@@ -7,6 +8,7 @@ import type {
 	ObjectId,
 } from "../../types";
 import type { AftermathApi } from "../providers/aftermathApi";
+import { GrpcCasting, type SuiObjectView } from "../utils/grpcCasting";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================
@@ -150,23 +152,31 @@ export class DynamicFieldsApiHelpers {
 	): Promise<DynamicFieldsWithCursor> => {
 		const { parentObjectId, dynamicFieldType } = inputs;
 
-		const dynamicFieldsResponse = await this.api.client.getDynamicFields({
-			...inputs,
+		// @dev: `getDynamicFields` -> `listDynamicFields`. `res.data` ->
+		// `res.dynamicFields`, `res.nextCursor` -> `res.cursor`, and each entry is
+		// reshaped by `GrpcCasting` (`fieldId` -> `objectId`, `valueType` ->
+		// `objectType`).
+		const dynamicFieldsResponse = await this.api.client.listDynamicFields({
+			cursor: inputs.cursor,
 			limit:
 				inputs.limit ?? DynamicFieldsApiHelpers.constants.defaultLimitStepSize,
 			parentId: parentObjectId,
 		});
 
+		const allDynamicFields = dynamicFieldsResponse.dynamicFields.map(
+			GrpcCasting.dynamicFieldInfoFromGrpcEntry
+		);
+
 		const dynamicFields =
 			dynamicFieldType === undefined
-				? dynamicFieldsResponse.data
-				: dynamicFieldsResponse.data.filter((dynamicField: DynamicFieldInfo) =>
+				? allDynamicFields
+				: allDynamicFields.filter((dynamicField: DynamicFieldInfo) =>
 						typeof dynamicFieldType === "string"
 							? dynamicField.objectType === dynamicFieldType
 							: dynamicFieldType(dynamicField.objectType)
 					);
 
-		const nextCursor = dynamicFieldsResponse.nextCursor;
+		const nextCursor = dynamicFieldsResponse.cursor;
 		return {
 			dynamicFields,
 			nextCursor,
@@ -177,10 +187,37 @@ export class DynamicFieldsApiHelpers {
 	//  Dynamic Field Objects
 	// =========================================================================
 
-	public fetchDynamicFieldObject = (inputs: {
+	/**
+	 * @remarks Ported to `client.core.getDynamicObjectField`.
+	 *
+	 * ⚠️ **Not** gRPC's `getDynamicField`, which is the obvious-looking target and
+	 * the wrong one: it returns the field's value as `{ type, bcs }` only — no
+	 * `json` view and no `objectId` — so it cannot feed an object caster.
+	 * `getDynamicObjectField` returns `{ object }` in the same shape as
+	 * `getObject`, which can. (It lives on `client.core`, not on the client root,
+	 * which is why an earlier pass recorded it as unavailable.)
+	 *
+	 * The return type changes from `SuiObjectResponse` to {@link SuiObjectView},
+	 * in step with every other object fetcher here. This helper has **zero
+	 * internal callers**, so nothing inside the SDK is affected.
+	 */
+	public fetchDynamicFieldObject = async (inputs: {
 		parentId: ObjectId;
-		name: DynamicFieldName;
-	}) => {
-		return this.api.client.getDynamicFieldObject(inputs);
+		/**
+		 * ⚠️ gRPC's `DynamicFieldName` requires the name's **BCS bytes**
+		 * (`{ type, bcs }`) where JSON-RPC's took its parsed JSON value
+		 * (`{ type, value }`). The SDK does not carry Move type layouts, so it
+		 * cannot convert one to the other — callers must supply the bytes. Both
+		 * `listDynamicFields` and `GrpcCasting.dynamicFieldInfoFromGrpcEntry`
+		 * expose them (as `bcsName`, base64).
+		 */
+		name: SuiClientTypes.DynamicFieldName;
+	}): Promise<SuiObjectView> => {
+		const { object } = await this.api.client.core.getDynamicObjectField({
+			parentId: inputs.parentId,
+			name: inputs.name,
+			include: { json: true, display: true },
+		});
+		return object;
 	};
 }

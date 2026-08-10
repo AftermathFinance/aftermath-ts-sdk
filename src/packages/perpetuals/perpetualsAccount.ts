@@ -18,9 +18,12 @@ import type {
 	ApiPerpetualsCancelAndPlaceOrdersBody,
 	ApiPerpetualsCancelOrdersBody,
 	ApiPerpetualsCancelStopOrdersBody,
+	ApiPerpetualsCancelTwapOrdersBody,
+	ApiPerpetualsCreateTwapOrdersBody,
 	ApiPerpetualsDeallocateCollateralBody,
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsEditStopOrdersBody,
+	ApiPerpetualsEditTwapOrdersBody,
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
@@ -43,6 +46,8 @@ import type {
 	ApiPerpetualsStopOrderDatasBody,
 	ApiPerpetualsStopOrderDatasResponse,
 	ApiPerpetualsTransferCollateralBody,
+	ApiPerpetualsTwapOrderDatasBody,
+	ApiPerpetualsTwapOrderDatasResponse,
 	ApiPerpetualsWithdrawCollateralBody,
 	// ApiPerpetualsAccountMarginHistoryBody,
 	ApiPerpetualsWithdrawCollateralResponse,
@@ -62,6 +67,9 @@ import type {
 	PerpetualsStopOrderData,
 	SdkPerpetualsCancelAndPlaceOrdersInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
+	SdkPerpetualsCancelTwapOrdersInputs,
+	SdkPerpetualsCreateTwapOrdersInputs,
+	SdkPerpetualsEditTwapOrdersInputs,
 	SdkPerpetualsPlaceLimitOrderInputs,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
 	SdkPerpetualsPlaceMarketOrderInputs,
@@ -944,6 +952,162 @@ export class PerpetualsAccount extends Caller {
 				txKind: true,
 			}
 		);
+	}
+
+	/**
+	 * Build a `create-twap-orders` transaction for this account.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsCreateTwapOrdersInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCreateTwapOrdersTx(
+		inputs: SdkPerpetualsCreateTwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/create-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build an `edit-twap-orders` transaction for this account.
+	 * `newTwapOrders` maps each TWAP order object id to the edit to apply.
+	 *
+	 * @param inputs.newTwapOrders - Map of TWAP order id to the edit to apply.
+	 * @param inputs.tx - Optional transaction to extend.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getEditTwapOrdersTx(inputs: SdkPerpetualsEditTwapOrdersInputs) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsEditTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/edit-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `cancel-twap-orders` transaction for this account.
+	 * This cancels TWAP order objects by their object IDs.
+	 *
+	 * @param inputs.tx - Optional transaction to extend.
+	 * @param inputs.twapOrderIds - Array of TWAP order object IDs to cancel.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCancelTwapOrdersTx(
+		inputs: SdkPerpetualsCancelTwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCancelTwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-twap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Fetch TWAP-order data for this account, using an off-chain signed payload.
+	 *
+	 * @param inputs.bytes - Serialized message that was signed.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @param inputs.marketIds - Optional subset of markets to filter results by.
+	 *
+	 * @returns {@link ApiPerpetualsTwapOrderDatasResponse} containing `twapOrderDatas`.
+	 */
+	public async getTwapOrderDatas(inputs: {
+		bytes: string;
+		signature: string;
+		marketIds?: PerpetualsMarketId[];
+	}) {
+		const { bytes, signature, marketIds } = inputs;
+
+		return await this.fetchApi<
+			ApiPerpetualsTwapOrderDatasResponse,
+			ApiPerpetualsTwapOrderDatasBody
+		>(`${this.vaultId ? "vault" : "account"}/twap-order-datas`, {
+			bytes,
+			signature,
+			walletAddress: this.ownerAddress(),
+			marketIds: marketIds ?? [],
+			...("vaultId" in this.accountCap
+				? {
+						vaultId: this.accountCap.vaultId,
+					}
+				: {
+						accountId: this.accountCap.accountId,
+					}),
+		});
 	}
 
 	// public async getReduceOrderTx(inputs: {
@@ -1865,7 +2029,7 @@ export class PerpetualsAccount extends Caller {
 	 * - Market ID matches the input market.
 	 * - `slTp` field is present.
 	 * - Order side is opposite of the position side.
-	 * - At least a `stopLossIndexPrice` or `takeProfitIndexPrice` is set.
+	 * - At least a `stopLossPrice` or `takeProfitPrice` is set.
 	 *
 	 * Notes on matching:
 	 * - The side comparison uses the current position side derived from the account snapshot.
@@ -1911,7 +2075,7 @@ export class PerpetualsAccount extends Caller {
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
-					(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt &&
 					!order.limitOrder
 			);
@@ -1921,7 +2085,7 @@ export class PerpetualsAccount extends Caller {
 				order.marketId === marketId &&
 				order.slTp &&
 				order.side !== side &&
-				(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 				order.size < Casting.i64MaxBigInt &&
 				!order.limitOrder
 		);
@@ -1955,7 +2119,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.slTp &&
 					order.slTp.limitOrderId === limitOrderId &&
-					(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+					(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 					order.size >= Casting.i64MaxBigInt
 			);
 
@@ -1963,7 +2127,7 @@ export class PerpetualsAccount extends Caller {
 			(order) =>
 				order.slTp &&
 				order.slTp.limitOrderId === limitOrderId &&
-				(order.slTp.stopLossIndexPrice || order.slTp.takeProfitIndexPrice) &&
+				(order.slTp.stopLossPrice || order.slTp.takeProfitPrice) &&
 				order.size < Casting.i64MaxBigInt
 		);
 

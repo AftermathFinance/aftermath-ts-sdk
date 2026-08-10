@@ -1,0 +1,56 @@
+{
+	"objectId": "0x0235f7d73eb5974bf9cbf518763d60893f0942a7f0deb76fb30eae9147926c48",
+	"version": "411272839",
+	"digest": "5yqNMHdEoWXTDZjHCwLCjiqD6fT1opR3akttu1zR466v",
+	"owner": {
+		"$kind": "ObjectOwner",
+		"ObjectOwner": "0x06cb737965d223ad55f245c7cbe662bc035f55b7b43fb75a8eceb7fefb3d021c"
+	},
+	"type": "0xefe170ec0be4d762196bedecd7a065816576198a6527c99282a2551aaa7da38c::pool::Pool<0x46557efacefd91391c44bce37ffd8b78aa485353c5f4515771c2bc254c24c1af::af_lp::AF_LP>",
+	"json": {
+		"coin_decimals": "CQk=",
+		"creator": "0xb2ca950477950c78494624d3d0af81272b08dcbe27bc0d9abb605b9c7e070bbe",
+		"decimal_scalars": [
+			"1000000000000000000",
+			"1000000000000000000"
+		],
+		"fees_deposit": [
+			"0",
+			"0"
+		],
+		"fees_swap_in": [
+			"10000000000000000",
+			"10000000000000000"
+		],
+		"fees_swap_out": [
+			"0",
+			"0"
+		],
+		"fees_withdraw": [
+			"0",
+			"0"
+		],
+		"flatness": "0",
+		"id": "0x0235f7d73eb5974bf9cbf518763d60893f0942a7f0deb76fb30eae9147926c48",
+		"illiquid_lp_supply": "1000",
+		"lp_decimal_scalar": "999999999999989990",
+		"lp_decimals": 9,
+		"lp_supply": {
+			"value": "100000009899506000"
+		},
+		"name": "KINGCOBRA_NOTBAT",
+		"normalized_balances": [
+			"16090948578616763000000000000000000",
+			"624222584743764199000000000000000000"
+		],
+		"type_names": [
+			"d1fc206d1fdd71c6da714ec8be4fd10a0896b95be2f2af36a9d4e2dcb8492a29::kingcobra::KINGCOBRA",
+			"f9433456cb60bbc276e8790b643ed24fec9f128fc2486926b7d1afbf83c04b60::notbat::NOTBAT"
+		],
+		"weights": [
+			"500000000000000000",
+			"500000000000000000"
+		]
+	},
+	"display": null
+}

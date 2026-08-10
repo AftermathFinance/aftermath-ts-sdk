@@ -1,5 +1,6 @@
 import type {
 	Balance,
+	Bps,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -18,7 +19,7 @@ export interface LimitOrdersIntegratorFeeData {
 	/**
 	 * The integrator fee percentage in basis points (bps), e.g., 100 => 1%.
 	 */
-	feeBps: number;
+	feeBps: Bps;
 	/**
 	 * The recipient address for fee collection.
 	 */

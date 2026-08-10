@@ -1,7 +1,8 @@
-import type { SuiEvent, TransactionEffects } from "@mysten/sui/jsonRpc";
-import type { Transaction } from "@mysten/sui/transactions";
+import type { SuiClientTypes } from "@mysten/sui/client";
+import { Transaction } from "@mysten/sui/transactions";
 import type { Byte, SuiAddress } from "../../types";
 import type { AftermathApi } from "../providers/aftermathApi";
+import { GrpcCasting } from "../utils/grpcCasting";
 
 export class InspectionsApiHelpers {
 	public static constants = {
@@ -40,38 +41,68 @@ export class InspectionsApiHelpers {
 		return allBytes[allBytes.length - 1];
 	};
 
+	/**
+	 * Simulates `tx` and returns the BCS bytes each command returned.
+	 *
+	 * @remarks Ported from JSON-RPC's `devInspectTransactionBlock` to gRPC's
+	 * `simulateTransaction`. Three things differ:
+	 * - the sender is taken from the transaction (`tx.setSenderIfNotSet`), not
+	 *   passed as a separate option;
+	 * - `checksEnabled: false` is what makes inspecting non-entry / non-public
+	 *   Move functions possible (with checks on, the node rejects an unsigned
+	 *   transaction touching objects the sender does not own);
+	 * - return values arrive as `commandResults[i].returnValues[j].bcs`
+	 *   (`Uint8Array`) instead of JSON-RPC's `[number[], type]` tuples. Note
+	 *   `commandResults` is requested **inside** `include`.
+	 *
+	 * `events` and `effects` are now gRPC-shaped (`SuiClientTypes.Event` /
+	 * `SuiClientTypes.TransactionEffects`) rather than the JSON-RPC types — a
+	 * `success: boolean` status instead of `status: "success" | "failure"`, and
+	 * BCS bytes rather than `parsedJson` on events. Nothing in this SDK reads
+	 * either field.
+	 */
 	public fetchAllBytesFromTx = async (inputs: {
 		tx: Transaction;
 		sender?: SuiAddress;
 	}): Promise<{
-		events: SuiEvent[];
-		effects: TransactionEffects;
+		events: SuiClientTypes.Event[];
+		effects: SuiClientTypes.TransactionEffects;
 		allBytes: Byte[][][];
 	}> => {
 		const sender =
 			inputs.sender ?? InspectionsApiHelpers.constants.devInspectSigner;
-		const response = await this.api.client.devInspectTransactionBlock({
-			sender,
-			transactionBlock: inputs.tx,
+
+		// @dev: gRPC takes the sender off the transaction, so it has to be set —
+		// but `devInspectTransactionBlock` took it as a separate option and left
+		// the caller's transaction untouched. Clone before setting it so a caller
+		// that later executes the same transaction does not inherit the
+		// dev-inspect signer.
+		const tx = Transaction.from(inputs.tx.serialize());
+		tx.setSenderIfNotSet(sender);
+
+		const simulation = await this.api.client.simulateTransaction({
+			transaction: tx,
+			include: { effects: true, events: true, commandResults: true },
+			checksEnabled: false,
 		});
 
-		if (response.effects.status.status === "failure") {
-			throw new Error(
-				response.effects.status.error ?? response.error ?? "dev inspect failed"
-			);
+		const { effects, events, status } =
+			GrpcCasting.transactionFromResult(simulation);
+
+		if (!status.success) {
+			throw new Error(status.error?.message ?? "dev inspect failed");
 		}
 
-		if (!response.results) {
+		if (!simulation.commandResults) {
 			throw new Error("dev inspect move call returned no results");
 		}
 
-		const resultBytes = response.results.map(
-			(result: { returnValues?: [number[], string][] }) =>
-				result.returnValues?.map((val: [number[], string]) => val[0]) ?? []
+		const resultBytes = simulation.commandResults.map((result) =>
+			result.returnValues.map((val) => Array.from(val.bcs))
 		);
 		return {
-			events: response.events,
-			effects: response.effects,
+			events,
+			effects,
 			allBytes: resultBytes,
 		};
 	};

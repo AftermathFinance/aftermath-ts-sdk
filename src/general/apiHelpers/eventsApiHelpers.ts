@@ -40,20 +40,37 @@ export class EventsApiHelpers {
 	// TODO: make this filter by looking ONLY at all relevant AF packages
 	// TODO: move to wallet package ?
 	/**
-	 * @deprecated `subscribeEvent` was removed from `SuiJsonRpcClient` in
-	 * `@mysten/sui` v2. Poll `queryEvents` instead or use a WebSocket transport.
+	 * @deprecated Not implemented. gRPC's
+	 * `SubscriptionService.SubscribeEvents` is the replacement — reach it via
+	 * `AftermathApi["client"].subscriptionService` — or poll
+	 * {@link EventsApiHelpers.fetchCastEventsWithCursor}.
 	 */
 	public fetchSubscribeToUserEvents = async (_inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
 	}): Promise<never> => {
 		throw new Error(
-			"fetchSubscribeToUserEvents is not supported in @mysten/sui v2. " +
-				"subscribeEvent was removed from SuiJsonRpcClient. " +
-				"Poll queryEvents instead or use a WebSocket transport."
+			"fetchSubscribeToUserEvents is not implemented. Use gRPC's " +
+				"SubscriptionService.SubscribeEvents (available on " +
+				"`AftermathApi.client.subscriptionService`), or poll " +
+				"fetchCastEventsWithCursor."
 		);
 	};
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface** — see
+	 * {@link AftermathApi.jsonRpcClient}. `suix_queryEvents` has no
+	 * `SuiGrpcClient` equivalent: the only gRPC path is the raw
+	 * `ledgerService.ListEvents`, whose filter model and cursor differ from
+	 * `SuiEventFilter` / `EventId`, and whose events carry BCS bytes instead of
+	 * the `parsedJson` that every `eventFromEventOnChain` caster reads. Porting
+	 * it would change this helper's semantics, so it still goes through
+	 * JSON-RPC and will stop working when that is removed from fullnodes
+	 * (scheduled for mid-October 2026).
+	 *
+	 * @throws If no `jsonRpcClient` was passed to {@link AftermathApi}, since it
+	 * is optional there.
+	 */
 	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
 		inputs: {
 			query: SuiEventFilter;
@@ -62,7 +79,11 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventType>> => {
 		const { query, eventFromEventOnChain, cursor, limit } = inputs;
 
-		const fetchedEvents = await this.api.client.queryEvents({
+		const jsonRpcClient = this.api.requireJsonRpcClient(
+			"Events().fetchCastEventsWithCursor"
+		);
+
+		const fetchedEvents = await jsonRpcClient.queryEvents({
 			query,
 			cursor: cursor
 				? { ...cursor, eventSeq: cursor.eventSeq.toString() }

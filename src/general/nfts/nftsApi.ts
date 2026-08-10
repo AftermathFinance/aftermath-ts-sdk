@@ -60,13 +60,10 @@ export class NftsApi {
 	}): Promise<Nft[]> => {
 		const objects = await this.api.Objects().fetchOwnedObjects({
 			...inputs,
-			options: {
-				// NOTE: do we need all of this ?
-				showContent: true,
-				showOwner: true,
-				showType: true,
-				showDisplay: true,
-			},
+			// @dev: `showDisplay` -> `withDisplay`, which becomes
+			// `include: { display: true }`. `nftFromSuiObject` reads display, so
+			// dropping this would leave every NFT with an empty one.
+			withDisplay: true,
 		});
 		return Casting.nfts.nftsFromSuiObjects(objects);
 	};
@@ -76,13 +73,7 @@ export class NftsApi {
 	}): Promise<Nft[]> => {
 		const objects = await this.api.Objects().fetchObjectBatch({
 			...inputs,
-			options: {
-				// NOTE: do we need all of this ?
-				showContent: true,
-				showOwner: true,
-				showType: true,
-				showDisplay: true,
-			},
+			withDisplay: true,
 		});
 		return Casting.nfts.nftsFromSuiObjects(objects);
 	};
@@ -130,12 +121,12 @@ export class NftsApi {
 
 		return this.api.Objects().fetchCastObjectBatch({
 			objectIds: kioskOwnerCapIds,
-			objectFromSuiObjectResponse: (response) =>
-				response.data?.type &&
-				Helpers.addLeadingZeroesToType(response.data?.type) ===
+			objectFromSuiObjectResponse: (object) =>
+				object.type &&
+				Helpers.addLeadingZeroesToType(object.type) ===
 					this.objectTypes.personalKioskCap
-					? Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(response)
-					: Casting.nfts.kioskOwnerCapFromSuiObject(response),
+					? Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(object)
+					: Casting.nfts.kioskOwnerCapFromSuiObject(object),
 		});
 	};
 

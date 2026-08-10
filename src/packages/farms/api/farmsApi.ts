@@ -1607,6 +1607,63 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
+	 * Creates a transaction command to set the minimum lock duration (ms) for a
+	 * staking pool. Owner-cap only; V2 vault module. Mirrors
+	 * `setStakingPoolMinStakeAmountTxV2`.
+	 */
+	public setStakingPoolMinLockDurationMsTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		lockDurationMs: bigint;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaultsV2,
+				FarmsApi.constants.moduleNames.vaultV2,
+				"set_min_lock_duration_ms"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId),
+				tx.object(inputs.stakingPoolId),
+				tx.object(this.addresses.objects.version),
+				tx.pure.u64(inputs.lockDurationMs),
+			],
+		});
+	};
+
+	/**
+	 * Creates a transaction command to set the maximum lock duration (ms) for a
+	 * staking pool. Owner-cap only; V2 vault module.
+	 */
+	public setStakingPoolMaxLockDurationMsTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		lockDurationMs: bigint;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaultsV2,
+				FarmsApi.constants.moduleNames.vaultV2,
+				"set_max_lock_duration_ms"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId),
+				tx.object(inputs.stakingPoolId),
+				tx.object(this.addresses.objects.version),
+				tx.pure.u64(inputs.lockDurationMs),
+			],
+		});
+	};
+
+	/**
 	 * Creates a Move call (V1) to **remove undistributed reward coins** from a staking pool.
 	 * Only callable by the pool **owner** (validated via `ownerCapId`). This does not claw back
 	 * rewards already accrued/claimed by stakers—only reduces the remaining reward balance
@@ -2476,6 +2533,16 @@ export class FarmsApi implements MoveErrorsInterface {
 	public buildSetStakingPoolMinStakeAmountTxV2 =
 		Helpers.transactions.createBuildTxFunc(
 			this.setStakingPoolMinStakeAmountTxV2
+		);
+
+	public buildSetStakingPoolMinLockDurationMsTxV2 =
+		Helpers.transactions.createBuildTxFunc(
+			this.setStakingPoolMinLockDurationMsTxV2
+		);
+
+	public buildSetStakingPoolMaxLockDurationMsTxV2 =
+		Helpers.transactions.createBuildTxFunc(
+			this.setStakingPoolMaxLockDurationMsTxV2
 		);
 
 	/**

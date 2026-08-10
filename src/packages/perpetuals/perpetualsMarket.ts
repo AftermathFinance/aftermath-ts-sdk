@@ -16,6 +16,7 @@ import type {
 	PerpetualsMarket24hrStats,
 	PerpetualsMarketData,
 	PerpetualsMarketId,
+	PerpetualsMarketMetadata,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
@@ -86,6 +87,12 @@ export class PerpetualsMarket extends Caller {
 	/** Dynamic market state (funding rates, open interest, etc.). */
 	public readonly marketState: PerpetualsMarketState;
 
+	/**
+	 * Display metadata (symbol, label, artwork, category) for this market, or
+	 * `null` when none is available.
+	 */
+	public readonly metadata: PerpetualsMarketMetadata | null;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -96,6 +103,7 @@ export class PerpetualsMarket extends Caller {
 	 * @param marketData - Snapshot of market configuration and state.
 	 * @param config - Optional {@link CallerConfig} (network, base URL, etc.).
 	 * @param api - Optional shared {@link AftermathApi} provider instance.
+	 * @param metadata - Optional display metadata for the market.
 	 *
 	 * @remarks
 	 * This class extends {@link Caller} with the `"perpetuals"` route prefix, meaning
@@ -104,7 +112,8 @@ export class PerpetualsMarket extends Caller {
 	constructor(
 		public marketData: PerpetualsMarketData,
 		config?: CallerConfig,
-		public readonly api?: AftermathApi
+		public readonly api?: AftermathApi,
+		metadata?: PerpetualsMarketMetadata | null
 	) {
 		super(config, "perpetuals");
 		this.marketId = marketData.objectId;
@@ -113,6 +122,7 @@ export class PerpetualsMarket extends Caller {
 		this.collateralCoinType = marketData.collateralCoinType;
 		this.marketParams = marketData.marketParams;
 		this.marketState = marketData.marketState;
+		this.metadata = metadata ?? null;
 	}
 
 	// =========================================================================
@@ -648,8 +658,6 @@ export class PerpetualsMarket extends Caller {
 			asksQuantity: 0,
 			bidsQuantity: 0,
 			pendingOrders: [],
-			makerFee: 1, // 100% (placeholder default)
-			takerFee: 1, // 100% (placeholder default)
 			leverage: 1,
 			entryPrice: 0,
 			freeCollateral: 0,

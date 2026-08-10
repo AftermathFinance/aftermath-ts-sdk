@@ -95,8 +95,29 @@ export interface ApiGasPoolWithdrawResponse {
 
 export interface ApiGasPoolSponsorBody {
 	walletAddress: SuiAddress;
-	amount: Balance;
+	/**
+	 * Base64 of the JSON `{"action":"SPONSOR_GAS","date":<unix seconds>}` signed
+	 * by `walletAddress`. Proves who is asking, not what for. Reusable for a day
+	 * either side of `date`, so sign once and cache it.
+	 */
+	bytes: string;
+	/** `walletAddress`'s signature over `bytes`. */
+	signature: string;
 	txKind?: SerializedTransaction;
+}
+
+/**
+ * A complete sponsored transaction. The client signs `transaction` as the
+ * sender and submits it together with `sponsorSignature`; `digest` is what both
+ * signatures commit to.
+ */
+export interface ApiGasPoolSponsorResponse {
+	/** Base64 BCS `Transaction`, gas payment and epoch bound already attached. */
+	transaction: SerializedTransaction;
+	/** The gas pool sponsor's signature over `transaction`. */
+	sponsorSignature: string;
+	/** Digest of `transaction`. */
+	digest: string;
 }
 
 // =========================================================================

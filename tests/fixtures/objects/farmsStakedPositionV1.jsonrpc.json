@@ -1,0 +1,48 @@
+{
+	"data": {
+		"objectId": "0x55cb8cc38f23ec1bb13a4264c070c815937765e28ce10ad9641ecc106f195a45",
+		"version": "939448098",
+		"digest": "GzozxzUSYo4U857ajYQMhsK1c738ba4kiA1MZ1sZi3x8",
+		"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::staked_position::StakedPosition<0x3cb52b59860159e2bf0a3b3a4af2d338c89d7a69cac339bf3295fa7c31605089::af_lp::AF_LP>",
+		"owner": {
+			"AddressOwner": "0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x4f0a1a923dd063757fd37e04a9c2cee8980008e94433c9075c390065f98e9e4b::staked_position::StakedPosition<0x3cb52b59860159e2bf0a3b3a4af2d338c89d7a69cac339bf3295fa7c31605089::af_lp::AF_LP>",
+			"hasPublicTransfer": true,
+			"fields": {
+				"afterburner_vault_id": "0xbcd906d21ffdda84f9121b3227b22b74edd435326764123f8613ee538d13eb86",
+				"balance": "12000000000",
+				"base_rewards_accumulated": [
+					"0",
+					"0"
+				],
+				"base_rewards_debt": [
+					"3175332178137",
+					"7844245022"
+				],
+				"id": {
+					"id": "0x55cb8cc38f23ec1bb13a4264c070c815937765e28ce10ad9641ecc106f195a45"
+				},
+				"last_reward_timestamp_ms": "1783459245465",
+				"lock_duration_ms": "0",
+				"lock_multiplier": "1000000000000000000",
+				"lock_start_timestamp_ms": "1698177102483",
+				"multiplier_rewards_accumulated": [
+					"0",
+					"0"
+				],
+				"multiplier_rewards_debt": [
+					"56604305927",
+					"214247"
+				],
+				"multiplier_staked_amount": "0"
+			}
+		}
+	}
+}

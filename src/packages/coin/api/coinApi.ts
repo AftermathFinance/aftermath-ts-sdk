@@ -1,10 +1,12 @@
-import type { CoinStruct, PaginatedCoins } from "@mysten/sui/jsonRpc";
+import type { SuiClientTypes } from "@mysten/sui/client";
+import type { CoinStruct } from "@mysten/sui/jsonRpc";
 import type {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import type { AftermathApi } from "../../../general/providers/aftermathApi";
+import { GrpcCasting } from "../../../general/utils/grpcCasting";
 import { Helpers } from "../../../general/utils/helpers";
 import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Coin } from "../coin";
@@ -85,21 +87,27 @@ export class CoinApi {
 		coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined;
+		let cursor: string | null | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins = await this.api.client.getCoins({
-				...inputs,
-				owner: inputs.walletAddress,
-				cursor,
-			});
+			// @dev: `getCoins` -> `listCoins`; `res.data` -> `res.objects` and
+			// `res.nextCursor` -> `res.cursor`. See `GrpcCasting` for the
+			// per-coin reshape.
+			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
+				await this.api.client.listCoins({
+					coinType: inputs.coinType,
+					owner: inputs.walletAddress,
+					cursor,
+				});
 
-			const coinData = paginatedCoins.data;
+			const coinData = paginatedCoins.objects.map(
+				GrpcCasting.coinStructFromGrpcCoin
+			);
 			allCoinData = [...allCoinData, ...coinData];
 
 			if (
-				paginatedCoins.data.length === 0 ||
+				paginatedCoins.objects.length === 0 ||
 				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.nextCursor
+				!paginatedCoins.cursor
 			) {
 				allCoinData.sort((b, a) =>
 					Number(BigInt(a.balance) - BigInt(b.balance))
@@ -118,7 +126,7 @@ export class CoinApi {
 				throw new Error("wallet does not have coins of sufficient balance");
 			}
 
-			cursor = paginatedCoins.nextCursor;
+			cursor = paginatedCoins.cursor;
 		} while (true);
 	};
 
@@ -129,18 +137,21 @@ export class CoinApi {
 		// coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined;
+		let cursor: string | null | undefined;
 		do {
-			const paginatedCoins: PaginatedCoins = await this.api.client.getCoins({
-				...inputs,
-				owner: inputs.walletAddress,
-				cursor,
-			});
+			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
+				await this.api.client.listCoins({
+					coinType: inputs.coinType,
+					owner: inputs.walletAddress,
+					cursor,
+				});
 
-			// const coinData = paginatedCoins.data.filter(
+			// const coinData = paginatedCoins.objects.filter(
 			// 	(data) => BigInt(data.balance) > BigInt(0)
 			// );
-			const coinData = paginatedCoins.data;
+			const coinData = paginatedCoins.objects.map(
+				GrpcCasting.coinStructFromGrpcCoin
+			);
 			allCoinData = [...allCoinData, ...coinData];
 
 			// const totalAmount = Helpers.sumBigInt(
@@ -149,16 +160,16 @@ export class CoinApi {
 			// if (totalAmount >= inputs.coinAmount) return allCoinData;
 
 			if (
-				paginatedCoins.data.length === 0 ||
+				paginatedCoins.objects.length === 0 ||
 				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.nextCursor
+				!paginatedCoins.cursor
 			) {
 				return allCoinData.sort((b, a) =>
 					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
 				);
 			}
 
-			cursor = paginatedCoins.nextCursor;
+			cursor = paginatedCoins.cursor;
 		} while (true);
 	};
 

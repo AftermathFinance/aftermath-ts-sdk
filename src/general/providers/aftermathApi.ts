@@ -1,3 +1,4 @@
+import type { SuiGrpcClient } from "@mysten/sui/grpc";
 import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { CoinApi } from "../../packages/coin/api/coinApi";
 import { DcaApi } from "../../packages/dca/api/dcaApi";
@@ -13,18 +14,17 @@ import { RouterApi } from "../../packages/router/api/routerApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
-import type {
-	MoveErrorsInterface,
-	TranslatedMoveError,
-} from "../types/moveErrorsInterface";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
-
 import { NftsApi } from "../nfts/nftsApi";
 import type { ConfigAddresses } from "../types/configTypes";
+import type {
+	MoveErrorsInterface,
+	TranslatedMoveError,
+} from "../types/moveErrorsInterface";
 import { Helpers } from "../utils";
 import { WalletApi } from "../wallet/walletApi";
 
@@ -37,17 +37,34 @@ import { WalletApi } from "../wallet/walletApi";
  * @example
  * ```typescript
  * import { AftermathApi } from "aftermath-ts-sdk";
- * import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+ * import { SuiGrpcClient } from "@mysten/sui/grpc";
  *
  * const addresses = { ... }; // from aftermath.getAddresses()
- * const client = new SuiJsonRpcClient({
- *   url: "https://fullnode.mainnet.sui.io",
+ * const fullnodeUrl = "https://fullnode.mainnet.sui.io";
+ *
+ * const client = new SuiGrpcClient({
  *   network: "mainnet",
+ *   baseUrl: fullnodeUrl,
  * });
  *
  * const afApi = new AftermathApi(client, addresses);
  * // access protocol APIs
  * const poolsApi = afApi.Pools();
+ * ```
+ *
+ * Only if you call one of the three legacy helpers listed on
+ * {@link AftermathApi.jsonRpcClient} do you need to opt into JSON-RPC:
+ *
+ * @example
+ * ```typescript
+ * import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+ *
+ * const jsonRpcClient = new SuiJsonRpcClient({
+ *   url: fullnodeUrl,
+ *   network: "mainnet",
+ * });
+ *
+ * const afApi = new AftermathApi(client, addresses, jsonRpcClient);
  * ```
  */
 export class AftermathApi {
@@ -99,13 +116,89 @@ export class AftermathApi {
 	 * Constructs a new instance of the `AftermathApi`, binding the given Sui client
 	 * to the known `addresses`.
 	 *
-	 * @param client - A `SuiJsonRpcClient` for on-chain queries and transactions.
+	 * @param client - A `SuiGrpcClient` for on-chain queries and transactions.
 	 * @param addresses - The config addresses (object IDs, package IDs, etc.) for the Aftermath protocol.
+	 * @param jsonRpcClient - **Optional.** A `SuiJsonRpcClient` pointed at the same
+	 * fullnode. Only used by the three legacy helpers listed on
+	 * {@link AftermathApi.jsonRpcClient}; every other call goes over gRPC via
+	 * `client`. Omit it unless you call one of those three — they then throw a
+	 * descriptive error instead of failing against a deprecated protocol. See
+	 * {@link AftermathApi.requireJsonRpcClient}.
 	 */
 	public constructor(
-		public readonly client: SuiJsonRpcClient,
-		public readonly addresses: ConfigAddresses
+		public readonly client: SuiGrpcClient,
+		public readonly addresses: ConfigAddresses,
+		/**
+		 * The **remaining JSON-RPC surface** of this SDK, and an **optional**
+		 * legacy add-on rather than a structural dependency — pass it only if you
+		 * call one of the three helpers below. When it is absent they throw (see
+		 * {@link AftermathApi.requireJsonRpcClient}); nothing else in the SDK
+		 * reads it.
+		 *
+		 * Sui JSON-RPC is deprecated and scheduled for removal from fullnodes in
+		 * mid-October 2026, but these helpers cannot be expressed with
+		 * `SuiGrpcClient` without changing what they return to their callers:
+		 *
+		 * - `Events().fetchCastEventsWithCursor` — `suix_queryEvents` has no
+		 *   `SuiGrpcClient` equivalent (only the raw `ledgerService`, with a
+		 *   different filter model).
+		 * - `Transactions().fetchTransactionsWithCursor` — `suix_queryTransactionBlocks`
+		 *   has no gRPC equivalent at all (GraphQL or an indexer is required).
+		 * - `Sui().fetchSystemState` — gRPC has no `SuiSystemStateSummary`
+		 *   equivalent (`core.getCurrentSystemState()` carries no validators, and
+		 *   `ledgerService.getEpoch`'s validator shape omits several summary
+		 *   fields). Already `@deprecated` with no internal callers.
+		 *
+		 * **This list is now exhaustive**, and `grep -rn "jsonRpcClient\." src/`
+		 * returns exactly these three call sites. Neither of the first two is
+		 * reachable from the Aftermath frontend.
+		 *
+		 * The object readers that used to be on this list — `Objects().fetchObject`
+		 * / `fetchObjectGeneral` / `fetchObjectBatch` / `fetchOwnedObjects` and
+		 * `DynamicFields().fetchDynamicFieldObject` — are **on gRPC as of plan
+		 * 251**. gRPC's `json` view does differ in shape from JSON-RPC's
+		 * `content.fields` (UIDs flattened, nested structs unwrapped,
+		 * `vector<u8>` base64-encoded), but that is decidable per read site from
+		 * the `*FieldsOnChain` interface already declared there, so no Move type
+		 * layouts are needed — see `GrpcCasting`'s field-shape primitives.
+		 */
+		public readonly jsonRpcClient?: SuiJsonRpcClient
 	) {}
+
+	// =========================================================================
+	//  Legacy JSON-RPC Access
+	// =========================================================================
+
+	/**
+	 * Returns the optional {@link AftermathApi.jsonRpcClient}, throwing a
+	 * descriptive error when it was not supplied.
+	 *
+	 * Used by the three helpers that have no `SuiGrpcClient` equivalent. The
+	 * throw is deliberate: these helpers cannot degrade to an empty result
+	 * without silently lying to their callers, and JSON-RPC is scheduled for
+	 * removal from Sui fullnodes in mid-October 2026, so a missing client is a
+	 * configuration error worth naming rather than hiding.
+	 *
+	 * @param methodName - The public helper the caller invoked, e.g.
+	 * `"Events().fetchCastEventsWithCursor"`. Named in the error message.
+	 * @throws If no `jsonRpcClient` was passed to the constructor.
+	 */
+	public requireJsonRpcClient = (methodName: string): SuiJsonRpcClient => {
+		if (!this.jsonRpcClient) {
+			throw new Error(
+				`${methodName} requires a \`SuiJsonRpcClient\`, which was not ` +
+					"provided to `AftermathApi`. It is one of three helpers with no " +
+					"`SuiGrpcClient` equivalent (alongside " +
+					"`Transactions().fetchTransactionsWithCursor` and the deprecated " +
+					"`Sui().fetchSystemState`); every other call in this SDK goes over " +
+					"gRPC. Either pass a `SuiJsonRpcClient` as `AftermathApi`'s third " +
+					"constructor argument, or use the Aftermath API's own endpoints — " +
+					"note that Sui JSON-RPC is deprecated and scheduled for removal " +
+					"from fullnodes in mid-October 2026."
+			);
+		}
+		return this.jsonRpcClient;
+	};
 
 	// =========================================================================
 	//  Class Object Creation
@@ -251,9 +344,9 @@ export class AftermathApi {
 	 * }
 	 * ```
 	 */
-	public translateMoveErrorMessage(
-		inputs: { errorMessage: string }
-	): TranslatedMoveError | undefined {
+	public translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+	}): TranslatedMoveError | undefined {
 		// @dev: packages that publish move error tables; order is significant: first match wins.
 		const sources: MoveErrorsInterface[] = [
 			this.Pools(),

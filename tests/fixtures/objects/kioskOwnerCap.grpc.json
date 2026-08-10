@@ -1,0 +1,15 @@
+{
+	"objectId": "0x00466232fba63744db59a9fcf51ed7a15bdc3406c8ed2d061724aefcad5907f3",
+	"version": "415731039",
+	"digest": "6U3XnEK8vCY2HZq2VGaT5BEFvjJgRuMNzjgNZmURXWL5",
+	"owner": {
+		"AddressOwner": "0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace",
+		"$kind": "AddressOwner"
+	},
+	"type": "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
+	"json": {
+		"for": "0x1e60753a4abcd617827bf519d60584af191b85211dd25a75663888c8740f03d6",
+		"id": "0x00466232fba63744db59a9fcf51ed7a15bdc3406c8ed2d061724aefcad5907f3"
+	},
+	"display": null
+}

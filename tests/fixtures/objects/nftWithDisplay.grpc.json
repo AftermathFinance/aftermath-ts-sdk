@@ -1,0 +1,137 @@
+{
+	"objectId": "0xf81a80fa791159b4bac8f416d976fd6ceac706c9edf294d9e878649405dcf8a1",
+	"version": "952360517",
+	"digest": "9b5nDJ5XDEXqM8PoSJea4RXewAQAuudwWQfS86UiDpq8",
+	"owner": {
+		"AddressOwner": "0x9ad2e08839655882c09319896e01fccf34e99291e98ed00cbff70f6cae6144b1",
+		"$kind": "AddressOwner"
+	},
+	"type": "0x5c67326d96aa593599722a174b1f358036f3b6ee3a42eccf3065aa02d9ecc666::evolved_sudoz::EvolvedSudoz",
+	"json": {
+		"attributes": {
+			"contents": [
+				{
+					"key": "Background",
+					"value": "brown"
+				},
+				{
+					"key": "Skin",
+					"value": "grey"
+				},
+				{
+					"key": "Clothes",
+					"value": "blue jacket"
+				},
+				{
+					"key": "Hats",
+					"value": "grey white check hat"
+				},
+				{
+					"key": "Eyewear",
+					"value": "gold glasses"
+				},
+				{
+					"key": "Mouth",
+					"value": "cigaratte"
+				},
+				{
+					"key": "Earrings",
+					"value": "sui"
+				},
+				{
+					"key": "Metadata ID",
+					"value": "3115"
+				},
+				{
+					"key": "Number",
+					"value": "31"
+				},
+				{
+					"key": "Type",
+					"value": "Developer Reserve"
+				}
+			]
+		},
+		"background": "brown",
+		"clothes": "blue jacket",
+		"description": "An evolved form of the SUDOZ artifact with unique traits",
+		"earrings": "sui",
+		"eyewear": "gold glasses",
+		"hats": "grey white check hat",
+		"id": "0xf81a80fa791159b4bac8f416d976fd6ceac706c9edf294d9e878649405dcf8a1",
+		"image_url": "https://ipfs.io/ipfs/bafybeic7ymazpspv6ojxwrr6rqu3glnrtzbj3ej477nowr73brmb4hkkka/nfts/3115.webp",
+		"metadata_id": "3115",
+		"mouth": "cigaratte",
+		"name": "THE SUDOZ #3115",
+		"number": "31",
+		"original_artifact_number": "0",
+		"original_path": 0,
+		"skin": "grey"
+	},
+	"display": {
+		"output": {
+			"attributes": {
+				"contents": [
+					{
+						"key": "Background",
+						"value": "brown"
+					},
+					{
+						"key": "Skin",
+						"value": "grey"
+					},
+					{
+						"key": "Clothes",
+						"value": "blue jacket"
+					},
+					{
+						"key": "Hats",
+						"value": "grey white check hat"
+					},
+					{
+						"key": "Eyewear",
+						"value": "gold glasses"
+					},
+					{
+						"key": "Mouth",
+						"value": "cigaratte"
+					},
+					{
+						"key": "Earrings",
+						"value": "sui"
+					},
+					{
+						"key": "Metadata ID",
+						"value": "3115"
+					},
+					{
+						"key": "Number",
+						"value": "31"
+					},
+					{
+						"key": "Type",
+						"value": "Developer Reserve"
+					}
+				]
+			},
+			"background": "brown",
+			"clothes": "blue jacket",
+			"collection": "THE SUDOZ",
+			"creator": "SUDOZ",
+			"description": "An evolved form of the SUDOZ artifact with unique traits",
+			"earrings": "sui",
+			"eyewear": "gold glasses",
+			"hats": "grey white check hat",
+			"image_url": "https://ipfs.io/ipfs/bafybeic7ymazpspv6ojxwrr6rqu3glnrtzbj3ej477nowr73brmb4hkkka/nfts/3115.webp",
+			"metadata_id": "3115",
+			"mouth": "cigaratte",
+			"name": "THE SUDOZ #3115",
+			"number": "#31",
+			"original_artifact_number": "#0",
+			"original_path": "0",
+			"project_url": "https://sudoz.xyz",
+			"skin": "grey"
+		},
+		"errors": null
+	}
+}

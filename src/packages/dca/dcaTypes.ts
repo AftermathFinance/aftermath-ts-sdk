@@ -1,5 +1,6 @@
 import type {
 	Balance,
+	Bps,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -18,7 +19,7 @@ export interface DcaIntegratorFeeData {
 	/**
 	 * The fee in basis points (bps). e.g., 100 => 1%.
 	 */
-	feeBps: number;
+	feeBps: Bps;
 	/**
 	 * The Sui address that will receive the fee portion.
 	 */
@@ -88,7 +89,7 @@ export interface ApiDcaTransactionForCreateOrderBody {
 	/**
 	 * The maximum allowable slippage (in basis points) for each trade, e.g. 100 => 1%.
 	 */
-	maxAllowableSlippageBps: number;
+	maxAllowableSlippageBps: Bps;
 	/**
 	 * The per-trade amount of `allocateCoinType` to be used, e.g. each trade uses 2 SUI if this is `2e9`.
 	 */
@@ -242,7 +243,7 @@ export interface DcaOrderOverviewObject {
 	/**
 	 * The maximum slippage (bps) allowed for each trade.
 	 */
-	maxSlippageBps: number;
+	maxSlippageBps: Bps;
 	/**
 	 * Optional bounding strategy with min/max acceptable prices.
 	 */

@@ -451,6 +451,48 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
+	 * Builds a transaction to set the pool's minimum lock duration (ms).
+	 * Owner-cap only. V2 pools only — V1 vaults do not expose this entry.
+	 */
+	public getSetMinLockDurationMsTransaction(inputs: {
+		ownerCapId: ObjectId;
+		lockDurationMs: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		if (this.version() === 1) {
+			throw new Error(
+				"set_min_lock_duration_ms is not supported on V1 staking pools"
+			);
+		}
+		return this.farmsApi().buildSetStakingPoolMinLockDurationMsTxV2({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
+	}
+
+	/**
+	 * Builds a transaction to set the pool's maximum lock duration (ms).
+	 * Owner-cap only. V2 pools only.
+	 */
+	public getSetMaxLockDurationMsTransaction(inputs: {
+		ownerCapId: ObjectId;
+		lockDurationMs: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		if (this.version() === 1) {
+			throw new Error(
+				"set_max_lock_duration_ms is not supported on V1 staking pools"
+			);
+		}
+		return this.farmsApi().buildSetStakingPoolMaxLockDurationMsTxV2({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
+	}
+
+	/**
 	 * Builds a transaction granting a one-time admin cap to another address, allowing them to perform specific
 	 * one-time administrative actions (like initializing a reward).
 	 *

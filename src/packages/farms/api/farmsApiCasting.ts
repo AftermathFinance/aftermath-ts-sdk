@@ -1,5 +1,8 @@
-import type { SuiObjectResponse } from "@mysten/sui/jsonRpc";
-import { Helpers } from "../../../general/utils";
+import {
+	GrpcCasting,
+	Helpers,
+	type SuiObjectView,
+} from "../../../general/utils";
 import { Coin } from "../../coin/coin";
 import type {
 	FarmsAddedRewardEvent,
@@ -62,7 +65,7 @@ export class FarmsApiCasting {
 	// =========================================================================
 
 	public static partialStakedPositionObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -99,7 +102,7 @@ export class FarmsApiCasting {
 	};
 
 	public static partialStakedPositionObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -136,7 +139,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -152,13 +155,13 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOwnerCapFieldsOnChainV2["fields"];
+		) as FarmsStakingPoolOwnerCapFieldsOnChainV2;
 
 		return {
 			objectType,
@@ -168,7 +171,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -184,7 +187,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2 = (
-		data: SuiObjectResponse
+		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
 		const objectType = Helpers.getObjectType(data);
 
@@ -192,11 +195,17 @@ export class FarmsApiCasting {
 			data
 		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2;
 
+		// @dev: `cap` is a nested `AuthorityCap` struct, so it arrived wrapped in
+		// JSON-RPC's `{ type, fields }` envelope and arrives bare over gRPC. The
+		// sibling `…OwnerCapV2` caster needs no unwrap because *its* `AuthorityCap`
+		// is the top-level object rather than a nested field.
+		const cap = GrpcCasting.unwrapStructField(fields.cap);
+
 		// TODO: add reward coin type ?
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			stakingPoolId: fields.cap.fields.for,
+			stakingPoolId: cap.for,
 		};
 	};
 

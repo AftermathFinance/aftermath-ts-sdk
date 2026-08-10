@@ -1,0 +1,26 @@
+{
+	"data": {
+		"objectId": "0x64e666dc35f414fe47454abad90458b3eca6e9c1e12ed308234f295c77186ef8",
+		"version": "921128670",
+		"digest": "ssE5UYczeNzNJoAwvVwxphziMweuZkPxu8LxDJ84sbx",
+		"type": "0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::AuthorityCap<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::VAULT<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::ADMIN>>",
+		"owner": {
+			"AddressOwner": "0x2cecee428bb8d58cd0d5b95efb6483fa482ef625e0fb7fed138f3181812b8eab"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::AuthorityCap<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::VAULT<0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::authority::ADMIN>>",
+			"hasPublicTransfer": true,
+			"fields": {
+				"for": "0xc84fbaa8cda83c695d35ecc7d738c3cd4a2bd144998aed4d0a5e70d7fb841093",
+				"id": {
+					"id": "0x64e666dc35f414fe47454abad90458b3eca6e9c1e12ed308234f295c77186ef8"
+				}
+			}
+		}
+	}
+}

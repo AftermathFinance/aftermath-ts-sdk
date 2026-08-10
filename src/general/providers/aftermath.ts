@@ -1,3 +1,4 @@
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Auth, NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { Coin } from "../../packages/coin/coin";
@@ -132,12 +133,27 @@ export class Aftermath extends Caller {
 		const fullnodeUrl =
 			this.options.fullnodeUrl ?? Caller.defaultFullnodeUrl(network);
 
-		const client = new SuiJsonRpcClient({
+		const client = new SuiGrpcClient({
+			network: network.toLowerCase(),
+			baseUrl: fullnodeUrl,
+		});
+
+		// @dev: the remaining JSON-RPC surface, now down to three call sites:
+		// `SuiGrpcClient` cannot express `queryEvents`, `queryTransactionBlocks`,
+		// or the full `SuiSystemStateSummary`. Everything else — including every
+		// Move-object read, which used to need JSON-RPC's parsed `content.fields`
+		// view — goes over gRPC. See `AftermathApi.jsonRpcClient`.
+		//
+		// It is optional on `AftermathApi`, but constructed here so that
+		// `Aftermath.create()` keeps those three helpers working exactly as
+		// before. Constructing it performs no network I/O; only calling one of
+		// the three reaches the deprecated protocol.
+		const jsonRpcClient = new SuiJsonRpcClient({
 			url: fullnodeUrl,
 			network: network.toLowerCase(),
 		});
 
-		this.api = new AftermathApi(client, addresses);
+		this.api = new AftermathApi(client, addresses, jsonRpcClient);
 	}
 
 	/**
@@ -181,9 +197,9 @@ export class Aftermath extends Caller {
 	 * Thin pass-through to the underlying {@link AftermathApi} so consumers
 	 * don't need to reach into the private `api` field.
 	 */
-	translateMoveErrorMessage(
-		inputs: { errorMessage: string }
-	): TranslatedMoveError | undefined {
+	translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+	}): TranslatedMoveError | undefined {
 		return this.api.translateMoveErrorMessage(inputs);
 	}
 

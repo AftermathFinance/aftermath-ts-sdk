@@ -17,6 +17,7 @@ import type {
 	TransactionsWithCursor,
 } from "../../types";
 import type { AftermathApi } from "../providers/aftermathApi";
+import { GrpcCasting } from "../utils/grpcCasting";
 import { Helpers } from "../utils/helpers";
 
 export class TransactionsApiHelpers {
@@ -34,6 +35,17 @@ export class TransactionsApiHelpers {
 	//  Fetching
 	// =========================================================================
 
+	/**
+	 * @remarks **Remaining JSON-RPC surface.** `suix_queryTransactionBlocks` has
+	 * no gRPC equivalent — Sui's own migration cookbook directs callers to
+	 * GraphQL or an indexer — so this helper still goes through
+	 * {@link AftermathApi.jsonRpcClient} and will stop working when JSON-RPC is
+	 * removed from fullnodes (scheduled for mid-October 2026). Prefer the
+	 * Aftermath API's transaction-history endpoints.
+	 *
+	 * @throws If no `jsonRpcClient` was passed to {@link AftermathApi}, since it
+	 * is optional there.
+	 */
 	public fetchTransactionsWithCursor = async (inputs: {
 		query: SuiTransactionBlockResponseQuery;
 		cursor?: TransactionDigest;
@@ -41,8 +53,12 @@ export class TransactionsApiHelpers {
 	}): Promise<TransactionsWithCursor> => {
 		const { query, cursor, limit } = inputs;
 
-		const transactionsWithCursor = await this.api.client.queryTransactionBlocks(
-			{
+		const jsonRpcClient = this.api.requireJsonRpcClient(
+			"Transactions().fetchTransactionsWithCursor"
+		);
+
+		const transactionsWithCursor =
+			await jsonRpcClient.queryTransactionBlocks({
 				...query,
 				cursor,
 				limit,
@@ -53,8 +69,7 @@ export class TransactionsApiHelpers {
 					showObjectChanges: true,
 					showInput: true,
 				},
-			}
-		);
+			});
 
 		return {
 			transactions: transactionsWithCursor.data,
@@ -67,16 +82,27 @@ export class TransactionsApiHelpers {
 	}): Promise<Transaction> => {
 		const { tx } = inputs;
 
-		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.api.client.dryRunTransactionBlock({
-				transactionBlock: await tx.build({
+		// @dev: `dryRunTransactionBlock` -> `simulateTransaction`. Verified live
+		// that the two return identical `gasUsed`
+		// (`{computationCost, storageCost, storageRebate,
+		// nonRefundableStorageFee}` as decimal strings).
+		const [simulation, { referenceGasPrice }] = await Promise.all([
+			this.api.client.simulateTransaction({
+				transaction: await tx.build({
 					client: this.api.client,
 				}),
+				include: { effects: true },
 			}),
 			this.api.client.getReferenceGasPrice(),
 		]);
 
-		const gasData = txResponse.effects.gasUsed;
+		// @dev: a simulation that fails on-chain still carries effects, but under
+		// the `FailedTransaction` arm of the `$kind` union. Reading only
+		// `result.Transaction` would silently drop the gas estimate exactly when
+		// the caller needs it most.
+		const { effects } = GrpcCasting.transactionFromResult(simulation);
+
+		const gasData = effects.gasUsed;
 		const gasUsed =
 			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
 
@@ -84,6 +110,8 @@ export class TransactionsApiHelpers {
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
 		tx.setGasBudget(safeGasBudget);
+		// @dev: gRPC nests this under `referenceGasPrice`; JSON-RPC returned a bare
+		// decimal string.
 		tx.setGasPrice(BigInt(referenceGasPrice));
 		return tx;
 	};

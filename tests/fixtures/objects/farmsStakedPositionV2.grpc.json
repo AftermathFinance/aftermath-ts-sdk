@@ -1,0 +1,36 @@
+{
+	"objectId": "0x24b39515b018b4a3cbf9c6bceab70e59810c36c7441fb870f181a0bd872f7677",
+	"version": "954716569",
+	"digest": "G8aWyeKXK6MuDHDu4zqcCU6NV2DsahPdEE7dEHAHwRmt",
+	"owner": {
+		"AddressOwner": "0xcc58f556a7da161062716f552fe8a1326a5c5dd847d086934ac38167ae1601b3",
+		"$kind": "AddressOwner"
+	},
+	"type": "0x79ee374b9e3c60c00a19fdbeaea25731bbea8f2cab9bb61bb712543e0ba55b7a::staked_position::StakedPosition<0x604f2e82f5923c22373d048149c4b7861585cebe231b4e9e93ed8fb9c3c33bb5::af_lp::AF_LP>",
+	"json": {
+		"balance": "398872",
+		"base_rewards_accumulated": [
+			"0"
+		],
+		"base_rewards_debt": [
+			"438599008"
+		],
+		"id": "0x24b39515b018b4a3cbf9c6bceab70e59810c36c7441fb870f181a0bd872f7677",
+		"last_reward_timestamp_ms": "1785353246941",
+		"lock_duration_ms": "1209600000",
+		"lock_enforcement": {
+			"@variant": "STRICT"
+		},
+		"lock_multiplier": "2000000000000000000",
+		"lock_start_timestamp_ms": "1785353246941",
+		"multiplier_rewards_accumulated": [
+			"0"
+		],
+		"multiplier_rewards_debt": [
+			"438599008"
+		],
+		"multiplier_staked_amount": "398872",
+		"vault_id": "0x05a662d9e9673d2407f8b996fa581b8194ac44b632b7c5785694030346e5e214"
+	},
+	"display": null
+}

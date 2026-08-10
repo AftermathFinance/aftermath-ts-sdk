@@ -1,0 +1,34 @@
+{
+	"data": {
+		"objectId": "0x63872ab2d39a51669c0a7e6373456d3b3d48b6f99136bfc14fe879ae8e296dce",
+		"version": "743103539",
+		"digest": "FVKg9b7VLxMtvdvqA2yB9EntJc9aZAEFgLBjcSPJubYg",
+		"type": "0x0cb4bcc0560340eb1a1b929cabe56b33fc6449820ec8c1980d69bb98b649b802::personal_kiosk::PersonalKioskCap",
+		"owner": {
+			"AddressOwner": "0x2cecee428bb8d58cd0d5b95efb6483fa482ef625e0fb7fed138f3181812b8eab"
+		},
+		"display": {
+			"data": null,
+			"error": null
+		},
+		"content": {
+			"dataType": "moveObject",
+			"type": "0x0cb4bcc0560340eb1a1b929cabe56b33fc6449820ec8c1980d69bb98b649b802::personal_kiosk::PersonalKioskCap",
+			"hasPublicTransfer": false,
+			"fields": {
+				"cap": {
+					"type": "0x2::kiosk::KioskOwnerCap",
+					"fields": {
+						"for": "0x96bdb5344fac122b8f4b45a6315ba0219a5a53ae0fdc5ce5b45539b83826d5a0",
+						"id": {
+							"id": "0xd6aa59b62f7bc07fd4221ce00d09f78882670f95353d34cafb1b327832ca28fa"
+						}
+					}
+				},
+				"id": {
+					"id": "0x63872ab2d39a51669c0a7e6373456d3b3d48b6f99136bfc14fe879ae8e296dce"
+				}
+			}
+		}
+	}
+}
