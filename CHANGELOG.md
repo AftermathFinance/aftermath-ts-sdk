@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 2.2.1
+
+### Patch Changes
+
+- [#149](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/149) [`b524aa9`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/b524aa94d435a1e1ece087d5c98e99cdfc26929f) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Fix `Rewards.getExpectedRewards` to call the kebab-case `rewards/expected-rewards` endpoint, matching the backend path normalization.
+
 ## 2.2.0
 
 ### Minor Changes
