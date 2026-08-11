@@ -9,6 +9,7 @@ import type {
 	ApiPoolObjectIdForLpCoinTypeBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	ApiPoolsStatsBody,
+	ApiPoolsSummaryBody,
 	ApiPublishLpCoinBody,
 	Balance,
 	CallerConfig,
@@ -18,6 +19,7 @@ import type {
 	PoolLpInfo,
 	PoolObject,
 	PoolStats,
+	PoolSummary,
 	PoolWithdrawEvent,
 	Slippage,
 	SuiAddress,
@@ -427,6 +429,21 @@ export class Pools extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<PoolStats[]> {
 		return this.fetchApi("stats", inputs, abortSignal);
+	}
+
+	/**
+	 * Fetches pool objects and their statistics in a single batch response.
+	 * When `poolIds` is omitted, the API returns summaries for all pools.
+	 *
+	 * @param inputs - Optionally provide the pool IDs to include.
+	 * @param abortSignal - An optional signal for cancelling the request.
+	 * @returns Pool objects paired with their current statistics.
+	 */
+	public async getPoolSummaries(
+		inputs?: ApiPoolsSummaryBody,
+		abortSignal?: AbortSignal
+	): Promise<PoolSummary[]> {
+		return this.fetchApi("summary", inputs ?? {}, abortSignal);
 	}
 
 	/**

@@ -133,6 +133,31 @@ describe("Pools signal propagation", () => {
 		expectPostBodyWithoutSignal(calls);
 	});
 
+	it("forwards the signal for pool summaries", async () => {
+		const signal = makeSignal();
+		const calls = installJsonFetch([
+			{
+				pool: poolFixture,
+				stats: {
+					volume: 1,
+					tvl: 2,
+					supplyPerLps: [],
+					lpPrice: 3,
+					fees: 4,
+					apr: 0.5,
+				},
+			},
+		]);
+		const summaries = await new Pools(config).getPoolSummaries(
+			{ poolIds: [poolFixture.objectId] },
+			signal
+		);
+		expect(summaries[0]?.pool.objectId).toBe(poolFixture.objectId);
+		expect(summaries[0]?.stats.tvl).toBe(2);
+		expectSignal(calls, signal);
+		expectPostBodyWithoutSignal(calls);
+	});
+
 	it("forwards the signal through LP object-id wrappers", async () => {
 		const signal = makeSignal();
 		const calls = installJsonFetch([poolFixture.objectId]);
@@ -202,6 +227,22 @@ describe("Farms signal propagation", () => {
 		).toBe(7.5);
 		expectSignal(rewardsCalls, rewardsSignal);
 		expectPostBodyWithoutSignal(rewardsCalls);
+	});
+
+	it("forwards the signal for farm summaries", async () => {
+		const signal = makeSignal();
+		const calls = installJsonFetch([
+			{ farmId: farmFixture.objectId, tvl: 12.5, rewardsTvl: 7.5 },
+		]);
+		const summaries = await new Farms(config).getFarmSummaries(
+			{ farmIds: [farmFixture.objectId] },
+			signal
+		);
+		expect(summaries).toEqual([
+			{ farmId: farmFixture.objectId, tvl: 12.5, rewardsTvl: 7.5 },
+		]);
+		expectSignal(calls, signal);
+		expectPostBodyWithoutSignal(calls);
 	});
 
 	it("forwards the signal through FarmsStakingPool TVL delegation", async () => {

@@ -14,6 +14,8 @@ import type {
 	ApiFarmsOwnedStakedPositionsBody,
 	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
+	ApiFarmsSummaryBody,
+	FarmSummary,
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
 	FarmUserEvent,
@@ -269,6 +271,21 @@ export class Farms extends Caller {
 		abortSignal?: AbortSignal
 	): Promise<number> {
 		return this.fetchApi("rewards-tvl", inputs ?? {}, abortSignal);
+	}
+
+	/**
+	 * Fetches TVL and reward TVL for multiple farms in a single batch response.
+	 * When `farmIds` is omitted, the API returns summaries for all farms.
+	 *
+	 * @param inputs - Optionally provide the farm IDs to include.
+	 * @param abortSignal - An optional signal for cancelling the request.
+	 * @returns TVL and reward TVL metrics for each requested farm.
+	 */
+	public async getFarmSummaries(
+		inputs?: ApiFarmsSummaryBody,
+		abortSignal?: AbortSignal
+	): Promise<FarmSummary[]> {
+		return this.fetchApi("summary", inputs ?? {}, abortSignal);
 	}
 
 	// =========================================================================

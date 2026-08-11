@@ -504,6 +504,23 @@ export interface FarmsWithdrewPrincipalEvent extends Event {
 //  API
 // =========================================================================
 
+/**
+ * Represents the TVL and reward TVL metrics returned for a farm.
+ */
+export interface FarmSummary {
+	farmId: ObjectId;
+	tvl: number;
+	rewardsTvl: number;
+}
+
+/**
+ * Request body for fetching TVL and reward TVL for multiple farms in one
+ * response.
+ */
+export interface ApiFarmsSummaryBody {
+	farmIds?: ObjectId[];
+}
+
 // =========================================================================
 //  Staked Positions API
 // =========================================================================
