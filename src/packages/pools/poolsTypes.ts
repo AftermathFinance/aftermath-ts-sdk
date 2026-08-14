@@ -330,6 +330,15 @@ export interface PoolStats {
 }
 
 /**
+ * Represents a pool object together with the analytics returned by the pool
+ * summary endpoint.
+ */
+export interface PoolSummary {
+	pool: PoolObject;
+	stats: PoolStats;
+}
+
+/**
  * Represents a data point for pool analytics, including a Unix timestamp (in ms)
  * and a numeric value (e.g., volume or fee data).
  */
@@ -560,6 +569,13 @@ export interface ApiPoolObjectIdForLpCoinTypeBody {
  */
 export interface ApiPoolsStatsBody {
 	poolIds: ObjectId[];
+}
+
+/**
+ * Request body for fetching pool objects and statistics in one response.
+ */
+export interface ApiPoolsSummaryBody {
+	poolIds?: ObjectId[];
 }
 
 /**

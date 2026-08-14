@@ -50,12 +50,16 @@ export class Prices extends Caller {
 	 * console.log(suiPriceInfo.price, suiPriceInfo.priceChange24HoursPercentage);
 	 * ```
 	 */
-	public async getCoinPriceInfo(inputs: {
-		coin: CoinType;
-	}): Promise<CoinPriceInfo> {
-		const coinsToPriceInfo = await this.getCoinsToPriceInfo({
-			coins: [inputs.coin],
-		});
+	public async getCoinPriceInfo(
+		inputs: { coin: CoinType },
+		abortSignal?: AbortSignal
+	): Promise<CoinPriceInfo> {
+		const coinsToPriceInfo = await this.getCoinsToPriceInfo(
+			{
+				coins: [inputs.coin],
+			},
+			abortSignal
+		);
 		return Object.values(coinsToPriceInfo)[0];
 	}
 
@@ -75,10 +79,11 @@ export class Prices extends Caller {
 	 * console.log(info);
 	 * ```
 	 */
-	public async getCoinsToPriceInfo(inputs: {
-		coins: CoinType[];
-	}): Promise<CoinsToPriceInfo> {
-		return this.fetchApi("", inputs);
+	public async getCoinsToPriceInfo(
+		inputs: { coins: CoinType[] },
+		abortSignal?: AbortSignal
+	): Promise<CoinsToPriceInfo> {
+		return this.fetchApi("", inputs, abortSignal);
 	}
 
 	/**
@@ -94,8 +99,11 @@ export class Prices extends Caller {
 	 * console.log("SUI price in USD:", suiPrice);
 	 * ```
 	 */
-	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
-		const priceInfo = await this.getCoinPriceInfo(inputs);
+	public async getCoinPrice(
+		inputs: { coin: CoinType },
+		abortSignal?: AbortSignal
+	): Promise<number> {
+		const priceInfo = await this.getCoinPriceInfo(inputs, abortSignal);
 		return priceInfo.price;
 	}
 
@@ -112,10 +120,14 @@ export class Prices extends Caller {
 	 * console.log(multiPrices["0x2::sui::SUI"]); // e.g. 1.23
 	 * ```
 	 */
-	public async getCoinsToPrice(inputs: {
-		coins: CoinType[];
-	}): Promise<CoinsToPrice> {
-		const coinsToPriceInfo = await this.getCoinsToPriceInfo(inputs);
+	public async getCoinsToPrice(
+		inputs: { coins: CoinType[] },
+		abortSignal?: AbortSignal
+	): Promise<CoinsToPrice> {
+		const coinsToPriceInfo = await this.getCoinsToPriceInfo(
+			inputs,
+			abortSignal
+		);
 		const coinsToPrice: CoinsToPrice = Object.entries(coinsToPriceInfo).reduce(
 			(acc, [coinType, info]) => ({
 				...acc,

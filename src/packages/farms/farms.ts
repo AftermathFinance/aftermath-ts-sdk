@@ -14,6 +14,8 @@ import type {
 	ApiFarmsOwnedStakedPositionsBody,
 	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
+	ApiFarmsSummaryBody,
+	FarmSummary,
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
 	FarmUserEvent,
@@ -86,11 +88,14 @@ export class Farms extends Caller {
 	 * console.log(pool.stakingPool);
 	 * ```
 	 */
-	public async getStakingPool(inputs: {
-		objectId: ObjectId;
-	}): Promise<FarmsStakingPool> {
+	public async getStakingPool(
+		inputs: { objectId: ObjectId },
+		abortSignal?: AbortSignal
+	): Promise<FarmsStakingPool> {
 		const stakingPool = await this.fetchApi<FarmsStakingPoolObject>(
-			inputs.objectId
+			inputs.objectId,
+			undefined,
+			abortSignal
 		);
 		return new FarmsStakingPool(stakingPool, this.config, this.api);
 	}
@@ -109,17 +114,22 @@ export class Farms extends Caller {
 	 * console.log(pools[0].stakingPool, pools[1].stakingPool);
 	 * ```
 	 */
-	public async getStakingPools(inputs: {
-		objectIds: ObjectId[];
-	}): Promise<FarmsStakingPool[]> {
+	public async getStakingPools(
+		inputs: { objectIds: ObjectId[] },
+		abortSignal?: AbortSignal
+	): Promise<FarmsStakingPool[]> {
 		const stakingPools = await this.fetchApi<
 			FarmsStakingPoolObject[],
 			{
 				farmIds: ObjectId[];
 			}
-		>("", {
-			farmIds: inputs.objectIds,
-		});
+		>(
+			"",
+			{
+				farmIds: inputs.objectIds,
+			},
+			abortSignal
+		);
 		return stakingPools.map(
 			(stakingPool) => new FarmsStakingPool(stakingPool, this.config, this.api)
 		);
@@ -136,8 +146,12 @@ export class Farms extends Caller {
 	 * console.log(allPools.map(pool => pool.stakingPool));
 	 * ```
 	 */
-	public async getAllStakingPools() {
-		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi("", {});
+	public async getAllStakingPools(abortSignal?: AbortSignal) {
+		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi(
+			"",
+			{},
+			abortSignal
+		);
 		return stakingPools.map(
 			(pool) => new FarmsStakingPool(pool, this.config, this.api)
 		);
@@ -230,8 +244,11 @@ export class Farms extends Caller {
 	 * console.log("Specific farm's TVL:", tvlForSpecificFarm);
 	 * ```
 	 */
-	public async getTVL(inputs?: { farmIds?: ObjectId[] }): Promise<number> {
-		return this.fetchApi("tvl", inputs ?? {});
+	public async getTVL(
+		inputs?: { farmIds?: ObjectId[] },
+		abortSignal?: AbortSignal
+	): Promise<number> {
+		return this.fetchApi("tvl", inputs ?? {}, abortSignal);
 	}
 
 	/**
@@ -249,10 +266,26 @@ export class Farms extends Caller {
 	 * console.log("Single farm's rewards TVL:", singleFarmRewardsTvl);
 	 * ```
 	 */
-	public async getRewardsTVL(inputs?: {
-		farmIds?: ObjectId[];
-	}): Promise<number> {
-		return this.fetchApi("rewards-tvl", inputs ?? {});
+	public async getRewardsTVL(
+		inputs?: { farmIds?: ObjectId[] },
+		abortSignal?: AbortSignal
+	): Promise<number> {
+		return this.fetchApi("rewards-tvl", inputs ?? {}, abortSignal);
+	}
+
+	/**
+	 * Fetches TVL and reward TVL for multiple farms in a single batch response.
+	 * When `farmIds` is omitted, the API returns summaries for all farms.
+	 *
+	 * @param inputs - Optionally provide the farm IDs to include.
+	 * @param abortSignal - An optional signal for cancelling the request.
+	 * @returns TVL and reward TVL metrics for each requested farm.
+	 */
+	public async getFarmSummaries(
+		inputs?: ApiFarmsSummaryBody,
+		abortSignal?: AbortSignal
+	): Promise<FarmSummary[]> {
+		return this.fetchApi("summary", inputs ?? {}, abortSignal);
 	}
 
 	// =========================================================================

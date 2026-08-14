@@ -9,6 +9,7 @@ import type {
 	ApiPoolObjectIdForLpCoinTypeBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	ApiPoolsStatsBody,
+	ApiPoolsSummaryBody,
 	ApiPublishLpCoinBody,
 	Balance,
 	CallerConfig,
@@ -18,6 +19,7 @@ import type {
 	PoolLpInfo,
 	PoolObject,
 	PoolStats,
+	PoolSummary,
 	PoolWithdrawEvent,
 	Slippage,
 	SuiAddress,
@@ -171,8 +173,15 @@ export class Pools extends Caller {
 	 * console.log(pool.pool.lpCoinType, pool.pool.name);
 	 * ```
 	 */
-	public async getPool(inputs: { objectId: ObjectId }) {
-		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
+	public async getPool(
+		inputs: { objectId: ObjectId },
+		abortSignal?: AbortSignal
+	) {
+		const pool = await this.fetchApi<PoolObject>(
+			inputs.objectId,
+			undefined,
+			abortSignal
+		);
 		return new Pool(pool, this.config, this.api);
 	}
 
@@ -188,15 +197,22 @@ export class Pools extends Caller {
 	 * console.log(poolArray.length);
 	 * ```
 	 */
-	public async getPools(inputs: { objectIds: ObjectId[] }) {
+	public async getPools(
+		inputs: { objectIds: ObjectId[] },
+		abortSignal?: AbortSignal
+	) {
 		const pools = await this.fetchApi<
 			PoolObject[],
 			{
 				poolIds: ObjectId[];
 			}
-		>("", {
-			poolIds: inputs.objectIds,
-		});
+		>(
+			"",
+			{
+				poolIds: inputs.objectIds,
+			},
+			abortSignal
+		);
 		return pools.map((pool) => new Pool(pool, this.config, this.api));
 	}
 
@@ -211,8 +227,8 @@ export class Pools extends Caller {
 	 * console.log(allPools.map(p => p.pool.name));
 	 * ```
 	 */
-	public async getAllPools() {
-		const pools: PoolObject[] = await this.fetchApi("", {});
+	public async getAllPools(abortSignal?: AbortSignal) {
+		const pools: PoolObject[] = await this.fetchApi("", {}, abortSignal);
 		return pools.map((pool) => new Pool(pool, this.config, this.api));
 	}
 
@@ -312,10 +328,16 @@ export class Pools extends Caller {
 	 * console.log(poolId);
 	 * ```
 	 */
-	public getPoolObjectIdForLpCoinType = (inputs: { lpCoinType: CoinType }) => {
-		return this.getPoolObjectIdsForLpCoinTypes({
-			lpCoinTypes: [inputs.lpCoinType],
-		});
+	public getPoolObjectIdForLpCoinType = (
+		inputs: { lpCoinType: CoinType },
+		abortSignal?: AbortSignal
+	) => {
+		return this.getPoolObjectIdsForLpCoinTypes(
+			{
+				lpCoinTypes: [inputs.lpCoinType],
+			},
+			abortSignal
+		);
 	};
 
 	/**
@@ -334,12 +356,13 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getPoolObjectIdsForLpCoinTypes(
-		inputs: ApiPoolObjectIdForLpCoinTypeBody
+		inputs: ApiPoolObjectIdForLpCoinTypeBody,
+		abortSignal?: AbortSignal
 	): Promise<(ObjectId | undefined)[]> {
 		return this.fetchApi<
 			(ObjectId | undefined)[],
 			ApiPoolObjectIdForLpCoinTypeBody
-		>("pool-object-ids", inputs);
+		>("pool-object-ids", inputs, abortSignal);
 	}
 
 	/**
@@ -349,10 +372,11 @@ export class Pools extends Caller {
 	 * @param inputs - Contains the `lpCoinType` to check.
 	 * @returns `true` if the coin is an LP token, `false` otherwise.
 	 */
-	public isLpCoinType = async (inputs: {
-		lpCoinType: CoinType;
-	}): Promise<boolean> => {
-		const result = await this.getPoolObjectIdForLpCoinType(inputs);
+	public isLpCoinType = async (
+		inputs: { lpCoinType: CoinType },
+		abortSignal?: AbortSignal
+	): Promise<boolean> => {
+		const result = await this.getPoolObjectIdForLpCoinType(inputs, abortSignal);
 		return result.some((id) => id !== undefined);
 	};
 
@@ -400,8 +424,26 @@ export class Pools extends Caller {
 	 * console.log(stats[0].volume, stats[1].tvl);
 	 * ```
 	 */
-	public async getPoolsStats(inputs: ApiPoolsStatsBody): Promise<PoolStats[]> {
-		return this.fetchApi("stats", inputs);
+	public async getPoolsStats(
+		inputs: ApiPoolsStatsBody,
+		abortSignal?: AbortSignal
+	): Promise<PoolStats[]> {
+		return this.fetchApi("stats", inputs, abortSignal);
+	}
+
+	/**
+	 * Fetches pool objects and their statistics in a single batch response.
+	 * When `poolIds` is omitted, the API returns summaries for all pools.
+	 *
+	 * @param inputs - Optionally provide the pool IDs to include.
+	 * @param abortSignal - An optional signal for cancelling the request.
+	 * @returns Pool objects paired with their current statistics.
+	 */
+	public async getPoolSummaries(
+		inputs?: ApiPoolsSummaryBody,
+		abortSignal?: AbortSignal
+	): Promise<PoolSummary[]> {
+		return this.fetchApi("summary", inputs ?? {}, abortSignal);
 	}
 
 	/**

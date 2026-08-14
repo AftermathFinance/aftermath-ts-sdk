@@ -12,6 +12,11 @@ import type {
 	Url,
 } from "../../types";
 import { Helpers } from "./helpers";
+import {
+	AftermathTransportError,
+	normalizeAftermathTransportError,
+	parseRetryAfter,
+} from "./transportError";
 
 /**
  * A JSON.stringify replacer that serializes BigInt values as strings
@@ -61,15 +66,29 @@ export class Caller {
 	): Promise<OutputType> {
 		if (!response.ok) {
 			const status = response.status;
+			const retryAfterMs = parseRetryAfter(response.headers.get("Retry-After"));
+			const statusText = response.statusText;
 			const body = await response.text();
-			throw new Error(`HTTP ${status} ${response.statusText}: ${body}`);
+			throw new AftermathTransportError("http", {
+				message: `HTTP ${status} ${statusText}: ${body}`,
+				name: "Error",
+				retryAfterMs,
+				status,
+			});
 		}
 
 		const text = await response.text();
 
-		const output = disableBigIntJsonParsing
-			? JSON.parse(text, (_key, value) => (value === null ? undefined : value))
-			: Helpers.parseJsonWithBigint(text);
+		let output: unknown;
+		try {
+			output = disableBigIntJsonParsing
+				? JSON.parse(text, (_key, value) =>
+						value === null ? undefined : value
+					)
+				: Helpers.parseJsonWithBigint(text);
+		} catch (cause) {
+			throw new AftermathTransportError("decode", { cause });
+		}
 
 		return (output ?? undefined) as OutputType;
 	}
@@ -147,28 +166,32 @@ export class Caller {
 			disableBigIntJsonParsing?: boolean;
 		}
 	): Promise<Output> {
-		const apiCallUrl = this.urlForApiCall(url);
+		try {
+			const apiCallUrl = this.urlForApiCall(url);
 
-		const headers = {
-			"Content-Type": "application/json",
-			...(this.config.accessToken
-				? { Authorization: `Bearer ${this.config.accessToken}` }
-				: {}),
-		};
+			const headers = {
+				"Content-Type": "application/json",
+				...(this.config.accessToken
+					? { Authorization: `Bearer ${this.config.accessToken}` }
+					: {}),
+			};
 
-		const uncastResponse = await (body === undefined
-			? fetch(apiCallUrl, { headers, signal })
-			: fetch(apiCallUrl, {
-					method: "POST",
-					body: JSON.stringify(body, bigIntReplacer),
-					headers,
-					signal,
-				}));
+			const uncastResponse = await (body === undefined
+				? fetch(apiCallUrl, { headers, signal })
+				: fetch(apiCallUrl, {
+						method: "POST",
+						body: JSON.stringify(body, bigIntReplacer),
+						headers,
+						signal,
+					}));
 
-		return Caller.fetchResponseToType<Output>(
-			uncastResponse,
-			!!options?.disableBigIntJsonParsing
-		);
+			return await Caller.fetchResponseToType<Output>(
+				uncastResponse,
+				!!options?.disableBigIntJsonParsing
+			);
+		} catch (error) {
+			throw normalizeAftermathTransportError(error, signal);
+		}
 	}
 
 	protected async fetchApiTransaction<BodyType = undefined>(
