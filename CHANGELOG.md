@@ -1,5 +1,17 @@
 # aftermath-ts-sdk
 
+## 2.3.0
+
+### Minor Changes
+
+- [#151](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/151) [`32c4013`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/32c4013e37e46eeb7f98686663e6b126708dd94c) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add typed batch methods for fetching pool and farm summaries with abort-signal support.
+
+- [#151](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/151) [`32c4013`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/32c4013e37e46eeb7f98686663e6b126708dd94c) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add final-positional `AbortSignal` support to Aftermath initialization and
+  read methods, plus additive `AftermathTransportError` classification for
+  HTTP, network, cancellation, timeout, and decode failures. Existing error
+  messages and names remain compatible, including the legacy HTTP error format;
+  new structured transport fields are available alongside them.
+
 ## 2.2.1
 
 ### Patch Changes
