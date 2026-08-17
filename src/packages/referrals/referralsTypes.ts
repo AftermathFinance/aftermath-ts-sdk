@@ -131,12 +131,10 @@ export interface ApiReferralsCreateReferralLinkBody {
 	 */
 	signature: string;
 	/**
-	 * Desired referral code. Optional: when omitted the service defaults to
-	 * `ref_{walletAddress}`. The signed message no longer carries it, so it must
-	 * travel in the body (AFX-382). Note the default exceeds the 32-character
-	 * limit, so callers should always send an explicit `refCode`.
+	 * The referral code to create. The signed message no longer carries it, so
+	 * it travels in the body.
 	 */
-	refCode?: string;
+	refCode: string;
 }
 
 export interface ApiReferralsCreateReferralLinkResponse {
@@ -173,7 +171,7 @@ export interface ApiReferralsSetReferrerBody {
 	signature: string;
 	/**
 	 * The referral code to link the referee to. Required: the signed message no
-	 * longer carries it, so it must travel in the body (AFX-382).
+	 * longer carries it, so it must travel in the body.
 	 */
 	refCode: string;
 }

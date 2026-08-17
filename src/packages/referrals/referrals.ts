@@ -115,7 +115,7 @@ export class Referrals extends Caller {
 	/**
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `refCode` in the
-	 * `createReferralLink` body instead (AFX-382).
+	 * `createReferralLink` body instead.
 	 */
 	public createReferralLinkMessageToSign(inputs: { refCode: string }) {
 		return {
@@ -128,7 +128,7 @@ export class Referrals extends Caller {
 	/**
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `refCode` in the
-	 * `setReferrer` body instead (AFX-382).
+	 * `setReferrer` body instead.
 	 */
 	public setReferrerMessageToSign(inputs: { refCode: string }) {
 		return {

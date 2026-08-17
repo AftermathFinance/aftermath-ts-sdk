@@ -170,7 +170,7 @@ export class LimitOrders extends Caller {
 	 *
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
-	 * `cancelLimitOrder` body instead (AFX-382).
+	 * `cancelLimitOrder` body instead.
 	 * @param inputs - Object with `orderIds`, an array of order object IDs to cancel.
 	 * @returns A JSON structure with the action and order IDs to be canceled.
 	 */
