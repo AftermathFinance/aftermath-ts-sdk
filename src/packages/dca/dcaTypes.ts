@@ -127,7 +127,7 @@ export interface ApiDcaTransactionForCloseOrderBody {
 	signature: string;
 	/**
 	 * The order object IDs to cancel. Required: the signed message no longer
-	 * carries them, so they must travel in the body (AFX-382).
+	 * carries them, so they must travel in the body.
 	 */
 	orderObjectIds: string[];
 }

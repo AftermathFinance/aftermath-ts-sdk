@@ -37,14 +37,14 @@ export interface PerpetualsSponsorConfig {
 	/**
 	 * Wallet address to use for gas pool sponsorship. Must be the connected
 	 * wallet: af-fe now verifies the sponsor and refuses a request naming any
-	 * other address with error 2034 before it reaches the pool (AFX-382).
+	 * other address with error 2034 before it reaches the pool.
 	 */
 	walletAddress: SuiAddress;
 	/**
 	 * Base64 UTF-8 bytes of the Terms and Conditions message (see
 	 * `UserData.createTermsAndConditionsMessage`), signed once by `walletAddress`
 	 * and cached for the session. Sending this cached signature is all the gas
-	 * pool needs; it replaces the old per-tx `SPONSOR_GAS` payload (AFX-382).
+	 * pool needs; it replaces the old per-tx `SPONSOR_GAS` payload.
 	 */
 	bytes?: string;
 	/** `walletAddress`'s signature over `bytes` (the cached T&C signature). */

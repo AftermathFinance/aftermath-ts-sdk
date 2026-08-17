@@ -105,7 +105,7 @@ export class UserData extends Caller {
 	 * The single message every wallet signs once per session to prove ownership.
 	 * af-fe decodes the personal-message bytes and compares this text byte for
 	 * byte, so it must stay exactly this string: no JSON wrapper, action, date,
-	 * or trailing whitespace (AFX-382).
+	 * or trailing whitespace.
 	 */
 	public static readonly termsAndConditionsMessage =
 		"Aftermath Terms and Conditions";
@@ -115,7 +115,7 @@ export class UserData extends Caller {
 	 * personal message over its UTF-8 bytes and reuse the signature for the whole
 	 * session: it is the one credential af-fe verifies for referrals, rewards,
 	 * stop/twap order datas, collateral/order history, the websocket `user`
-	 * subscription, and gas-pool sponsorship (AFX-382).
+	 * subscription, and gas-pool sponsorship.
 	 *
 	 * @returns The exact string to sign.
 	 *
@@ -136,8 +136,7 @@ export class UserData extends Caller {
 	 * with the Terms and Conditions of the service.
 	 *
 	 * @deprecated af-fe no longer accepts the `{action:...}` wrapper and rejects
-	 * it with error 2034. Sign {@link createTermsAndConditionsMessage} instead
-	 * (AFX-382).
+	 * it with error 2034. Sign {@link createTermsAndConditionsMessage} instead.
 	 * @returns An object with an `action` property set to "SIGN_TERMS_AND_CONDITIONS".
 	 */
 	public createSignTermsAndConditionsMessageToSign(): {

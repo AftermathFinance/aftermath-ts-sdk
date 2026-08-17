@@ -178,7 +178,7 @@ export class Dca extends Caller {
 	 *
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
-	 * `closeDcaOrder` body instead (AFX-382).
+	 * `closeDcaOrder` body instead.
 	 * @param inputs - An object containing `orderIds`, an array of order object IDs to cancel.
 	 * @returns An object with `action: "CANCEL_DCA_ORDERS"` and the `order_object_ids`.
 	 */
