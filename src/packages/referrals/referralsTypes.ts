@@ -130,6 +130,13 @@ export interface ApiReferralsCreateReferralLinkBody {
 	 * The signature of the message signed by the user's wallet. Required for authentication.
 	 */
 	signature: string;
+	/**
+	 * Desired referral code. Optional: when omitted the service defaults to
+	 * `ref_{walletAddress}`. The signed message no longer carries it, so it must
+	 * travel in the body (AFX-382). Note the default exceeds the 32-character
+	 * limit, so callers should always send an explicit `refCode`.
+	 */
+	refCode?: string;
 }
 
 export interface ApiReferralsCreateReferralLinkResponse {
@@ -164,6 +171,11 @@ export interface ApiReferralsSetReferrerBody {
 	 * The signature of the message signed by the referee's wallet. Required for authentication.
 	 */
 	signature: string;
+	/**
+	 * The referral code to link the referee to. Required: the signed message no
+	 * longer carries it, so it must travel in the body (AFX-382).
+	 */
+	refCode: string;
 }
 
 export interface ApiReferralsSetReferrerResponse {
