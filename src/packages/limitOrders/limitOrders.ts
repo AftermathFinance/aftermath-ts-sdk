@@ -168,16 +168,11 @@ export class LimitOrders extends Caller {
 	 * signs this message (converted to bytes), and the resulting signature is passed
 	 * to `cancelLimitOrder`.
 	 *
+	 * @deprecated af-fe no longer accepts this per-action message. Sign
+	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
+	 * `cancelLimitOrder` body instead (AFX-382).
 	 * @param inputs - Object with `orderIds`, an array of order object IDs to cancel.
 	 * @returns A JSON structure with the action and order IDs to be canceled.
-	 *
-	 * @example
-	 * ```typescript
-	 * const msg = limitOrders.cancelLimitOrdersMessageToSign({
-	 *   orderIds: ["0x<order1>", "0x<order2>"]
-	 * });
-	 * // user signs this JSON
-	 * ```
 	 */
 	public cancelLimitOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;

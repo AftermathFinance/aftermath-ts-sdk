@@ -34,16 +34,20 @@ import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
  * that debits the specified wallet's gas pool.
  */
 export interface PerpetualsSponsorConfig {
-	/** Wallet address to use for gas pool sponsorship. */
+	/**
+	 * Wallet address to use for gas pool sponsorship. Must be the connected
+	 * wallet: af-fe now verifies the sponsor and refuses a request naming any
+	 * other address with error 2034 before it reaches the pool (AFX-382).
+	 */
 	walletAddress: SuiAddress;
 	/**
-	 * Base64 of the JSON `{"action":"SPONSOR_GAS","date":<unix seconds>}` signed
-	 * by `walletAddress`. Proves who is asking, not what for; the gas pool won't
-	 * hand out a sponsorship without it. Reusable for a day either side of
-	 * `date`, so sign once, cache it, and send it with every sponsored tx.
+	 * Base64 UTF-8 bytes of the Terms and Conditions message (see
+	 * `UserData.createTermsAndConditionsMessage`), signed once by `walletAddress`
+	 * and cached for the session. Sending this cached signature is all the gas
+	 * pool needs; it replaces the old per-tx `SPONSOR_GAS` payload (AFX-382).
 	 */
 	bytes?: string;
-	/** `walletAddress`'s signature over `bytes`. */
+	/** `walletAddress`'s signature over `bytes` (the cached T&C signature). */
 	signature?: string;
 }
 

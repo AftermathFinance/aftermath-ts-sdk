@@ -176,15 +176,11 @@ export class Dca extends Caller {
 	 * The user can sign this message (converted to bytes) locally, then submit the signature to
 	 * `closeDcaOrder`.
 	 *
+	 * @deprecated af-fe no longer accepts this per-action message. Sign
+	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
+	 * `closeDcaOrder` body instead (AFX-382).
 	 * @param inputs - An object containing `orderIds`, an array of order object IDs to cancel.
 	 * @returns An object with `action: "CANCEL_DCA_ORDERS"` and the `order_object_ids`.
-	 *
-	 * @example
-	 * ```typescript
-	 * const msg = dca.closeDcaOrdersMessageToSign({ orderIds: ["0x<order1>", "0x<order2>"] });
-	 * console.log(msg);
-	 * // sign this as JSON or string-encode, then pass to closeDcaOrder
-	 * ```
 	 */
 	public closeDcaOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;

@@ -102,18 +102,43 @@ export class UserData extends Caller {
 	}
 
 	/**
-	 * Generates a simple message object that the user should sign to confirm their agreement
-	 * with the Terms and Conditions of the service.
+	 * The single message every wallet signs once per session to prove ownership.
+	 * af-fe decodes the personal-message bytes and compares this text byte for
+	 * byte, so it must stay exactly this string: no JSON wrapper, action, date,
+	 * or trailing whitespace (AFX-382).
+	 */
+	public static readonly termsAndConditionsMessage =
+		"Aftermath Terms and Conditions";
+
+	/**
+	 * Returns the canonical Terms and Conditions message to sign. Sign it as a
+	 * personal message over its UTF-8 bytes and reuse the signature for the whole
+	 * session: it is the one credential af-fe verifies for referrals, rewards,
+	 * stop/twap order datas, collateral/order history, the websocket `user`
+	 * subscription, and gas-pool sponsorship (AFX-382).
 	 *
-	 * @returns An object with an `action` property set to "SIGN_TERMS_AND_CONDITIONS".
+	 * @returns The exact string to sign.
 	 *
 	 * @example
 	 * ```typescript
-	 * const userData = new UserData();
-	 * const termsMsg = userData.createSignTermsAndConditionsMessageToSign();
-	 * console.log(termsMsg.action); // "SIGN_TERMS_AND_CONDITIONS"
-	 * // The user can sign this to show acceptance of the T&C.
+	 * const message = new UserData().createTermsAndConditionsMessage();
+	 * const { bytes, signature } = await signPersonalMessage(
+	 *   new TextEncoder().encode(message)
+	 * );
 	 * ```
+	 */
+	public createTermsAndConditionsMessage(): string {
+		return UserData.termsAndConditionsMessage;
+	}
+
+	/**
+	 * Generates a simple message object that the user should sign to confirm their agreement
+	 * with the Terms and Conditions of the service.
+	 *
+	 * @deprecated af-fe no longer accepts the `{action:...}` wrapper and rejects
+	 * it with error 2034. Sign {@link createTermsAndConditionsMessage} instead
+	 * (AFX-382).
+	 * @returns An object with an `action` property set to "SIGN_TERMS_AND_CONDITIONS".
 	 */
 	public createSignTermsAndConditionsMessageToSign(): {
 		action: string;
