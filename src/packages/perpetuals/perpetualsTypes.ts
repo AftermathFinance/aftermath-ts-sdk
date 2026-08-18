@@ -782,13 +782,13 @@ export interface PerpetualsVaultsConfig {
 	/** ID of the on-chain vaults configuration object. */
 	id: ObjectId;
 	/** On-chain configuration version. */
-	version: number;
+	version: bigint;
 	/** Default collateral price-feed staleness tolerance, in milliseconds. */
-	collateralPriceFeedStorageToleranceMs: number;
+	collateralPriceFeedStorageToleranceMs: bigint;
 	/** Maximum vault deposit lock period, in milliseconds. */
-	maxLockPeriodMs: number;
+	maxLockPeriodMs: bigint;
 	/** Maximum force-withdraw delay, in milliseconds. */
-	maxForceWithdrawDelayMs: number;
+	maxForceWithdrawDelayMs: bigint;
 	/** Maximum vault owner performance fee as a fraction (for example, `0.2`). */
 	maxPerformanceFeePercentage: number;
 	/** Minimum USD value the owner must lock when creating a vault. */
@@ -798,13 +798,13 @@ export interface PerpetualsVaultsConfig {
 	/** Minimum USD value accepted for a user deposit. */
 	minDepositUsd: number;
 	/** Maximum number of distinct markets supported by one vault. */
-	maxMarketsInVault: number;
+	maxMarketsInVault: bigint;
 	/** Maximum pending orders allowed per vault position. */
-	maxPendingOrdersPerPosition: number;
+	maxPendingOrdersPerPosition: bigint;
 	/** Time a vault remains paused for force withdrawal, in milliseconds. */
-	forceWithdrawPauseMs: number;
+	forceWithdrawPauseMs: bigint;
 	/** Maximum active assistant capabilities associated with one vault. */
-	maxAssistantsPerVault: number;
+	maxAssistantsPerVault: bigint;
 }
 
 /**

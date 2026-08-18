@@ -5,7 +5,12 @@ jest.mock("@mysten/sui/transactions", () => ({
 }));
 jest.mock("../src/general/utils/helpers", () => ({
 	Helpers: {
-		parseJsonWithBigint: (text: string) => JSON.parse(text),
+		parseJsonWithBigint: (text: string) =>
+			JSON.parse(text, (_key, value) =>
+				typeof value === "string" && value.endsWith("n")
+					? BigInt(value.slice(0, -1))
+					: value
+			),
 	},
 }));
 jest.mock("../src/packages/perpetuals/perpetualsAccount", () => ({
@@ -31,18 +36,30 @@ interface FetchCall {
 
 const vaultsConfigFixture: PerpetualsVaultsConfig = {
 	id: "0xabc",
-	version: 2,
-	collateralPriceFeedStorageToleranceMs: 30_000,
-	maxLockPeriodMs: 5_184_000_000,
-	maxForceWithdrawDelayMs: 86_400_000,
+	version: 18_446_744_073_709_551_615n,
+	collateralPriceFeedStorageToleranceMs: 30_000n,
+	maxLockPeriodMs: 5_184_000_000n,
+	maxForceWithdrawDelayMs: 86_400_000n,
 	maxPerformanceFeePercentage: 0.2,
 	minOwnerLockUsd: 1,
 	maxOwnerLockUsd: 1_000_000,
 	minDepositUsd: 1,
-	maxMarketsInVault: 12,
-	maxPendingOrdersPerPosition: 70,
-	forceWithdrawPauseMs: 300_000,
-	maxAssistantsPerVault: 10,
+	maxMarketsInVault: 12n,
+	maxPendingOrdersPerPosition: 70n,
+	forceWithdrawPauseMs: 300_000n,
+	maxAssistantsPerVault: 10n,
+};
+
+const vaultsConfigWireFixture = {
+	...vaultsConfigFixture,
+	version: "18446744073709551615n",
+	collateralPriceFeedStorageToleranceMs: "30000n",
+	maxLockPeriodMs: "5184000000n",
+	maxForceWithdrawDelayMs: "86400000n",
+	maxMarketsInVault: "12n",
+	maxPendingOrdersPerPosition: "70n",
+	forceWithdrawPauseMs: "300000n",
+	maxAssistantsPerVault: "10n",
 };
 
 const originalFetch = globalThis.fetch;
@@ -56,7 +73,7 @@ describe("Perpetuals vaults config", () => {
 		const calls: FetchCall[] = [];
 		globalThis.fetch = ((input, init) => {
 			calls.push({ input, init });
-			return Promise.resolve(Response.json(vaultsConfigFixture));
+			return Promise.resolve(Response.json(vaultsConfigWireFixture));
 		}) as typeof fetch;
 		const signal = new AbortController().signal;
 
