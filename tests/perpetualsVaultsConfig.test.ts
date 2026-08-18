@@ -1,4 +1,28 @@
-import { Perpetuals, type PerpetualsVaultsConfig } from "../src";
+import { jest } from "@jest/globals";
+
+jest.mock("@mysten/sui/transactions", () => ({
+	Transaction: class {},
+}));
+jest.mock("../src/general/utils/helpers", () => ({
+	Helpers: {
+		parseJsonWithBigint: (text: string) => JSON.parse(text),
+	},
+}));
+jest.mock("../src/packages/perpetuals/perpetualsAccount", () => ({
+	PerpetualsAccount: class {},
+}));
+jest.mock("../src/packages/perpetuals/perpetualsMarket", () => ({
+	PerpetualsMarket: class {},
+}));
+jest.mock("../src/packages/perpetuals/perpetualsVault", () => ({
+	PerpetualsVault: class {},
+}));
+jest.mock("../src/packages/perpetuals/utils", () => ({
+	PerpetualsOrderUtils: {},
+}));
+
+import { Perpetuals } from "../src/packages/perpetuals/perpetuals";
+import type { PerpetualsVaultsConfig } from "../src/packages/perpetuals/perpetualsTypes";
 
 interface FetchCall {
 	input: RequestInfo | URL;
