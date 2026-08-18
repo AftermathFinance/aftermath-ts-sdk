@@ -1,5 +1,14 @@
 # aftermath-ts-sdk
 
+## 3.0.0
+
+### Major Changes
+
+- [#156](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/156) [`1659a54`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/1659a54bd844e3bf61f2bb91f3f579b9def773ff) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add `Perpetuals.getVaultsConfig()` for fetching current on-chain vault protocol
+  limits and remove the obsolete hardcoded `PerpetualsVault.constants` values.
+  Integer fields are returned as `bigint`, matching the service's lossless
+  `"123n"` wire format. The endpoint uses `POST` with an empty JSON body.
+
 ## 2.4.0
 
 ### Minor Changes
