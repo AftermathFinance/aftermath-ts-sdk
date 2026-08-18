@@ -86,8 +86,8 @@ describe("Perpetuals vaults config", () => {
 		expect(calls[0]?.input).toBe(
 			"https://sdk.test/api/perpetuals/vaults/config"
 		);
-		expect(calls[0]?.init?.method).toBeUndefined();
-		expect(calls[0]?.init?.body).toBeUndefined();
+		expect(calls[0]?.init?.method).toBe("POST");
+		expect(calls[0]?.init?.body).toBe("{}");
 		expect(calls[0]?.init?.signal).toBe(signal);
 	});
 });

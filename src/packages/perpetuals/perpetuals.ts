@@ -288,9 +288,9 @@ export class Perpetuals extends Caller {
 	public getVaultsConfig(
 		abortSignal?: AbortSignal
 	): Promise<PerpetualsVaultsConfig> {
-		return this.fetchApi<PerpetualsVaultsConfig>(
+		return this.fetchApi<PerpetualsVaultsConfig, Record<string, never>>(
 			"vaults/config",
-			undefined,
+			{},
 			abortSignal
 		);
 	}
