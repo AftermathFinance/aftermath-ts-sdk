@@ -75,6 +75,7 @@ import {
 	type PerpetualsPartialVaultCap,
 	type PerpetualsSponsorConfig,
 	PerpetualsVaultCap,
+	type PerpetualsVaultsConfig,
 	type PerpetualsWsCandleResponseMessage,
 	type PerpetualsWsUpdatesResponseMessage,
 	type PerpetualsWsUpdatesSubscriptionMessage,
@@ -273,6 +274,26 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 	//  Vaults
 	// =========================================================================
+
+	/**
+	 * Fetch the current network-wide Perpetuals vault protocol configuration.
+	 *
+	 * The returned limits are sourced from the on-chain configuration exposed by
+	 * the service. Consumers should use these values instead of hardcoded vault
+	 * limits because governance or package upgrades may change them.
+	 *
+	 * @param abortSignal - Optional signal used to cancel the request.
+	 * @returns The current vault protocol limits for this client's network.
+	 */
+	public getVaultsConfig(
+		abortSignal?: AbortSignal
+	): Promise<PerpetualsVaultsConfig> {
+		return this.fetchApi<PerpetualsVaultsConfig, Record<string, never>>(
+			"vaults/config",
+			{},
+			abortSignal
+		);
+	}
 
 	/**
 	 * Fetch all vaults on the current network.

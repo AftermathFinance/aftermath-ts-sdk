@@ -90,54 +90,6 @@ import type { PerpetualsAccount } from "./perpetualsAccount";
  */
 export class PerpetualsVault extends Caller {
 	// =========================================================================
-	//  Public Constants
-	// =========================================================================
-
-	/**
-	 * Vault-level protocol limits and UI-friendly constraints.
-	 *
-	 * @remarks
-	 * These are SDK constants (not fetched from chain). They should match the
-	 * on-chain / backend limits enforced by the vault module.
-	 */
-	public static readonly constants = {
-		/**
-		 * Maximum lock period in milliseconds.
-		 */
-		maxLockPeriodMs: 5_184_000_000, // 2 months
-
-		/**
-		 * Maximum period for force withdraw delay in milliseconds.
-		 */
-		maxForceWithdrawDelayMs: 86_400_000, // 1 day
-
-		/**
-		 * Maximum vault fee (performance fee).
-		 */
-		maxPerformanceFeePercentage: 0.2, // 20%
-
-		/**
-		 * Minimum USD value required for user deposits.
-		 */
-		minDepositUsd: 1,
-
-		/**
-		 * Minimum USD value required to be locked by vault owner during vault creation.
-		 */
-		minOwnerLockUsd: 1,
-
-		/**
-		 * The maximum number of distinct markets (`ClearingHouse`s) the vault can trade.
-		 */
-		maxMarketsInVault: 12,
-
-		/**
-		 * The maximum number of pending orders allowed for a single position in the vault.
-		 */
-		maxPendingOrdersPerPosition: 70,
-	};
-
-	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -269,7 +221,7 @@ export class PerpetualsVault extends Caller {
 	/**
 	 * Build an owner transaction to update the vault's force withdraw delay.
 	 *
-	 * @param inputs.forceWithdrawDelayMs - New delay (ms). Should be <= {@link constants.maxForceWithdrawDelayMs}.
+	 * @param inputs.forceWithdrawDelayMs - New delay (ms). Should be no greater than the current `maxForceWithdrawDelayMs` from {@link Perpetuals.getVaultsConfig}.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing `tx`.
@@ -300,7 +252,7 @@ export class PerpetualsVault extends Caller {
 	/**
 	 * Build an owner transaction to update the vault's lock period.
 	 *
-	 * @param inputs.lockPeriodMs - New lock period (ms). Should be <= {@link constants.maxLockPeriodMs}.
+	 * @param inputs.lockPeriodMs - New lock period (ms). Should be no greater than the current `maxLockPeriodMs` from {@link Perpetuals.getVaultsConfig}.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing `tx`.
@@ -332,7 +284,7 @@ export class PerpetualsVault extends Caller {
 	 * Build an owner transaction to update the vault performance fee.
 	 *
 	 * @param inputs.performanceFeePercentage - New fee as a fraction (e.g. `0.2` = 20%).
-	 *   Should be <= {@link constants.maxPerformanceFeePercentage}.
+	 *   Should be no greater than the current `maxPerformanceFeePercentage` from {@link Perpetuals.getVaultsConfig}.
 	 * @param inputs.tx - Optional transaction to extend.
 	 *
 	 * @returns Transaction response containing `tx`.

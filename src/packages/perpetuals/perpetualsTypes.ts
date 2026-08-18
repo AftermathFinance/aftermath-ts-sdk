@@ -773,6 +773,41 @@ export interface PerpetualsVaultMetatada {
 }
 
 /**
+ * Network-specific protocol limits shared by all Perpetuals vaults.
+ *
+ * These values come from the current on-chain vaults configuration rather
+ * than SDK constants. Fetch them with {@link Perpetuals.getVaultsConfig}.
+ */
+export interface PerpetualsVaultsConfig {
+	/** ID of the on-chain vaults configuration object. */
+	id: ObjectId;
+	/** On-chain configuration version. */
+	version: bigint;
+	/** Default collateral price-feed staleness tolerance, in milliseconds. */
+	collateralPriceFeedStorageToleranceMs: bigint;
+	/** Maximum vault deposit lock period, in milliseconds. */
+	maxLockPeriodMs: bigint;
+	/** Maximum force-withdraw delay, in milliseconds. */
+	maxForceWithdrawDelayMs: bigint;
+	/** Maximum vault owner performance fee as a fraction (for example, `0.2`). */
+	maxPerformanceFeePercentage: number;
+	/** Minimum USD value the owner must lock when creating a vault. */
+	minOwnerLockUsd: number;
+	/** Maximum USD value the owner may lock when creating a vault. */
+	maxOwnerLockUsd: number;
+	/** Minimum USD value accepted for a user deposit. */
+	minDepositUsd: number;
+	/** Maximum number of distinct markets supported by one vault. */
+	maxMarketsInVault: bigint;
+	/** Maximum pending orders allowed per vault position. */
+	maxPendingOrdersPerPosition: bigint;
+	/** Time a vault remains paused for force withdrawal, in milliseconds. */
+	forceWithdrawPauseMs: bigint;
+	/** Maximum active assistant capabilities associated with one vault. */
+	maxAssistantsPerVault: bigint;
+}
+
+/**
  * On-chain representation of a vault that manages user collateral and
  * interacts with clearing houses on their behalf.
  */
