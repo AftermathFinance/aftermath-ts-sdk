@@ -49,12 +49,14 @@ import {
 	type ApiPerpetualsOwnedVaultCapsResponse,
 	type ApiPerpetualsShareAccountBody,
 	type ApiPerpetualsTransferCapTxBody,
+	type ApiPerpetualsVaultGrantAgentWalletTxBody,
 	type ApiPerpetualsVaultLpCoinPricesBody,
 	type ApiPerpetualsVaultLpCoinPricesResponse,
 	type ApiPerpetualsVaultOwnedLpCoinsBody,
 	type ApiPerpetualsVaultOwnedLpCoinsResponse,
 	type ApiPerpetualsVaultOwnedWithdrawRequestsBody,
 	type ApiPerpetualsVaultOwnedWithdrawRequestsResponse,
+	type ApiPerpetualsVaultRevokeAgentWalletTxBody,
 	type ApiPerpetualsVaultsBody,
 	type ApiPerpetualsVaultsResponse,
 	type ApiTransactionResponse,
@@ -846,6 +848,54 @@ export class Perpetuals extends Caller {
 			{
 				txKind: true,
 			}
+		);
+	}
+
+	/** Build a transaction that grants assistant permissions for a vault. */
+	public async getGrantVaultAgentWalletTx(
+		inputs: Omit<ApiPerpetualsVaultGrantAgentWalletTxBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultGrantAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/grant-agent-wallet",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
+
+	/** Build a transaction that revokes a vault assistant capability. */
+	public async getRevokeVaultAgentWalletTx(
+		inputs: Omit<ApiPerpetualsVaultRevokeAgentWalletTxBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultRevokeAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/revoke-agent-wallet",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{ txKind: true }
 		);
 	}
 
