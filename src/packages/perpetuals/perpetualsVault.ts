@@ -8,6 +8,7 @@ import type {
 	ApiPerpetualsVaultCancelWithdrawRequestTxBody,
 	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
 	ApiPerpetualsVaultDepositTxBody,
+	ApiPerpetualsVaultGrantAgentWalletTxBody,
 	ApiPerpetualsVaultOwnerProcessWithdrawRequestsTxBody,
 	ApiPerpetualsVaultOwnerUpdateForceWithdrawDelayTxBody,
 	ApiPerpetualsVaultOwnerUpdateLockPeriodTxBody,
@@ -37,12 +38,14 @@ import type {
 	ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse,
 	ApiPerpetualsVaultProcessForceWithdrawRequestTxBody,
 	ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse,
+	ApiPerpetualsVaultRevokeAgentWalletTxBody,
 	ApiPerpetualsVaultsWithdrawRequestsBody,
 	ApiPerpetualsVaultsWithdrawRequestsResponse,
 	ApiPerpetualsVaultUpdateWithdrawRequestSlippageTxBody,
 	ApiTransactionResponse,
 	Balance,
 	CallerConfig,
+	ObjectId,
 	PerpetualsAccountObject,
 	PerpetualsMarketId,
 	PerpetualsPartialVaultCap,
@@ -315,6 +318,54 @@ export class PerpetualsVault extends Caller {
 	// =========================================================================
 	//  Owner Interactions Txs
 	// =========================================================================
+
+	/** Build an owner transaction that grants assistant permissions for this vault. */
+	public async getGrantAgentWalletTx(inputs: {
+		recipientAddress: SuiAddress;
+		sponsor?: PerpetualsSponsorConfig;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultGrantAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/grant-agent-wallet",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
+
+	/** Build an owner transaction that revokes an assistant from this vault. */
+	public async getRevokeAgentWalletTx(inputs: {
+		accountCapId: ObjectId;
+		sponsor?: PerpetualsSponsorConfig;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultRevokeAgentWalletTxBody,
+			ApiTransactionResponse
+		>(
+			"vault/transactions/owner/revoke-agent-wallet",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({
+					tx: tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{ txKind: true }
+		);
+	}
 
 	/**
 	 * Build an owner transaction to process one or more users' withdraw requests.

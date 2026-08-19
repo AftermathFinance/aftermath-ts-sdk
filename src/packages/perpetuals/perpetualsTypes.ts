@@ -3837,6 +3837,22 @@ export interface ApiPerpetualsRevokeAgentWalletTxBody {
 	txKind?: SerializedTransaction;
 }
 
+/** Request body for granting an Agent Wallet on a perpetuals vault. */
+export interface ApiPerpetualsVaultGrantAgentWalletTxBody {
+	vaultId: ObjectId;
+	recipientAddress: SuiAddress;
+	sponsor?: PerpetualsSponsorConfig;
+	txKind?: SerializedTransaction;
+}
+
+/** Request body for revoking an Agent Wallet from a perpetuals vault. */
+export interface ApiPerpetualsVaultRevokeAgentWalletTxBody {
+	vaultId: ObjectId;
+	accountCapId: ObjectId;
+	sponsor?: PerpetualsSponsorConfig;
+	txKind?: SerializedTransaction;
+}
+
 export interface ApiPerpetualsTransferCapTxBody {
 	/**
 	 * Recipient wallet address that should receive the capability object.
