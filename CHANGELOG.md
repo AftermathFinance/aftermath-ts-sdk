@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 3.1.0
+
+### Minor Changes
+
+- [#158](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/158) [`868d10e`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/868d10e9c1c65ef89ac5e58db9e11863f2089c09) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add transaction builders for granting and revoking perpetuals vault assistant capabilities.
+
 ## 3.0.0
 
 ### Major Changes
