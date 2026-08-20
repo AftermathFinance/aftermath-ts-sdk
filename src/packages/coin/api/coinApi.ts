@@ -10,7 +10,13 @@ import { GrpcCasting } from "../../../general/utils/grpcCasting";
 import { Helpers } from "../../../general/utils/helpers";
 import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Coin } from "../coin";
+
 // import { ethers, Networkish } from "ethers";
+
+// Backstop for coin-dust wallets (100k+ coin objects): a tx merging this many
+// coins would exceed protocol limits (256 gas-payment objects) anyway, so stop
+// paging rather than fetching the whole wallet.
+const MAX_COIN_FETCH_PAGES = 50;
 
 export class CoinApi {
 	// =========================================================================
@@ -86,8 +92,9 @@ export class CoinApi {
 		coinType: CoinType;
 		coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
-		let allCoinData: CoinStruct[] = [];
+		const allCoinData: CoinStruct[] = [];
 		let cursor: string | null | undefined;
+		let pages = 0;
 		do {
 			// @dev: `getCoins` -> `listCoins`; `res.data` -> `res.objects` and
 			// `res.nextCursor` -> `res.cursor`. See `GrpcCasting` for the
@@ -98,32 +105,39 @@ export class CoinApi {
 					owner: inputs.walletAddress,
 					cursor,
 				});
+			pages += 1;
 
-			const coinData = paginatedCoins.objects.map(
-				GrpcCasting.coinStructFromGrpcCoin
+			allCoinData.push(
+				...paginatedCoins.objects.map(GrpcCasting.coinStructFromGrpcCoin)
 			);
-			allCoinData = [...allCoinData, ...coinData];
+
+			// Return the fewest (largest) coins fetched so far that cover the
+			// amount — exiting as soon as they do keeps pagination proportional
+			// to the amount needed, not to the wallet's total coin count.
+			allCoinData.sort((b, a) => Number(BigInt(a.balance) - BigInt(b.balance)));
+
+			const selectedCoins: CoinStruct[] = [];
+			let sum = BigInt(0);
+			for (const coinData of allCoinData) {
+				selectedCoins.push(coinData);
+				sum += BigInt(coinData.balance);
+
+				if (sum >= inputs.coinAmount) {
+					return selectedCoins;
+				}
+			}
 
 			if (
 				paginatedCoins.objects.length === 0 ||
 				!paginatedCoins.hasNextPage ||
 				!paginatedCoins.cursor
 			) {
-				allCoinData.sort((b, a) =>
-					Number(BigInt(a.balance) - BigInt(b.balance))
-				);
-
-				const coinDatas: CoinStruct[] = [];
-				let sum = BigInt(0);
-				for (const coinData of allCoinData) {
-					coinDatas.push(coinData);
-					sum += BigInt(coinData.balance);
-
-					if (sum >= inputs.coinAmount) {
-						return coinDatas;
-					}
-				}
 				throw new Error("wallet does not have coins of sufficient balance");
+			}
+			if (pages >= MAX_COIN_FETCH_PAGES) {
+				throw new Error(
+					"wallet balance is spread across too many coin objects"
+				);
 			}
 
 			cursor = paginatedCoins.cursor;
@@ -136,7 +150,7 @@ export class CoinApi {
 		coinType: CoinType;
 		// coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
-		let allCoinData: CoinStruct[] = [];
+		const allCoinData: CoinStruct[] = [];
 		let cursor: string | null | undefined;
 		do {
 			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
@@ -149,10 +163,9 @@ export class CoinApi {
 			// const coinData = paginatedCoins.objects.filter(
 			// 	(data) => BigInt(data.balance) > BigInt(0)
 			// );
-			const coinData = paginatedCoins.objects.map(
-				GrpcCasting.coinStructFromGrpcCoin
+			allCoinData.push(
+				...paginatedCoins.objects.map(GrpcCasting.coinStructFromGrpcCoin)
 			);
-			allCoinData = [...allCoinData, ...coinData];
 
 			// const totalAmount = Helpers.sumBigInt(
 			// 	allCoinData.map((data) => BigInt(data.balance))

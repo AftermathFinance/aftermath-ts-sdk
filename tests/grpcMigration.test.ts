@@ -343,6 +343,57 @@ describe("CoinApi.fetchCoinsWithAtLeastAmount", () => {
 		expect(coins.map((c) => c.balance)).toEqual(["7", "5"]);
 	});
 
+	it("stops paging as soon as fetched coins cover the amount", async () => {
+		let call = 0;
+		const api = mockApi({
+			client: {
+				listCoins: async () => {
+					call++;
+					return {
+						objects: [grpcCoin(`0x${call}`, "100")],
+						hasNextPage: true,
+						cursor: `c${call}`,
+					};
+				},
+			},
+		});
+
+		const coins = await new CoinApi(api).fetchCoinsWithAtLeastAmount({
+			walletAddress: "0x5",
+			coinType: "0x2::sui::SUI",
+			coinAmount: BigInt(100),
+		});
+
+		// Page 1 already covers the amount — no further fetches.
+		expect(call).toBe(1);
+		expect(coins.map((c) => c.balance)).toEqual(["100"]);
+	});
+
+	it("gives up on coin-dust wallets instead of paging forever", async () => {
+		let call = 0;
+		const api = mockApi({
+			client: {
+				listCoins: async () => {
+					call++;
+					return {
+						objects: [grpcCoin(`0x${call}`, "1")],
+						hasNextPage: true,
+						cursor: `c${call}`,
+					};
+				},
+			},
+		});
+
+		await expect(
+			new CoinApi(api).fetchCoinsWithAtLeastAmount({
+				walletAddress: "0x5",
+				coinType: "0x2::sui::SUI",
+				coinAmount: BigInt(1_000_000),
+			})
+		).rejects.toThrow("wallet balance is spread across too many coin objects");
+		expect(call).toBe(50);
+	});
+
 	it("throws when the wallet cannot cover the amount", async () => {
 		const api = mockApi({
 			client: {
@@ -787,7 +838,10 @@ describe("client routing", () => {
 		});
 		const helpers = new ObjectsApiHelpers(api);
 		await helpers.fetchOwnedObjects({ walletAddress: "0x5" });
-		await helpers.fetchOwnedObjects({ walletAddress: "0x5", withDisplay: true });
+		await helpers.fetchOwnedObjects({
+			walletAddress: "0x5",
+			withDisplay: true,
+		});
 		// gRPC returns `json`/`display` as undefined unless asked, so a dropped
 		// flag is a silently empty field rather than an error.
 		expect(includes).toEqual([
@@ -901,7 +955,8 @@ describe("optional jsonRpcClient", () => {
 		],
 		[
 			"Sui().fetchSystemState",
-			() => new SuiApiHelpers(new Api(grpcClient, addresses)).fetchSystemState(),
+			() =>
+				new SuiApiHelpers(new Api(grpcClient, addresses)).fetchSystemState(),
 		],
 	])("%s throws when no jsonRpcClient was provided", async (name, call) => {
 		// @dev: asserting on the method name proves the error identifies the
