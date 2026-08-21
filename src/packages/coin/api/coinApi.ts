@@ -1,8 +1,9 @@
 import type { SuiClientTypes } from "@mysten/sui/client";
 import type { CoinStruct } from "@mysten/sui/jsonRpc";
-import type {
-	Transaction,
-	TransactionObjectArgument,
+import {
+	coinWithBalance,
+	type Transaction,
+	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import type { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -10,8 +11,6 @@ import { GrpcCasting } from "../../../general/utils/grpcCasting";
 import { Helpers } from "../../../general/utils/helpers";
 import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Coin } from "../coin";
-
-// import { ethers, Networkish } from "ethers";
 
 // Backstop for coin-dust wallets (100k+ coin objects): a tx merging this many
 // coins would exceed protocol limits (256 gas-payment objects) anyway, so stop
@@ -40,14 +39,20 @@ export class CoinApi {
 
 		tx.setSender(walletAddress);
 
-		const coinData = await this.fetchCoinsWithAtLeastAmount(inputs);
-		return CoinApi.coinWithAmountTx({
-			tx,
-			coinData,
-			coinAmount,
-			coinType,
-			isSponsoredTx,
-		});
+		if (isSponsoredTx) {
+			const coinData = await this.fetchCoinsWithAtLeastAmount(inputs);
+			return CoinApi.coinWithAmountTx({
+				tx,
+				coinData,
+				coinAmount,
+				coinType,
+				isSponsoredTx,
+			});
+		}
+
+		await this.assertSufficientTotalBalance(inputs);
+
+		return coinWithBalance({ type: coinType, balance: coinAmount })(tx);
 	};
 
 	public fetchCoinsWithAmountTx = async (inputs: {
@@ -57,33 +62,18 @@ export class CoinApi {
 		coinAmounts: Balance[];
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument[]> => {
-		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } = inputs;
+		const { coinTypes, coinAmounts } = inputs;
 
-		tx.setSender(walletAddress);
-
-		const allCoinsData = await Promise.all(
-			coinTypes.map(async (coinType, index) =>
-				this.fetchCoinsWithAtLeastAmount({
+		const coinArgs: TransactionObjectArgument[] = [];
+		for (const [index, coinType] of coinTypes.entries()) {
+			coinArgs.push(
+				await this.fetchCoinWithAmountTx({
 					...inputs,
-					coinAmount: coinAmounts[index],
 					coinType,
+					coinAmount: coinAmounts[index],
 				})
-			)
-		);
-
-		let coinArgs: TransactionObjectArgument[] = [];
-		for (const [index, coinData] of allCoinsData.entries()) {
-			const coinArg = CoinApi.coinWithAmountTx({
-				tx,
-				coinData,
-				coinAmount: coinAmounts[index],
-				coinType: coinTypes[index],
-				isSponsoredTx,
-			});
-
-			coinArgs = [...coinArgs, coinArg];
+			);
 		}
-
 		return coinArgs;
 	};
 
@@ -94,8 +84,8 @@ export class CoinApi {
 	}): Promise<CoinStruct[]> => {
 		const allCoinData: CoinStruct[] = [];
 		let cursor: string | null | undefined;
-		let pages = 0;
-		do {
+
+		for (let page = 0; page < MAX_COIN_FETCH_PAGES; page++) {
 			// @dev: `getCoins` -> `listCoins`; `res.data` -> `res.objects` and
 			// `res.nextCursor` -> `res.cursor`. See `GrpcCasting` for the
 			// per-coin reshape.
@@ -105,7 +95,6 @@ export class CoinApi {
 					owner: inputs.walletAddress,
 					cursor,
 				});
-			pages += 1;
 
 			allCoinData.push(
 				...paginatedCoins.objects.map(GrpcCasting.coinStructFromGrpcCoin)
@@ -134,24 +123,20 @@ export class CoinApi {
 			) {
 				throw new Error("wallet does not have coins of sufficient balance");
 			}
-			if (pages >= MAX_COIN_FETCH_PAGES) {
-				throw new Error(
-					"wallet balance is spread across too many coin objects"
-				);
-			}
 
 			cursor = paginatedCoins.cursor;
-		} while (true);
+		}
+
+		throw new Error("wallet balance is spread across too many coin objects");
 	};
 
-	// fetchCoinsUntilAmountReachedOrEnd
 	public fetchAllCoins = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
-		// coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		const allCoinData: CoinStruct[] = [];
-		let cursor: string | null | undefined;
+		let cursor: string | undefined;
+
 		do {
 			const paginatedCoins: SuiClientTypes.ListCoinsResponse =
 				await this.api.client.listCoins({
@@ -160,30 +145,45 @@ export class CoinApi {
 					cursor,
 				});
 
-			// const coinData = paginatedCoins.objects.filter(
-			// 	(data) => BigInt(data.balance) > BigInt(0)
-			// );
 			allCoinData.push(
 				...paginatedCoins.objects.map(GrpcCasting.coinStructFromGrpcCoin)
 			);
 
-			// const totalAmount = Helpers.sumBigInt(
-			// 	allCoinData.map((data) => BigInt(data.balance))
-			// );
-			// if (totalAmount >= inputs.coinAmount) return allCoinData;
+			cursor =
+				paginatedCoins.objects.length > 0 &&
+				paginatedCoins.hasNextPage &&
+				paginatedCoins.cursor
+					? paginatedCoins.cursor
+					: undefined;
+		} while (cursor !== undefined);
 
-			if (
-				paginatedCoins.objects.length === 0 ||
-				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.cursor
-			) {
-				return allCoinData.sort((b, a) =>
-					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
-				);
-			}
+		return allCoinData.sort((b, a) =>
+			Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
+		);
+	};
 
-			cursor = paginatedCoins.cursor;
-		} while (true);
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	/**
+	 * Checks the wallet's TOTAL balance (owned coins + SIP-58 address balance)
+	 * covers `coinAmount`, throwing the canonical insufficient-balance error
+	 * otherwise. `coinWithBalance` can source from both, so this is the correct
+	 * spendability check for the non-sponsored path.
+	 */
+	private assertSufficientTotalBalance = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		coinAmount: Balance;
+	}): Promise<void> => {
+		const { balance } = await this.api.client.getBalance({
+			owner: inputs.walletAddress,
+			coinType: Helpers.stripLeadingZeroesFromType(inputs.coinType),
+		});
+		if (BigInt(balance.balance) < inputs.coinAmount) {
+			throw new Error("wallet does not have coins of sufficient balance");
+		}
 	};
 
 	// =========================================================================
@@ -223,20 +223,12 @@ export class CoinApi {
 			);
 
 			return tx.splitCoins(tx.gas, [coinAmount]);
-			// return Helpers.transactions.splitCoinsTx({
-			// 	tx,
-			// 	coinId: tx.gas,
-			// 	amounts: [coinAmount],
-			// 	coinType,
-			// });
 		}
 
 		const coinObjectIds = coinData.map((data) => data.coinObjectId);
 		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
-			// TODO: fix this (v1)
-
 			if (isSponsoredTx) {
 				tx.add({
 					$kind: "MergeCoins",
@@ -254,11 +246,6 @@ export class CoinApi {
 			}
 		}
 
-		// return tx.add({
-		// 	kind: "SplitCoins",
-		// 	coin: tx.object(mergedCoinObjectId),
-		// 	amounts: [tx.pure(coinAmount)],
-		// });
 		return isSponsoredTx
 			? TransactionsApiHelpers.splitCoinTx({
 					tx,

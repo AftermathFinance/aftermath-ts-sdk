@@ -322,6 +322,91 @@ describe("CoinApi.fetchAllCoins", () => {
 	});
 });
 
+describe("CoinApi.fetchCoinWithAmountTx", () => {
+	it("non-sponsored: sources via the CoinWithBalance intent, never listCoins", async () => {
+		let listCoinsCalls = 0;
+		const api = mockApi({
+			client: {
+				getBalance: async () => ({
+					balance: {
+						coinType: "0x2::sui::SUI",
+						balance: "5000",
+						coinBalance: "0",
+						addressBalance: "5000",
+					},
+				}),
+				listCoins: async () => {
+					listCoinsCalls++;
+					return { objects: [], hasNextPage: false, cursor: null };
+				},
+			},
+		});
+
+		const tx = new Transaction();
+		const arg = await new CoinApi(api).fetchCoinWithAmountTx({
+			tx,
+			walletAddress: "0x5",
+			coinType: "0x2::sui::SUI",
+			coinAmount: BigInt(1000),
+		});
+
+		// Accumulator-only balance is spendable, and no coin pagination ran.
+		expect(arg).toBeDefined();
+		expect(listCoinsCalls).toBe(0);
+	});
+
+	it("non-sponsored: throws the canonical error when total balance is short", async () => {
+		const api = mockApi({
+			client: {
+				getBalance: async () => ({
+					balance: {
+						coinType: "0x2::sui::SUI",
+						balance: "10",
+						coinBalance: "10",
+						addressBalance: "0",
+					},
+				}),
+			},
+		});
+
+		await expect(
+			new CoinApi(api).fetchCoinWithAmountTx({
+				tx: new Transaction(),
+				walletAddress: "0x5",
+				coinType: "0x2::sui::SUI",
+				coinAmount: BigInt(1000),
+			})
+		).rejects.toThrow("wallet does not have coins of sufficient balance");
+	});
+
+	it("sponsored: stays on owned-coin selection (listCoins), no intent", async () => {
+		let listCoinsCalls = 0;
+		const api = mockApi({
+			client: {
+				listCoins: async () => {
+					listCoinsCalls++;
+					return {
+						objects: [grpcCoin("0x01", "5000")],
+						hasNextPage: false,
+						cursor: null,
+					};
+				},
+			},
+		});
+
+		const arg = await new CoinApi(api).fetchCoinWithAmountTx({
+			tx: new Transaction(),
+			walletAddress: "0x5",
+			coinType: "0x2::sui::SUI",
+			coinAmount: BigInt(1000),
+			isSponsoredTx: true,
+		});
+
+		expect(arg).toBeDefined();
+		expect(listCoinsCalls).toBe(1);
+	});
+});
+
 describe("CoinApi.fetchCoinsWithAtLeastAmount", () => {
 	it("accumulates across pages until the requested amount is covered", async () => {
 		const pages = [
