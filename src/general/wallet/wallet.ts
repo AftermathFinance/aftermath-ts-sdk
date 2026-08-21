@@ -71,6 +71,22 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getBalances(inputs: { coins: CoinType[] }): Promise<Balance[]> {
+		// @dev: prefer the gRPC provider. `getBalance` reports the total a
+		// wallet can spend — owned `Coin<T>` objects *plus* its SIP-58 address
+		// balance — whereas the service endpoint sums owned coin objects only,
+		// so accumulator-held funds read as zero there.
+		const api = this.api;
+		if (api) {
+			return await Promise.all(
+				inputs.coins.map((coin) =>
+					api.Wallet().fetchCoinBalance({
+						walletAddress: this.address,
+						coin,
+					})
+				)
+			);
+		}
+
 		return this.fetchApi("coin-balances", {
 			...inputs,
 			walletAddress: this.address,
@@ -91,6 +107,15 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
+		// @dev: see `getBalances` — the gRPC provider includes SIP-58 address
+		// balances, the service endpoint does not.
+		const api = this.api;
+		if (api) {
+			return await api.Wallet().fetchAllCoinBalances({
+				walletAddress: this.address,
+			});
+		}
+
 		return this.fetchApi("all-coin-balances", {
 			walletAddress: this.address,
 		});
