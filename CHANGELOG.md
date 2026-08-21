@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 3.1.1
+
+### Patch Changes
+
+- [`c01aecd`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/c01aecd435a6cace422460c3f1d98ef064ad406a) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - `fetchCoinsWithAtLeastAmount` now stops paginating as soon as the fetched coins cover the requested amount (with a 50-page backstop), instead of enumerating the wallet's entire coin list first. Coin-dust wallets with 100k+ coin objects previously made every trade build hang for minutes.
+
 ## 3.1.0
 
 ### Minor Changes
