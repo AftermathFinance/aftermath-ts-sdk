@@ -10,7 +10,6 @@ import type { AftermathApi } from "../../../general/providers/aftermathApi";
 import { GrpcCasting } from "../../../general/utils/grpcCasting";
 import { Helpers } from "../../../general/utils/helpers";
 import type { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
-import { Coin } from "../coin";
 
 // Backstop for coin-dust wallets (100k+ coin objects): a tx merging this many
 // coins would exceed protocol limits (256 gas-payment objects) anyway, so stop
@@ -41,12 +40,11 @@ export class CoinApi {
 
 		if (isSponsoredTx) {
 			const coinData = await this.fetchCoinsWithAtLeastAmount(inputs);
-			return CoinApi.coinWithAmountTx({
+			return CoinApi.sponsoredCoinWithAmountTx({
 				tx,
 				coinData,
 				coinAmount,
 				coinType,
-				isSponsoredTx,
 			});
 		}
 
@@ -190,69 +188,41 @@ export class CoinApi {
 	//  Private Static Methods
 	// =========================================================================
 
-	private static coinWithAmountTx = (inputs: {
+	/**
+	 * Owned-coin arg for the sponsored path: merge the selected coins and split
+	 * the amount without touching `tx.gas` (that's the sponsor's coin) and via
+	 * raw commands only, since the tx is serialized unbuilt. `coinData` comes
+	 * from `fetchCoinsWithAtLeastAmount`, which guarantees it covers
+	 * `coinAmount`.
+	 */
+	private static sponsoredCoinWithAmountTx = (inputs: {
 		tx: Transaction;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;
-		isSponsoredTx?: boolean;
 	}): TransactionObjectArgument => {
-		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
-
-		if (coinData.length <= 0) {
-			throw new Error("wallet does not have coins of sufficient balance");
-		}
-
-		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
-
-		const totalCoinBalance = Helpers.sumBigInt(
-			coinData.map((data) => BigInt(data.balance))
-		);
-		if (totalCoinBalance < coinAmount) {
-			throw new Error("wallet does not have coins of sufficient balance");
-		}
-
-		if (!isSponsoredTx && isSuiCoin) {
-			tx.setGasPayment(
-				coinData.map((obj) => {
-					return {
-						...obj,
-						objectId: obj.coinObjectId,
-					};
-				})
-			);
-
-			return tx.splitCoins(tx.gas, [coinAmount]);
-		}
+		const { tx, coinData, coinAmount, coinType } = inputs;
 
 		const coinObjectIds = coinData.map((data) => data.coinObjectId);
 		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
-			if (isSponsoredTx) {
-				tx.add({
-					$kind: "MergeCoins",
-					MergeCoins: {
-						destination: tx.object(mergedCoinObjectId),
-						sources: [
-							...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
-						],
-					},
-				});
-			} else {
-				tx.mergeCoins(tx.object(mergedCoinObjectId), [
-					...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
-				]);
-			}
+			tx.add({
+				$kind: "MergeCoins",
+				MergeCoins: {
+					destination: tx.object(mergedCoinObjectId),
+					sources: [
+						...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
+					],
+				},
+			});
 		}
 
-		return isSponsoredTx
-			? TransactionsApiHelpers.splitCoinTx({
-					tx,
-					coinId: mergedCoinObjectId,
-					amount: coinAmount,
-					coinType,
-				})
-			: tx.splitCoins(mergedCoinObjectId, [coinAmount]);
+		return TransactionsApiHelpers.splitCoinTx({
+			tx,
+			coinId: mergedCoinObjectId,
+			amount: coinAmount,
+			coinType,
+		});
 	};
 }
