@@ -14,12 +14,8 @@ import type {
 	CoinSymbolToCoinTypes,
 	CoinsToBalance,
 	CoinsToDecimals,
-	CoinsWithAmountsGasData,
 	CoinType,
 	KeyType,
-	SerializedTransaction,
-	ServiceCoinDataV2,
-	SuiAddress,
 } from "../../types";
 
 /**
@@ -588,51 +584,4 @@ export class Coin extends Caller {
 			return undefined;
 		}
 	};
-
-	// =========================================================================
-	//  Transaction Builders
-	// =========================================================================
-
-	/**
-	 * Sources `amounts` of `coinTypes` for `walletAddress` and appends the
-	 * resulting commands to `txKind`, returning the extended transaction kind
-	 * along with a coin argument per requested amount.
-	 *
-	 * Coins are drawn from owned `Coin<T>` objects and from the wallet's SIP-58
-	 * address balance (via `0x2::coin::redeem_funds`), so accumulator-held funds
-	 * are spendable.
-	 *
-	 * @param inputs - The wallet, index-aligned `coinTypes`/`amounts`, the
-	 * base64 `txKind` to extend, and optional `gas` metadata to carry across the
-	 * transaction-kind boundary.
-	 * @returns The updated `txKind`, one coin argument per requested amount, and
-	 * the gas metadata carried by the builder.
-	 *
-	 * @example
-	 * ```typescript
-	 * const { txKind, arguments: coinArgs } = await coin.getCoinsWithAmounts({
-	 * 	walletAddress: "0x<address>",
-	 * 	coinTypes: ["0x2::sui::SUI"],
-	 * 	amounts: [BigInt(500_000_000)],
-	 * 	txKind,
-	 * });
-	 * ```
-	 */
-	public async getCoinsWithAmounts(inputs: {
-		walletAddress: SuiAddress;
-		coinTypes: CoinType[];
-		amounts: Balance[];
-		txKind: SerializedTransaction;
-		gas?: CoinsWithAmountsGasData;
-	}): Promise<{
-		txKind: SerializedTransaction;
-		arguments: ServiceCoinDataV2[];
-		gas: CoinsWithAmountsGasData | null;
-	}> {
-		if (inputs.coinTypes.length !== inputs.amounts.length) {
-			throw new Error("`coinTypes` and `amounts` must have the same length");
-		}
-
-		return this.fetchApi("coins-with-amounts", inputs);
-	}
 }
