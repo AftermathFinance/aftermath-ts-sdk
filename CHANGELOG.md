@@ -1,5 +1,25 @@
 # aftermath-ts-sdk
 
+## 3.3.0
+
+### Minor Changes
+
+- [`ba82ead`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/ba82ead88b6c7042ce15fb86af4e1d3fdf0096a6) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - `Wallet.getAllBalances()` and `Wallet.getBalances()` now read through the gRPC
+  provider, so a wallet's SIP-58 address balance counts towards its reported
+  balance. The service endpoints they used before (`all-coin-balances`,
+  `coin-balances`) sum owned `Coin<T>` objects only, so a wallet holding its funds
+  in the accumulator reported zero.
+
+  These reads now require an `AftermathApi` and throw without one, rather than
+  falling back to those endpoints and returning a quietly wrong balance. Only
+  `Aftermath.Wallet()` can produce a `Wallet`, and it always supplies a provider,
+  so no supported construction path is affected.
+
+  Adds `Coin.getCoinsWithAmounts()`, wrapping `/coins/coins-with-amounts`: it
+  sources the requested amounts from owned coins and the address balance, appends
+  the coin-sourcing commands to a `TransactionKind`, and returns the extended kind
+  with one coin argument per requested amount.
+
 ## 3.2.0
 
 ### Minor Changes
