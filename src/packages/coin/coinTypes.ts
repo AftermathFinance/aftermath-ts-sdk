@@ -3,7 +3,6 @@ import type {
 	Balance,
 	ObjectId,
 	Percentage,
-	SuiAddress,
 } from "../../general/types/generalTypes";
 import type { CoinGeckoCoinApiId } from "../../types";
 
@@ -152,30 +151,3 @@ export type ServiceCoinDataV2 =
 	| { Input: number }
 	| { Result: number }
 	| { NestedResult: [number, number] };
-
-// =========================================================================
-//  Coins With Amounts
-// =========================================================================
-
-/**
- * A gas coin reference carried across a `TransactionKind`-only API boundary.
- * `version` and `digest` are only meaningful together, forming a full object
- * reference; supplying neither leaves the object to be resolved later.
- */
-export interface CoinsWithAmountsGasCoin {
-	objectId: ObjectId;
-	version?: bigint;
-	digest?: string;
-}
-
-/**
- * Gas metadata preserved across a `TransactionKind`-only API boundary, since a
- * transaction kind cannot itself carry gas data.
- */
-export interface CoinsWithAmountsGasData {
-	coins: CoinsWithAmountsGasCoin[];
-	/** Absent when the gas coin object IDs are resolved by executor code later. */
-	owner?: SuiAddress;
-	budget: bigint;
-	price?: bigint;
-}
