@@ -42,32 +42,26 @@ export class WalletApi {
 
 		// @dev: JSON-RPC's `getAllBalances` returned every balance in one array;
 		// gRPC's `listBalances` pages. Page to exhaustion to preserve behaviour.
-		const allBalances: SuiClientTypes.Balance[] = [];
-		let cursor: string | null | undefined;
+		const coinsToBalance: CoinsToBalance = {};
+		let cursor: string | undefined;
+
 		do {
-			const page = await this.api.client.listBalances({
-				owner: walletAddress,
-				cursor,
-			});
-			allBalances.push(...page.balances);
+			const page: SuiClientTypes.ListBalancesResponse =
+				await this.api.client.listBalances({
+					owner: walletAddress,
+					cursor,
+				});
 
-			if (page.balances.length === 0 || !page.hasNextPage || !page.cursor) {
-				break;
+			for (const balance of page.balances) {
+				coinsToBalance[Helpers.addLeadingZeroesToType(balance.coinType)] =
+					BigInt(balance.balance);
 			}
-			cursor = page.cursor;
-		} while (true);
 
-		const coinsToBalance: CoinsToBalance = allBalances.reduce(
-			(acc: CoinsToBalance, balance) => {
-				return {
-					...acc,
-					[Helpers.addLeadingZeroesToType(balance.coinType)]: BigInt(
-						balance.balance
-					),
-				};
-			},
-			{}
-		);
+			cursor =
+				page.balances.length > 0 && page.hasNextPage && page.cursor
+					? page.cursor
+					: undefined;
+		} while (cursor !== undefined);
 
 		return coinsToBalance;
 	};

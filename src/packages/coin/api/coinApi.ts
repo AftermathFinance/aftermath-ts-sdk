@@ -99,7 +99,7 @@ export class CoinApi {
 			);
 
 			// Return the fewest (largest) coins fetched so far that cover the
-			// amount — exiting as soon as they do keeps pagination proportional
+			// amount. Exiting as soon as they do keeps pagination proportional
 			// to the amount needed, not to the wallet's total coin count.
 			allCoinData.sort((b, a) => Number(BigInt(a.balance) - BigInt(b.balance)));
 

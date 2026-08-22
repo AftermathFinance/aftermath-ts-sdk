@@ -12,7 +12,7 @@
  */
 
 import type { AftermathApi } from "../src";
-// @dev: deep path — `Wallet` is reached through `Aftermath.Wallet()` in normal
+// @dev: deep path. `Wallet` is reached through `Aftermath.Wallet()` in normal
 // use and is not re-exported by the package barrel.
 import { Wallet } from "../src/general/wallet/wallet";
 
@@ -63,12 +63,14 @@ describe("Wallet.getAllBalances", () => {
 		expect(calls).toEqual([]);
 	});
 
-	it("falls back to the service endpoint without a provider", async () => {
+	it("throws rather than reading the accumulator-blind service endpoint", async () => {
 		const wallet = walletWith();
 		const calls = trackFetchApi(wallet, { [SUI]: BigInt(1) });
 
-		expect(await wallet.getAllBalances()).toEqual({ [SUI]: BigInt(1) });
-		expect(calls).toEqual(["all-coin-balances"]);
+		await expect(wallet.getAllBalances()).rejects.toThrow(
+			"require an `AftermathApi`"
+		);
+		expect(calls).toEqual([]);
 	});
 });
 
@@ -93,11 +95,13 @@ describe("Wallet.getBalances", () => {
 		expect(calls).toEqual([]);
 	});
 
-	it("falls back to the service endpoint without a provider", async () => {
+	it("throws rather than reading the accumulator-blind service endpoint", async () => {
 		const wallet = walletWith();
 		const calls = trackFetchApi(wallet, [BigInt(5)]);
 
-		expect(await wallet.getBalances({ coins: [SUI] })).toEqual([BigInt(5)]);
-		expect(calls).toEqual(["coin-balances"]);
+		await expect(wallet.getBalances({ coins: [SUI] })).rejects.toThrow(
+			"require an `AftermathApi`"
+		);
+		expect(calls).toEqual([]);
 	});
 });
