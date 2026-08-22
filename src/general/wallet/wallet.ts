@@ -30,23 +30,6 @@ export class Wallet extends Caller {
 		super(config, "wallet");
 	}
 
-	/**
-	 * The gRPC provider backing this wallet's reads.
-	 *
-	 * Balances come from gRPC rather than the Aftermath service so that a
-	 * wallet's SIP-58 address balance counts towards what it holds. `api` is
-	 * optional only for historical reasons: `Aftermath.Wallet()` is the sole
-	 * way to obtain a `Wallet` and always supplies one.
-	 */
-	private requireApi(): AftermathApi {
-		if (!this.api) {
-			throw new Error(
-				"`Wallet` reads require an `AftermathApi`. Construct via `Aftermath.create()`"
-			);
-		}
-		return this.api;
-	}
-
 	// =========================================================================
 	//  Balances
 	// =========================================================================
@@ -88,24 +71,10 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getBalances(inputs: { coins: CoinType[] }): Promise<Balance[]> {
-		const api = this.requireApi();
-		return await Promise.all(
-			inputs.coins.map((coin) =>
-				api.Wallet().fetchCoinBalance({
-					walletAddress: this.address,
-					coin,
-				})
-			)
-		);
-
-		// @dev: the `coin-balances` service endpoint sums owned `Coin<T>`
-		// objects only, so a wallet holding its funds in the SIP-58 accumulator
-		// reads as zero there. Kept for reference until that is fixed service
-		// side.
-		// return this.fetchApi("coin-balances", {
-		// 	...inputs,
-		// 	walletAddress: this.address,
-		// });
+		return this.fetchApi("coin-balances", {
+			...inputs,
+			walletAddress: this.address,
+		});
 	}
 
 	/**
@@ -122,15 +91,9 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return await this.requireApi().Wallet().fetchAllCoinBalances({
+		return this.fetchApi("all-coin-balances", {
 			walletAddress: this.address,
 		});
-
-		// @dev: see `getBalances`. The `all-coin-balances` service endpoint
-		// misses SIP-58 address balances.
-		// return this.fetchApi("all-coin-balances", {
-		// 	walletAddress: this.address,
-		// });
 	}
 
 	// =========================================================================
