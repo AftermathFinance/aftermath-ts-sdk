@@ -1,5 +1,21 @@
 # aftermath-ts-sdk
 
+## 3.3.1
+
+### Patch Changes
+
+- [#163](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/163) [`3728026`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/3728026ec3a78e8b68abdccc62e8e41ad93051dd) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Removes `Coin.getCoinsWithAmounts()` and its `CoinsWithAmountsGasData` /
+  `CoinsWithAmountsGasCoin` types. It wrapped the service's
+  `/coins/coins-with-amounts` endpoint, which no caller adopted; treating it as
+  withdrawn now rather than leaving an unused transaction-building surface in the
+  public API. Everything else added in 3.3.0 is unaffected.
+
+- [#163](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/163) [`3728026`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/3728026ec3a78e8b68abdccc62e8e41ad93051dd) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - `Wallet.getBalances()` and `Wallet.getAllBalances()` call the `coin-balances`
+  and `all-coin-balances` service endpoints again, as they always did. Routing
+  them to the gRPC provider was the wrong layer: it gave the SDK a second source
+  of truth for balances and papered over the service endpoints under-reporting
+  SIP-58 address balances, which is fixed service side instead.
+
 ## 3.3.0
 
 ### Minor Changes
