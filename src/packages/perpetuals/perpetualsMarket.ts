@@ -570,17 +570,14 @@ export class PerpetualsMarket extends Caller {
 		ceil?: boolean;
 	}) => {
 		const scaledPrice = Number(inputs.price * Casting.Fixed.fixedOneN9);
-		return (
-			(BigInt(
-				inputs.floor
-					? Math.floor(scaledPrice)
-					: inputs.ceil
-						? Math.ceil(scaledPrice)
-						: Math.round(scaledPrice)
-			) /
-				this.marketParams.tickSize) *
-			this.marketParams.tickSize
-		);
+		const ticks = scaledPrice / Number(this.marketParams.tickSize);
+		let roundedTicks = Math.round(ticks);
+		if (inputs.floor) {
+			roundedTicks = Math.floor(ticks);
+		} else if (inputs.ceil) {
+			roundedTicks = Math.ceil(ticks);
+		}
+		return BigInt(roundedTicks) * this.marketParams.tickSize;
 	};
 
 	/**
@@ -625,17 +622,14 @@ export class PerpetualsMarket extends Caller {
 		ceil?: boolean;
 	}) => {
 		const scaledSize = Number(inputs.size * Casting.Fixed.fixedOneN9);
-		return (
-			(BigInt(
-				inputs.floor
-					? Math.floor(scaledSize)
-					: inputs.ceil
-						? Math.ceil(scaledSize)
-						: Math.round(scaledSize)
-			) /
-				this.marketParams.lotSize) *
-			this.marketParams.lotSize
-		);
+		const lots = scaledSize / Number(this.marketParams.lotSize);
+		let roundedLots = Math.round(lots);
+		if (inputs.floor) {
+			roundedLots = Math.floor(lots);
+		} else if (inputs.ceil) {
+			roundedLots = Math.ceil(lots);
+		}
+		return BigInt(roundedLots) * this.marketParams.lotSize;
 	};
 
 	/**
