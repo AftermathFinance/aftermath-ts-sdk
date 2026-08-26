@@ -21,7 +21,7 @@
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --runInBand",
     "test:focused": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
-    "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --runInBand",
+    "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --runInBand",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "test:surface": "node scripts/testSurface.mjs",
     "test:surface:strict": "node scripts/testSurface.mjs --strict",

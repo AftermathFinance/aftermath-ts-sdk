@@ -34,6 +34,9 @@ independent. Do not create a catch-all test file for unrelated packages.
 Jest and the test TypeScript project expose `@sdk/*` and `@test/*` aliases so
 test imports do not depend on directory depth or extension quirks.
 
+The strict surface audit is coverage-backed. Run the coverage-enabled test
+command before `npm run test:surface:strict`.
+
 ## Worker fences
 
 - A worker owns only the test files and fixture directory named in its task.

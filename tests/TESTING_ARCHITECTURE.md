@@ -58,5 +58,8 @@ npm run test:coverage
 ```
 
 The surface audit checks source-area ownership rather than filename or import
-text heuristics. Cross-cutting tests are reported separately so they remain
-visible without being misattributed to one package.
+text heuristics. In strict mode it also requires the coverage summary and
+verifies that every included source module has coverage and at least one covered
+statement. Cross-cutting tests are reported separately so they remain visible
+without being misattributed to one package. GitHub Actions runs this audit
+after the coverage-enabled CI test command.
