@@ -60,7 +60,7 @@ export class DynamicGas extends Caller {
 	}) {
 		const { tx, walletAddress, gasCoinType } = inputs;
 		return this.fetchApi<ApiDynamicGasResponse, ApiDynamicGasBody>("", {
-			serializedTx: tx.serialize(),
+			serializedTx: await tx.toJSON(),
 			walletAddress,
 			gasCoinType,
 		});
