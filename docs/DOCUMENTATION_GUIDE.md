@@ -77,14 +77,14 @@ unexplained placeholders that a reader could mistake for working values.
 
 Run the documentation audit after source comments change:
 
-```bash
-npm run docs:audit
+```sh
+bun run docs:audit
 ```
 
 Run the strict audit before committing documentation:
 
-```bash
-npm run docs:audit:strict
+```sh
+bun run docs:audit:strict
 ```
 
 Repeated declarations that TypeScript merges into one interface are checked as
@@ -93,26 +93,34 @@ unique field in the merged public shape to have a comment.
 
 Generate the HTML reference with:
 
-```bash
-npm run docs:generate
+```sh
+bun run docs:generate
 ```
 
 The generator reads `typedoc.json`, expands the `src/` entry point to cover the
-SDK source modules, and writes the generated site to `.docs-site/`. That
+active SDK source modules, and writes the generated site to `.docs-site/`.
+Inactive placeholders are excluded in the same configuration. The output
 directory is a local and CI build artifact; it is intentionally not committed
-to the repository or included in the npm package. The authored guides and
-research notes remain in `docs/` and are included as TypeDoc project
-documents.
+to the repository or included in the npm package. The public site includes only
+the authored Markdown under `docs/guides/` and `docs/explanation/`.
+
+`DOCUMENTATION_GUIDE.md` is maintainer documentation and is intentionally kept
+out of the public site. Do not add it, research notes, investigation reports,
+or other maintainer material to TypeDoc's `projectDocuments` list. Keep
+point-in-time research outside the public repository when it contains internal
+implementation details or stale conclusions.
 
 Run the repository checks before committing documentation:
 
-```bash
-npm run docs:check-links
-npm run package:check
+```sh
+bun run docs:check-links
+bun run docs:check-site
+bun run package:check
 ```
 
 The GitHub Actions documentation workflow runs the audit, TypeDoc generation,
-link check, and package check for documentation pull requests. On `main`, it
+link check, generated-site scope check, and package check for documentation pull
+requests. On `main`, it
 uploads `.docs-site/` as a Pages artifact and deploys it with the GitHub Pages
 deployment action. Configure the final custom hostname in the repository's
 Pages settings after the DNS record has been created; do not add credentials or

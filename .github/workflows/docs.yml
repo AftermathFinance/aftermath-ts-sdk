@@ -9,6 +9,7 @@ on:
       - "src/**"
       - "scripts/auditDocumentation.mjs"
       - "scripts/checkDocumentationLinks.mjs"
+      - "scripts/checkDocumentationSite.mjs"
       - "scripts/checkPackage.mjs"
       - "typedoc.json"
       - "tsconfig.json"
@@ -22,6 +23,7 @@ on:
       - "src/**"
       - "scripts/auditDocumentation.mjs"
       - "scripts/checkDocumentationLinks.mjs"
+      - "scripts/checkDocumentationSite.mjs"
       - "scripts/checkPackage.mjs"
       - "typedoc.json"
       - "tsconfig.json"
@@ -62,6 +64,8 @@ jobs:
         run: bun run docs:generate
       - name: Check documentation links
         run: bun run docs:check-links
+      - name: Check generated documentation site
+        run: bun run docs:check-site
       - name: Check package contents
         run: bun run package:check
       - name: Configure GitHub Pages
