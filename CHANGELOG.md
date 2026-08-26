@@ -1,5 +1,14 @@
 # aftermath-ts-sdk
 
+## 3.3.2
+
+### Patch Changes
+
+- [`69fa3d6`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/69fa3d6e7ccb6f001fb66725dee68d6aa85bb665) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - `DynamicGas.getUseDynamicGasForTx()` and
+  `Router.addTransactionForCompleteTradeRoute()` now send transactions as v2 JSON
+  (`toJSON()`) rather than the deprecated v1 `blockData` shape (`serialize()`),
+  which the services reject as invalid input.
+
 ## 3.3.1
 
 ### Patch Changes
