@@ -29,7 +29,6 @@ export class ReferralVault extends Caller {
 	 *
 	 * @deprecated Use `Referral` class instead
 	 * @param config - Optional caller configuration, including Sui network and access token.
-	 * @param api - An optional `AftermathApi` provider instance for referral-specific methods.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "referral-vault");

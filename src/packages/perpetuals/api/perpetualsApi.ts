@@ -10,6 +10,14 @@ import type {
 	PerpetualsAddresses,
 } from "../../../types";
 
+/**
+ * Low-level perpetuals API metadata and transaction helper surface.
+ *
+ * The high-level `Perpetuals` client uses this provider-backed class for
+ * configured package addresses, fully qualified event types, and Move error
+ * mappings. Construct it with an {@link AftermathApi} whose perpetuals
+ * addresses have been resolved.
+ */
 export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Class Members
@@ -25,43 +33,80 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		},
 	};
 
+	/** Resolved package and object addresses for the configured network. */
 	public readonly addresses: PerpetualsAddresses;
 
+	/** Fully qualified Sui event struct types used by perpetuals event queries. */
 	public readonly eventTypes: {
+		/** Event type for collateral withdrawals. */
 		withdrewCollateral: AnyObjectType;
+		/** Event type for collateral deposits. */
 		depositedCollateral: AnyObjectType;
+		/** Event type for funding settlement. */
 		settledFunding: AnyObjectType;
+		/** Event type for collateral allocation to a market. */
 		allocatedCollateral: AnyObjectType;
+		/** Event type for collateral deallocation from a market. */
 		deallocatedCollateral: AnyObjectType;
+		/** Event type for a liquidated position. */
 		liquidated: AnyObjectType;
+		/** Event type for account creation. */
 		createdAccount: AnyObjectType;
+		/** Event type for order cancellation. */
 		canceledOrder: AnyObjectType;
+		/** Event type for an order being posted. */
 		postedOrder: AnyObjectType;
+		/** Aggregate event type for maker-order fills. */
 		filledMakerOrders: AnyObjectType;
+		/** Event type for an individual maker-order fill. */
 		filledMakerOrder: AnyObjectType;
+		/** Event type for a taker-order fill. */
 		filledTakerOrder: AnyObjectType;
+		/** Event type for a premium TWAP update. */
 		updatedPremiumTwap: AnyObjectType;
+		/** Event type for a spread TWAP update. */
 		updatedSpreadTwap: AnyObjectType;
+		/** Event type for a funding update. */
 		updatedFunding: AnyObjectType;
+		/** Event type for a clearing-house version update. */
 		updatedMarketVersion: AnyObjectType;
+		/** Event type for stop-order ticket creation. */
 		createdStopOrderTicket: AnyObjectType;
+		/** Event type for stop-order ticket deletion. */
 		deletedStopOrderTicket: AnyObjectType;
+		/** Event type for stop-order executor changes. */
 		editedStopOrderTicketExecutor: AnyObjectType;
+		/** Event type for adding collateral to a stop-order ticket. */
 		addedStopOrderTicketCollateral: AnyObjectType;
+		/** Event type for removing collateral from a stop-order ticket. */
 		removedStopOrderTicketCollateral: AnyObjectType;
+		/** Event type for stop-order detail changes. */
 		editedStopOrderTicketDetails: AnyObjectType;
+		/** Event type for stop-order ticket execution. */
 		executedStopOrderTicket: AnyObjectType;
+		/** Event type for liquidator-side taker fills. */
 		filledTakerOrderLiquidator: AnyObjectType;
+		/** Event type for performed liquidations. */
 		performedLiquidation: AnyObjectType;
+		/** Event type for reduced orders. */
 		reducedOrder: AnyObjectType;
+		/** Event type for auto-deleveraging events. */
 		performedAdl: AnyObjectType;
 	};
+	/** Move error map used by the shared caller error decoder. */
 	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a low-level perpetuals API instance from a configured provider.
+	 *
+	 * @param api - Provider containing the network addresses used to build event
+	 * type strings and transaction inputs.
+	 * @throws `Error` when `api.addresses.perpetuals` is not configured.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.perpetuals;
 		if (!addresses) {
@@ -1138,6 +1183,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Helpers
 	// =========================================================================
 
+	/**
+	 * Builds the fully qualified Move type for an account capability.
+	 *
+	 * @param inputs.collateralCoinType - Collateral coin type parameter of the
+	 * on-chain `Account` object.
+	 * @returns The fully qualified `Account<collateralCoinType>` type string.
+	 */
 	public getAccountCapType = (inputs: {
 		collateralCoinType: CoinType;
 	}): string => {

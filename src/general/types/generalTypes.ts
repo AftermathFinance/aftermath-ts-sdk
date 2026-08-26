@@ -26,6 +26,8 @@ export type Balance = bigint;
  * precision (e.g., decimal-like math).
  */
 export type IFixed = bigint;
+
+/** A Sui checkpoint sequence number represented as a `bigint`. */
 export type SuiCheckpoint = bigint;
 
 /**
@@ -207,6 +209,9 @@ export interface ExternalFee {
 /**
  * A function signature for signing arbitrary messages. Typically used in
  * cryptographic contexts.
+ *
+ * @param args.message - The message bytes that the callback must sign.
+ * @returns A promise for the resulting signature string.
  */
 export type SignMessageCallback = (args: { message: Uint8Array }) => Promise<{
 	signature: string;
@@ -277,6 +282,7 @@ export interface EventsInputs {
  * and including the user's wallet address.
  */
 export type UserEventsInputs = EventsInputs & {
+	/** Wallet address whose events the indexer should return. */
 	walletAddress: SuiAddress;
 };
 
@@ -326,7 +332,9 @@ export interface DynamicFieldObjectsWithCursor<ObjectType> {
  * Inputs for fetching dynamic fields, including optional cursor and limit for pagination.
  */
 export interface DynamicFieldsInputs {
+	/** Cursor identifying the first dynamic-field page to fetch. */
 	cursor?: ObjectId;
+	/** Maximum number of dynamic fields to return in one page. */
 	limit?: number;
 }
 
@@ -392,7 +400,9 @@ export type ApiIndexerUserEventsBody = ApiIndexerEventsBody & {
  * Represents query parameters for retrieving data with skip/limit pagination in an indexer.
  */
 export interface IndexerDataWithCursorQueryParams {
+	/** Number of indexer records to skip before collecting results. */
 	skip: number;
+	/** Maximum number of indexer records to return. */
 	limit: number;
 }
 
@@ -425,11 +435,22 @@ export interface CallerConfig {
 	apiEndpoint?: string;
 }
 
+/**
+ * Raw response returned by an API endpoint that builds or sponsors a
+ * transaction.
+ *
+ * `Caller` converts `txKind` into the `tx` field exposed by
+ * {@link SdkTransactionResponse} or a package-specific response type.
+ */
 export interface ApiTransactionResponse {
+	/** Serialized transaction kind returned by the API. */
 	txKind: SerializedTransaction;
+	/** Optional sponsor signature. Its presence means `txKind` is a full transaction. */
 	sponsorSignature?: string;
 }
 
+/** Client-facing response containing a transaction object reconstructed by the SDK. */
 export interface SdkTransactionResponse {
+	/** Transaction block ready for the caller to sign, compose, or submit. */
 	tx: Transaction;
 }

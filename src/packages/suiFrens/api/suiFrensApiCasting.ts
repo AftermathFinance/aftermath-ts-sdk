@@ -30,6 +30,14 @@ import {
 	Helpers,
 	type SuiObjectView,
 } from "../../../general/utils";
+
+/**
+ * Converts raw SuiFrens object views and on-chain events into SDK data shapes.
+ *
+ * The static methods perform local field conversion only. They decode numeric
+ * strings to `bigint`, pad Sui addresses and object IDs, and map snake-case
+ * on-chain fields to the public camel-case interfaces.
+ */
 export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects
@@ -37,6 +45,13 @@ export class SuiFrensApiCasting {
 
 	// TODO: handle leading 0s for ALL castings
 
+	/**
+	 * Casts a CapyLabs application object view.
+	 *
+	 * @param data - Raw Sui object view containing CapyLabs fields.
+	 * @returns The public CapyLabs application object with bigint balances.
+	 * @throws Errors when required fields are missing or cannot convert to `bigint`.
+	 */
 	public static capyLabsAppObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): CapyLabsAppObject => {
@@ -54,6 +69,17 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts the base fields and display data of a non-staked SuiFren.
+	 *
+	 * The method returns a `PartialSuiFrenObject`; dynamic fields are added later
+	 * by `SuiFrensApi` inspection methods. `birthdate` remains a millisecond
+	 * timestamp represented as a JavaScript number.
+	 *
+	 * @param data - Raw Sui object view with SuiFren fields and display output.
+	 * @returns Partial SuiFren data with bigint numeric fields.
+	 * @throws Errors when required fields or display values are missing.
+	 */
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): PartialSuiFrenObject => {
@@ -87,6 +113,17 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts SuiFren fields embedded in staked metadata.
+	 *
+	 * The method takes the SuiFren type and ID from metadata, pads the ID, and
+	 * replaces every `mainnet` substring with `testnet` in the display image URL.
+	 * It returns no dynamic fields.
+	*
+	 * @param data - Raw staked-metadata object view with display output.
+	 * @returns Partial SuiFren data reconstructed from metadata fields.
+	 * @throws Errors when required fields or display values are missing.
+	 */
 	public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
 		(data: SuiObjectView): PartialSuiFrenObject => {
 			const fields = Helpers.getObjectFields(
@@ -119,6 +156,17 @@ export class SuiFrensApiCasting {
 			};
 		};
 
+	/**
+	 * Casts the vault metadata object for one staked SuiFren.
+	 *
+	 * Numeric fee and count fields become `bigint`; the associated SuiFren ID is
+	 * padded with leading zeroes. Raw display fields and `last_epoch_mixed` are
+	 * not included in the returned public metadata shape.
+	*
+	 * @param data - Raw staked-metadata object view.
+	 * @returns Public staked metadata.
+	 * @throws Errors when required fields are missing or cannot convert to `bigint`.
+	 */
 	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): StakedSuiFrenMetadataV1Object => {
@@ -140,6 +188,13 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts one staked-metadata view into both public metadata and partial SuiFren data.
+	 *
+	 * @param data - Raw staked-metadata object view with display output.
+	 * @returns The cast metadata and partial SuiFren values.
+	 * @throws Errors propagated from either underlying caster.
+	 */
 	public static partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse =
 		(
 			data: SuiObjectView
@@ -157,6 +212,13 @@ export class SuiFrensApiCasting {
 			};
 		};
 
+	/**
+	 * Casts a staked-position object view.
+	*
+	 * @param data - Raw position object view.
+	 * @returns Position data with a padded SuiFren ID.
+	 * @throws Errors when required fields are missing.
+	 */
 	public static stakedSuiFrenPositionFromSuiObjectResponse = (
 		data: SuiObjectView
 	): StakedSuiFrenPositionObject => {
@@ -173,6 +235,16 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts the SuiFrens vault-state object.
+	*
+	 * The nested metadata table's size becomes `stakedSuiFrens`, and the raw
+	 * `mixed` value becomes `totalMixes`.
+	*
+	 * @param data - Raw vault-state object view.
+	 * @returns Public vault-state totals as bigints.
+	 * @throws Errors when required fields are missing or cannot convert to `bigint`.
+	 */
 	public static suiFrenVaultStateV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): SuiFrenVaultStateV1Object => {
@@ -196,6 +268,13 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts an accessory object view.
+	*
+	 * @param data - Raw accessory object view with display output.
+	 * @returns Public accessory data.
+	 * @throws Errors when required fields or display values are missing.
+	 */
 	public static accessoryObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): SuiFrenAccessoryObject => {
@@ -220,6 +299,15 @@ export class SuiFrensApiCasting {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Casts a raw harvested-fees event.
+	*
+	 * The issuer address is padded, the fee is converted to `bigint`, and the raw
+	 * timestamp, transaction digest, and event type are preserved.
+	*
+	 * @param eventOnChain - Raw event with parsed fields and metadata.
+	 * @returns Public harvested-fees event.
+	 */
 	public static harvestSuiFrenFeesEventFromOnChain = (
 		eventOnChain: HarvestSuiFrenFeesEventOnChain
 	): HarvestSuiFrenFeesEvent => {
@@ -233,6 +321,14 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a raw SuiFren mix event.
+	*
+	 * Parent and child IDs are padded and the fee is converted to `bigint`.
+	*
+	 * @param eventOnChain - Raw event with parsed fields and metadata.
+	 * @returns Public mix event.
+	 */
 	public static mixSuiFrensEventFromOnChain = (
 		eventOnChain: MixSuiFrensEventOnChain
 	): MixSuiFrensEvent => {
@@ -249,6 +345,12 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a raw SuiFren stake event.
+	*
+	 * @param eventOnChain - Raw event with parsed fields and metadata.
+	 * @returns Public stake event with padded issuer and SuiFren IDs.
+	 */
 	public static stakeSuiFrenEventFromOnChain = (
 		eventOnChain: StakeSuiFrenEventOnChain
 	): StakeSuiFrenEvent => {
@@ -264,6 +366,14 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a raw SuiFren unstake event.
+	*
+	 * The issuer and SuiFren ID are padded and the fee becomes a `bigint`.
+	*
+	 * @param eventOnChain - Raw event with parsed fields and metadata.
+	 * @returns Public unstake event.
+	 */
 	public static unstakeSuiFrenEventFromOnChain = (
 		eventOnChain: UnstakeSuiFrenEventOnChain
 	): UnstakeSuiFrenEvent => {

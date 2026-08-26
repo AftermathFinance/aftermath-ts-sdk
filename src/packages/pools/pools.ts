@@ -27,10 +27,12 @@ import type {
 import { Pool } from "./pool";
 
 /**
- * The `Pools` class provides a high-level interface for interacting with
- * Aftermath Finance liquidity pools. It allows fetching individual or multiple
- * pools, managing liquidity pool tokens (LP tokens), and creating new pools
- * if you have the required privileges.
+ * Provides high-level pool reads, transaction requests, fee helpers, and pool
+ * discovery for Aftermath AMMs.
+ *
+ * API methods return decoded `bigint` amounts in coin or LP smallest units.
+ * Transaction methods return unsigned `Transaction` objects. Network failures
+ * are normalized as `AftermathTransportError` by the shared caller.
  *
  * @example
  * ```typescript
@@ -51,19 +53,18 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Static constants relevant to the pool logic, such as protocol fees,
-	 * referral percentages, and bounds for trading/withdrawal percentages.
+	 * Protocol fee fractions, referral settings, safety bounds, and defaults used
+	 * by the high-level pool helpers.
 	 */
 	public static readonly constants = {
 		/**
-		 * Protocol fee structure: `totalProtocol` is the fraction of trades
-		 * that is taken as a fee, which is split among `treasury`, `insuranceFund`,
-		 * and `devWallet` in the given proportions.
+		 * Protocol fee fractions. `totalProtocol` is taken from a trade and the
+		 * other fields describe its allocation.
 		 */
 		feePercentages: {
 			/**
-			 * The total fraction (as a decimal) of trades charged by the protocol.
-			 * e.g., 0.00005 => 0.005%.
+			 * The total decimal fraction charged by the protocol. `0.00005` is
+			 * `0.005%`.
 			 */
 			totalProtocol: 0.000_05,
 			/**
@@ -80,21 +81,24 @@ export class Pools extends Caller {
 			devWallet: 0.2,
 		},
 		/**
-		 * Referral fee structures, applying a discount/rebate to the user and
-		 * referrer, taken from the treasury portion of protocol fees.
+		 * Referral fractions applied to the treasury allocation. The static fee
+		 * helper uses `discount`; referral transaction builders register the
+		 * referrer separately.
 		 */
 		referralPercentages: {
 			/**
-			 * The fraction of the treasury portion that discounts the user's fee.
+			 * The fraction of the treasury allocation used as a user fee discount.
 			 */
 			discount: 0.05,
 			/**
-			 * The fraction of the treasury portion that acts as a rebate to the referrer.
+			 * The configured fraction of the treasury allocation reserved as a
+			 * referrer rebate.
 			 */
 			rebate: 0.05,
 		},
 		/**
-		 * Various bounds used to prevent extreme trades or invalid pool configurations.
+		 * Decimal safety bounds enforced by local estimates and pool creation
+		 * validation.
 		 */
 		bounds: {
 			/**
@@ -102,35 +106,36 @@ export class Pools extends Caller {
 			 */
 			maxCoinsInPool: 8,
 			/**
-			 * Maximum fraction (decimal) of a pool's balance that can be traded at once.
+			 * Maximum decimal fraction of a pool balance accepted for one trade.
 			 */
 			maxTradePercentageOfPoolBalance: 0.3,
 			/**
-			 * Maximum fraction (decimal) of a pool's balance that can be withdrawn at once.
+			 * Maximum decimal fraction of a pool balance accepted for one withdrawal.
 			 */
 			maxWithdrawPercentageOfPoolBalance: 0.3,
 			/**
-			 * Minimum and maximum swap fees (0.01% to 10%).
+			 * Minimum and maximum decimal swap fees. The range is `0.0001` to `0.1`,
+			 * or `0.01%` to `10%`.
 			 */
 			minSwapFee: 0.0001,
 			maxSwapFee: 0.1,
 			/**
-			 * Minimum and maximum coin weight for weighted pools (1% to 99%).
+			 * Minimum and maximum decimal coin weights. The range is 1% to 99%.
 			 */
 			minWeight: 0.01,
 			maxWeight: 0.99,
 			/**
-			 * Minimum and maximum DAO fee (0% to 100%).
+			 * Minimum and maximum decimal DAO fees. The range is 0% to 100%.
 			 */
 			minDaoFee: 0,
 			maxDaoFee: 1,
 		},
 		/**
-		 * Default parameter(s) used in the absence of explicit user or code settings.
+		 * Defaults used when a caller does not supply an explicit value.
 		 */
 		defaults: {
 			/**
-			 * Default decimals for LP coins if none are specified.
+			 * Default LP coin decimal precision.
 			 */
 			lpCoinDecimals: 9,
 		},
@@ -141,10 +146,13 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates a new `Pools` instance for querying and managing AMM pools on Aftermath.
+	 * Creates a pool client without making a network request.
 	 *
-	 * @param config - Optional configuration object specifying network or access token.
-	 * @param api - An optional `AftermathApi` instance providing advanced transaction building.
+	 * Supply `api` when transaction methods must select coins or configure
+	 * referral transactions. Read methods can use `config` alone.
+	 *
+	 * @param config - Optional API host, network, and access-token configuration.
+	 * @param api - Optional provider used by transaction builders and DAO-fee commands.
 	 */
 	constructor(
 		config?: CallerConfig,
@@ -162,10 +170,12 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches a single pool by its on-chain `objectId` and returns a new `Pool` instance.
+	 * Fetches one pool by its on-chain object ID and wraps it in `Pool`.
 	 *
-	 * @param inputs - An object containing `objectId`.
-	 * @returns A promise that resolves to a `Pool` instance.
+	 * @param inputs - The pool object ID to read.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for a `Pool` backed by the decoded API object.
+	 * @throws `AftermathTransportError` for HTTP, network, abort, timeout, or decode failures.
 	 *
 	 * @example
 	 * ```typescript
@@ -186,10 +196,12 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Fetches multiple pools by their on-chain `objectIds` and returns an array of `Pool` instances.
+	 * Fetches multiple pools by object ID and wraps the returned objects in `Pool`.
 	 *
-	 * @param inputs - An object containing an array of `objectIds`.
-	 * @returns A promise that resolves to an array of `Pool` instances.
+	 * @param inputs - The pool object IDs to read.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for pools in the API response order.
+	 * @throws `AftermathTransportError` for the batch request or response failures.
 	 *
 	 * @example
 	 * ```typescript
@@ -217,9 +229,11 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Retrieves all pools recognized by the Aftermath API, returning an array of `Pool` objects.
+	 * Fetches every pool recognized by the Aftermath API.
 	 *
-	 * @returns An array of `Pool` instances.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for all decoded `Pool` instances.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -233,11 +247,11 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Fetches information about all owned LP coins for a given wallet address.
-	 * This indicates the user's liquidity positions across multiple pools.
+	 * Fetches the LP coin balances owned by a wallet across pools.
 	 *
-	 * @param inputs - An object containing the `walletAddress`.
-	 * @returns An array of `PoolLpInfo` objects summarizing the user's LP balances.
+	 * @param inputs - The wallet address to inspect.
+	 * @returns A promise for LP coin types, pool IDs, and smallest-unit balances.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -256,11 +270,14 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Constructs or fetches a transaction to publish a new LP coin package,
-	 * typically used by advanced users or devs establishing new liquidity pools.
+	 * Builds an unsigned transaction that publishes the compiled LP coin package.
 	 *
-	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
-	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 * The transaction transfers the resulting upgrade capability to
+	 * `walletAddress`. It is not signed, submitted, or serialized by this method.
+	 *
+	 * @param inputs - Publisher address and compiled LP coin decimal precision.
+	 * @returns A promise for the unsigned publish `Transaction`.
+	 * @throws `Error` when the provider lacks the compiled package for the requested decimals.
 	 *
 	 * @example
 	 * ```typescript
@@ -275,11 +292,15 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Constructs a transaction to create a brand new pool on-chain, given coin types,
-	 * initial weights, fees, and possible DAO fee info.
+	 * Builds an unsigned transaction that creates a new pool on chain.
 	 *
-	 * @param inputs - The body describing how to form the new pool.
-	 * @returns A transaction object that can be signed and executed.
+	 * The API serializes nested `bigint` deposits with an `n` suffix, and the
+	 * caller must supply a creation capability and initial coin balances. This
+	 * method does not sign, submit, or serialize the returned `Transaction`.
+	 *
+	 * @param inputs - Pool type, metadata, coin configuration, capability, and fee settings.
+	 * @returns A promise for the unsigned pool-creation `Transaction`.
+	 * @throws `AftermathTransportError` when the API cannot build or decode the transaction.
 	 *
 	 * @example
 	 * ```typescript
@@ -315,10 +336,16 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Retrieves the on-chain pool object ID corresponding to a specific LP coin type.
+	 * Resolves one LP coin type through the batch pool-ID endpoint.
 	 *
-	 * @param inputs - Contains the `lpCoinType` string.
-	 * @returns The pool object ID if it exists.
+	 * The response is an array with one entry, which can be `undefined` when the
+	 * type is not registered. Use `getPoolObjectIdsForLpCoinTypes` for several
+	 * types.
+	 *
+	 * @param inputs - The LP coin type to resolve.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for a one-entry `(ObjectId | undefined)[]` result.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -341,11 +368,15 @@ export class Pools extends Caller {
 	};
 
 	/**
-	 * Retrieves multiple pool object IDs given an array of LP coin types.
-	 * If a given LP coin type has no associated pool, it might return `undefined`.
+	 * Resolves LP coin types to pool object IDs.
 	 *
-	 * @param inputs - Contains an array of `lpCoinTypes`.
-	 * @returns An array of `ObjectId | undefined` of matching length.
+	 * The response preserves input order and uses `undefined` for an LP type with
+	 * no associated pool.
+	 *
+	 * @param inputs - LP coin types to resolve.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for one result per input type.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -366,11 +397,15 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Checks if a given coin type is recognized as an LP coin.
-	 * Internally calls `getPoolObjectIdForLpCoinType`.
+	 * Checks whether an LP coin type maps to a registered pool.
 	 *
-	 * @param inputs - Contains the `lpCoinType` to check.
-	 * @returns `true` if the coin is an LP token, `false` otherwise.
+	 * This performs the same API read as `getPoolObjectIdForLpCoinType` and does
+	 * not validate the coin type from its string shape alone.
+	 *
+	 * @param inputs - The LP coin type to resolve.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for `true` when the API returns a pool ID.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
 	public isLpCoinType = async (
 		inputs: { lpCoinType: CoinType },
@@ -381,9 +416,10 @@ export class Pools extends Caller {
 	};
 
 	/**
-	 * Retrieves the total volume across all pools in the last 24 hours.
+	 * Fetches the protocol-wide 24-hour pool volume.
 	 *
-	 * @returns A promise resolving to a numeric volume (e.g., in USD).
+	 * @returns A promise for the numeric API value. This method does not convert its unit.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -396,10 +432,11 @@ export class Pools extends Caller {
 	};
 
 	/**
-	 * Retrieves the total value locked (TVL) across all or specific pool IDs.
+	 * Fetches total value locked across all pools or a selected pool set.
 	 *
-	 * @param inputs - Optionally provide an array of specific `poolIds`. If omitted, returns global TVL.
-	 * @returns A promise resolving to a numeric TVL (e.g., in USD).
+	 * @param inputs - Optional pool IDs. Omit the argument for protocol-wide TVL.
+	 * @returns A promise for the numeric API TVL value. This method does not convert its unit.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -412,11 +449,12 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Fetches an array of `PoolStats` objects for a given set of pools,
-	 * including volume, fees, TVL, and other metrics.
+	 * Fetches analytics for a selected set of pools.
 	 *
-	 * @param inputs - Must include an array of `poolIds`.
-	 * @returns An array of `PoolStats` in matching order.
+	 * @param inputs - Pool object IDs to include, in the requested order.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for the corresponding `PoolStats` values.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -432,12 +470,14 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Fetches pool objects and their statistics in a single batch response.
-	 * When `poolIds` is omitted, the API returns summaries for all pools.
+	 * Fetches pool objects and analytics in one API response.
 	 *
-	 * @param inputs - Optionally provide the pool IDs to include.
-	 * @param abortSignal - An optional signal for cancelling the request.
-	 * @returns Pool objects paired with their current statistics.
+	 * Omit `poolIds` to request every pool summary.
+	 *
+	 * @param inputs - Optional pool IDs to include.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for pool objects paired with current `PoolStats`.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
 	public async getPoolSummaries(
 		inputs?: ApiPoolsSummaryBody,
@@ -447,11 +487,14 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Returns all DAO fee pool owner capabilities owned by a particular user.
-	 * This is used to see which pools' DAO fees the user can update.
+	 * Fetches DAO fee owner capabilities owned by a wallet.
 	 *
-	 * @param inputs - An object with user `walletAddress`.
-	 * @returns Data about each `DaoFeePoolOwnerCapObject` the user owns.
+	 * Each returned capability identifies a DAO fee pool whose fee or recipient
+	 * the wallet can update. DAO-fee package addresses must be configured.
+	 *
+	 * @param inputs - The wallet address to inspect.
+	 * @returns A promise for the owned DAO fee capability objects.
+	 * @throws `Error` when DAO-fee addresses are not configured.
 	 *
 	 * @example
 	 * ```typescript
@@ -472,11 +515,11 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches user-specific interaction events (deposits, withdrawals) across pools,
-	 * optionally with pagination.
+	 * Fetches a wallet's deposit and withdrawal events across pools.
 	 *
-	 * @param inputs - An object containing `walletAddress`, plus optional pagination (`cursor`, `limit`).
-	 * @returns An event set with a cursor for further queries if available.
+	 * @param inputs - Wallet address and optional indexer pagination fields.
+	 * @returns A promise for paginated `PoolDepositEvent` and `PoolWithdrawEvent` values.
+	 * @throws `AftermathTransportError` when the indexer request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -505,11 +548,16 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Returns how much coin remains **after** applying the protocol fees
-	 * (and referral discount if `withReferral` is `true`).
+	 * Applies the protocol fee to a smallest-unit amount.
 	 *
-	 * @param inputs - The original `amount` and an optional referral flag.
-	 * @returns The post-fee (net) amount as a bigint.
+	 * The default protocol fee is `0.00005`, or `0.005%`. With
+	 * `withReferral: true`, the helper reduces only the treasury portion by the
+	 * configured referral discount. It does not register a referrer or calculate
+	 * the separate referrer rebate. Use a referral-aware transaction builder for
+	 * that side effect.
+	 *
+	 * @param inputs - The gross amount in a coin's smallest unit and optional referral flag.
+	 * @returns The net amount in the same smallest unit, rounded down.
 	 *
 	 * @example
 	 * ```typescript
@@ -535,12 +583,14 @@ export class Pools extends Caller {
 	};
 
 	/**
-	 * The inverse calculation: given a net amount (post-fees), figure out
-	 * the original gross amount. Used when we already have fees subtracted
-	 * but need to restore an original quantity.
+	 * Reverses `getAmountWithProtocolFees` for a smallest-unit amount.
 	 *
-	 * @param inputs - The net `amount` after fees, plus an optional referral flag.
-	 * @returns The original gross amount as a bigint.
+	 * The result is rounded down. With `withReferral: true`, it uses the same
+	 * treasury discount as the forward calculation. It does not register a
+	 * referrer or pay a referral rebate.
+	 *
+	 * @param inputs - The net amount in a coin's smallest unit and optional referral flag.
+	 * @returns The estimated gross amount in the same smallest unit, rounded down.
 	 */
 	public static getAmountWithoutProtocolFees = (inputs: {
 		amount: Balance;
@@ -563,11 +613,10 @@ export class Pools extends Caller {
 	};
 
 	/**
-	 * A helper to transform a user-provided slippage fraction, e.g. 0.01,
-	 * into a 1 - slippage format, if needed for certain math operations.
+	 * Converts a decimal slippage tolerance to the fixed-point minimum-result factor.
 	 *
-	 * @param slippage - The decimal fraction of slippage tolerance, e.g. 0.01 => 1%.
-	 * @returns A big integer representing `1 - slippage` in a fixed context.
+	 * @param slippage - A decimal fraction from `0` to `1`. `0.01` represents 1%.
+	 * @returns `1 - slippage` encoded as an on-chain fixed-point bigint.
 	 */
 	public static normalizeInvertSlippage = (slippage: Slippage) =>
 		FixedUtils.directUncast(1 - slippage);
@@ -577,11 +626,14 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Produces a user-friendly string for an LP coin type, e.g. "Sui Coin LP"
-	 * by analyzing the coin type symbol. Typically used in UIs or logs.
+	 * Formats an Aftermath LP coin type for display.
 	 *
-	 * @param lpCoinType - The coin type for the LP token.
-	 * @returns A string representation for display, e.g. "Af_lp_abc" => "Abc LP".
+	 * The method reads the type symbol, removes the `AF_LP_` prefix when present,
+	 * title-cases underscore-separated components, and appends `LP`. It does not
+	 * validate the type on chain.
+	 *
+	 * @param lpCoinType - The fully qualified LP coin type.
+	 * @returns A display label such as `"A B LP"`.
 	 */
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
 		`${Coin.getCoinTypeSymbol(lpCoinType)
@@ -596,11 +648,13 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * A quick heuristic check to see if the given `lpCoinType` string
-	 * might represent an Aftermath LP token. This is not a full on-chain validation.
+	 * Performs a string-shape check for an Aftermath LP coin type.
 	 *
-	 * @param inputs - An object containing `lpCoinType`.
-	 * @returns `true` if it matches a known pattern; otherwise `false`.
+	 * The check requires three `::` segments, an `af_lp` module segment, and an
+	 * `AF_LP` symbol segment. It does not query the API or prove that a pool exists.
+	 *
+	 * @param inputs - The coin type string to inspect.
+	 * @returns `true` when the string matches the heuristic pattern.
 	 */
 	public static isPossibleLpCoinType = (inputs: { lpCoinType: CoinType }) => {
 		const { lpCoinType } = inputs;

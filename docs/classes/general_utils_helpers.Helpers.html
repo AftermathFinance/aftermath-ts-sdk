@@ -1,0 +1,1131 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Helpers | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/general_utils_helpers.html">general/utils/helpers</a></li>
+<li><a href="" aria-current="page">Helpers</a></li></ul>
+<h1>Class Helpers</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>A utility class containing various helper functions for general use across
+the Aftermath TS ecosystem. This includes numeric operations, object field
+extraction, array transformations, slippage adjustments, and Move error parsing.</p>
+</div></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L45">general/utils/helpers.ts:45</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#blendedoperations" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>blended<wbr/>Operations</span></a>
+<a href="#dynamicfields" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>dynamic<wbr/>Fields</span></a>
+<a href="#events" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>events</span></a>
+<a href="#inspections" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>inspections</span></a>
+<a href="#objects" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>objects</span></a>
+<a href="#transactions" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>transactions</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#absbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>abs<wbr/>Big<wbr/>Int</span></a>
+<a href="#addleadingzeroestotype" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Leading<wbr/>Zeroes<wbr/>To<wbr/>Type</span></a>
+<a href="#addtxobject" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Tx<wbr/>Object</span></a>
+<a href="#applyslippage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>apply<wbr/>Slippage</span></a>
+<a href="#applyslippagebigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>apply<wbr/>Slippage<wbr/>Big<wbr/>Int</span></a>
+<a href="#bifilter" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>bifilter</span></a>
+<a href="#bifilterasync" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>bifilter<wbr/>Async</span></a>
+<a href="#capitalizeonlyfirstletter" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>capitalize<wbr/>Only<wbr/>First<wbr/>Letter</span></a>
+<a href="#closeenough" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Enough</span></a>
+<a href="#closeenoughbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Enough<wbr/>Big<wbr/>Int</span></a>
+<a href="#createuid" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Uid</span></a>
+<a href="#deepcopy" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deep<wbr/>Copy</span></a>
+<a href="#filterobject" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filter<wbr/>Object</span></a>
+<a href="#getobjectdisplay" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Display</span></a>
+<a href="#getobjectfields" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Fields</span></a>
+<a href="#getobjectid" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Id</span></a>
+<a href="#getobjecttype" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Type</span></a>
+<a href="#indexofmax" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>index<wbr/>Of<wbr/>Max</span></a>
+<a href="#isarrayofstrings" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Array<wbr/>Of<wbr/>Strings</span></a>
+<a href="#isnumber" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Number</span></a>
+<a href="#isvalidhex" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Hex</span></a>
+<a href="#isvalidsuiaddress" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Sui<wbr/>Address</span></a>
+<a href="#isvalidtype" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Type</span></a>
+<a href="#keypairfromprivatekey" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>keypair<wbr/>From<wbr/>Private<wbr/>Key</span></a>
+<a href="#maxbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>max<wbr/>Big<wbr/>Int</span></a>
+<a href="#minbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>min<wbr/>Big<wbr/>Int</span></a>
+<a href="#parsejsonwithbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>parse<wbr/>Json<wbr/>With<wbr/>Bigint</span></a>
+<a href="#parsemoveerrormessage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>parse<wbr/>Move<wbr/>Error<wbr/>Message</span></a>
+<a href="#removecircularreferences" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>remove<wbr/>Circular<wbr/>References</span></a>
+<a href="#sleep" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sleep</span></a>
+<a href="#splitnonsuicointype" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Non<wbr/>Sui<wbr/>Coin<wbr/>Type</span></a>
+<a href="#stripleadingzeroesfromtype" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>strip<wbr/>Leading<wbr/>Zeroes<wbr/>From<wbr/>Type</span></a>
+<a href="#sum" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sum</span></a>
+<a href="#sumbigint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sum<wbr/>Big<wbr/>Int</span></a>
+<a href="#translatemoveerrormessage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>translate<wbr/>Move<wbr/>Error<wbr/>Message</span></a>
+<a href="#uniquearray" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unique<wbr/>Array</span></a>
+<a href="#verycloseint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>very<wbr/>Close<wbr/>Int</span></a>
+<a href="#zip" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>zip</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorhelpers"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">Helpers</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">Helpers</a><a href="#constructorhelpers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">Helpers</a></h4></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="blendedoperations"><code class="tsd-tag">Static</code><span>blended<wbr/>Operations</span><a href="#blendedoperations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">blendedOperations</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">mulBBB</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">mulBBN</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">mulNBB</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">mulNBN</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">mulNNB</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">mulNNN</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-comment tsd-typography"><p>Mixed <code>number</code> and <code>bigint</code> multiplication helpers.</p>
+<p>The suffix describes the argument and return types: <code>N</code> is <code>number</code> and
+<code>B</code> is <code>bigint</code>. Helpers that return <code>bigint</code> apply <code>Math.floor</code> before the
+conversion. Converting a bigint product to <code>number</code> can lose precision.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulBBB</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies two bigints and returns the exact bigint product.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulBBN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies two bigints and converts the product to a number.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulNBB</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies a number by a bigint after converting the bigint to a number,
+floors the product, and returns a bigint.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulNBN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies a number by a bigint after converting the bigint to a number.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulNNB</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies two numbers, floors the product, and returns a bigint.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">mulNNN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>Multiplies two numbers and returns a number.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L246">general/utils/helpers.ts:246</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="dynamicfields"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>dynamic<wbr/>Fields</span><a href="#dynamicfields" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">dynamicFields</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">typeof</span> <a href="general_apiHelpers_dynamicFieldsApiHelpers.DynamicFieldsApiHelpers.html" class="tsd-signature-type tsd-kind-class">DynamicFieldsApiHelpers</a><span class="tsd-signature-symbol"> = DynamicFieldsApiHelpers</span></div>
+<div class="tsd-comment tsd-typography"><p>Static reference to the <code>DynamicFieldsApiHelpers</code>, providing utility methods
+for working with dynamic fields in Sui objects.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L54">general/utils/helpers.ts:54</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="events"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>events</span><a href="#events" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">events</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">typeof</span> <a href="general_apiHelpers_eventsApiHelpers.EventsApiHelpers.html" class="tsd-signature-type tsd-kind-class">EventsApiHelpers</a><span class="tsd-signature-symbol"> = EventsApiHelpers</span></div>
+<div class="tsd-comment tsd-typography"><p>Static reference to the <code>EventsApiHelpers</code>, providing methods for
+querying and filtering Sui events.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L60">general/utils/helpers.ts:60</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="inspections"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>inspections</span><a href="#inspections" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">inspections</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">typeof</span> <a href="general_apiHelpers_inspectionsApiHelpers.InspectionsApiHelpers.html" class="tsd-signature-type tsd-kind-class">InspectionsApiHelpers</a><span class="tsd-signature-symbol"> = InspectionsApiHelpers</span></div>
+<div class="tsd-comment tsd-typography"><p>Static reference to the <code>InspectionsApiHelpers</code>, used for reading
+Summaries or inspection data from objects.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L66">general/utils/helpers.ts:66</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="objects"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>objects</span><a href="#objects" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">objects</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">typeof</span> <a href="general_apiHelpers_objectsApiHelpers.ObjectsApiHelpers.html" class="tsd-signature-type tsd-kind-class">ObjectsApiHelpers</a><span class="tsd-signature-symbol"> = ObjectsApiHelpers</span></div>
+<div class="tsd-comment tsd-typography"><p>Static reference to the <code>ObjectsApiHelpers</code>, providing direct
+retrieval or manipulation of on-chain Sui objects.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L72">general/utils/helpers.ts:72</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="transactions"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>transactions</span><a href="#transactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">transactions</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">typeof</span> <a href="general_apiHelpers_transactionsApiHelpers.TransactionsApiHelpers.html" class="tsd-signature-type tsd-kind-class">TransactionsApiHelpers</a><span class="tsd-signature-symbol"> = TransactionsApiHelpers</span></div>
+<div class="tsd-comment tsd-typography"><p>Static reference to the <code>TransactionsApiHelpers</code>, enabling easier
+queries for transaction data by digest or other criteria.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L78">general/utils/helpers.ts:78</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="absbigint"><code class="tsd-tag">Static</code><span>abs<wbr/>Big<wbr/>Int</span><a href="#absbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="absbigint-1"><span class="tsd-kind-call-signature">absBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">num</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#absbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the non-negative absolute value of a bigint.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">num</span>: <span class="tsd-signature-type">bigint</span></span>
+<div class="tsd-comment tsd-typography"><p>The input bigint.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p><code>num</code> when it is non-negative, or <code>-num</code> otherwise.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L300">general/utils/helpers.ts:300</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="addleadingzeroestotype"><code class="tsd-tag">Static</code><span>add<wbr/>Leading<wbr/>Zeroes<wbr/>To<wbr/>Type</span><a href="#addleadingzeroestotype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="addleadingzeroestotype-1"><span class="tsd-kind-call-signature">addLeadingZeroesToType</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#addleadingzeroestotype-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Left-pads the first type segment to 64 characters after <code>0x</code>.</p>
+<p>When <code>type</code> contains <code>::</code>, the text after the first separator is appended
+unchanged apart from the helper's existing removal of the next <code>0x</code> while
+it splits the suffix. The method does not validate hexadecimal characters.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">type</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The address or extended Move type string.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>A string whose first segment has 64 characters after <code>0x</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws">Throws<a href="#throws" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> when the first segment is longer than 64 characters.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L108">general/utils/helpers.ts:108</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="addtxobject"><code class="tsd-tag">Static</code><span>add<wbr/>Tx<wbr/>Object</span><a href="#addtxobject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="addtxobject-1"><span class="tsd-kind-call-signature">addTxObject</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">object</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">TransactionObjectArgument</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TransactionObjectArgument</span><a href="#addtxobject-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Converts an object ID into a transaction object argument when needed.</p>
+<p>A string calls <code>tx.object(object)</code>, which adds an input to the transaction.
+An existing <code>TransactionObjectArgument</code> is returned by identity and does
+not call the transaction.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tx</span>: <span class="tsd-signature-type external">Transaction</span></span>
+<div class="tsd-comment tsd-typography"><p>The transaction to update when <code>object</code> is a string.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">object</span>: <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">TransactionObjectArgument</span></span>
+<div class="tsd-comment tsd-typography"><p>An object ID or an existing transaction object argument.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionObjectArgument</span></h4><p>A transaction object argument for <code>object</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L783">general/utils/helpers.ts:783</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="applyslippage"><code class="tsd-tag">Static</code><span>apply<wbr/>Slippage</span><a href="#applyslippage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="applyslippage-1"><span class="tsd-kind-call-signature">applySlippage</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">slippage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#applyslippage-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Applies a percent reduction to a JavaScript number.</p>
+<p>The method returns <code>amount - (slippage / 100) * amount</code> without clamping or
+validating the input.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">amount</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The original numeric amount.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">slippage</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The percent value, where <code>1</code> means 1%.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>The reduced amount as a <code>number</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L568">general/utils/helpers.ts:568</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="applyslippagebigint"><code class="tsd-tag">Static</code><span>apply<wbr/>Slippage<wbr/>Big<wbr/>Int</span><a href="#applyslippagebigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="applyslippagebigint-1"><span class="tsd-kind-call-signature">applySlippageBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">slippage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#applyslippagebigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Applies a percent reduction to a bigint amount.</p>
+<p>The method computes <code>amount - floor((slippage / 100) * Number(amount))</code>.
+Converting the amount to <code>number</code> can lose precision before the reduction is
+converted back to bigint. It does not clamp the result or validate the
+percent input.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">amount</span>: <span class="tsd-signature-type">bigint</span></span>
+<div class="tsd-comment tsd-typography"><p>The original amount.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">slippage</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The percent value, where <code>1</code> means 1%.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p>The reduced amount as a <code>bigint</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-1">Throws<a href="#throws-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>RangeError</code> when the computed reduction cannot be converted to a
+<code>bigint</code>, such as for a non-finite result.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L554">general/utils/helpers.ts:554</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="bifilter"><code class="tsd-tag">Static</code><span>bifilter</span><a href="#bifilter" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="bifilter-1"><span class="tsd-kind-call-signature">bifilter</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">array</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">func</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">item</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span>trues<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span> falses<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">]</span><a href="#bifilter-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Splits an array according to a synchronous predicate.</p>
+<p>Truthy predicate results go to the first array and falsy results go to the
+second. The method preserves input order and passes the item, index, and
+original array to the predicate.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="bifilterarraytype"><span class="tsd-kind-type-parameter">ArrayType</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">array</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The array to filter.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">func</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">item</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">boolean</span></span>
+<div class="tsd-comment tsd-typography"><p>The predicate to call for each item.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span>trues<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span> falses<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">]</span></h4><p>A tuple of <code>[truthyItems, falsyItems]</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L484">general/utils/helpers.ts:484</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="bifilterasync"><code class="tsd-tag">Static</code><span>bifilter<wbr/>Async</span><a href="#bifilterasync" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="bifilterasync-1"><span class="tsd-kind-call-signature">bifilterAsync</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">array</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">func</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">item</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span>trues<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span> falses<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span><a href="#bifilterasync-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Splits an array according to asynchronous predicate results.</p>
+<p>The method invokes the predicate for every item before awaiting
+<code>Promise.all</code>, so the checks run in parallel. It preserves input order and
+rejects if any predicate promise rejects.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="bifilterasyncarraytype"><span class="tsd-kind-type-parameter">ArrayType</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">array</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The array to filter.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">func</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">item</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></span>
+<div class="tsd-comment tsd-typography"><p>An async predicate receiving the item, index, and original array.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span>trues<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span> falses<span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#bifilterasyncarraytype">ArrayType</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise for <code>[truthyItems, falsyItems]</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L514">general/utils/helpers.ts:514</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="capitalizeonlyfirstletter"><code class="tsd-tag">Static</code><span>capitalize<wbr/>Only<wbr/>First<wbr/>Letter</span><a href="#capitalizeonlyfirstletter" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="capitalizeonlyfirstletter-1"><span class="tsd-kind-call-signature">capitalizeOnlyFirstLetter</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">str</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#capitalizeonlyfirstletter-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Uppercases the first character and lowercases the remaining characters.</p>
+<p>For example, <code>&quot;HELLO&quot;</code> becomes <code>&quot;Hello&quot;</code>. An empty string remains empty.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">str</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The input string to transform.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The transformed string.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L314">general/utils/helpers.ts:314</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closeenough"><code class="tsd-tag">Static</code><span>close<wbr/>Enough</span><a href="#closeenough" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closeenough-1"><span class="tsd-kind-call-signature">closeEnough</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">tolerance</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#closeenough-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether two numbers differ by at most a relative tolerance.</p>
+<p>The exact comparison is <code>Math.abs(a - b) &lt;= tolerance * Math.max(a, b)</code>.
+The method does not clamp <code>tolerance</code> or use absolute values for the
+operands in the right-hand side.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">a</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The first number.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">b</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The second number.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">tolerance</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The multiplier applied to <code>Math.max(a, b)</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the comparison passes.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L207">general/utils/helpers.ts:207</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closeenoughbigint"><code class="tsd-tag">Static</code><span>close<wbr/>Enough<wbr/>Big<wbr/>Int</span><a href="#closeenoughbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closeenoughbigint-1"><span class="tsd-kind-call-signature">closeEnoughBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">tolerance</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#closeenoughbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks bigint closeness after converting both operands to numbers.</p>
+<p>The comparison is therefore subject to JavaScript number precision and uses
+the same formula as <code>closeEnough</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">a</span>: <span class="tsd-signature-type">bigint</span></span>
+<div class="tsd-comment tsd-typography"><p>First bigint.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">b</span>: <span class="tsd-signature-type">bigint</span></span>
+<div class="tsd-comment tsd-typography"><p>Second bigint.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">tolerance</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The multiplier passed to <code>closeEnough</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the numeric comparison passes.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L221">general/utils/helpers.ts:221</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createuid"><code class="tsd-tag">Static</code><span>create<wbr/>Uid</span><a href="#createuid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createuid-1"><span class="tsd-kind-call-signature">createUid</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#createuid-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates a timestamp-and-random base36 identifier string.</p>
+<p>The value combines <code>Date.now().toString(36)</code> with the random suffix from
+<code>Math.random().toString(36)</code>. It is not guaranteed to be globally unique.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The generated base36 string.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L470">general/utils/helpers.ts:470</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="deepcopy"><code class="tsd-tag">Static</code><span>deep<wbr/>Copy</span><a href="#deepcopy" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="deepcopy-1"><span class="tsd-kind-call-signature">deepCopy</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#deepcopyt">T</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">target</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#deepcopyt">T</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#deepcopyt">T</a><a href="#deepcopy-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Recursively copies arrays, enumerable object properties, and <code>Date</code> values.</p>
+<p>Dates are cloned from their timestamp. Other objects become plain objects
+containing their enumerable string-keyed properties. Primitive values are
+returned unchanged, and cyclic input is not supported.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="deepcopyt"><span class="tsd-kind-type-parameter">T</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">target</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#deepcopyt">T</a></span>
+<div class="tsd-comment tsd-typography"><p>The data to clone deeply.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a class="tsd-signature-type tsd-kind-type-parameter" href="#deepcopyt">T</a></h4><p>A copied structure with the same generic type.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L379">general/utils/helpers.ts:379</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="filterobject"><code class="tsd-tag">Static</code><span>filter<wbr/>Object</span><a href="#filterobject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="filterobject-1"><span class="tsd-kind-call-signature">filterObject</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">obj</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">predicate</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">&gt;</span><a href="#filterobject-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns an object containing only entries accepted by a predicate.</p>
+<p>The method examines the object's enumerable own string-keyed entries and
+returns a new object. It does not mutate <code>obj</code>.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="filterobjectvalue"><span class="tsd-kind-type-parameter">Value</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">obj</span>: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">&gt;</span></span>
+<div class="tsd-comment tsd-typography"><p>The original object to filter.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">predicate</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">boolean</span></span>
+<div class="tsd-comment tsd-typography"><p>A function taking a key and value and returning a boolean.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#filterobjectvalue">Value</a><span class="tsd-signature-symbol">&gt;</span></h4><p>A new object with the accepted entries.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L532">general/utils/helpers.ts:532</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getobjectdisplay"><code class="tsd-tag">Static</code><span>get<wbr/>Object<wbr/>Display</span><a href="#getobjectdisplay" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getobjectdisplay-1"><span class="tsd-kind-call-signature">getObjectDisplay</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">DisplayFieldsResponse</span><a href="#getobjectdisplay-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns display metadata from a gRPC object view in JSON-RPC shape.</p>
+<p>Reshaped onto JSON-RPC's <code>DisplayFieldsResponse</code> so the display casters are
+unaffected by the transport change; see
+<a href="general_utils_grpcCasting.GrpcCasting.html#displayfieldsresponsefromgrpcdisplay" class="tsd-kind-method">GrpcCasting.displayFieldsResponseFromGrpcDisplay</a> for the two
+semantic differences that reshape absorbs.</p>
+<p><code>display</code> is <code>undefined</code> when it was not requested and <code>null</code> when the
+object's type has no Display template. A non-null value is reshaped by
+<code>GrpcCasting.displayFieldsResponseFromGrpcDisplay</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>The object view containing display data.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DisplayFieldsResponse</span></h4><p>The JSON-RPC-shaped display response.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-2">Throws<a href="#throws-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> when <code>data.display</code> is <code>undefined</code>, which indicates that
+display data was not requested or was not returned.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L760">general/utils/helpers.ts:760</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getobjectfields"><code class="tsd-tag">Static</code><span>get<wbr/>Object<wbr/>Fields</span><a href="#getobjectfields" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getobjectfields-1"><span class="tsd-kind-call-signature">getObjectFields</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><a href="#getobjectfields-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the Move fields from a gRPC object view.</p>
+<p>The value is the gRPC <code>json</code> view, not JSON-RPC <code>content.fields</code>. Nested
+structs can be bare, <code>vector&lt;u8&gt;</code> fields can be base64 strings, and <code>UID</code>
+fields can be bare object IDs. Use the corresponding <code>GrpcCasting</code> helpers
+before reading those shapes. The returned record is dynamic and is not
+statically checked field by field.</p>
+<p><code>json</code> is <code>undefined</code> unless <code>include: { json: true }</code> was passed at the
+fetch site.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>The object view containing the requested <code>json</code> fields.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The dynamic Move field record.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-3">Throws<a href="#throws-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> when <code>data.json</code> is absent or falsy.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L735">general/utils/helpers.ts:735</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getobjectid"><code class="tsd-tag">Static</code><span>get<wbr/>Object<wbr/>Id</span><a href="#getobjectid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getobjectid-1"><span class="tsd-kind-call-signature">getObjectId</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#getobjectid-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the object ID after applying <code>addLeadingZeroesToType</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>The gRPC object view.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>A zero-padded <code>ObjectId</code> string.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-4">Throws<a href="#throws-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> when <code>data.objectId</code> is absent or empty, or when the ID is
+longer than 64 hexadecimal characters.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L709">general/utils/helpers.ts:709</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getobjecttype"><code class="tsd-tag">Static</code><span>get<wbr/>Object<wbr/>Type</span><a href="#getobjecttype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getobjecttype-1"><span class="tsd-kind-call-signature">getObjectType</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#getobjecttype-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the object type after applying <code>addLeadingZeroesToType</code>.</p>
+<p>The helper pads the outer address segment. Generic arguments keep their
+source padding and spacing, so equivalent gRPC and JSON-RPC generic type
+strings can remain textually different.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>The gRPC object view.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The normalized fully qualified object type.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-5">Throws<a href="#throws-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> when <code>data.type</code> is absent or empty, or when its first type
+segment is too long.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L692">general/utils/helpers.ts:692</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="indexofmax"><code class="tsd-tag">Static</code><span>index<wbr/>Of<wbr/>Max</span><a href="#indexofmax" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="indexofmax-1"><span class="tsd-kind-call-signature">indexOfMax</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#indexofmaxt">T</a> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">Date</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#indexofmaxt">T</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#indexofmax-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Finds the first index containing the maximum comparable value.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="indexofmaxt"><span class="tsd-kind-type-parameter">T</span> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">Date</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">arr</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#indexofmaxt">T</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The input array.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>The first maximum index, or <code>-1</code> when the array is empty.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L405">general/utils/helpers.ts:405</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isarrayofstrings"><code class="tsd-tag">Static</code><span>is<wbr/>Array<wbr/>Of<wbr/>Strings</span><a href="#isarrayofstrings" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isarrayofstrings-1"><span class="tsd-kind-call-signature">isArrayOfStrings</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-kind-parameter">value</span> <span class="tsd-signature-keyword">is</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><a href="#isarrayofstrings-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether an unknown value is an array whose items are all strings.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">value</span>: <span class="tsd-signature-type">unknown</span></span>
+<div class="tsd-comment tsd-typography"><p>The value to check.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-kind-parameter">value</span> <span class="tsd-signature-keyword">is</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><p><code>true</code> for an empty or string-only array, otherwise <code>false</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L635">general/utils/helpers.ts:635</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isnumber"><code class="tsd-tag">Static</code><span>is<wbr/>Number</span><a href="#isnumber" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isnumber-1"><span class="tsd-kind-call-signature">isNumber</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">str</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isnumber-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether a string matches the helper's unsigned decimal pattern.</p>
+<p>The pattern accepts digits with at most one decimal point, including an
+empty string, a leading point such as <code>.5</code>, and a trailing point such as
+<code>5.</code>. It rejects signs, exponents, and other characters.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">str</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The string to test.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when <code>str</code> matches that pattern.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L176">general/utils/helpers.ts:176</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isvalidhex"><code class="tsd-tag">Static</code><span>is<wbr/>Valid<wbr/>Hex</span><a href="#isvalidhex" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isvalidhex-1"><span class="tsd-kind-call-signature">isValidHex</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">hexString</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isvalidhex-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether a string contains one or more hexadecimal digits.</p>
+<p>The string may begin with <code>0x</code> or <code>0X</code>. Whitespace, signs, and an empty
+<code>0x</code> prefix are rejected.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">hexString</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The string to check.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the string matches the hexadecimal pattern.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L673">general/utils/helpers.ts:673</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isvalidsuiaddress"><code class="tsd-tag">Static</code><span>is<wbr/>Valid<wbr/>Sui<wbr/>Address</span><a href="#isvalidsuiaddress" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isvalidsuiaddress-1"><span class="tsd-kind-call-signature">isValidSuiAddress</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">address</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isvalidsuiaddress-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether a string is a valid Sui address.</p>
+<p>Lowercase-<code>0x</code> addresses of up to 64 hexadecimal characters are padded to
+64 characters before validation. Invalid prefixes, lengths, characters, and
+address strings longer than 64 characters return <code>false</code>; normalization
+errors are caught rather than thrown.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">address</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The address string to validate.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the normalized value passes Sui address validation.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L805">general/utils/helpers.ts:805</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isvalidtype"><code class="tsd-tag">Static</code><span>is<wbr/>Valid<wbr/>Type</span><a href="#isvalidtype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isvalidtype-1"><span class="tsd-kind-call-signature">isValidType</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">str</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isvalidtype-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Applies the helper's minimum-shape check for a Sui Move type.</p>
+<p>After trimming whitespace, the string must start with lowercase <code>0x</code>, have
+length at least <code>9</code>, contain <code>::</code> at index <code>3</code> or later and again at index
+<code>6</code> or later, and not end with <code>:</code>. The method does not validate the full
+address, module, or type grammar.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">str</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The string to validate.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the minimum shape passes.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L652">general/utils/helpers.ts:652</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="keypairfromprivatekey"><code class="tsd-tag">Static</code><span>keypair<wbr/>From<wbr/>Private<wbr/>Key</span><a href="#keypairfromprivatekey" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="keypairfromprivatekey-1"><span class="tsd-kind-call-signature">keypairFromPrivateKey</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">privateKey</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Keypair</span><a href="#keypairfromprivatekey-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Constructs a Sui keypair from an encoded private key.</p>
+<p><code>decodeSuiPrivateKey</code> selects the scheme from the encoded key. This method
+supports <code>ED25519</code>, <code>Secp256k1</code>, and <code>Secp256r1</code> and returns the matching
+keypair implementation. It performs no network I/O.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">privateKey</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The encoded private key accepted by
+<code>decodeSuiPrivateKey</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Keypair</span></h4><p>A new keypair for signing.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-6">Throws<a href="#throws-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>When the key is malformed, unsupported, or cannot be decoded by the
+underlying cryptography library.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L981">general/utils/helpers.ts:981</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="maxbigint"><code class="tsd-tag">Static</code><span>max<wbr/>Big<wbr/>Int</span><a href="#maxbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="maxbigint-1"><span class="tsd-kind-call-signature">maxBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#maxbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the largest bigint in the argument list.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The bigints to compare.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p>The largest argument.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-7">Throws<a href="#throws-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>TypeError</code> when no arguments are supplied.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L281">general/utils/helpers.ts:281</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="minbigint"><code class="tsd-tag">Static</code><span>min<wbr/>Big<wbr/>Int</span><a href="#minbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="minbigint-1"><span class="tsd-kind-call-signature">minBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#minbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the smallest bigint in the argument list.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The bigints to compare.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p>The smallest argument.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-8">Throws<a href="#throws-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>TypeError</code> when no arguments are supplied.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L291">general/utils/helpers.ts:291</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="parsejsonwithbigint"><code class="tsd-tag">Static</code><span>parse<wbr/>Json<wbr/>With<wbr/>Bigint</span><a href="#parsejsonwithbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="parsejsonwithbigint-1"><span class="tsd-kind-call-signature">parseJsonWithBigint</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">json</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">unsafeStringNumberConversion</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><a href="#parsejsonwithbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Parses JSON while applying the SDK's bigint and null conversions.</p>
+<p>Every string containing an optional minus sign, decimal digits, and a trailing
+<code>n</code> becomes a <code>bigint</code> after that suffix is removed. Every JSON <code>null</code> becomes
+<code>undefined</code>, including nested values.
+With <code>unsafeStringNumberConversion: true</code>, strings accepted by <code>isNumber</code>
+are also passed to <code>BigInt</code>; this can convert decimal-looking strings only
+when <code>BigInt</code> accepts them and can throw for strings that match the loose
+pattern but are not valid bigint input.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">json</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>A valid JSON string.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">unsafeStringNumberConversion</span>: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></span>
+<div class="tsd-comment tsd-typography"><p>Whether to convert strings accepted by
+<code>isNumber</code> to <code>bigint</code> as well.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4><p>The parsed value after recursive reviver conversion. Top-level
+<code>null</code> becomes <code>undefined</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-9">Throws<a href="#throws-9" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>SyntaxError</code> for invalid JSON or a bigint conversion error from the
+reviver.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L340">general/utils/helpers.ts:340</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="parsemoveerrormessage"><code class="tsd-tag">Static</code><span>parse<wbr/>Move<wbr/>Error<wbr/>Message</span><a href="#parsemoveerrormessage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="parsemoveerrormessage-1"><span class="tsd-kind-call-signature">parseMoveErrorMessage</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_moveErrorsInterface.ParsedMoveError.html" class="tsd-signature-type tsd-kind-interface">ParsedMoveError</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#parsemoveerrormessage-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Extracts a Move abort code, package ID, and module from a Sui error message.</p>
+<p>The message must contain <code>MoveAbort</code> and the parser must find an integer
+after the last comma, an <code>address: ... , name:</code> package segment, and an
+<code>Identifier(&quot;...&quot;)</code> module segment. The package ID is normalized to 64
+hexadecimal characters. An empty address segment is accepted by the current
+padding logic and becomes the zero address. If any other required part is
+missing or invalid, the method returns <code>undefined</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>The raw Sui error message.</p>
+</div>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The error text to parse.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/general_types_moveErrorsInterface.ParsedMoveError.html" class="tsd-signature-type tsd-kind-interface">ParsedMoveError</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><p>The parsed error details, or <code>undefined</code> when the message does not
+match the supported shape.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L838">general/utils/helpers.ts:838</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="removecircularreferences"><code class="tsd-tag">Static</code><span>remove<wbr/>Circular<wbr/>References</span><a href="#removecircularreferences" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="removecircularreferences-1"><span class="tsd-kind-call-signature">removeCircularReferences</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#removecircularreferencest">T</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">obj</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#removecircularreferencest">T</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">seen</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">WeakSet</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#removecircularreferencest">T</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#removecircularreferences-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Copies an object or array while replacing repeated references with <code>undefined</code>.</p>
+<p>The <code>seen</code> set tracks every object visited during this call. A cycle and a
+later occurrence of an already visited shared object both become
+<code>undefined</code>. The method returns new arrays and plain objects without
+mutating the input, but it mutates the supplied <code>seen</code> set.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="removecircularreferencest"><span class="tsd-kind-type-parameter">T</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">obj</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#removecircularreferencest">T</a></span>
+<div class="tsd-comment tsd-typography"><p>The object or array to remove circular references from.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">seen</span>: <span class="tsd-signature-type">WeakSet</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></span>
+<div class="tsd-comment tsd-typography"><p>The reference set used to track visited objects.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a class="tsd-signature-type tsd-kind-type-parameter" href="#removecircularreferencest">T</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><p>A copied structure, or <code>undefined</code> for a repeated object reference.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L602">general/utils/helpers.ts:602</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="sleep"><code class="tsd-tag">Static</code><span>sleep</span><a href="#sleep" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="sleep-1"><span class="tsd-kind-call-signature">sleep</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><a href="#sleep-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns a promise that resolves after a timer delay.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">ms</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The delay passed to <code>setTimeout</code>, in milliseconds.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise that resolves with <code>undefined</code> after the timer fires.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L460">general/utils/helpers.ts:460</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="splitnonsuicointype"><code class="tsd-tag">Static</code><span>split<wbr/>Non<wbr/>Sui<wbr/>Coin<wbr/>Type</span><a href="#splitnonsuicointype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="splitnonsuicointype-1"><span class="tsd-kind-call-signature">splitNonSuiCoinType</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">coin</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">chain</span><span class="tsd-signature-symbol">:</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;ethereum&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;arbitrum&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;bsc&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;solana&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;sui&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;polygon&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;avalanche&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;optimism&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;base&quot;</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span><a href="#splitnonsuicointype-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Splits a coin string at colons for external coin-price lookups.</p>
+<p>When both the first and second segments are non-empty, the method returns
+those two segments and discards later segments. When either segment is
+empty or absent, it returns the original string with <code>chain: &quot;sui&quot;</code>.
+The chain value is not validated against the <code>CoinGeckoChain</code> union at
+runtime.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">coin</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The coin string, which may look like <code>&quot;bsc:0x&lt;...&gt;&quot;</code> or just <code>&quot;0x&lt;...&gt;&quot;</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">chain</span><span class="tsd-signature-symbol">:</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;ethereum&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;arbitrum&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;bsc&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;solana&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;sui&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;polygon&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;avalanche&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;optimism&quot;</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;base&quot;</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></h4><p>An object with the <code>chain</code> (e.g. &quot;bsc&quot;) and the <code>coinType</code>.</p>
+
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">chain</span><span class="tsd-signature-symbol">: </span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;ethereum&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;arbitrum&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;bsc&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;solana&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;sui&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;polygon&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;avalanche&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;optimism&quot;</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;base&quot;</span></h5>
+<div class="tsd-comment tsd-typography"><p>The prefix before the first colon, or <code>&quot;sui&quot;</code> for an unsplit value.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The text between the first and second colon when a prefix exists.</p>
+</div></li></ul><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L146">general/utils/helpers.ts:146</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stripleadingzeroesfromtype"><code class="tsd-tag">Static</code><span>strip<wbr/>Leading<wbr/>Zeroes<wbr/>From<wbr/>Type</span><a href="#stripleadingzeroesfromtype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stripleadingzeroesfromtype-1"><span class="tsd-kind-call-signature">stripLeadingZeroesFromType</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#stripleadingzeroesfromtype-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Removes zeroes from every <code>x0...</code> sequence in a type string.</p>
+<p>For example, <code>&quot;0x0000123&quot;</code> becomes <code>&quot;0x123&quot;</code>. The replacement also
+affects addresses inside generic type arguments, and it does not validate
+the rest of the string.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">type</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The address or Move type string to process.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>A new string with those zero runs removed.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L94">general/utils/helpers.ts:94</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="sum"><code class="tsd-tag">Static</code><span>sum</span><a href="#sum" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="sum-1"><span class="tsd-kind-call-signature">sum</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#sum-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Adds the numbers in an array from left to right.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">arr</span>: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The array of numbers to sum.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>The numeric total, or <code>0</code> for an empty array.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L184">general/utils/helpers.ts:184</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="sumbigint"><code class="tsd-tag">Static</code><span>sum<wbr/>Big<wbr/>Int</span><a href="#sumbigint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="sumbigint-1"><span class="tsd-kind-call-signature">sumBigInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#sumbigint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Adds the bigints in an array from left to right.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">arr</span>: <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The array of bigints to sum.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p>The bigint total, or <code>0n</code> for an empty array.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L192">general/utils/helpers.ts:192</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="translatemoveerrormessage"><code class="tsd-tag">Static</code><span>translate<wbr/>Move<wbr/>Error<wbr/>Message</span><a href="#translatemoveerrormessage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="translatemoveerrormessage-1"><span class="tsd-kind-call-signature">translateMoveErrorMessage</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">moveErrors</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_moveErrorsInterface.MoveErrors.html" class="tsd-signature-type tsd-kind-type-alias">MoveErrors</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_moveErrorsInterface.TranslatedMoveError.html" class="tsd-signature-type tsd-kind-interface">TranslatedMoveError</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#translatemoveerrormessage-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Maps a parsed Move abort to a message in a package error table.</p>
+<p>The method first requires a package entry. It then prefers an exact module
+and error-code entry, and falls back to the package's <code>ANY</code> table. It returns
+<code>undefined</code> when parsing fails, the package is absent, or neither table has
+the error code.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">moveErrors</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_moveErrorsInterface.MoveErrors.html" class="tsd-signature-type tsd-kind-type-alias">MoveErrors</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>The error text and lookup table.</p>
+</div>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">errorMessage</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The raw Sui Move abort message.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">moveErrors</span><span class="tsd-signature-symbol">: </span><a href="../types/general_types_moveErrorsInterface.MoveErrors.html" class="tsd-signature-type tsd-kind-type-alias">MoveErrors</a></h5>
+<div class="tsd-comment tsd-typography"><p>The package, module, and error-code message table.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/general_types_moveErrorsInterface.TranslatedMoveError.html" class="tsd-signature-type tsd-kind-interface">TranslatedMoveError</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><p>The parsed details with the translated message, or <code>undefined</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L930">general/utils/helpers.ts:930</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="uniquearray"><code class="tsd-tag">Static</code><span>unique<wbr/>Array</span><a href="#uniquearray" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="uniquearray-1"><span class="tsd-kind-call-signature">uniqueArray</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#uniquearrayt">T</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arr</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#uniquearrayt">T</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#uniquearrayt">T</a><span class="tsd-signature-symbol">[]</span><a href="#uniquearray-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns a new array with duplicate elements removed.</p>
+<p>If the first element is an object, the method compares every element by its
+<code>JSON.stringify</code> result. Otherwise it uses <code>Set</code> equality. Both paths keep
+the first occurrence's order, and the input array is not mutated.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="uniquearrayt"><span class="tsd-kind-type-parameter">T</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">arr</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#uniquearrayt">T</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The original array.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a class="tsd-signature-type tsd-kind-type-parameter" href="#uniquearrayt">T</a><span class="tsd-signature-symbol">[]</span></h4><p>An array of unique items.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-10">Throws<a href="#throws-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>When the object path cannot serialize an element, such as a bigint.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L444">general/utils/helpers.ts:444</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="verycloseint"><code class="tsd-tag">Static</code><span>very<wbr/>Close<wbr/>Int</span><a href="#verycloseint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="verycloseint-1"><span class="tsd-kind-call-signature">veryCloseInt</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">fixedOne</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#verycloseint-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Compares the floored scale buckets of two numbers.</p>
+<p>The method computes <code>Math.floor(a / fixedOne)</code> and
+<code>Math.floor(b / fixedOne)</code>, then checks whether their absolute difference
+is at most <code>1</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">a</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>First number (scaled).</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">b</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>Second number (scaled).</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">fixedOne</span>: <span class="tsd-signature-type">number</span></span>
+<div class="tsd-comment tsd-typography"><p>The scale divisor shared by <code>a</code> and <code>b</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> when the bucket difference is at most <code>1</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L236">general/utils/helpers.ts:236</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="zip"><code class="tsd-tag">Static</code><span>zip</span><a href="#zip" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="zip-1"><span class="tsd-kind-call-signature">zip</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#zips1">S1</a><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips2">S2</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">firstCollection</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips1">S1</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">lastCollection</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips2">S2</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#zips1">S1</a><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips2">S2</a><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">[]</span><a href="#zip-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Pairs corresponding elements from two arrays.</p>
+<p>The result stops at the shorter input and does not mutate either array.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li><span id="zips1"><span class="tsd-kind-type-parameter">S1</span></span></li>
+<li><span id="zips2"><span class="tsd-kind-type-parameter">S2</span></span></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">firstCollection</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips1">S1</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The first collection.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">lastCollection</span>: <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips2">S2</a><span class="tsd-signature-symbol">[]</span></span>
+<div class="tsd-comment tsd-typography"><p>The second collection.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#zips1">S1</a><span class="tsd-signature-symbol">,</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#zips2">S2</a><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">[]</span></h4><p>An array of <code>[firstCollection[i], lastCollection[i]]</code> pairs.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/helpers.ts#L581">general/utils/helpers.ts:581</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#blendedoperations"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>blended<wbr/>Operations</span></a><a href="#dynamicfields"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>dynamic<wbr/>Fields</span></a><a href="#events"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>events</span></a><a href="#inspections"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>inspections</span></a><a href="#objects"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>objects</span></a><a href="#transactions"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>transactions</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#absbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>abs<wbr/>Big<wbr/>Int</span></a><a href="#addleadingzeroestotype"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Leading<wbr/>Zeroes<wbr/>To<wbr/>Type</span></a><a href="#addtxobject"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Tx<wbr/>Object</span></a><a href="#applyslippage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>apply<wbr/>Slippage</span></a><a href="#applyslippagebigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>apply<wbr/>Slippage<wbr/>Big<wbr/>Int</span></a><a href="#bifilter"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>bifilter</span></a><a href="#bifilterasync"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>bifilter<wbr/>Async</span></a><a href="#capitalizeonlyfirstletter"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>capitalize<wbr/>Only<wbr/>First<wbr/>Letter</span></a><a href="#closeenough"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Enough</span></a><a href="#closeenoughbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Enough<wbr/>Big<wbr/>Int</span></a><a href="#createuid"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Uid</span></a><a href="#deepcopy"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deep<wbr/>Copy</span></a><a href="#filterobject"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filter<wbr/>Object</span></a><a href="#getobjectdisplay"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Display</span></a><a href="#getobjectfields"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Fields</span></a><a href="#getobjectid"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Id</span></a><a href="#getobjecttype"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Object<wbr/>Type</span></a><a href="#indexofmax"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>index<wbr/>Of<wbr/>Max</span></a><a href="#isarrayofstrings"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Array<wbr/>Of<wbr/>Strings</span></a><a href="#isnumber"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Number</span></a><a href="#isvalidhex"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Hex</span></a><a href="#isvalidsuiaddress"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Sui<wbr/>Address</span></a><a href="#isvalidtype"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Type</span></a><a href="#keypairfromprivatekey"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>keypair<wbr/>From<wbr/>Private<wbr/>Key</span></a><a href="#maxbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>max<wbr/>Big<wbr/>Int</span></a><a href="#minbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>min<wbr/>Big<wbr/>Int</span></a><a href="#parsejsonwithbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>parse<wbr/>Json<wbr/>With<wbr/>Bigint</span></a><a href="#parsemoveerrormessage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>parse<wbr/>Move<wbr/>Error<wbr/>Message</span></a><a href="#removecircularreferences"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>remove<wbr/>Circular<wbr/>References</span></a><a href="#sleep"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sleep</span></a><a href="#splitnonsuicointype"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Non<wbr/>Sui<wbr/>Coin<wbr/>Type</span></a><a href="#stripleadingzeroesfromtype"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>strip<wbr/>Leading<wbr/>Zeroes<wbr/>From<wbr/>Type</span></a><a href="#sum"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sum</span></a><a href="#sumbigint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sum<wbr/>Big<wbr/>Int</span></a><a href="#translatemoveerrormessage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>translate<wbr/>Move<wbr/>Error<wbr/>Message</span></a><a href="#uniquearray"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unique<wbr/>Array</span></a><a href="#verycloseint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>very<wbr/>Close<wbr/>Int</span></a><a href="#zip"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>zip</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

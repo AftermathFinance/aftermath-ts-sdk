@@ -60,6 +60,13 @@ import {
 } from "../perpetualsTypes";
 
 // TODO: handle 0xs and leading 0s everywhere
+/**
+ * Converts raw Sui perpetuals events into the SDK's camel-case event types.
+ *
+ * These static helpers do not perform network I/O. They convert bigint-like
+ * strings and fixed-point strings from `parsedJson`, preserve the event
+ * timestamp in milliseconds, and copy the transaction digest and event type.
+ */
 export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Objects
@@ -112,6 +119,7 @@ export class PerpetualsApiCasting {
 	//  Updated Version
 	// =========================================================================
 
+	/** Casts a raw clearing-house version update event. */
 	public static UpdatedMarketVersionEventFromOnChain = (
 		eventOnChain: UpdatedMarketVersionEventOnChain
 	): UpdatedMarketVersionEvent => {
@@ -129,6 +137,7 @@ export class PerpetualsApiCasting {
 	//  Collateral
 	// =========================================================================
 
+	/** Casts a raw collateral-withdrawal event. */
 	public static withdrewCollateralEventFromOnChain = (
 		eventOnChain: WithdrewCollateralEventOnChain
 	): WithdrewCollateralEvent => {
@@ -142,6 +151,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw collateral-deposit event. */
 	public static depositedCollateralEventFromOnChain = (
 		eventOnChain: DepositedCollateralEventOnChain
 	): DepositedCollateralEvent => {
@@ -155,6 +165,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw funding-settlement event and converts fixed-point USD values. */
 	public static settledFundingEventFromOnChain = (
 		eventOnChain: SettledFundingEventOnChain
 	): SettledFundingEvent => {
@@ -177,6 +188,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw collateral-allocation event. */
 	public static allocatedCollateralEventFromOnChain = (
 		eventOnChain: AllocatedCollateralEventOnChain
 	): AllocatedCollateralEvent => {
@@ -191,6 +203,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw collateral-deallocation event. */
 	public static deallocatedCollateralEventFromOnChain = (
 		eventOnChain: DeallocatedCollateralEventOnChain
 	): DeallocatedCollateralEvent => {
@@ -209,6 +222,7 @@ export class PerpetualsApiCasting {
 	//  Liquidation
 	// =========================================================================
 
+	/** Casts a raw liquidation event and derives the liquidated side and USD fields. */
 	public static liquidatedEventFromOnChain = (
 		eventOnChain: LiquidatedEventOnChain
 	): LiquidatedEvent => {
@@ -248,6 +262,7 @@ export class PerpetualsApiCasting {
 	//  Account
 	// =========================================================================
 
+	/** Casts a raw account-creation event. */
 	public static createdAccountEventFromOnChain = (
 		eventOnChain: CreatedAccountEventOnChain
 	): CreatedAccountEvent => {
@@ -293,6 +308,7 @@ export class PerpetualsApiCasting {
 	// 	};
 	// };
 
+	/** Casts a raw position initial-margin-ratio update event. */
 	public static SetPositionInitialMarginRatioEventFromOnChain = (
 		eventOnChain: SetPositionInitialMarginRatioEventOnChain
 	): SetPositionInitialMarginRatioEvent => {
@@ -313,6 +329,7 @@ export class PerpetualsApiCasting {
 	//  Order
 	// =========================================================================
 
+	/** Casts a raw order-cancellation event and derives the order side from its ID. */
 	public static canceledOrderEventFromOnChain = (
 		eventOnChain: CanceledOrderEventOnChain
 	): CanceledOrderEvent => {
@@ -329,6 +346,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw aggregate maker-fill event into per-order fill records. */
 	public static filledMakerOrdersEventFromOnChain = (
 		eventOnChain: FilledMakerOrdersEventOnChain
 	): FilledMakerOrdersEvent => {
@@ -355,6 +373,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw taker-fill event and derives signed base and quote deltas. */
 	public static filledTakerOrderEventFromOnChain = (
 		eventOnChain: FilledTakerOrderEventOnChain
 	): FilledTakerOrderEvent => {
@@ -381,6 +400,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw posted-order event, including an optional expiry timestamp. */
 	public static postedOrderEventFromOnChain = (
 		eventOnChain: PostedOrderEventOnChain
 	): PostedOrderEvent => {
@@ -401,6 +421,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw order-reduction event. */
 	public static reducedOrderEventFromOnChain = (
 		eventOnChain: ReducedOrderEventOnChain
 	): ReducedOrderEvent => {
@@ -420,6 +441,7 @@ export class PerpetualsApiCasting {
 	//  Stop Orders
 	// =========================================================================
 
+	/** Casts a raw stop-order ticket creation event. */
 	public static createdStopOrderTicketEventFromOnChain = (
 		eventOnChain: CreatedStopOrderTicketEventOnChain
 	): CreatedStopOrderTicketEvent => {
@@ -439,6 +461,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw stop-order ticket execution event. */
 	public static executedStopOrderTicketEventFromOnChain = (
 		eventOnChain: ExecutedStopOrderTicketEventOnChain
 	): ExecutedStopOrderTicketEvent => {
@@ -453,6 +476,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw stop-order ticket deletion event. */
 	public static deletedStopOrderTicketEventFromOnChain = (
 		eventOnChain: DeletedStopOrderTicketEventOnChain
 	): DeletedStopOrderTicketEvent => {
@@ -470,6 +494,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw stop-order ticket detail-edit event. */
 	public static editedStopOrderTicketDetailsEventFromOnChain = (
 		eventOnChain: EditedStopOrderTicketDetailsEventOnChain
 	): EditedStopOrderTicketDetailsEvent => {
@@ -488,6 +513,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw stop-order ticket executor-edit event. */
 	public static editedStopOrderTicketExecutorEventFromOnChain = (
 		eventOnChain: EditedStopOrderTicketExecutorEventOnChain
 	): EditedStopOrderTicketExecutorEvent => {
@@ -574,6 +600,7 @@ export class PerpetualsApiCasting {
 	//  Twap
 	// =========================================================================
 
+	/** Casts a raw premium TWAP update event. */
 	public static updatedPremiumTwapEventFromOnChain = (
 		eventOnChain: UpdatedPremiumTwapEventOnChain
 	): UpdatedPremiumTwapEvent => {
@@ -590,6 +617,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	/** Casts a raw spread TWAP update event. */
 	public static updatedSpreadTwapEventFromOnChain = (
 		eventOnChain: UpdatedSpreadTwapEventOnChain
 	): UpdatedSpreadTwapEvent => {
@@ -610,6 +638,7 @@ export class PerpetualsApiCasting {
 	//  Funding
 	// =========================================================================
 
+	/** Casts a raw cumulative funding-rate update event. */
 	public static updatedFundingEventFromOnChain = (
 		eventOnChain: UpdatedFundingEventOnChain
 	): UpdatedFundingEvent => {

@@ -1,0 +1,421 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>PerpetualsApiCasting | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_perpetuals_api_perpetualsApiCasting.html">packages/perpetuals/api/perpetualsApiCasting</a></li>
+<li><a href="" aria-current="page">PerpetualsApiCasting</a></li></ul>
+<h1>Class PerpetualsApiCasting</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Converts raw Sui perpetuals events into the SDK's camel-case event types.</p>
+<p>These static helpers do not perform network I/O. They convert bigint-like
+strings and fixed-point strings from <code>parsedJson</code>, preserve the event
+timestamp in milliseconds, and copy the transaction digest and event type.</p>
+</div></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L70">packages/perpetuals/api/perpetualsApiCasting.ts:70</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#allocatedcollateraleventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>allocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#canceledordereventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>canceled<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#createdaccounteventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Account<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#createdstoporderticketeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#deallocatedcollateraleventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deallocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#deletedstoporderticketeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deleted<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#depositedcollateraleventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#editedstoporderticketdetailseventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Details<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#editedstoporderticketexecutoreventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Executor<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#executedstoporderticketeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>executed<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#filledmakerorderseventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filled<wbr/>Maker<wbr/>Orders<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#filledtakerordereventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filled<wbr/>Taker<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#liquidatedeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>liquidated<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#postedordereventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>posted<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#reducedordereventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reduced<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#setpositioninitialmarginratioeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>Set<wbr/>Position<wbr/>Initial<wbr/>Margin<wbr/>Ratio<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#settledfundingeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>settled<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#updatedfundingeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#updatedmarketversioneventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>Updated<wbr/>Market<wbr/>Version<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#updatedpremiumtwapeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Premium<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#updatedspreadtwapeventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Spread<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+<a href="#withdrewcollateraleventfromonchain" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorperpetualsapicasting"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">PerpetualsApiCasting</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">PerpetualsApiCasting</a><a href="#constructorperpetualsapicasting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">PerpetualsApiCasting</a></h4></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="allocatedcollateraleventfromonchain"><code class="tsd-tag">Static</code><span>allocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#allocatedcollateraleventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="allocatedcollateraleventfromonchain-1"><span class="tsd-kind-call-signature">allocatedCollateralEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.AllocatedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">AllocatedCollateralEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.AllocatedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">AllocatedCollateralEvent</a><a href="#allocatedcollateraleventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw collateral-allocation event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.AllocatedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">AllocatedCollateralEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.AllocatedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">AllocatedCollateralEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L192">packages/perpetuals/api/perpetualsApiCasting.ts:192</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="canceledordereventfromonchain"><code class="tsd-tag">Static</code><span>canceled<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#canceledordereventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="canceledordereventfromonchain-1"><span class="tsd-kind-call-signature">canceledOrderEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.CanceledOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CanceledOrderEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.CanceledOrderEvent.html" class="tsd-signature-type tsd-kind-interface">CanceledOrderEvent</a><a href="#canceledordereventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw order-cancellation event and derives the order side from its ID.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.CanceledOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CanceledOrderEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.CanceledOrderEvent.html" class="tsd-signature-type tsd-kind-interface">CanceledOrderEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L333">packages/perpetuals/api/perpetualsApiCasting.ts:333</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createdaccounteventfromonchain"><code class="tsd-tag">Static</code><span>created<wbr/>Account<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#createdaccounteventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createdaccounteventfromonchain-1"><span class="tsd-kind-call-signature">createdAccountEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.CreatedAccountEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CreatedAccountEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.CreatedAccountEvent.html" class="tsd-signature-type tsd-kind-interface">CreatedAccountEvent</a><a href="#createdaccounteventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw account-creation event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.CreatedAccountEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CreatedAccountEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.CreatedAccountEvent.html" class="tsd-signature-type tsd-kind-interface">CreatedAccountEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L266">packages/perpetuals/api/perpetualsApiCasting.ts:266</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createdstoporderticketeventfromonchain"><code class="tsd-tag">Static</code><span>created<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#createdstoporderticketeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createdstoporderticketeventfromonchain-1"><span class="tsd-kind-call-signature">createdStopOrderTicketEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.CreatedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CreatedStopOrderTicketEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.CreatedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">CreatedStopOrderTicketEvent</a><a href="#createdstoporderticketeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw stop-order ticket creation event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.CreatedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">CreatedStopOrderTicketEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.CreatedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">CreatedStopOrderTicketEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L445">packages/perpetuals/api/perpetualsApiCasting.ts:445</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="deallocatedcollateraleventfromonchain"><code class="tsd-tag">Static</code><span>deallocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#deallocatedcollateraleventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="deallocatedcollateraleventfromonchain-1"><span class="tsd-kind-call-signature">deallocatedCollateralEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.DeallocatedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DeallocatedCollateralEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.DeallocatedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">DeallocatedCollateralEvent</a><a href="#deallocatedcollateraleventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw collateral-deallocation event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.DeallocatedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DeallocatedCollateralEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.DeallocatedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">DeallocatedCollateralEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L207">packages/perpetuals/api/perpetualsApiCasting.ts:207</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="deletedstoporderticketeventfromonchain"><code class="tsd-tag">Static</code><span>deleted<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#deletedstoporderticketeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="deletedstoporderticketeventfromonchain-1"><span class="tsd-kind-call-signature">deletedStopOrderTicketEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.DeletedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DeletedStopOrderTicketEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.DeletedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">DeletedStopOrderTicketEvent</a><a href="#deletedstoporderticketeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw stop-order ticket deletion event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.DeletedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DeletedStopOrderTicketEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.DeletedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">DeletedStopOrderTicketEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L480">packages/perpetuals/api/perpetualsApiCasting.ts:480</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="depositedcollateraleventfromonchain"><code class="tsd-tag">Static</code><span>deposited<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#depositedcollateraleventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="depositedcollateraleventfromonchain-1"><span class="tsd-kind-call-signature">depositedCollateralEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.DepositedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DepositedCollateralEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.DepositedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">DepositedCollateralEvent</a><a href="#depositedcollateraleventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw collateral-deposit event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.DepositedCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">DepositedCollateralEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.DepositedCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">DepositedCollateralEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L155">packages/perpetuals/api/perpetualsApiCasting.ts:155</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="editedstoporderticketdetailseventfromonchain"><code class="tsd-tag">Static</code><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Details<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#editedstoporderticketdetailseventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="editedstoporderticketdetailseventfromonchain-1"><span class="tsd-kind-call-signature">editedStopOrderTicketDetailsEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.EditedStopOrderTicketDetailsEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">EditedStopOrderTicketDetailsEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.EditedStopOrderTicketDetailsEvent.html" class="tsd-signature-type tsd-kind-interface">EditedStopOrderTicketDetailsEvent</a><a href="#editedstoporderticketdetailseventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw stop-order ticket detail-edit event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.EditedStopOrderTicketDetailsEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">EditedStopOrderTicketDetailsEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.EditedStopOrderTicketDetailsEvent.html" class="tsd-signature-type tsd-kind-interface">EditedStopOrderTicketDetailsEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L498">packages/perpetuals/api/perpetualsApiCasting.ts:498</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="editedstoporderticketexecutoreventfromonchain"><code class="tsd-tag">Static</code><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Executor<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#editedstoporderticketexecutoreventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="editedstoporderticketexecutoreventfromonchain-1"><span class="tsd-kind-call-signature">editedStopOrderTicketExecutorEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.EditedStopOrderTicketExecutorEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">EditedStopOrderTicketExecutorEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.EditedStopOrderTicketExecutorEvent.html" class="tsd-signature-type tsd-kind-interface">EditedStopOrderTicketExecutorEvent</a><a href="#editedstoporderticketexecutoreventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw stop-order ticket executor-edit event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.EditedStopOrderTicketExecutorEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">EditedStopOrderTicketExecutorEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.EditedStopOrderTicketExecutorEvent.html" class="tsd-signature-type tsd-kind-interface">EditedStopOrderTicketExecutorEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L517">packages/perpetuals/api/perpetualsApiCasting.ts:517</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="executedstoporderticketeventfromonchain"><code class="tsd-tag">Static</code><span>executed<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#executedstoporderticketeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="executedstoporderticketeventfromonchain-1"><span class="tsd-kind-call-signature">executedStopOrderTicketEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.ExecutedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">ExecutedStopOrderTicketEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.ExecutedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">ExecutedStopOrderTicketEvent</a><a href="#executedstoporderticketeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw stop-order ticket execution event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.ExecutedStopOrderTicketEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">ExecutedStopOrderTicketEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.ExecutedStopOrderTicketEvent.html" class="tsd-signature-type tsd-kind-interface">ExecutedStopOrderTicketEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L465">packages/perpetuals/api/perpetualsApiCasting.ts:465</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="filledmakerorderseventfromonchain"><code class="tsd-tag">Static</code><span>filled<wbr/>Maker<wbr/>Orders<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#filledmakerorderseventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="filledmakerorderseventfromonchain-1"><span class="tsd-kind-call-signature">filledMakerOrdersEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.FilledMakerOrdersEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">FilledMakerOrdersEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.FilledMakerOrdersEvent.html" class="tsd-signature-type tsd-kind-interface">FilledMakerOrdersEvent</a><a href="#filledmakerorderseventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw aggregate maker-fill event into per-order fill records.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.FilledMakerOrdersEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">FilledMakerOrdersEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.FilledMakerOrdersEvent.html" class="tsd-signature-type tsd-kind-interface">FilledMakerOrdersEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L350">packages/perpetuals/api/perpetualsApiCasting.ts:350</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="filledtakerordereventfromonchain"><code class="tsd-tag">Static</code><span>filled<wbr/>Taker<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#filledtakerordereventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="filledtakerordereventfromonchain-1"><span class="tsd-kind-call-signature">filledTakerOrderEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.FilledTakerOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">FilledTakerOrderEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.FilledTakerOrderEvent.html" class="tsd-signature-type tsd-kind-interface">FilledTakerOrderEvent</a><a href="#filledtakerordereventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw taker-fill event and derives signed base and quote deltas.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.FilledTakerOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">FilledTakerOrderEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.FilledTakerOrderEvent.html" class="tsd-signature-type tsd-kind-interface">FilledTakerOrderEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L377">packages/perpetuals/api/perpetualsApiCasting.ts:377</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="liquidatedeventfromonchain"><code class="tsd-tag">Static</code><span>liquidated<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#liquidatedeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="liquidatedeventfromonchain-1"><span class="tsd-kind-call-signature">liquidatedEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.LiquidatedEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">LiquidatedEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.LiquidatedEvent.html" class="tsd-signature-type tsd-kind-interface">LiquidatedEvent</a><a href="#liquidatedeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw liquidation event and derives the liquidated side and USD fields.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.LiquidatedEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">LiquidatedEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.LiquidatedEvent.html" class="tsd-signature-type tsd-kind-interface">LiquidatedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L226">packages/perpetuals/api/perpetualsApiCasting.ts:226</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="postedordereventfromonchain"><code class="tsd-tag">Static</code><span>posted<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#postedordereventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="postedordereventfromonchain-1"><span class="tsd-kind-call-signature">postedOrderEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.PostedOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">PostedOrderEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PostedOrderEvent.html" class="tsd-signature-type tsd-kind-interface">PostedOrderEvent</a><a href="#postedordereventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw posted-order event, including an optional expiry timestamp.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.PostedOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">PostedOrderEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.PostedOrderEvent.html" class="tsd-signature-type tsd-kind-interface">PostedOrderEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L404">packages/perpetuals/api/perpetualsApiCasting.ts:404</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="reducedordereventfromonchain"><code class="tsd-tag">Static</code><span>reduced<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#reducedordereventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="reducedordereventfromonchain-1"><span class="tsd-kind-call-signature">reducedOrderEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.ReducedOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">ReducedOrderEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.ReducedOrderEvent.html" class="tsd-signature-type tsd-kind-interface">ReducedOrderEvent</a><a href="#reducedordereventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw order-reduction event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.ReducedOrderEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">ReducedOrderEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.ReducedOrderEvent.html" class="tsd-signature-type tsd-kind-interface">ReducedOrderEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L425">packages/perpetuals/api/perpetualsApiCasting.ts:425</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setpositioninitialmarginratioeventfromonchain"><code class="tsd-tag">Static</code><span>Set<wbr/>Position<wbr/>Initial<wbr/>Margin<wbr/>Ratio<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#setpositioninitialmarginratioeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setpositioninitialmarginratioeventfromonchain-1"><span class="tsd-kind-call-signature">SetPositionInitialMarginRatioEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.SetPositionInitialMarginRatioEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">SetPositionInitialMarginRatioEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.SetPositionInitialMarginRatioEvent.html" class="tsd-signature-type tsd-kind-interface">SetPositionInitialMarginRatioEvent</a><a href="#setpositioninitialmarginratioeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw position initial-margin-ratio update event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.SetPositionInitialMarginRatioEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">SetPositionInitialMarginRatioEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.SetPositionInitialMarginRatioEvent.html" class="tsd-signature-type tsd-kind-interface">SetPositionInitialMarginRatioEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L312">packages/perpetuals/api/perpetualsApiCasting.ts:312</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="settledfundingeventfromonchain"><code class="tsd-tag">Static</code><span>settled<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#settledfundingeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="settledfundingeventfromonchain-1"><span class="tsd-kind-call-signature">settledFundingEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.SettledFundingEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">SettledFundingEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.SettledFundingEvent.html" class="tsd-signature-type tsd-kind-interface">SettledFundingEvent</a><a href="#settledfundingeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw funding-settlement event and converts fixed-point USD values.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.SettledFundingEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">SettledFundingEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.SettledFundingEvent.html" class="tsd-signature-type tsd-kind-interface">SettledFundingEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L169">packages/perpetuals/api/perpetualsApiCasting.ts:169</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedfundingeventfromonchain"><code class="tsd-tag">Static</code><span>updated<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#updatedfundingeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updatedfundingeventfromonchain-1"><span class="tsd-kind-call-signature">updatedFundingEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedFundingEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedFundingEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedFundingEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedFundingEvent</a><a href="#updatedfundingeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw cumulative funding-rate update event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedFundingEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedFundingEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedFundingEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedFundingEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L642">packages/perpetuals/api/perpetualsApiCasting.ts:642</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedmarketversioneventfromonchain"><code class="tsd-tag">Static</code><span>Updated<wbr/>Market<wbr/>Version<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#updatedmarketversioneventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updatedmarketversioneventfromonchain-1"><span class="tsd-kind-call-signature">UpdatedMarketVersionEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedMarketVersionEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedMarketVersionEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedMarketVersionEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedMarketVersionEvent</a><a href="#updatedmarketversioneventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw clearing-house version update event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedMarketVersionEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedMarketVersionEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedMarketVersionEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedMarketVersionEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L123">packages/perpetuals/api/perpetualsApiCasting.ts:123</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedpremiumtwapeventfromonchain"><code class="tsd-tag">Static</code><span>updated<wbr/>Premium<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#updatedpremiumtwapeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updatedpremiumtwapeventfromonchain-1"><span class="tsd-kind-call-signature">updatedPremiumTwapEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedPremiumTwapEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedPremiumTwapEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedPremiumTwapEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedPremiumTwapEvent</a><a href="#updatedpremiumtwapeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw premium TWAP update event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedPremiumTwapEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedPremiumTwapEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedPremiumTwapEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedPremiumTwapEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L604">packages/perpetuals/api/perpetualsApiCasting.ts:604</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedspreadtwapeventfromonchain"><code class="tsd-tag">Static</code><span>updated<wbr/>Spread<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#updatedspreadtwapeventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updatedspreadtwapeventfromonchain-1"><span class="tsd-kind-call-signature">updatedSpreadTwapEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedSpreadTwapEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedSpreadTwapEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedSpreadTwapEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedSpreadTwapEvent</a><a href="#updatedspreadtwapeventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw spread TWAP update event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.UpdatedSpreadTwapEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">UpdatedSpreadTwapEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.UpdatedSpreadTwapEvent.html" class="tsd-signature-type tsd-kind-interface">UpdatedSpreadTwapEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L621">packages/perpetuals/api/perpetualsApiCasting.ts:621</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="withdrewcollateraleventfromonchain"><code class="tsd-tag">Static</code><span>withdrew<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span><a href="#withdrewcollateraleventfromonchain" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="withdrewcollateraleventfromonchain-1"><span class="tsd-kind-call-signature">withdrewCollateralEventFromOnChain</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsCastingTypes.WithdrewCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">WithdrewCollateralEventOnChain</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.WithdrewCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">WithdrewCollateralEvent</a><a href="#withdrewcollateraleventfromonchain-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a raw collateral-withdrawal event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_perpetuals_perpetualsCastingTypes.WithdrewCollateralEventOnChain.html" class="tsd-signature-type tsd-kind-type-alias">WithdrewCollateralEventOnChain</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_perpetuals_perpetualsTypes.WithdrewCollateralEvent.html" class="tsd-signature-type tsd-kind-interface">WithdrewCollateralEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/api/perpetualsApiCasting.ts#L141">packages/perpetuals/api/perpetualsApiCasting.ts:141</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#allocatedcollateraleventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>allocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#canceledordereventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>canceled<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#createdaccounteventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Account<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#createdstoporderticketeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#deallocatedcollateraleventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deallocated<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#deletedstoporderticketeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deleted<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#depositedcollateraleventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#editedstoporderticketdetailseventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Details<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#editedstoporderticketexecutoreventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>edited<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Executor<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#executedstoporderticketeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>executed<wbr/>Stop<wbr/>Order<wbr/>Ticket<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#filledmakerorderseventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filled<wbr/>Maker<wbr/>Orders<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#filledtakerordereventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>filled<wbr/>Taker<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#liquidatedeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>liquidated<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#postedordereventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>posted<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#reducedordereventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reduced<wbr/>Order<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#setpositioninitialmarginratioeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>Set<wbr/>Position<wbr/>Initial<wbr/>Margin<wbr/>Ratio<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#settledfundingeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>settled<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#updatedfundingeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Funding<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#updatedmarketversioneventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>Updated<wbr/>Market<wbr/>Version<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#updatedpremiumtwapeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Premium<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#updatedspreadtwapeventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Spread<wbr/>Twap<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a><a href="#withdrewcollateraleventfromonchain"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Collateral<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

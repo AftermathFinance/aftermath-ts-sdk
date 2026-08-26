@@ -9,6 +9,15 @@ import type {
 	SuiAddress,
 } from "../../../types";
 
+/**
+ * Builds referral-vault Move calls and evaluates referral-vault inspection
+ * results.
+ *
+ * This low-level helper requires the referral-vault package and object
+ * addresses in the provider configuration. Use it when composing a larger
+ * transaction or when the high-level referral facade does not expose the
+ * operation you need.
+ */
 export class ReferralVaultApi {
 	// =========================================================================
 	//  Constants
@@ -24,12 +33,20 @@ export class ReferralVaultApi {
 	//  Class Members
 	// =========================================================================
 
+	/** Package and object addresses used by referral-vault calls. */
 	public readonly addresses: ReferralVaultAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a helper bound to an {@link AftermathApi} provider.
+	 *
+	 * @param api - Provider containing the configured referral-vault addresses
+	 * and inspection transport.
+	 * @throws If referral-vault addresses are absent from the provider.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.referralVault;
 		if (!addresses) {
@@ -47,6 +64,20 @@ export class ReferralVaultApi {
 	//  Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Appends a Move call that records a referee's referrer.
+	 *
+	 * If the transaction sender already matches `referrer`, this method leaves
+	 * the transaction unchanged. The method also suppresses malformed-address
+	 * errors to preserve the historical SDK behavior; validate addresses before
+	 * calling it when you need deterministic failure handling.
+	 *
+	 * @param inputs - Transaction and referrer address to record.
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.referrer - Sui address of the referrer.
+	 * @returns The result of `tx.moveCall`, or `undefined` when the sender is the
+	 * referrer or the input address cannot be encoded.
+	 */
 	public updateReferrerTx = (inputs: {
 		tx: Transaction;
 		referrer: SuiAddress;
@@ -80,6 +111,17 @@ export class ReferralVaultApi {
 		} catch (_e) {}
 	};
 
+	/**
+	 * Appends a Move call that withdraws accrued rebate for a coin type.
+	 *
+	 * @param inputs - Transaction, coin type, and transfer behavior.
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.coinType - Fully qualified coin type whose rebate is
+	 * withdrawn.
+	 * @param inputs.withTransfer - When `true`, transfers the withdrawn coins to
+	 * the transaction sender; when omitted or `false`, returns the Move result.
+	 * @returns The Move call result, which is a transaction result handle.
+	 */
 	public withdrawRebateTx = (inputs: {
 		tx: Transaction;
 		coinType: CoinType;
@@ -97,6 +139,18 @@ export class ReferralVaultApi {
 		});
 	};
 
+	/**
+	 * Appends a read-only Move call that returns a referrer's rebate balance.
+	 *
+	 * The Move function returns a `u64`; the result is not fetched until the
+	 * transaction is executed or inspected.
+	 *
+	 * @param inputs - Transaction, coin type, and referrer address.
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.coinType - Fully qualified coin type for the rebate balance.
+	 * @param inputs.referrer - Address whose rebate balance to read.
+	 * @returns A transaction result handle containing the Move `u64` value.
+	 */
 	public balanceOfRebateTx = (inputs: {
 		tx: Transaction;
 		coinType: CoinType;
@@ -117,6 +171,17 @@ export class ReferralVaultApi {
 		});
 	};
 
+	/**
+	 * Appends a read-only Move call that returns the referrer of an address.
+	 *
+	 * The Move function returns `Option<address>`. Use an inspection helper or
+	 * execute the transaction to read the value.
+	 *
+	 * @param inputs - Transaction and referee address.
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.referee - Address whose referrer to look up.
+	 * @returns A transaction result handle containing `Option<address>`.
+	 */
 	public referrerForTx = (inputs: {
 		tx: Transaction;
 		referee: SuiAddress;
@@ -136,6 +201,17 @@ export class ReferralVaultApi {
 		});
 	};
 
+	/**
+	 * Appends a read-only Move call that checks whether an address has a
+	 * referrer.
+	 *
+	 * The method name preserves the SDK's historical `Refferer` spelling.
+	 *
+	 * @param inputs - Transaction and referee address.
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.referee - Address to check.
+	 * @returns A transaction result handle containing the Move `bool` value.
+	 */
 	public hasReffererTx = (inputs: {
 		tx: Transaction;
 		referee: SuiAddress;
@@ -159,6 +235,15 @@ export class ReferralVaultApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Inspects the rebate balance for a referrer and decodes the returned `u64`.
+	 *
+	 * @param inputs - Coin type and referrer address.
+	 * @param inputs.coinType - Fully qualified coin type for the rebate balance.
+	 * @param inputs.referrer - Address whose rebate balance to fetch.
+	 * @returns The raw rebate balance as a bigint-backed {@link Balance} value.
+	 * @throws If the inspection transport rejects the generated transaction.
+	 */
 	public fetchBalanceOfRebate = async (inputs: {
 		coinType: CoinType;
 		referrer: SuiAddress;
@@ -171,6 +256,17 @@ export class ReferralVaultApi {
 		return Casting.bigIntFromBytes(bytes);
 	};
 
+	/**
+	 * Inspects the referrer of an address and decodes the returned optional
+	 * address.
+	 *
+	 * @param inputs - Referee address to query.
+	 * @param inputs.referee - Address whose referrer to fetch.
+	 * @returns The referrer address, or `undefined` when the Move option is
+	 * empty.
+	 * @throws If the inspection transport rejects the generated transaction or
+	 * the returned bytes are not a valid BCS `Option<address>`.
+	 */
 	public fetchReferrer = async (inputs: {
 		referee: SuiAddress;
 	}): Promise<SuiAddress | undefined> => {

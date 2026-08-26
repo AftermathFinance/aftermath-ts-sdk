@@ -1,0 +1,48 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"name": "aftermath-ts-sdk",
+	"entryPoints": ["src"],
+	"entryPointStrategy": "expand",
+	"out": "docs",
+	"readme": "README.md",
+	"tsconfig": "tsconfig.json",
+	"projectDocuments": [
+		"docs/DOCUMENTATION_GUIDE.md",
+		"docs/guides/*.md",
+		"docs/explanation/*.md",
+		"docs/research/*.md"
+	],
+	"cleanOutputDir": false,
+	"excludeExternals": true,
+	"excludePrivate": true,
+  "excludeProtected": true,
+  "includeVersion": true,
+  "externalSymbolLinkMappings": {
+    "@mysten/sui": {
+      "Transaction": "#"
+    },
+    "typescript": {
+      "WebSocket": "#"
+    }
+  },
+  "validation": {
+		"notExported": true,
+		"invalidLink": true,
+		"invalidPath": true,
+		"rewrittenLink": true,
+		"notDocumented": false
+	},
+	"treatValidationWarningsAsErrors": true,
+	"requiredToBeDocumented": [
+		"Enum",
+		"EnumMember",
+		"Variable",
+		"Function",
+		"Class",
+		"Interface",
+		"Property",
+		"Method",
+		"Accessor",
+		"TypeAlias"
+	]
+}

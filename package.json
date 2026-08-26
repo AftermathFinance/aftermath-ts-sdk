@@ -23,6 +23,9 @@
     "test:focused": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
     "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --runInBand",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
+    "docs:audit": "node scripts/auditDocumentation.mjs",
+    "docs:audit:strict": "node scripts/auditDocumentation.mjs --strict",
+    "docs:generate": "typedoc --options typedoc.json",
     "test:surface": "node scripts/testSurface.mjs",
     "test:surface:strict": "node scripts/testSurface.mjs --strict",
     "check": "ultracite check",
@@ -67,6 +70,7 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "tsup": "^8.5.1",
+    "typedoc": "0.28.20",
     "typescript": "^5.8.3",
     "ultracite": "7.1.5",
     "yaml": "^2.3.1"

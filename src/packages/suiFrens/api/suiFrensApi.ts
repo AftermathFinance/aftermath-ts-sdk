@@ -47,6 +47,14 @@ import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
 import { SuiFrens } from "../suiFrens";
 
+/**
+ * Low-level SuiFrens object, event, inspection, and transaction-builder API.
+ *
+ * Read methods use the configured gRPC or API helpers. Event methods that call
+ * `fetchCastEventsWithCursor` require the optional JSON-RPC client on
+ * `AftermathApi`. Transaction-command methods append Move calls only; builder
+ * methods create unsigned transactions for a caller-supplied wallet address.
+ */
 export class SuiFrensApi {
 	// =========================================================================
 	//  Constants
@@ -88,26 +96,39 @@ export class SuiFrensApi {
 	//  Class Members
 	// =========================================================================
 
+	/** Package and shared-object addresses used by SuiFrens operations. */
 	public readonly addresses: SuiFrensAddresses;
 
+	/** Move object types used by SuiFrens object and dynamic-field reads. */
 	public readonly objectTypes: {
 		// suiFrens
+		/** Base SuiFren generic object type. */
 		suiFren: AnyObjectType;
+		/** Capy object type. */
 		capy: AnyObjectType;
+		/** Bullshark object type. */
 		bullshark: AnyObjectType;
 
 		// accessories
+		/** Accessory object type. */
 		suiFrenAccessory: AnyObjectType;
 
 		// staking
+		/** Staked-position object type. */
 		stakedSuiFrenPosition: AnyObjectType;
+		/** Version-one staked metadata dynamic-field type. */
 		stakedSuiFrenMetadataV1: AnyObjectType;
 	};
 
+	/** Move event types used by the four public event fetchers. */
 	public readonly eventTypes: {
+		/** Harvested-fees event type. */
 		harvestSuiFrenFees: AnyObjectType;
+		/** Mixed-SuiFren event type. */
 		mixSuiFrens: AnyObjectType;
+		/** Staked-SuiFren event type. */
 		stakeSuiFren: AnyObjectType;
+		/** Unstaked-SuiFren event type. */
 		unstakeSuiFren: AnyObjectType;
 	};
 
@@ -115,6 +136,13 @@ export class SuiFrensApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an API bound to an `AftermathApi` provider and derives package,
+	 * object, and event type strings from its configured addresses.
+	 *
+	 * @param api - Provider containing Sui clients and SuiFrens addresses.
+	 * @throws `Error` when `api.addresses.suiFrens` is not configured.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.suiFrens;
 		if (!addresses)
@@ -152,6 +180,17 @@ export class SuiFrensApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Reads mixing limits and last-mixed epochs for several SuiFrens in one dev-inspection transaction.
+	 *
+	 * The returned array matches `suiFrenIds` by index. `mixLimit` decodes
+	 * `Option<u8>` and `lastEpochMixed` decodes `Option<u64>`; absent values are
+	 * returned as `undefined` and present values as `bigint`.
+	 *
+	 * @param inputs - SuiFren IDs and the generic type used by the inspection call.
+	 * @returns One `{ mixLimit, lastEpochMixed }` result per input ID.
+	 * @throws Errors from the inspection client, BCS decoding, or transaction builder.
+	 */
 	public fetchMixingLimitsAndLastEpochMixeds = async (inputs: {
 		suiFrenIds: ObjectId[];
 		suiFrenType: AnyObjectType;
@@ -189,6 +228,17 @@ export class SuiFrensApi {
 		}));
 	};
 
+	/**
+	 * Reads one SuiFren's optional mixing limit through dev inspection.
+	 *
+	 * Bullshark objects return `undefined` without creating an inspection call
+	 * because the current implementation does not expose a mixing-limit field for
+	 * that type.
+	 *
+	 * @param inputs - SuiFren ID and generic type used by the Move call.
+	 * @returns The limit as a `bigint`, or `undefined` when the type or on-chain option has no value.
+	 * @throws Errors from the inspection client, BCS decoding, or transaction builder.
+	 */
 	public fetchMixingLimit = async (inputs: {
 		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
@@ -213,6 +263,16 @@ export class SuiFrensApi {
 			: BigInt(unwrapped);
 	};
 
+	/**
+	 * Reads one SuiFren's optional last-mixed epoch through dev inspection.
+	 *
+	 * Bullshark objects return `undefined` without creating an inspection call.
+	 * Other values decode from `Option<u64>` to `bigint`.
+	 *
+	 * @param inputs - SuiFren ID and generic type used by the Move call.
+	 * @returns The epoch number as a `bigint`, or `undefined` when absent.
+	 * @throws Errors from the inspection client, BCS decoding, or transaction builder.
+	 */
 	public fetchLastEpochMixed = async (inputs: {
 		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
@@ -237,6 +297,16 @@ export class SuiFrensApi {
 			: BigInt(unwrapped);
 	};
 
+	/**
+	 * Resolves staked-metadata object IDs for a list of SuiFren IDs.
+	 *
+	 * The method builds a dev-inspection call that returns a `vector<address>` and
+	 * decodes those addresses as object IDs.
+	 *
+	 * @param inputs - SuiFren object IDs to resolve.
+	 * @returns Staked metadata object IDs in the Move call's returned order.
+	 * @throws Errors from the inspection client, BCS decoding, or transaction builder.
+	 */
 	public fetchStakedSuiFrenMetadataIds = async (inputs: {
 		suiFrenIds: ObjectId[];
 	}): Promise<ObjectId[]> => {
@@ -261,6 +331,16 @@ export class SuiFrensApi {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches and casts paginated SuiFren fee-harvest events.
+	 *
+	 * This method uses the event helper's JSON-RPC path. The provider must include
+	 * a `SuiJsonRpcClient`; the gRPC-only provider cannot satisfy this query.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns Cast events and a nullable next cursor.
+	 * @throws `Error` when the provider has no JSON-RPC client, or errors from event querying/casting.
+	 */
 	public fetchHarvestSuiFrenFeesEvents = (inputs: EventsInputs) =>
 		this.api.Events().fetchCastEventsWithCursor<
 			HarvestSuiFrenFeesEventOnChain,
@@ -274,6 +354,13 @@ export class SuiFrensApi {
 				Casting.suiFrens.harvestSuiFrenFeesEventFromOnChain,
 		});
 
+	/**
+	 * Fetches and casts paginated SuiFren mix events.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns Cast mix events and a nullable next cursor.
+	 * @throws `Error` when the provider has no JSON-RPC client, or errors from event querying/casting.
+	 */
 	public fetchMixSuiFrensEvents = (inputs: EventsInputs) =>
 		this.api.Events().fetchCastEventsWithCursor<
 			MixSuiFrensEventOnChain,
@@ -286,6 +373,13 @@ export class SuiFrensApi {
 			eventFromEventOnChain: Casting.suiFrens.mixSuiFrensEventFromOnChain,
 		});
 
+	/**
+	 * Fetches and casts paginated SuiFren stake events.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns Cast stake events and a nullable next cursor.
+	 * @throws `Error` when the provider has no JSON-RPC client, or errors from event querying/casting.
+	 */
 	public fetchStakeSuiFrenEvents = (inputs: EventsInputs) =>
 		this.api.Events().fetchCastEventsWithCursor<
 			StakeSuiFrenEventOnChain,
@@ -298,6 +392,13 @@ export class SuiFrensApi {
 			eventFromEventOnChain: Casting.suiFrens.stakeSuiFrenEventFromOnChain,
 		});
 
+	/**
+	 * Fetches and casts paginated SuiFren unstake events.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns Cast unstake events and a nullable next cursor.
+	 * @throws `Error` when the provider has no JSON-RPC client, or errors from event querying/casting.
+	 */
 	public fetchUnstakeSuiFrenEvents = (inputs: EventsInputs) =>
 		this.api.Events().fetchCastEventsWithCursor<
 			UnstakeSuiFrenEventOnChain,
@@ -318,6 +419,12 @@ export class SuiFrensApi {
 	//  CapyLabsApp Object
 	// =========================================================================
 
+	/**
+	 * Fetches and casts the configured CapyLabs application object.
+	 *
+	 * @returns The CapyLabs application object with bigint numeric fields.
+	 * @throws Errors from the object client or response caster.
+	 */
 	public fetchCapyLabsApp = async () => {
 		return this.api.Objects().fetchCastObject({
 			objectId: this.addresses.objects.capyLabsApp,
@@ -326,6 +433,12 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Fetches and casts the configured SuiFrens vault-state object.
+	 *
+	 * @returns Vault totals for staked SuiFrens and total mixes.
+	 * @throws Errors from the object client or response caster.
+	 */
 	public fetchSuiFrenVaultStateV1Object = async () => {
 		return this.api.Objects().fetchCastObject({
 			objectId: this.addresses.objects.suiFrensVaultStateV1,
@@ -338,6 +451,17 @@ export class SuiFrensApi {
 	//  SuiFren Objects
 	// =========================================================================
 
+	/**
+	 * Fetches complete SuiFren objects by ID.
+	 *
+	 * The method first reads object fields and display data, then performs the
+	 * inspection calls needed to add `mixLimit` and `lastEpochMixed`. Values that
+	 * are absent on chain remain `undefined`.
+	 *
+	 * @param inputs - SuiFren object IDs.
+	 * @returns Complete SuiFren objects in the response order.
+	 * @throws Errors from object reads, dev inspection, BCS decoding, or casting.
+	 */
 	public fetchSuiFrens = async (inputs: {
 		suiFrenIds: ObjectId[];
 	}): Promise<SuiFrenObject[]> => {
@@ -356,6 +480,17 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Fetches complete SuiFrens owned by a wallet.
+	 *
+	 * The method reads ordinary owned SuiFrens and also traverses owned kiosk
+	 * owner caps to find Bullshark objects. Returned objects do not include an
+	 * ownership flag; the high-level facade wraps them with `isOwned: true`.
+	 *
+	 * @param inputs - Wallet address whose SuiFren and kiosk objects are read.
+	 * @returns Complete owned SuiFren objects.
+	 * @throws Errors from object, dynamic-field, inspection, or kiosk reads.
+	 */
 	public fetchOwnedSuiFrens = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<SuiFrenObject[]> => {
@@ -383,6 +518,17 @@ export class SuiFrensApi {
 		return suiFrens;
 	};
 
+	/**
+	 * Fetches complete staked SuiFrens by metadata object ID.
+	 *
+	 * `stakedSuiFrenIds` are metadata IDs from the vault table, not owned
+	 * staked-position IDs. The returned info contains the SuiFren and metadata;
+	 * `position` is left unset by this method.
+	 *
+	 * @param inputs - Staked metadata object IDs.
+	 * @returns Staked SuiFren info in the response order.
+	 * @throws Errors from object reads, inspection, BCS decoding, or casting.
+	 */
 	public fetchStakedSuiFrens = async (inputs: {
 		stakedSuiFrenIds: ObjectId[];
 	}): Promise<StakedSuiFrenInfo[]> => {
@@ -407,6 +553,17 @@ export class SuiFrensApi {
 		}));
 	};
 
+	/**
+	 * Fetches one page of staked-SuiFren metadata dynamic fields.
+	 *
+	 * `cursor` is the last dynamic-field object ID from the previous page and
+	 * `limit` is the maximum number of dynamic fields requested. The method uses
+	 * the configured metadata table and resolves each field to staked info.
+	 *
+	 * @param inputs - Optional dynamic-field cursor and page limit.
+	 * @returns Staked info objects and a nullable next cursor.
+	 * @throws Errors from dynamic-field listing, object reads, or casting.
+	 */
 	public fetchStakedSuiFrensDynamicFields = (inputs: DynamicFieldsInputs) => {
 		return this.api.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
@@ -424,6 +581,15 @@ export class SuiFrensApi {
 	//  Accessories
 	// =========================================================================
 
+	/**
+	 * Fetches all accessories attached to one SuiFren through dynamic fields.
+	 *
+	 * This method returns all matching fields without exposing a page cursor.
+	 *
+	 * @param inputs - SuiFren parent object ID.
+	 * @returns Accessory objects attached to the parent.
+	 * @throws Errors from dynamic-field listing, object reads, or casting.
+	 */
 	public fetchAccessoriesForSuiFren = async (inputs: {
 		suiFrenId: ObjectId;
 	}) => {
@@ -434,6 +600,13 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Fetches accessory objects owned by a wallet.
+	 *
+	 * @param inputs - Wallet address whose accessory objects are listed.
+	 * @returns Owned accessory objects with display data.
+	 * @throws Errors from the object client or response caster.
+	 */
 	public fetchOwnedAccessories = async (inputs: {
 		walletAddress: SuiAddress;
 	}) => {
@@ -447,6 +620,13 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Fetches and casts accessory objects by ID.
+	 *
+	 * @param inputs - Accessory object IDs.
+	 * @returns Cast accessory objects with display data.
+	 * @throws Errors from the object client or response caster.
+	 */
 	public fetchAccessories = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<SuiFrenAccessoryObject[]> => {
@@ -464,6 +644,20 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	// TODO: handle sorting
+	/**
+	 * Fetches staked SuiFrens until enough locally filtered results are available.
+	 *
+	 * `limit` is the number of matching results to return and defaults to 25.
+	 * `limitStepSize` controls each underlying dynamic-field page and defaults to
+	 * the dynamic-field helper's page size. Attribute keys and values are matched
+	 * case-insensitively. If more matches remain, `nextCursor` is set to the first
+	 * omitted matching object's ID. `sortBy` is accepted for compatibility but is
+	 * not applied by the current implementation.
+	 *
+	 * @param inputs - Attribute filters and pagination controls.
+	 * @returns Filtered staked info objects and a cursor for the next filtered page.
+	 * @throws Errors from dynamic-field reads, object reads, inspection, or casting.
+	 */
 	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
 		attributes: Partial<SuiFrenAttributes>;
 		sortBy?: SuiFrensSortOption;
@@ -515,6 +709,16 @@ export class SuiFrensApi {
 		return resizedSuiFrensWithCursor;
 	};
 
+	/**
+	 * Fetches staked SuiFrens and their owned position objects for a wallet.
+	 *
+	 * The method lists owned staked positions, resolves their metadata IDs through
+	 * dev inspection, and combines each position with its staked metadata.
+	 *
+	 * @param inputs - Wallet address whose staked-position objects are listed.
+	 * @returns Staked info with the matching `position` field populated.
+	 * @throws Errors from owned-object reads, dev inspection, BCS decoding, or casting.
+	 */
 	public fetchOwnedStakedSuiFrens = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<StakedSuiFrenInfo[]> => {
@@ -549,6 +753,15 @@ export class SuiFrensApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Appends the vault metadata-ID inspection call to an existing transaction.
+	 *
+	 * The call returns a `vector<address>` in dev inspection output. This method
+	 * only mutates `tx`; it does not set a sender, perform inspection, or sign.
+	 *
+	 * @param inputs - Existing transaction and SuiFren IDs to inspect.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public devInspectMetadataObjectIdMulTx = (inputs: {
 		tx: Transaction;
 		suiFrenIds: ObjectId[];
@@ -569,6 +782,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the batched mixing-limit and last-epoch inspection call.
+	 *
+	 * The Move call returns `vector<Option<u8>>` and `vector<Option<u64>>` for
+	 * dev-inspection decoding. This method only mutates the supplied transaction.
+	 *
+	 * @param inputs - Existing transaction, SuiFren IDs, and generic SuiFren type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public devInspectMixLimitAndLastEpochMixedMulTx = (inputs: {
 		tx: Transaction;
 		suiFrenIds: ObjectId[];
@@ -592,6 +814,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the `mixing_limit` Move call for one SuiFren.
+	 *
+	 * The result is an `Option<u8>` in the Move call output. This local builder
+	 * only mutates `tx` and does not perform the inspection itself.
+	 *
+	 * @param inputs - Existing transaction, SuiFren ID, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public mixingLimitTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -612,6 +843,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the `last_epoch_mixed` Move call for one SuiFren.
+	 *
+	 * The result is an `Option<u64>` in the Move call output. This local builder
+	 * only mutates `tx` and does not perform the inspection itself.
+	 *
+	 * @param inputs - Existing transaction, SuiFren ID, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public lastEpochMixedTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -636,6 +876,15 @@ export class SuiFrensApi {
 	//  Mixing Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Appends the owned-parent `mix_and_keep` Move call.
+	 *
+	 * The payment coin may be an object ID or an existing transaction argument.
+	 * The method does not select the coin, set a sender, transfer outputs, or sign.
+	 *
+	 * @param inputs - Existing transaction, two parent IDs, payment coin, and SuiFren type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public mixAndKeepTx = (inputs: {
 		tx: Transaction;
 		parentOneId: ObjectId;
@@ -669,6 +918,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the `mix_with_staked_and_keep` Move call.
+	 *
+	 * `nonStakedParentId` and `stakedParentId` select the parent roles in the
+	 * Move call. The payment coin may be an object ID or transaction argument.
+	 *
+	 * @param inputs - Existing transaction, parent IDs, payment coin, and SuiFren type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public mixWithStakedAndKeepTx = (inputs: {
 		tx: Transaction;
 		nonStakedParentId: ObjectId;
@@ -702,6 +960,14 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the `mix_staked_with_staked_and_keep` Move call.
+	 *
+	 * The payment coin may be an object ID or an existing transaction argument.
+	 *
+	 * @param inputs - Existing transaction, two staked parent IDs, payment coin, and SuiFren type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public mixStakedWithStakedAndKeepTx = (inputs: {
 		tx: Transaction;
 		parentOneId: ObjectId;
@@ -739,6 +1005,16 @@ export class SuiFrensApi {
 	//  Staking Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Appends the `stake_and_keep` Move call.
+	 *
+	 * `baseFee` and `feeIncrementPerMix` are raw payment-coin balances. The Move
+	 * call encodes `minRemainingMixesToKeep` as `u8`. This method does not set a
+	 * sender or select gas and payment objects.
+	 *
+	 * @param inputs - Existing transaction, SuiFren ID, fee settings, auto-stake flag, minimum count, and type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public stakeAndKeepTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -772,6 +1048,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the `unstake_and_keep` Move call for a staked position.
+	 *
+	 * This method only mutates the supplied transaction. The caller must provide
+	 * a position object usable by the transaction sender.
+	 *
+	 * @param inputs - Existing transaction, staked-position ID, and SuiFren type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public unstakeAndKeepTx = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
@@ -799,6 +1084,12 @@ export class SuiFrensApi {
 	//  Fee Harvest Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Appends the vault `begin_harvest` Move call.
+	 *
+	 * @param inputs - Existing transaction to mutate.
+	 * @returns The transaction argument used as harvest metadata.
+	 */
 	public beginHarvestTx = (inputs: {
 		tx: Transaction;
 	}) /* (HarvestedFeesEventMetadata) */ => {
@@ -815,6 +1106,15 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends a vault `harvest` Move call for one staked position.
+	*
+	 * `harvestFeesEventMetadataId` may be an object ID or a transaction argument
+	 * returned by `beginHarvestTx`.
+	*
+	 * @param inputs - Existing transaction, position ID, and harvest metadata argument.
+	 * @returns The transaction argument containing the harvested coin.
+	 */
 	public harvestTx = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
@@ -839,6 +1139,12 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the vault `end_harvest` Move call.
+	*
+	 * @param inputs - Existing transaction and metadata ID or transaction argument.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public endHarvestTx = (inputs: {
 		tx: Transaction;
 		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
@@ -864,6 +1170,12 @@ export class SuiFrensApi {
 	//  Accessory Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Appends the staked-position `add_accessory` Move call.
+	*
+	 * @param inputs - Existing transaction, SuiFren ID, accessory ID, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public addAccessoryTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -887,6 +1199,12 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the owned-SuiFren `add_accessory_to_owned_suifren` Move call.
+	*
+	 * @param inputs - Existing transaction, SuiFren ID, accessory ID, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public addAccessoryToOwnedSuiFrenTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -909,6 +1227,12 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the staked-position `remove_accessory_and_keep` Move call.
+	*
+	 * @param inputs - Existing transaction, staked-position ID, accessory type, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public removeAccessoryAndKeepTx = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
@@ -932,6 +1256,12 @@ export class SuiFrensApi {
 		});
 	};
 
+	/**
+	 * Appends the owned-SuiFren `remove_accessory_from_owned_suifren_and_keep` call.
+	*
+	 * @param inputs - Existing transaction, SuiFren ID, accessory type, and generic type.
+	 * @returns The transaction argument returned by `tx.moveCall`.
+	 */
 	public removeAccessoryFromOwnedSuiFrenAndKeepTx = (inputs: {
 		tx: Transaction;
 		suiFrenId: ObjectId;
@@ -962,6 +1292,15 @@ export class SuiFrensApi {
 	//  Staking Transactions
 	// =========================================================================
 
+	/**
+	 * Creates a new unsigned staking transaction with `walletAddress` as sender.
+	 *
+	 * The builder appends `stake_and_keep` with `autoStakeFees: true`. It performs
+	 * no network I/O and does not select an explicit payment coin.
+	 *
+	 * @param inputs - Wallet sender, SuiFren ID, fee settings, minimum count, and generic type.
+	 * @returns A new unsigned Sui `Transaction`.
+	 */
 	public fetchStakeTx = Helpers.transactions.createBuildTxFunc(
 		(inputs: {
 			tx: Transaction;
@@ -973,6 +1312,12 @@ export class SuiFrensApi {
 		}) => this.stakeAndKeepTx({ ...inputs, autoStakeFees: true })
 	);
 
+	/**
+	 * Creates a new unsigned unstaking transaction with `walletAddress` as sender.
+	 *
+	 * @param inputs - Wallet sender, staked-position ID, and generic SuiFren type.
+	 * @returns A new unsigned Sui `Transaction`.
+	 */
 	public fetchUnstakeTx = Helpers.transactions.createBuildTxFunc(
 		this.unstakeAndKeepTx
 	);
@@ -981,6 +1326,19 @@ export class SuiFrensApi {
 	//  Mixing Transactions
 	// =========================================================================
 
+	/**
+	 * Builds an unsigned mix transaction and selects the correct parent-state branch.
+	 *
+	 * The method sets `walletAddress` as sender, adds `baseFee` to the internal fee
+	 * calculated from the optional parent `mixFee` values, and selects a SUI coin
+	 * for the total. It calls the owned, mixed-owned/staked, or staked/staked Move
+	 * function according to which parent fees are defined. `isSponsoredTx` is
+	 * passed to coin selection.
+	 *
+	 * @param inputs - Parent IDs and fees, base fee, SuiFren type, wallet, and sponsorship flag.
+	 * @returns An unsigned Sui `Transaction` with the sender set.
+	 * @throws Errors from coin selection, the provider, or transaction building.
+	 */
 	public fetchBuildMixTx = async (
 		inputs: ApiMixSuiFrensBody
 	): Promise<Transaction> => {
@@ -1057,6 +1415,17 @@ export class SuiFrensApi {
 	//  Fee Harvesting Transactions
 	// =========================================================================
 
+	/**
+	 * Builds an unsigned fee-harvest transaction for one or more positions.
+	 *
+	 * The transaction begins harvest, harvests each position, merges multiple
+	 * harvested coins, transfers the resulting coin to `walletAddress`, and ends
+	 * harvest. The implementation expects at least one position ID.
+	 *
+	 * @param inputs - Wallet sender/recipient and a non-empty list of position IDs.
+	 * @returns An unsigned Sui `Transaction` with the sender set.
+	 * @throws Errors from the Sui transaction builder when the input list is empty or an argument is invalid.
+	 */
 	public fetchBuildHarvestFeesTx = async (inputs: {
 		walletAddress: SuiAddress;
 		stakedPositionIds: ObjectId[];
@@ -1095,6 +1464,16 @@ export class SuiFrensApi {
 	//  Accessory Transactions
 	// =========================================================================
 
+	/**
+	 * Builds an unsigned accessory-add transaction for an owned or staked SuiFren.
+	 *
+	 * `isOwned` selects `add_accessory_to_owned_suifren` when true and
+	 * `add_accessory` when false. The returned transaction has
+	 * `walletAddress` as sender.
+	*
+	 * @param inputs - Accessory body including ownership mode and wallet sender.
+	 * @returns A new unsigned Sui `Transaction`.
+	 */
 	public fetchBuildAddAccessoryTx = (inputs: ApiAddSuiFrenAccessoryBody) => {
 		if (inputs.isOwned) {
 			return Helpers.transactions.createBuildTxFunc(
@@ -1104,6 +1483,16 @@ export class SuiFrensApi {
 		return Helpers.transactions.createBuildTxFunc(this.addAccessoryTx)(inputs);
 	};
 
+	/**
+	 * Builds an unsigned accessory-removal transaction.
+	 *
+	 * The union discriminant selects the owned-SuiFren call when `suiFrenId` is
+	 * present and the staked-position call otherwise. The returned transaction has
+	 * `walletAddress` as sender.
+	*
+	 * @param inputs - Accessory type, generic type, wallet sender, and one object-ID branch.
+	 * @returns A new unsigned Sui `Transaction`.
+	 */
 	public fetchBuildRemoveAccessoryTx = (
 		inputs: ApiRemoveSuiFrenAccessoryBody
 	) => {
@@ -1121,6 +1510,15 @@ export class SuiFrensApi {
 	//  Stats
 	// =========================================================================
 
+	/**
+	 * Calculates SuiFrens statistics from vault state and the last 24 hours of mix events.
+	 *
+	 * The method performs the vault read and event query concurrently. The event
+	 * query uses the provider's JSON-RPC client through the public event fetcher.
+	*
+	 * @returns Vault totals, 24-hour fee sum, and 24-hour mix count.
+	 * @throws Errors from object reads, event queries, or event casting.
+	 */
 	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
 		const [suiFrenVault, mixSuiFrenEventsWithinTime] = await Promise.all([
 			this.fetchSuiFrenVaultStateV1Object(),
@@ -1146,6 +1544,16 @@ export class SuiFrensApi {
 	//  SuiFren Attribute Filtering
 	// =========================================================================
 
+	/**
+	 * Filters SuiFren objects by attribute keys and values.
+	 *
+	 * Matching is case-insensitive for both keys and values. An empty attribute
+	 * object returns the original `suiFrens` array reference; a non-empty filter
+	 * returns a new filtered array.
+	*
+	 * @param inputs - SuiFren objects and the partial attribute filter.
+	 * @returns The matching objects.
+	 */
 	public filterSuiFrensWithAttributes = (inputs: {
 		suiFrens: SuiFrenObject[];
 		attributes: Partial<SuiFrenAttributes>;

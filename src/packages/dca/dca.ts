@@ -34,7 +34,8 @@ export class Dca extends Caller {
 	 */
 	public static readonly constants = {
 		/**
-		 * The default gas budget for DCA-related transactions (50 SUI).
+		 * The default gas budget for DCA-related transactions, in MIST.
+		 * `50_000_000n` equals `0.05` SUI.
 		 */
 		gasAmount: BigInt(50_000_000),
 	};
@@ -47,7 +48,8 @@ export class Dca extends Caller {
 	 * Creates a new instance of the `Dca` class, responsible for
 	 * managing DCA orders (querying, creating, closing).
 	 *
-	 * @param config - Optional caller configuration, such as network and access token.
+	 * @param config - Optional caller configuration, such as network, API host,
+	 * access token, and API path.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "dca");
@@ -63,6 +65,7 @@ export class Dca extends Caller {
 	 *
 	 * @param inputs - Object containing the user's `walletAddress`.
 	 * @returns A `DcaOrdersObject` grouping active and past orders.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @deprecated Please use `getActiveDcaOrders` & `getPastDcaOrders` instead.
 	 * @example
@@ -81,6 +84,7 @@ export class Dca extends Caller {
 	 *
 	 * @param inputs - An object containing the user's `walletAddress`.
 	 * @returns A promise that resolves to an array of `DcaOrderObject` for the active orders.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -97,6 +101,7 @@ export class Dca extends Caller {
 	 *
 	 * @param inputs - An object containing the user's `walletAddress`.
 	 * @returns A promise that resolves to an array of `DcaOrderObject` for the past orders.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -113,11 +118,14 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction block on the Aftermath API to create a new DCA order.
-	 * The resulting `Transaction` can then be signed and executed by the user.
+	 * Requests a transaction block from the Aftermath API to create a new DCA order.
+	 * The returned `Transaction` is not signed or executed.
 	 *
-	 * @param inputs - The parameters describing the DCA order (coin types, amounts, frequency, etc.).
-	 * @returns A `Transaction` object that can be signed and submitted to the Sui network.
+	 * @param inputs - The DCA order parameters. Coin amounts are in the smallest
+	 * units of their coin, and time values ending in `Ms` are milliseconds.
+	 * @returns A parsed `Transaction` with the wallet address set as its sender.
+	 * @throws `AftermathTransportError` when the API request, response decoding,
+	 * or transaction parsing fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -143,11 +151,18 @@ export class Dca extends Caller {
 	}
 
 	/**
-	 * Closes (cancels) an existing DCA order by sending a transaction with user signature.
-	 * Typically used after generating a message to sign with `closeDcaOrdersMessageToSign`.
+	 * Sends a signed request to cancel one or more DCA orders.
 	 *
-	 * @param inputs - Contains the user's `walletAddress`, plus the `bytes` and `signature` from message signing.
-	 * @returns A boolean indicating success or failure (true if canceled).
+	 * Sign the exact string returned by
+	 * `UserData.createTermsAndConditionsMessage()` as a personal message over
+	 * its UTF-8 bytes. Send those signed bytes and the signature in `inputs`.
+	 * The order IDs are sent in `orderObjectIds`; the deprecated per-action
+	 * message from `closeDcaOrdersMessageToSign` is not the current credential.
+	 *
+	 * @param inputs - Wallet address, signed terms-message bytes, signature, and
+	 * the order object IDs to cancel.
+	 * @returns The backend cancellation result. `false` is a valid response.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -172,15 +187,17 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Generates a JSON object representing the message to sign for canceling one or more DCA orders.
-	 * The user can sign this message (converted to bytes) locally, then submit the signature to
-	 * `closeDcaOrder`.
+	 * Builds the legacy per-action message for canceling DCA orders.
+	 *
+	 * This method performs no network I/O. The current cancellation endpoint
+	 * authenticates with the canonical terms message instead. Put the order IDs
+	 * in `closeDcaOrder`'s `orderObjectIds` field.
 	 *
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
 	 * `closeDcaOrder` body instead.
 	 * @param inputs - An object containing `orderIds`, an array of order object IDs to cancel.
-	 * @returns An object with `action: "CANCEL_DCA_ORDERS"` and the `order_object_ids`.
+	 * @returns `{ action: "CANCEL_DCA_ORDERS", order_object_ids: inputs.orderIds }`.
 	 */
 	public closeDcaOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
@@ -201,7 +218,7 @@ export class Dca extends Caller {
 	 * a DCA user account. Use the `userData` package for user key storage or account creation.
 	 *
 	 * @deprecated Please use method from `userData` package instead.
-	 * @returns An object with `action: "CREATE_DCA_ACCOUNT"`.
+	 * @returns `{ action: "CREATE_DCA_ACCOUNT" }`. No network request is made.
 	 */
 	public createUserAccountMessageToSign(): {
 		action: string;
@@ -221,7 +238,8 @@ export class Dca extends Caller {
 	 *
 	 * @deprecated Use `userData` package method instead
 	 * @param inputs - Contains the user's `walletAddress`.
-	 * @returns The public key as a string or `undefined`.
+	 * @returns The stored public key, or `undefined` when the API returns no key.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
 	public async getUserPublicKey(inputs: {
 		walletAddress: SuiAddress;
@@ -239,8 +257,9 @@ export class Dca extends Caller {
 	 * Please use `createUserPublicKey` from the `userData` package instead.
 	 *
 	 * @deprecated Use `userData` package method instead
-	 * @param inputs - Body containing the user address, bytes, and signature.
-	 * @returns `true` if the public key was successfully stored, otherwise `false`.
+	 * @param inputs - User address, signed message bytes, and the corresponding signature.
+	 * @returns `true` if the public key was stored. `false` is also a valid backend response.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
 	public async createUserPublicKey(
 		inputs: ApiDcaCreateUserBody

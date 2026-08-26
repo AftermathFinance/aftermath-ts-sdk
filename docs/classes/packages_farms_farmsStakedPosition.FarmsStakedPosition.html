@@ -1,0 +1,608 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>FarmsStakedPosition | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_farms_farmsStakedPosition.html">packages/farms/farmsStakedPosition</a></li>
+<li><a href="" aria-current="page">FarmsStakedPosition</a></li></ul>
+<h1>Class FarmsStakedPosition</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>A local view of one user's staked position.</p>
+<p>The class exposes lock state, reward accounting, and version-aware builders
+for depositing, withdrawing, locking, unlocking, unstaking, and harvesting.
+Reward and lock calculations use the supplied pool view and do not fetch
+fresh data. Transaction builders require an <code>AftermathApi</code> provider and
+return unsigned transaction data.</p>
+</div></section>
+<section class="tsd-panel tsd-hierarchy" data-refl="4139">
+<h4>Hierarchy (<a href="../hierarchy.html#packages/farms/farmsStakedPosition.FarmsStakedPosition">View Summary</a>)</h4>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><a href="general_utils_caller.Caller.html" class="tsd-signature-type tsd-kind-class">Caller</a>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><span class="tsd-hierarchy-target">FarmsStakedPosition</span></li></ul></li></ul></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L27">packages/farms/farmsStakedPosition.ts:27</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#api" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api?</span></a>
+<a href="#config" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a>
+<a href="#stakedposition" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>staked<wbr/>Position</span></a>
+<a href="#truelastharvestrewardstimestamp" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>true<wbr/>Last<wbr/>Harvest<wbr/>Rewards<wbr/>Timestamp</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#getdepositprincipaltransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Principal<wbr/>Transaction</span></a>
+<a href="#getharvestrewardstransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Harvest<wbr/>Rewards<wbr/>Transaction</span></a>
+<a href="#getlocktransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Lock<wbr/>Transaction</span></a>
+<a href="#getrenewlocktransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Renew<wbr/>Lock<wbr/>Transaction</span></a>
+<a href="#getunlocktransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Unlock<wbr/>Transaction</span></a>
+<a href="#getunstaketransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Unstake<wbr/>Transaction</span></a>
+<a href="#getwithdrawprincipaltransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Withdraw<wbr/>Principal<wbr/>Transaction</span></a>
+<a href="#hasclaimablerewards" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>has<wbr/>Claimable<wbr/>Rewards</span></a>
+<a href="#islockduration" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Lock<wbr/>Duration</span></a>
+<a href="#islocked" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Locked</span></a>
+<a href="#isrelaxedlocked" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Relaxed<wbr/>Locked</span></a>
+<a href="#isstrictlylocked" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Strictly<wbr/>Locked</span></a>
+<a href="#nonzerorewardcointypes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>non<wbr/>Zero<wbr/>Reward<wbr/>Coin<wbr/>Types</span></a>
+<a href="#rewardcoin" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coin</span></a>
+<a href="#rewardcoinstoclaimablebalance" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coins<wbr/>To<wbr/>Claimable<wbr/>Balance</span></a>
+<a href="#rewardcointypes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coin<wbr/>Types</span></a>
+<a href="#rewardsearned" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>rewards<wbr/>Earned</span></a>
+<a href="#unlocktimestamp" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlock<wbr/>Timestamp</span></a>
+<a href="#updateposition" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>update<wbr/>Position</span></a>
+<a href="#version" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>version</span></a>
+<a href="#apibaseurlfornetwork" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a>
+<a href="#defaultfullnodeurl" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorfarmsstakedposition"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">FarmsStakedPosition</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">stakedPosition</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedPositionObject</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">trueLastHarvestRewardsTimestamp</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">config</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">FarmsStakedPosition</a><a href="#constructorfarmsstakedposition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates a <code>FarmsStakedPosition</code> instance from normalized position data.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">stakedPosition</span>: <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedPositionObject</a></span>
+<div class="tsd-comment tsd-typography"><p>Normalized object data for the user's position.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">trueLastHarvestRewardsTimestamp</span>: <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> = undefined</span></span>
+<div class="tsd-comment tsd-typography"><p>Optional timestamp override, in milliseconds.</p>
+</div></li>
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">config</span>: <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional network and API-host configuration.</p>
+</div></li>
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">api</span>: <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional provider required by transaction builders.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">FarmsStakedPosition</a></h4><aside class="tsd-sources">
+<p>Overrides <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#constructor">constructor</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L46">packages/farms/farmsStakedPosition.ts:46</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="api"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Readonly</code><span>api</span><a href="#api" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></div>
+<div class="tsd-comment tsd-typography"><p>Optional provider required by transaction builders.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L50">packages/farms/farmsStakedPosition.ts:50</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="config"><span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></div>
+<div class="tsd-comment tsd-typography"><p>The mutable configuration used for subsequent requests.</p>
+</div><aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#config">config</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L51">general/utils/caller.ts:51</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakedposition"><span>staked<wbr/>Position</span><a href="#stakedposition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">stakedPosition</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedPositionObject</a></div>
+<div class="tsd-comment tsd-typography"><p>Normalized object data for the user's position.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L47">packages/farms/farmsStakedPosition.ts:47</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="truelastharvestrewardstimestamp"><code class="tsd-tag">Readonly</code><span>true<wbr/>Last<wbr/>Harvest<wbr/>Rewards<wbr/>Timestamp</span><a href="#truelastharvestrewardstimestamp" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">trueLastHarvestRewardsTimestamp</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p>The reward timestamp supplied by the constructor, or the position's stored
+last-harvest timestamp when no override was supplied.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L32">packages/farms/farmsStakedPosition.ts:32</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getdepositprincipaltransaction"><span>get<wbr/>Deposit<wbr/>Principal<wbr/>Transaction</span><a href="#getdepositprincipaltransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getdepositprincipaltransaction-1"><span class="tsd-kind-call-signature">getDepositPrincipalTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSponsoredTx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getdepositprincipaltransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to deposit additional principal.</p>
+<p>The position, pool, and stake coin IDs are taken from this instance. The
+amount is in stake-coin base units. The transaction does not submit itself.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">isSponsoredTx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Deposit amount, signing wallet, and optional sponsorship.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws">Throws<a href="#throws" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L423">packages/farms/farmsStakedPosition.ts:423</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getharvestrewardstransaction"><span>get<wbr/>Harvest<wbr/>Rewards<wbr/>Transaction</span><a href="#getharvestrewardstransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getharvestrewardstransaction-1"><span class="tsd-kind-call-signature">getHarvestRewardsTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">claimSuiAsAfSui</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getharvestrewardstransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to harvest this position's rewards.</p>
+<p>The builder includes only reward types with a positive locally claimable
+balance. It can request SUI as afSUI when that option is supported.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">claimSuiAsAfSui</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Matching pool view, signing wallet, and optional SUI-to-afSUI claim flag.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-1">Throws<a href="#throws-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L583">packages/farms/farmsStakedPosition.ts:583</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getlocktransaction"><span>get<wbr/>Lock<wbr/>Transaction</span><a href="#getlocktransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getlocktransaction-1"><span class="tsd-kind-call-signature">getLockTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lockDurationMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getlocktransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to lock this position for a duration.</p>
+<p>The duration is in milliseconds and is validated against the pool's lock
+range when the transaction executes. V1 and V2 builders are selected from
+the position version.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lockDurationMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Lock duration and signing wallet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-2">Throws<a href="#throws-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L510">packages/farms/farmsStakedPosition.ts:510</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getrenewlocktransaction"><span>get<wbr/>Renew<wbr/>Lock<wbr/>Transaction</span><a href="#getrenewlocktransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getrenewlocktransaction-1"><span class="tsd-kind-call-signature">getRenewLockTransaction</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getrenewlocktransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to renew this position's lock.</p>
+<p>The on-chain command refreshes the lock without accepting a new duration.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Signing wallet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-3">Throws<a href="#throws-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L534">packages/farms/farmsStakedPosition.ts:534</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getunlocktransaction"><span>get<wbr/>Unlock<wbr/>Transaction</span><a href="#getunlocktransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getunlocktransaction-1"><span class="tsd-kind-call-signature">getUnlockTransaction</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getunlocktransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to unlock this position.</p>
+<p>The contract may reject the command while the position is still locked.
+Emission end and the pool's forced-open flag are part of the local lock
+checks used by the façade, but on-chain validation remains authoritative.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Signing wallet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-4">Throws<a href="#throws-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L557">packages/farms/farmsStakedPosition.ts:557</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getunstaketransaction"><span>get<wbr/>Unstake<wbr/>Transaction</span><a href="#getunstaketransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getunstaketransaction-1"><span class="tsd-kind-call-signature">getUnstakeTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">claimSuiAsAfSui</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getunstaketransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction that withdraws this entire position and destroys it.</p>
+<p>The builder includes reward types with a positive claimable balance before
+it withdraws principal and appends the destroy command. Strict pools still
+require the position to be unlocked when the transaction executes.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">claimSuiAsAfSui</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Matching pool view, signing wallet, and optional SUI-to-afSUI claim flag.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-5">Throws<a href="#throws-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L450">packages/farms/farmsStakedPosition.ts:450</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getwithdrawprincipaltransaction"><span>get<wbr/>Withdraw<wbr/>Principal<wbr/>Transaction</span><a href="#getwithdrawprincipaltransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getwithdrawprincipaltransaction-1"><span class="tsd-kind-call-signature">getWithdrawPrincipalTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">withdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getwithdrawprincipaltransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a version-aware transaction to withdraw part of the principal.</p>
+<p>Unlike <code>getUnstakeTransaction</code>, this operation keeps the position object.
+The amount is in stake-coin base units, and the matching pool view is used
+by the on-chain validation path.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">withdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Withdraw amount, matching pool view, and signing wallet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>An unsigned transaction that can be signed and executed.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-6">Throws<a href="#throws-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>An error if no <code>AftermathApi</code> instance was provided.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L479">packages/farms/farmsStakedPosition.ts:479</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="hasclaimablerewards"><span>has<wbr/>Claimable<wbr/>Rewards</span><a href="#hasclaimablerewards" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="hasclaimablerewards-1"><span class="tsd-kind-call-signature">hasClaimableRewards</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#hasclaimablerewards-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether this position has any claimable reward amount.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Contains a reference to the <code>FarmsStakingPool</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if there are unclaimed rewards; otherwise, <code>false</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L211">packages/farms/farmsStakedPosition.ts:211</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="islockduration"><span>is<wbr/>Lock<wbr/>Duration</span><a href="#islockduration" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="islockduration-1"><span class="tsd-kind-call-signature">isLockDuration</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#islockduration-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether the position stores a non-zero lock duration.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if the position was created with a lock duration &gt; 0.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L123">packages/farms/farmsStakedPosition.ts:123</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="islocked"><span>is<wbr/>Locked</span><a href="#islocked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="islocked-1"><span class="tsd-kind-call-signature">isLocked</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#islocked-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether the position is currently locked for this pool.</p>
+<p>The result is false when the lock has expired, the pool's emission period
+has ended, or the pool is forcibly open. It uses <code>Date.now()</code> and does not
+perform a network read.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Pool view used for emission-end and forced-unlock rules.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if the position is locked; otherwise, <code>false</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L84">packages/farms/farmsStakedPosition.ts:84</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isrelaxedlocked"><span>is<wbr/>Relaxed<wbr/>Locked</span><a href="#isrelaxedlocked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isrelaxedlocked-1"><span class="tsd-kind-call-signature">isRelaxedLocked</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isrelaxedlocked-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether the position is locked under relaxed pool enforcement.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Contains a <code>FarmsStakingPool</code> instance to check lock state and enforcement.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if locked with relaxed enforcement; otherwise, <code>false</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L109">packages/farms/farmsStakedPosition.ts:109</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isstrictlylocked"><span>is<wbr/>Strictly<wbr/>Locked</span><a href="#isstrictlylocked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isstrictlylocked-1"><span class="tsd-kind-call-signature">isStrictlyLocked</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isstrictlylocked-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks whether the position is locked under strict pool enforcement.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Contains a <code>FarmsStakingPool</code> instance to check lock state and enforcement.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if locked with strict enforcement; otherwise, <code>false</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L94">packages/farms/farmsStakedPosition.ts:94</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="nonzerorewardcointypes"><span>non<wbr/>Zero<wbr/>Reward<wbr/>Coin<wbr/>Types</span><a href="#nonzerorewardcointypes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="nonzerorewardcointypes-1"><span class="tsd-kind-call-signature">nonZeroRewardCoinTypes</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><a href="#nonzerorewardcointypes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns reward coin types with a positive claimable balance.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Contains a reference to the <code>FarmsStakingPool</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><p>An array of <code>CoinType</code> strings that have pending rewards &gt; 0.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L179">packages/farms/farmsStakedPosition.ts:179</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rewardcoin"><span>reward<wbr/>Coin</span><a href="#rewardcoin" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="rewardcoin-1"><span class="tsd-kind-call-signature">rewardCoin</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedPositionRewardCoin.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedPositionRewardCoin</a><a href="#rewardcoin-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Retrieves the local reward-accounting record for one coin type.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Reward coin type to look up.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedPositionRewardCoin.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedPositionRewardCoin</a></h4><p>The matching reward-accounting record.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-7">Throws<a href="#throws-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> with <code>&quot;Invalid coin type&quot;</code> when no matching record exists.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L194">packages/farms/farmsStakedPosition.ts:194</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rewardcoinstoclaimablebalance"><span>reward<wbr/>Coins<wbr/>To<wbr/>Claimable<wbr/>Balance</span><a href="#rewardcoinstoclaimablebalance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="rewardcoinstoclaimablebalance-1"><span class="tsd-kind-call-signature">rewardCoinsToClaimableBalance</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_coin_coinTypes.CoinsToBalance.html" class="tsd-signature-type tsd-kind-type-alias">CoinsToBalance</a><a href="#rewardcoinstoclaimablebalance-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Computes the claimable amount for each reward coin in this position.</p>
+<p>The returned map uses reward coin types as keys and base-unit <code>bigint</code>
+amounts as values. It applies the minimum claim threshold and available
+pool balance checks used by <code>rewardsEarned</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Pool view used to validate each reward balance.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../types/packages_coin_coinTypes.CoinsToBalance.html" class="tsd-signature-type tsd-kind-type-alias">CoinsToBalance</a></h4><p>A mapping from <code>coinType</code> to claimable base-unit balance.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L149">packages/farms/farmsStakedPosition.ts:149</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rewardcointypes"><span>reward<wbr/>Coin<wbr/>Types</span><a href="#rewardcointypes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="rewardcointypes-1"><span class="tsd-kind-call-signature">rewardCoinTypes</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><a href="#rewardcointypes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Lists all reward coin types associated with this position.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><p>An array of <code>CoinType</code> strings representing the reward coins.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L169">packages/farms/farmsStakedPosition.ts:169</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rewardsearned"><span>rewards<wbr/>Earned</span><a href="#rewardsearned" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="rewardsearned-1"><span class="tsd-kind-call-signature">rewardsEarned</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><a href="#rewardsearned-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the currently claimable amount for one reward coin.</p>
+<p>This local calculation adds base and multiplier rewards. It returns zero
+when the pool has no actual balance, the amount is below
+<code>Farms.constants.minRewardsToClaim</code>, or the amount exceeds the pool's
+available balance. It does not call <code>updatePosition()</code> automatically.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">coinType</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Reward coin type and the matching pool view.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">bigint</span></h4><p>The claimable amount in reward-coin base units.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-8">Throws<a href="#throws-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>Error</code> with <code>&quot;Invalid coin type&quot;</code> when either object has no matching reward record.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L244">packages/farms/farmsStakedPosition.ts:244</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="unlocktimestamp"><span>unlock<wbr/>Timestamp</span><a href="#unlocktimestamp" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="unlocktimestamp-1"><span class="tsd-kind-call-signature">unlockTimestamp</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#unlocktimestamp-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Computes the timestamp in milliseconds at which this position's lock ends.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>The unlock timestamp (lock start + lock duration).</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L132">packages/farms/farmsStakedPosition.ts:132</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updateposition"><span>update<wbr/>Position</span><a href="#updateposition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updateposition-1"><span class="tsd-kind-call-signature">updatePosition</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#updateposition-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Updates this position's local reward accounting from a pool snapshot.</p>
+<p>The method emits completed pool intervals, clamps a stale lock to the
+pool's maximum duration and multiplier, adds reward records introduced by
+the pool, updates reward debts, and records the current timestamp. It does
+not fetch from the network and does not automatically call the on-chain
+unlock operation when the lock expires.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">stakingPool</span><span class="tsd-signature-symbol">:</span> <a href="packages_farms_farmsStakingPool.FarmsStakingPool.html" class="tsd-signature-type tsd-kind-class">FarmsStakingPool</a> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Pool snapshot used for emission and per-share calculations.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-remarks">
+<h4 class="tsd-anchor-link" id="remarks">Remarks<a href="#remarks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Call this method before <code>rewardsEarned()</code> when the local position data is stale.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L283">packages/farms/farmsStakedPosition.ts:283</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="version"><span>version</span><a href="#version" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="version-1"><span class="tsd-kind-call-signature">version</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_farmsTypes.FarmsVersion.html" class="tsd-signature-type tsd-kind-type-alias">FarmsVersion</a><a href="#version-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the farm contract version that produced this position.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="../types/packages_farms_farmsTypes.FarmsVersion.html" class="tsd-signature-type tsd-kind-type-alias">FarmsVersion</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/farmsStakedPosition.ts#L70">packages/farms/farmsStakedPosition.ts:70</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="apibaseurlfornetwork"><code class="tsd-tag">Static</code><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span><a href="#apibaseurlfornetwork" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="apibaseurlfornetwork-1"><span class="tsd-kind-call-signature">apiBaseUrlForNetwork</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#apibaseurlfornetwork-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Aftermath API host for a Sui network.</p>
+<p>To target a custom or local host, pass <code>baseUrl</code> in <code>CallerConfig</code> to the
+constructor instead.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a></span>
+<div class="tsd-comment tsd-typography"><p>The Sui network whose host to return.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's HTTPS or local HTTP API host.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#apibaseurlfornetwork">apiBaseUrlForNetwork</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L151">general/utils/caller.ts:151</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="defaultfullnodeurl"><code class="tsd-tag">Static</code><span>default<wbr/>Fullnode<wbr/>Url</span><a href="#defaultfullnodeurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="defaultfullnodeurl-1"><span class="tsd-kind-call-signature">defaultFullnodeUrl</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#defaultfullnodeurl-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Sui fullnode URL for a network.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></span>
+<div class="tsd-comment tsd-typography"><p>The network whose fullnode URL to return. <code>undefined</code>
+defaults to mainnet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's fullnode URL.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#defaultfullnodeurl">defaultFullnodeUrl</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L162">general/utils/caller.ts:162</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#api"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api</span></a><a href="#config" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a><a href="#stakedposition"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>staked<wbr/>Position</span></a><a href="#truelastharvestrewardstimestamp"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>true<wbr/>Last<wbr/>Harvest<wbr/>Rewards<wbr/>Timestamp</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#getdepositprincipaltransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Principal<wbr/>Transaction</span></a><a href="#getharvestrewardstransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Harvest<wbr/>Rewards<wbr/>Transaction</span></a><a href="#getlocktransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Lock<wbr/>Transaction</span></a><a href="#getrenewlocktransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Renew<wbr/>Lock<wbr/>Transaction</span></a><a href="#getunlocktransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Unlock<wbr/>Transaction</span></a><a href="#getunstaketransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Unstake<wbr/>Transaction</span></a><a href="#getwithdrawprincipaltransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Withdraw<wbr/>Principal<wbr/>Transaction</span></a><a href="#hasclaimablerewards"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>has<wbr/>Claimable<wbr/>Rewards</span></a><a href="#islockduration"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Lock<wbr/>Duration</span></a><a href="#islocked"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Locked</span></a><a href="#isrelaxedlocked"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Relaxed<wbr/>Locked</span></a><a href="#isstrictlylocked"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Strictly<wbr/>Locked</span></a><a href="#nonzerorewardcointypes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>non<wbr/>Zero<wbr/>Reward<wbr/>Coin<wbr/>Types</span></a><a href="#rewardcoin"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coin</span></a><a href="#rewardcoinstoclaimablebalance"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coins<wbr/>To<wbr/>Claimable<wbr/>Balance</span></a><a href="#rewardcointypes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reward<wbr/>Coin<wbr/>Types</span></a><a href="#rewardsearned"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>rewards<wbr/>Earned</span></a><a href="#unlocktimestamp"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlock<wbr/>Timestamp</span></a><a href="#updateposition"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>update<wbr/>Position</span></a><a href="#version"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>version</span></a><a href="#apibaseurlfornetwork" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a><a href="#defaultfullnodeurl" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

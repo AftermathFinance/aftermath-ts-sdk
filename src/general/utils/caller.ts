@@ -30,13 +30,24 @@ function bigIntReplacer(_key: string, value: unknown): unknown {
 }
 
 interface ResponseWithTxKind {
+	/** The serialized transaction or transaction kind returned by the API. */
 	txKind: SerializedTransaction;
+	/** A sponsor signature. Its presence selects `Transaction.from`. */
 	sponsorSignature?: string;
 }
 
+/**
+ * Provides the shared HTTP, transaction, event, and WebSocket transport logic
+ * used by the SDK's API clients.
+ *
+ * Subclasses supply endpoint-specific methods and use the protected request
+ * helpers. Requests normalize HTTP, network, timeout, abort, and response
+ * decoding failures to `AftermathTransportError`.
+ */
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
 	protected readonly apiEndpoint: Url;
+	/** The mutable configuration used for subsequent requests. */
 	config: CallerConfig;
 	private readonly apiUrlPrefix: Url;
 
@@ -44,6 +55,18 @@ export class Caller {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a caller without making a network request.
+	 *
+	 * `config.baseUrl` takes precedence over `config.network`. If neither value
+	 * supplies a host, a later request fails with a normalized `network` error.
+	 * The caller stores the supplied configuration object, so later changes to
+	 * mutable request fields such as `config.accessToken` affect subsequent
+	 * requests. The derived host and endpoint are fixed at construction time.
+	 *
+	 * @param config - The network, API host, endpoint, and optional access token.
+	 * @param apiUrlPrefix - The package or service path inserted after the API endpoint.
+	 */
 	constructor(config: CallerConfig = {}, apiUrlPrefix: Url = "") {
 		this.config = config;
 		this.apiUrlPrefix = apiUrlPrefix;
@@ -117,17 +140,24 @@ export class Caller {
 	};
 
 	/**
-	 * Resolves the canonical Aftermath API base URL for a given network.
-	 * To target a non-canonical host (custom deployment, local backend, etc.)
-	 * pass `baseUrl` on `CallerConfig` instead.
+	 * Returns the canonical Aftermath API host for a Sui network.
+	 *
+	 * To target a custom or local host, pass `baseUrl` in `CallerConfig` to the
+	 * constructor instead.
+	 *
+	 * @param network - The Sui network whose host to return.
+	 * @returns The network's HTTPS or local HTTP API host.
 	 */
 	static apiBaseUrlForNetwork(network: SuiNetwork): Url {
 		return Caller.NETWORK_API_BASE_URLS[network];
 	}
 
 	/**
-	 * Resolves the canonical Sui fullnode URL for a given network. Falls back
-	 * to the mainnet fullnode when `network` is undefined.
+	 * Returns the canonical Sui fullnode URL for a network.
+	 *
+	 * @param network - The network whose fullnode URL to return. `undefined`
+	 * defaults to mainnet.
+	 * @returns The network's fullnode URL.
 	 */
 	static defaultFullnodeUrl(network: SuiNetwork | undefined): Url {
 		return Caller.NETWORK_FULLNODE_URLS[network ?? "MAINNET"];
@@ -158,11 +188,36 @@ export class Caller {
 	//  Api Calling
 	// =========================================================================
 
+	/**
+	 * Sends an HTTP request and decodes its response.
+	 *
+	 * An undefined `body` uses `fetch`'s default GET behavior. A defined body
+	 * uses POST and serializes every nested bigint as a decimal string with an
+	 * `n` suffix, such as `123n` becoming `"123n"`. The default response parser
+	 * converts those suffixed strings back to `bigint` and converts JSON `null`
+	 * values to `undefined`. Set `disableBigIntJsonParsing` to keep suffixed
+	 * strings as strings; JSON `null` values still become `undefined`.
+	 *
+	 * The method passes `signal` to `fetch` and does not serialize it into the
+	 * request body. Non-2xx responses become `http` errors with their status,
+	 * response body, and parsed `Retry-After` delay. Fetch failures become
+	 * `network`, `timeout`, or `abort` errors. Invalid JSON or bigint parsing
+	 * failures become `decode` errors.
+	 *
+	 * @param url - The path relative to the configured API host and prefixes.
+	 * @param body - The optional JSON request body.
+	 * @param signal - An optional caller-owned cancellation signal.
+	 * @param options - Response decoding options.
+	 * @returns The decoded response. A JSON `null` response is returned as `undefined`.
+	 * @throws `AftermathTransportError` when the URL cannot be called or the
+	 * response cannot be fetched, decoded, or accepted.
+	 */
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
 		body?: BodyType,
 		signal?: AbortSignal,
 		options?: {
+			/** Keep `123n` response values as strings instead of converting them. */
 			disableBigIntJsonParsing?: boolean;
 		}
 	): Promise<Output> {
@@ -194,12 +249,30 @@ export class Caller {
 		}
 	}
 
+	/**
+	 * Fetches a serialized transaction and parses it as a `Transaction`.
+	 *
+	 * `options.txKind` selects `Transaction.fromKind`; when it is false or
+	 * omitted, the method selects `Transaction.from`. A truthy
+	 * `body.walletAddress` is assigned to the returned transaction with
+	 * `setSender`.
+	 *
+	 * @param url - The path relative to the configured API host and prefixes.
+	 * @param body - The optional request body, including an optional wallet address.
+	 * @param signal - An optional caller-owned cancellation signal.
+	 * @param options - Response decoding and transaction parsing options.
+	 * @returns The parsed transaction.
+	 * @throws `AftermathTransportError` when the request or response fails. Errors
+	 * from `Transaction.from` or `Transaction.fromKind` are propagated unchanged.
+	 */
 	protected async fetchApiTransaction<BodyType = undefined>(
 		url: Url,
 		body?: BodyType & { walletAddress?: SuiAddress },
 		signal?: AbortSignal,
 		options?: {
+			/** Keep `123n` response values as strings instead of converting them. */
 			disableBigIntJsonParsing?: boolean;
+			/** Parse the response as transaction kind bytes instead of full bytes. */
 			txKind?: boolean;
 		}
 	) {
@@ -219,6 +292,23 @@ export class Caller {
 		return tx;
 	}
 
+	/**
+	 * Fetches an API response that contains `txKind` and returns the transaction
+	 * separately from the remaining response fields.
+	 *
+	 * A truthy `sponsorSignature` selects `Transaction.from`; otherwise the
+	 * method selects `Transaction.fromKind`. The returned object omits `txKind`
+	 * and adds `tx`. Transport and decoding failures are normalized by
+	 * `fetchApi`.
+	 *
+	 * @param url - The path relative to the configured API host and prefixes.
+	 * @param body - The optional JSON request body.
+	 * @param signal - An optional caller-owned cancellation signal.
+	 * @param options - Response decoding options passed to `fetchApi`.
+	 * @returns The response fields other than `txKind`, plus the parsed transaction.
+	 * @throws Errors from transaction parsing are propagated unchanged after
+	 * `fetchApi` has normalized transport and response-decoding failures.
+	 */
 	protected async fetchApiTxObject<
 		BodyType extends object,
 		OutputType extends ResponseWithTxKind,
@@ -226,7 +316,12 @@ export class Caller {
 		url: Url,
 		body?: BodyType & { walletAddress?: SuiAddress },
 		signal?: AbortSignal,
-		options?: { disableBigIntJsonParsing?: boolean; txKind?: boolean }
+		options?: {
+			/** Keep `123n` response values as strings instead of converting them. */
+			disableBigIntJsonParsing?: boolean;
+			/** Accepted for parity with `fetchApiTransaction`; selection here uses `sponsorSignature`. */
+			txKind?: boolean;
+		}
 	): Promise<
 		Omit<Extract<OutputType, ResponseWithTxKind>, "txKind"> & {
 			tx: Transaction;
@@ -248,11 +343,25 @@ export class Caller {
 		return { ...(rest as Rest), tx };
 	}
 
+	/**
+	 * Fetches a paginated event response through `fetchApi`.
+	 *
+	 * The response parser applies the same bigint and `null` conversion rules as
+	 * `fetchApi`.
+	 *
+	 * @param url - The event endpoint path.
+	 * @param body - The event query body.
+	 * @param signal - An optional caller-owned cancellation signal.
+	 * @param options - Response decoding options.
+	 * @returns The decoded events and the endpoint's cursor value.
+	 * @throws `AftermathTransportError` when the request or response fails.
+	 */
 	protected fetchApiEvents<EventType, BodyType = ApiEventsBody>(
 		url: Url,
 		body: BodyType,
 		signal?: AbortSignal,
 		options?: {
+			/** Keep `123n` response values as strings instead of converting them. */
 			disableBigIntJsonParsing?: boolean;
 		}
 	) {
@@ -264,6 +373,20 @@ export class Caller {
 		);
 	}
 
+	/**
+	 * Fetches indexer events and derives the next numeric cursor locally.
+	 *
+	 * If the response length is less than `body.limit` (or less than `1` when
+	 * `limit` is omitted), `nextCursor` is `undefined`. Otherwise it is the
+	 * response length plus `body.cursor`, treating an omitted cursor as `0`.
+	 *
+	 * @param url - The indexer event endpoint path.
+	 * @param body - The indexer query body.
+	 * @param signal - An optional caller-owned cancellation signal.
+	 * @param options - Response decoding options.
+	 * @returns The events and the derived numeric cursor.
+	 * @throws `AftermathTransportError` when the request or response fails.
+	 */
 	protected async fetchApiIndexerEvents<
 		EventType,
 		BodyType extends ApiIndexerEventsBody,
@@ -272,6 +395,7 @@ export class Caller {
 		body: BodyType,
 		signal?: AbortSignal,
 		options?: {
+			/** Keep `123n` response values as strings instead of converting them. */
 			disableBigIntJsonParsing?: boolean;
 		}
 	): Promise<IndexerEventsWithCursor<EventType>> {
@@ -291,20 +415,45 @@ export class Caller {
 		};
 	}
 
+	/**
+	 * Stores an access token on this caller for later requests.
+	 *
+	 * The operation mutates `config.accessToken`; it does not change any request
+	 * that has already been sent.
+	 *
+	 * @param accessToken - The token sent as a Bearer authorization header.
+	 */
 	protected setAccessToken = (accessToken: UniqueId) => {
 		this.config.accessToken = accessToken;
 	};
 
 	/**
-	 * Open a generic websocket stream.
-	 * - Automatically parses inbound JSON via `Helpers.parseJsonWithBigint`.
-	 * - Automatically enables BigInt -> "123n" serialization (same one-liner as `fetchApi`).
+	 * Opens a WebSocket stream at the configured host and path.
+	 *
+	 * The method constructs the URL from the API host, endpoint, prefix, and
+	 * `path`, then opens the socket immediately. Incoming messages are parsed
+	 * with `Helpers.parseJsonWithBigint`, so suffixed bigint strings become
+	 * `bigint` values and JSON `null` values become `undefined`. A parse failure
+	 * calls `onError` with an `ErrorEvent` whose type is
+	 * `message-parse-error`. `send` serializes nested bigints with the same
+	 * `"123n"` representation used by HTTP requests. `send` throws if the socket
+	 * is not open or if JSON serialization fails, and `close` closes the socket.
+	 *
+	 * @param args - The path and WebSocket event callbacks.
+	 * @returns The native WebSocket and the `send` and `close` operations.
+	 * @throws `Error` when no API host is configured or `send` runs before the
+	 * socket reaches the `OPEN` state.
 	 */
 	protected openWsStream<WsRequestMessage, WsResponseMessage>(args: {
+		/** The stream path, with or without a leading slash. */
 		path: Url;
+		/** Receives each successfully decoded response message. */
 		onMessage: (message: WsResponseMessage) => void;
+		/** Receives the native WebSocket open event. */
 		onOpen?: (ev: Event) => void;
+		/** Receives native socket errors and message parse errors. */
 		onError?: (ev: Event) => void;
+		/** Receives the native WebSocket close event. */
 		onClose?: (ev: CloseEvent) => void;
 	}) {
 		const { path, onMessage, onOpen, onError, onClose } = args;

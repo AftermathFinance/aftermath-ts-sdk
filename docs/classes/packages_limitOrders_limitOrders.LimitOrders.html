@@ -1,0 +1,346 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LimitOrders | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_limitOrders_limitOrders.html">packages/limitOrders/limitOrders</a></li>
+<li><a href="" aria-current="page">LimitOrders</a></li></ul>
+<h1>Class LimitOrders</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>The <code>LimitOrders</code> class manages creation, cancellation, and querying of
+limit orders on the Aftermath platform. Limit orders allow you to buy or
+sell at a specified price, giving more control over your trades compared
+to market execution.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">afSdk</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">Aftermath</span><span class="hl-1">.</span><span class="hl-0">create</span><span class="hl-1">({ </span><span class="hl-4">network:</span><span class="hl-1"> </span><span class="hl-2">&quot;MAINNET&quot;</span><span class="hl-1"> });</span><br/><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">limitOrders</span><span class="hl-1"> = </span><span class="hl-4">afSdk</span><span class="hl-1">.</span><span class="hl-0">LimitOrders</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div></section>
+<section class="tsd-panel tsd-hierarchy" data-refl="5367">
+<h4>Hierarchy (<a href="../hierarchy.html#packages/limitOrders/limitOrders.LimitOrders">View Summary</a>)</h4>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><a href="general_utils_caller.Caller.html" class="tsd-signature-type tsd-kind-class">Caller</a>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><span class="tsd-hierarchy-target">LimitOrders</span></li></ul></li></ul></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L25">packages/limitOrders/limitOrders.ts:25</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#config" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a>
+<a href="#constants" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>constants</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#cancellimitorder" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Limit<wbr/>Order</span></a>
+<a href="#cancellimitordersmessagetosign" class="tsd-index-link deprecated"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Limit<wbr/>Orders<wbr/>Message<wbr/>To<wbr/>Sign</span></a>
+<a href="#getactivelimitorders" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Active<wbr/>Limit<wbr/>Orders</span></a>
+<a href="#getcreatelimitordertx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Limit<wbr/>Order<wbr/>Tx</span></a>
+<a href="#getminordersizeusd" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Min<wbr/>Order<wbr/>Size<wbr/>Usd</span></a>
+<a href="#getpastlimitorders" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Past<wbr/>Limit<wbr/>Orders</span></a>
+<a href="#apibaseurlfornetwork" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a>
+<a href="#defaultfullnodeurl" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorlimitorders"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">LimitOrders</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">LimitOrders</a><a href="#constructorlimitorders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates a new <code>LimitOrders</code> instance for interacting with limit order functionality
+on Aftermath.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">config</span>: <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional configuration, including network, API host,
+access token, and API path.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">LimitOrders</a></h4><aside class="tsd-sources">
+<p>Overrides <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#constructor">constructor</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L53">packages/limitOrders/limitOrders.ts:53</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="config"><span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></div>
+<div class="tsd-comment tsd-typography"><p>The mutable configuration used for subsequent requests.</p>
+</div><aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#config">config</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L51">general/utils/caller.ts:51</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constants"><code class="tsd-tag">Static</code> <code class="tsd-tag">Readonly</code><span>constants</span><a href="#constants" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">constants</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">gasAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-comment tsd-typography"><p>Static configuration constants, including a default gas amount for
+limit order transactions (50 SUI).</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">gasAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>The default gas budget for limit-order transactions, in MIST.
+<code>50_000_000n</code> equals <code>0.05</code> SUI.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L34">packages/limitOrders/limitOrders.ts:34</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="cancellimitorder"><span>cancel<wbr/>Limit<wbr/>Order</span><a href="#cancellimitorder" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="cancellimitorder-1"><span class="tsd-kind-call-signature">cancelLimitOrder</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersCancelOrderTransactionBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersCancelOrderTransactionBody</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#cancellimitorder-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Sends a signed request to cancel one or more limit orders.</p>
+<p>Sign the exact string returned by
+<code>UserData.createTermsAndConditionsMessage()</code> as a personal message over
+its UTF-8 bytes. Send those signed bytes and the signature in <code>inputs</code>.
+The order IDs are sent in <code>orderObjectIds</code>; the deprecated per-action
+message from <code>cancelLimitOrdersMessageToSign</code> is not the current credential.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersCancelOrderTransactionBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersCancelOrderTransactionBody</a></span>
+<div class="tsd-comment tsd-typography"><p>Wallet address, signed terms-message bytes, signature, and
+the order object IDs to cancel.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The backend cancellation result. <code>false</code> is a valid response.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws">Throws<a href="#throws" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>AftermathTransportError</code> when the API request or response fails.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example-1">Example<a href="#example-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">success</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">limitOrders</span><span class="hl-1">.</span><span class="hl-0">cancelLimitOrder</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;address&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">bytes:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;signed_bytes&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">signature:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;signature&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L171">packages/limitOrders/limitOrders.ts:171</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="cancellimitordersmessagetosign"><span class="deprecated">cancel<wbr/>Limit<wbr/>Orders<wbr/>Message<wbr/>To<wbr/>Sign</span><a href="#cancellimitordersmessagetosign" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="cancellimitordersmessagetosign-1"><span class="tsd-kind-call-signature">cancelLimitOrdersMessageToSign</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">orderIds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">action</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">order_object_ids</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span><a href="#cancellimitordersmessagetosign-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds the legacy per-action message for canceling limit orders.</p>
+<p>This method performs no network I/O. The current cancellation endpoint
+authenticates with the canonical terms message instead. Put the order IDs
+in <code>cancelLimitOrder</code>'s <code>orderObjectIds</code> field.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">orderIds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>Object with <code>orderIds</code>, an array of order object IDs to cancel.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">action</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">order_object_ids</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span></h4><p><code>{ action: &quot;CANCEL_LIMIT_ORDERS&quot;, order_object_ids: inputs.orderIds }</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-deprecated">
+<h4 class="tsd-anchor-link" id="deprecated">Deprecated<a href="#deprecated" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>af-fe no longer accepts this per-action message. Sign
+<code>UserData.createTermsAndConditionsMessage</code> and pass <code>orderObjectIds</code> in the
+<code>cancelLimitOrder</code> body instead.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L197">packages/limitOrders/limitOrders.ts:197</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getactivelimitorders"><span>get<wbr/>Active<wbr/>Limit<wbr/>Orders</span><a href="#getactivelimitorders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getactivelimitorders-1"><span class="tsd-kind-call-signature">getActiveLimitOrders</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersActiveOrdersOwnedBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersActiveOrdersOwnedBody</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_limitOrders_limitOrdersTypes.LimitOrderObject.html" class="tsd-signature-type tsd-kind-interface">LimitOrderObject</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#getactivelimitorders-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetches the user's active limit orders from the Aftermath API.</p>
+<p>The <code>bytes</code> and <code>signature</code> fields authenticate the request. They are the
+signed terms-message credential, not a transaction or a limit-order
+cancellation payload.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersActiveOrdersOwnedBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersActiveOrdersOwnedBody</a></span>
+<div class="tsd-comment tsd-typography"><p>Contains the <code>walletAddress</code>, as well as <code>bytes</code> and <code>signature</code> if needed for auth.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_limitOrders_limitOrdersTypes.LimitOrderObject.html" class="tsd-signature-type tsd-kind-interface">LimitOrderObject</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise resolving to an array of <code>LimitOrderObject</code>, representing the active orders.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-1">Throws<a href="#throws-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>AftermathTransportError</code> when the API request or response fails.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example-2">Example<a href="#example-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">activeOrders</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">limitOrders</span><span class="hl-1">.</span><span class="hl-0">getActiveLimitOrders</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;address&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">bytes:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;signed_bytes&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">signature:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;signature&gt;&quot;</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L81">packages/limitOrders/limitOrders.ts:81</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getcreatelimitordertx"><span>get<wbr/>Create<wbr/>Limit<wbr/>Order<wbr/>Tx</span><a href="#getcreatelimitordertx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getcreatelimitordertx-1"><span class="tsd-kind-call-signature">getCreateLimitOrderTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersCreateOrderTransactionBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersCreateOrderTransactionBody</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span><a href="#getcreatelimitordertx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Requests a limit-order creation transaction from the Aftermath API.
+The returned <code>Transaction</code> is not signed or executed.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <a href="../interfaces/packages_limitOrders_limitOrdersTypes.ApiLimitOrdersCreateOrderTransactionBody.html" class="tsd-signature-type tsd-kind-interface">ApiLimitOrdersCreateOrderTransactionBody</a></span>
+<div class="tsd-comment tsd-typography"><p>Limit-order details. Coin amounts are in the smallest units
+of their coin, and <code>expiryDurationMs</code> is in milliseconds.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A parsed <code>Transaction</code> with the wallet address set as its sender.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-2">Throws<a href="#throws-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>AftermathTransportError</code> when the API request, response decoding,
+or transaction parsing fails.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example-3">Example<a href="#example-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">tx</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">limitOrders</span><span class="hl-1">.</span><span class="hl-0">getCreateLimitOrderTx</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;address&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">allocateCoinType:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;coin&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">allocateCoinAmount:</span><span class="hl-1"> </span><span class="hl-0">BigInt</span><span class="hl-1">(</span><span class="hl-8">1000</span><span class="hl-1">),</span><br/><span class="hl-1">  </span><span class="hl-4">buyCoinType:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;other_coin&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">expiryDurationMs:</span><span class="hl-1"> </span><span class="hl-8">3600000</span><span class="hl-1">, </span><span class="hl-7">// 1 hour</span><br/><span class="hl-1">  </span><span class="hl-4">outputToInputExchangeRate:</span><span class="hl-1"> </span><span class="hl-8">0.5</span><span class="hl-1">,</span><br/><span class="hl-1">});</span><br/><span class="hl-7">// sign and execute the transaction</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L139">packages/limitOrders/limitOrders.ts:139</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getminordersizeusd"><span>get<wbr/>Min<wbr/>Order<wbr/>Size<wbr/>Usd</span><a href="#getminordersizeusd" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getminordersizeusd-1"><span class="tsd-kind-call-signature">getMinOrderSizeUsd</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">&gt;</span><a href="#getminordersizeusd-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetches the minimum allowable limit-order size in USD.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise resolving to a <code>number</code> (USD value) or <code>undefined</code> if not configured.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-3">Throws<a href="#throws-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>AftermathTransportError</code> when the API request or response fails.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example-4">Example<a href="#example-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">minSize</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">limitOrders</span><span class="hl-1">.</span><span class="hl-0">getMinOrderSizeUsd</span><span class="hl-1">();</span><br/><span class="hl-4">console</span><span class="hl-1">.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Minimum order size in USD:&quot;</span><span class="hl-1">, </span><span class="hl-4">minSize</span><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L223">packages/limitOrders/limitOrders.ts:223</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpastlimitorders"><span>get<wbr/>Past<wbr/>Limit<wbr/>Orders</span><a href="#getpastlimitorders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpastlimitorders-1"><span class="tsd-kind-call-signature">getPastLimitOrders</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_limitOrders_limitOrdersTypes.LimitOrderObject.html" class="tsd-signature-type tsd-kind-interface">LimitOrderObject</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#getpastlimitorders-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetches the user's past limit orders from the Aftermath API, including
+completed, canceled, expired, and failed orders.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<div class="tsd-comment tsd-typography"><p>An object containing the <code>walletAddress</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_limitOrders_limitOrdersTypes.LimitOrderObject.html" class="tsd-signature-type tsd-kind-interface">LimitOrderObject</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise resolving to an array of <code>LimitOrderObject</code> representing past orders.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws-4">Throws<a href="#throws-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>AftermathTransportError</code> when the API request or response fails.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example-5">Example<a href="#example-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">pastOrders</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">limitOrders</span><span class="hl-1">.</span><span class="hl-0">getPastLimitOrders</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x&lt;address&gt;&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/limitOrders/limitOrders.ts#L105">packages/limitOrders/limitOrders.ts:105</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="apibaseurlfornetwork"><code class="tsd-tag">Static</code><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span><a href="#apibaseurlfornetwork" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="apibaseurlfornetwork-1"><span class="tsd-kind-call-signature">apiBaseUrlForNetwork</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#apibaseurlfornetwork-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Aftermath API host for a Sui network.</p>
+<p>To target a custom or local host, pass <code>baseUrl</code> in <code>CallerConfig</code> to the
+constructor instead.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a></span>
+<div class="tsd-comment tsd-typography"><p>The Sui network whose host to return.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's HTTPS or local HTTP API host.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#apibaseurlfornetwork">apiBaseUrlForNetwork</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L151">general/utils/caller.ts:151</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="defaultfullnodeurl"><code class="tsd-tag">Static</code><span>default<wbr/>Fullnode<wbr/>Url</span><a href="#defaultfullnodeurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="defaultfullnodeurl-1"><span class="tsd-kind-call-signature">defaultFullnodeUrl</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#defaultfullnodeurl-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Sui fullnode URL for a network.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></span>
+<div class="tsd-comment tsd-typography"><p>The network whose fullnode URL to return. <code>undefined</code>
+defaults to mainnet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's fullnode URL.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#defaultfullnodeurl">defaultFullnodeUrl</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L162">general/utils/caller.ts:162</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#config" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a><a href="#constants"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>constants</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#cancellimitorder"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Limit<wbr/>Order</span></a><a href="#cancellimitordersmessagetosign"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Limit<wbr/>Orders<wbr/>Message<wbr/>To<wbr/>Sign</span></a><a href="#getactivelimitorders"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Active<wbr/>Limit<wbr/>Orders</span></a><a href="#getcreatelimitordertx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Limit<wbr/>Order<wbr/>Tx</span></a><a href="#getminordersizeusd"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Min<wbr/>Order<wbr/>Size<wbr/>Usd</span></a><a href="#getpastlimitorders"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Past<wbr/>Limit<wbr/>Orders</span></a><a href="#apibaseurlfornetwork" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a><a href="#defaultfullnodeurl" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

@@ -20,6 +20,7 @@ export class Multisig extends Caller {
 	 */
 	constructor(
 		config?: CallerConfig,
+		/** Optional low-level provider used to derive multisig data. */
 		public readonly api?: AftermathApi
 	) {
 		super(config, "multisig");
@@ -30,11 +31,16 @@ export class Multisig extends Caller {
 	// =========================================================================
 
 	/**
-	 * Retrieves a multisig address and corresponding public key for a user based on their
-	 * provided single public key.
+	 * Derives a multisig address and public key for a user from the configured
+	 * shared-custody key and the user's Ed25519 public key.
+	 *
+	 * The operation is local after the `AftermathApi` provider is configured. It
+	 * does not make a network request or sign a transaction.
 	 *
 	 * @param inputs - An object implementing `ApiMultisigUserBody`, containing the user's public key as a `Uint8Array`.
-	 * @returns A promise that resolves to an object containing both the multisig address and its public key.
+	 * @returns An object containing the derived multisig address and public key.
+	 * @throws `Error` when no `AftermathApi` provider was supplied or the public
+	 * key is malformed.
 	 *
 	 * @example
 	 * ```typescript

@@ -1,0 +1,237 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>research/documentation-best-practices | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">research/documentation-best-practices</a></li></ul></div>
+<div class="tsd-panel tsd-typography"><h1 id="documentation-best-practices-for-this-typescript-sdk" class="tsd-anchor-link">Documentation best practices for this TypeScript SDK<a href="#documentation-best-practices-for-this-typescript-sdk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<h2 id="status" class="tsd-anchor-link">Status<a href="#status" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Overall status: <strong>PASS</strong>.</p>
+<ul>
+<li><strong>PASS</strong> — The research is complete and uses official TypeDoc, TypeScript, and Google developer documentation.</li>
+<li><strong>PASS</strong> — The repository now has a strict source audit, a checked-in TypeDoc command and configuration, authored task guides, and a generated-reference workflow.</li>
+<li><strong>BLOCKED</strong> — None. The recommendations below are actionable without changing source code in this task.</li>
+</ul>
+<h2 id="scope-and-decision" class="tsd-anchor-link">Scope and decision<a href="#scope-and-decision" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The repository guide is the local authority for documentation ownership. It assigns
+the README and package guides to tutorials, focused guides to task-based work,
+source JSDoc to reference facts, and explanation pages to cross-package concepts.
+Keep that split. The <a href="DOCUMENTATION_GUIDE.html">repository documentation guide</a>
+also requires examples to match the current package shape and asks maintainers to
+run the documentation audits.</p>
+<p>Use this documentation model:</p>
+<table>
+<thead>
+<tr>
+<th>Reader goal</th>
+<th>Primary artifact</th>
+<th>Practical rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complete a first integration</td>
+<td>README or tutorial</td>
+<td>Show one working path from prerequisites to a visible result.</td>
+</tr>
+<tr>
+<td>Complete one known task</td>
+<td>How-to guide</td>
+<td>Give one focused, prescriptive procedure and link to reference facts.</td>
+</tr>
+<tr>
+<td>Look up an API fact</td>
+<td>Source JSDoc and generated TypeDoc</td>
+<td>State the exact symbol, inputs, output, errors, side effects, and deprecation state.</td>
+</tr>
+<tr>
+<td>Understand a cross-package concept</td>
+<td>Explanation page</td>
+<td>Define scope, explain relationships and trade-offs, and link to tasks and reference pages.</td>
+</tr>
+</tbody>
+</table>
+<p>Google recommends providing different documentation types for different user
+groups and reinforcing concepts with examples in tutorials. See the <a href="https://developers.google.com/tech-writing/course-summaries/two">Technical
+Writing Two summary</a>.</p>
+<h2 id="keep-source-jsdoc-as-the-api-contract" class="tsd-anchor-link">Keep source JSDoc as the API contract<a href="#keep-source-jsdoc-as-the-api-contract" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Put a <code>/** ... */</code> comment directly above every public declaration that needs
+documentation. TypeDoc follows TypeScript's comment discovery in most cases,
+supports Markdown, and renders fenced code blocks with syntax highlighting. See
+<a href="https://typedoc.org/documents/Doc_Comments.html">TypeDoc doc comments</a> and its
+<a href="https://typedoc.org/documents/Options.Comments.html">comment options</a>.</p>
+<p>Keep type facts in the TypeScript signature. TypeScript's JSDoc reference says
+that TypeScript files support documentation tags, while the type-oriented JSDoc
+tags are for JavaScript files. Use the real TypeScript types for the contract and
+use comments to explain semantics that a signature cannot express. See the
+<a href="https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html">TypeScript JSDoc reference</a>.</p>
+<p>For this SDK, a public comment should cover the following when applicable:</p>
+<ul>
+<li>The meaning, format, units, default, and ownership of each parameter.</li>
+<li>Whether the method performs network I/O, builds a transaction, or computes a local value.</li>
+<li>The client, network, provider, or configuration that the caller must supply.</li>
+<li>The return shape and the difference between <code>bigint</code>, <code>number</code>, decimal strings, cursors, and optional values.</li>
+<li>Input conditions, typed errors, transport failures, cancellation, and observable side effects.</li>
+<li>Network-specific behavior, deprecation replacements, and behavior that differs by transport.</li>
+</ul>
+<p>Use the supported tags consistently:</p>
+<ul>
+<li><code>@param</code> documents a parameter. For an object parameter, TypeDoc supports a dotted name for a first-level property such as <code>inputs.amount</code>; <a href="https://typedoc.org/documents/Tags._param.html">the <code>@param</code> reference</a> documents the limit.</li>
+<li><code>@returns</code> describes the returned value. TypeDoc permits at most one <code>@returns</code> tag, so put the complete result contract in one place. See <a href="https://typedoc.org/documents/Tags._returns.html">the <code>@returns</code> reference</a>.</li>
+<li><code>@throws</code> names an exception and the condition that causes it. See <a href="https://typedoc.org/documents/Tags._throws.html">the <code>@throws</code> reference</a>.</li>
+<li><code>@example</code> shows the smallest complete caller path when the inputs or setup are not obvious. Use a fenced <code>ts</code> block because TypeDoc only supports fenced code blocks. See <a href="https://typedoc.org/documents/Tags._example.html">the <code>@example</code> reference</a>.</li>
+<li><code>@deprecated</code> states why a declaration is deprecated and names its replacement. TypeDoc renders deprecated members distinctly. See <a href="https://typedoc.org/documents/Tags._deprecated.html">the <code>@deprecated</code> reference</a>.</li>
+<li><code>{@link Symbol}</code> links related public declarations. TypeDoc resolves these links with TypeScript's symbol rules by default and can warn about unresolved links. See <a href="https://typedoc.org/documents/Tags.__link_.html">the <code>{@link}</code> reference</a>.</li>
+<li><code>@see</code> links related external or conceptual resources. Use an explicit <code>{@link ...}</code> inside <code>@see</code> when the target is a symbol. See <a href="https://typedoc.org/documents/Tags._see.html">the <code>@see</code> reference</a>.</li>
+</ul>
+<p>Do not invent arbitrary JSDoc tags. TypeDoc warns about unrecognized tags; use
+its supported tags or define a custom tag in a checked-in <code>tsdoc.json</code> or
+TypeDoc configuration. See the <a href="https://typedoc.org/documents/Tags.html">TypeDoc tags overview</a>.</p>
+<p>Use <code>{@inheritDoc ...}</code> only when the inherited contract is exact. TypeDoc copies
+the summary, <code>@remarks</code>, parameters, type parameters, and return text, but not
+every local caveat. Add local error, side-effect, and transport details when a
+wrapper changes behavior. See <a href="https://typedoc.org/documents/Tags.__inheritDoc_.html">the <code>@inheritDoc</code> reference</a>.</p>
+<h2 id="make-generated-typedoc-reproducible" class="tsd-anchor-link">Make generated TypeDoc reproducible<a href="#make-generated-typedoc-reproducible" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Generate the reference from the same public entry point that consumers import.
+TypeDoc examines the exports of its entry points. If no entry point is supplied,
+it can discover them from the package <code>exports</code> or <code>main</code> fields. Configure an
+explicit source entry point, such as the repository's public <code>src/index.ts</code>,
+after confirming that it matches the package export surface. See <a href="https://typedoc.org/documents/Options.Input.html">TypeDoc input
+options</a>.</p>
+<p>Keep the TypeDoc version, entry point, output directory, and validation settings
+in the repository. Treat generated HTML as a build artifact. Regenerate it from
+source instead of editing individual HTML pages by hand.</p>
+<p>Enable validation for the failures that make a reference misleading:</p>
+<ul>
+<li><code>notExported</code> for links to types that do not appear in the public reference.</li>
+<li><code>invalidLink</code> for unresolved <code>@link</code> tags.</li>
+<li><code>invalidPath</code> for relative links that do not resolve.</li>
+<li><code>rewrittenLink</code> for links whose target does not have a unique URL.</li>
+<li><code>notDocumented</code> for public reflections without a comment.</li>
+<li><code>treatValidationWarningsAsErrors</code> in CI so a broken reference fails the documentation build.</li>
+</ul>
+<p>These checks are documented in <a href="https://typedoc.org/documents/Options.Validation.html">TypeDoc validation options</a>.</p>
+<p>Keep the generated reference aligned with the published declarations. TypeScript
+recommends publishing generated declarations with the package and pointing the
+<code>types</code> field at the main declaration file. This package already points
+<code>types</code> to <code>./dist/index.d.ts</code>; retain that alignment when the public export
+surface changes. See <a href="https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html">TypeScript declaration publishing</a>.</p>
+<h2 id="write-tutorials-and-how-to-guides-for-one-outcome" class="tsd-anchor-link">Write tutorials and how-to guides for one outcome<a href="#write-tutorials-and-how-to-guides-for-one-outcome" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Start each authored page with its scope, audience, prerequisites, and expected
+result. Google recommends stating scope and non-scope, identifying what readers
+already know, and putting key points at the start of a document. See <a href="https://developers.google.com/tech-writing/one/documents">Google's
+document organization guidance</a>
+and <a href="https://developers.google.com/tech-writing/one/audience">audience guidance</a>.</p>
+<p>For tutorials:</p>
+<ul>
+<li>Start with the smallest complete integration, such as importing the SDK, creating a client, and making one successful call.</li>
+<li>Keep the path linear. Show the expected result after the important steps.</li>
+<li>Explain concepts at the point where the example uses them, then link to an explanation or reference page for depth.</li>
+<li>Use examples that compile against the current package entry point. Do not use private addresses, live secrets, or placeholders that look like working values.</li>
+</ul>
+<p>For how-to guides:</p>
+<ul>
+<li>Name the task with a command, such as “Configure cancellation” or “Build a transaction.”</li>
+<li>State the goal and the required context before the action.</li>
+<li>Use one numbered item per meaningful action. Put conditions before the step they guard.</li>
+<li>Choose one recommended path. Split genuinely different methods into separate sections or pages.</li>
+<li>Link to repeated procedures instead of copying them.</li>
+</ul>
+<p>These rules follow Google's guidance that procedures use numbered steps, provide
+context and goals, keep steps short, and avoid repeating procedures. See the
+<a href="https://developers.google.com/style/procedures">Google procedures guide</a> and
+<a href="https://developers.google.com/style/prescriptive-documentation">prescriptive documentation guidance</a>.</p>
+<p>For reference pages, keep prose dry and complete. Let TypeDoc provide signatures
+and navigation, and let source JSDoc provide the behavior contract. Do not turn a
+reference page into a tutorial. For explanation pages, describe one bounded
+concept, state why it matters, and link to the relevant task and symbols.</p>
+<h2 id="make-pages-scannable-and-linkable" class="tsd-anchor-link">Make pages scannable and linkable<a href="#make-pages-scannable-and-linkable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Use sentence case, one level-1 heading, descriptive headings, and a logical
+heading hierarchy. Use task headings for procedures and noun phrases for
+concepts. Do not skip heading levels or put links in headings. See <a href="https://developers.google.com/style/headings">Google
+headings and titles</a>.</p>
+<p>Use meaningful link text that identifies the destination. Avoid “click here” and
+“read this document.” Link from tutorials and how-to guides to the exact TypeDoc
+symbol or conceptual page that supplies the missing detail. See <a href="https://developers.google.com/style/accessibility">Google's
+accessibility guidance for links</a>.</p>
+<p>Use code formatting for imports, symbols, types, paths, flags, status codes, and
+literal values. Use bullets for unordered options and numbered lists when order
+matters. Keep list items parallel and introduce lists with a complete sentence.
+See <a href="https://developers.google.com/style/lists">Google's lists guidance</a> and its
+<a href="https://developers.google.com/style/text-formatting">text-formatting summary</a>.</p>
+<p>Prefer direct, consistent language for a global developer audience. Define
+unfamiliar terms, avoid ambiguous pronouns and unnecessary jargon, and use active
+voice. See Google's <a href="https://developers.google.com/style/tone">voice and tone guidance</a>
+and <a href="https://developers.google.com/tech-writing/one/summary">Technical Writing One summary</a>.</p>
+<h2 id="verify-documentation-as-a-product" class="tsd-anchor-link">Verify documentation as a product<a href="#verify-documentation-as-a-product" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Use this sequence for each documentation change:</p>
+<ol>
+<li>Update the source comment beside the public declaration.</li>
+<li>Run <code>npm run docs:audit</code> while editing and <code>npm run docs:audit:strict</code> before merging.</li>
+<li>Type-check or build every example that the page promises will run.</li>
+<li>Regenerate TypeDoc from the checked-in configuration and review generated output with the source diff.</li>
+<li>Check internal and external links, then run the tutorial from a clean consumer project when the page changes installation or initialization.</li>
+</ol>
+<p>The repository's <a href="DOCUMENTATION_GUIDE.html">documentation guide</a> already defines
+the two audit commands and requires current, deterministic examples. TypeDoc's
+validation catches reference-model and link failures, but its comment guidance
+describes parsing and rendering code blocks, not compiling them. The separate
+example type-check is therefore an implementation recommendation based on the
+two tools' roles.</p>
+<h2 id="repository-findings" class="tsd-anchor-link">Repository findings<a href="#repository-findings" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The findings below record the repository observations that shaped this work.
+They are observations, not a substitute for the source-level API reference.</p>
+<ul>
+<li>The <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/docs/scripts/auditDocumentation.mjs">documentation audit script</a> inspects 135 source files and now reports 3,743 required public symbols with 0 missing comments. Repeated members of merged TypeScript interfaces are counted once because they represent one public field.</li>
+<li>The <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/docs/package.json">package manifest</a> exposes <code>docs:audit</code>, <code>docs:audit:strict</code>, and <code>docs:generate</code>; <code>typedoc</code> is pinned in <code>devDependencies</code>, and <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/docs/typedoc.json">typedoc.json</a> checks links and validation warnings. The generated reference is reproducible from the repository commands.</li>
+<li>The <code>docs/</code> tree now contains authored guides, an explanation of provider layers, and two research notes alongside the generated HTML. The README links readers to the generated API reference and the maintenance guide.</li>
+</ul>
+<h2 id="sources" class="tsd-anchor-link">Sources<a href="#sources" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>All external sources were official documentation pages accessed on 2026-08-25.</p>
+<ul>
+<li>TypeDoc: <a href="https://typedoc.org/documents/Doc_Comments.html">doc comments</a>, <a href="https://typedoc.org/documents/Tags.html">tags</a>, <a href="https://typedoc.org/documents/Options.Input.html">input options</a>, <a href="https://typedoc.org/documents/Options.Comments.html">comment options</a>, and <a href="https://typedoc.org/documents/Options.Validation.html">validation options</a>.</li>
+<li>TypeDoc tag references: <a href="https://typedoc.org/documents/Tags._param.html"><code>@param</code></a>, <a href="https://typedoc.org/documents/Tags._returns.html"><code>@returns</code></a>, <a href="https://typedoc.org/documents/Tags._throws.html"><code>@throws</code></a>, <a href="https://typedoc.org/documents/Tags._example.html"><code>@example</code></a>, <a href="https://typedoc.org/documents/Tags._deprecated.html"><code>@deprecated</code></a>, <a href="https://typedoc.org/documents/Tags._see.html"><code>@see</code></a>, <a href="https://typedoc.org/documents/Tags.__link_.html"><code>{@link}</code></a>, and <a href="https://typedoc.org/documents/Tags.__inheritDoc_.html"><code>{@inheritDoc}</code></a>.</li>
+<li>TypeScript: <a href="https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html">JSDoc reference</a>, <a href="https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html">declaration-file do's and don'ts</a>, and <a href="https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html">declaration publishing</a>.</li>
+<li>Google developer documentation: <a href="https://developers.google.com/style">style guide</a>, <a href="https://developers.google.com/style/headings">headings</a>, <a href="https://developers.google.com/style/procedures">procedures</a>, <a href="https://developers.google.com/style/accessibility">accessibility</a>, <a href="https://developers.google.com/style/lists">lists</a>, <a href="https://developers.google.com/tech-writing/one/documents">documents</a>, <a href="https://developers.google.com/tech-writing/one/audience">audience</a>, and <a href="https://developers.google.com/tech-writing/course-summaries/two">Technical Writing Two summary</a>.</li>
+</ul>
+<h2 id="file-changed" class="tsd-anchor-link">File changed<a href="#file-changed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Created and updated only:</p>
+<ul>
+<li><code>docs/research/documentation-best-practices.md</code></li>
+</ul>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#documentation-best-practices-for-this-typescript-sdk"><span>Documentation best practices for this <wbr/>Type<wbr/>Script <wbr/>SDK</span></a>
+<ul>
+<li><a href="#status"><span>Status</span></a></li>
+<li><a href="#scope-and-decision"><span>Scope and decision</span></a></li>
+<li><a href="#keep-source-jsdoc-as-the-api-contract"><span>Keep source <wbr/>JS<wbr/>Doc as the <wbr/>API contract</span></a></li>
+<li><a href="#make-generated-typedoc-reproducible"><span>Make generated <wbr/>Type<wbr/>Doc reproducible</span></a></li>
+<li><a href="#write-tutorials-and-how-to-guides-for-one-outcome"><span>Write tutorials and how-<wbr/>to guides for one outcome</span></a></li>
+<li><a href="#make-pages-scannable-and-linkable"><span>Make pages scannable and linkable</span></a></li>
+<li><a href="#verify-documentation-as-a-product"><span>Verify documentation as a product</span></a></li>
+<li><a href="#repository-findings"><span>Repository findings</span></a></li>
+<li><a href="#sources"><span>Sources</span></a></li>
+<li><a href="#file-changed"><span>File changed</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

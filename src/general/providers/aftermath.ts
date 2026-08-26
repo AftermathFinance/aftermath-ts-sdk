@@ -77,9 +77,14 @@ export interface AftermathOptions {
  *
  * Instances are created through the async {@link Aftermath.create} factory
  * — direct construction is not supported.
+ * Package accessors return a new provider on each call. Providers that need
+ * package or object addresses throw when their section is missing from the
+ * configured {@link ConfigAddresses}.
  *
  * @example
  * ```typescript
+ * import { Aftermath } from "aftermath-ts-sdk";
+ *
  * const aftermath = await Aftermath.create({ network: "MAINNET" });
  * const supportedCoins = await aftermath.Router().getSupportedCoins();
  * ```
@@ -95,6 +100,18 @@ export class Aftermath extends Caller {
 	 * Resolves on-chain addresses, configures the Sui fullnode client, and
 	 * returns a ready-to-use instance. Pass `addresses` or `api` to skip
 	 * the corresponding bootstrap steps.
+	 * The selected network supplies canonical API and fullnode URLs unless the
+	 * options provide overrides.
+	 *
+	 * @param options - Network, endpoint, address, and low-level API options.
+	 * @param abortSignal - Optional signal that cancels address discovery.
+	 * @returns A fully initialized provider.
+	 * @throws A transport error if address discovery fails or the signal aborts it.
+	 *
+	 * @example
+	 * ```typescript
+	 * const aftermath = await Aftermath.create({ network: "TESTNET" });
+	 * ```
 	 */
 	static async create(
 		options: AftermathOptions = {},
@@ -111,6 +128,7 @@ export class Aftermath extends Caller {
 
 	private readonly options: AftermathOptions;
 
+	/** Internal constructor used only by {@link Aftermath.create}. */
 	private constructor(options: AftermathOptions) {
 		super({
 			network: options.network ?? "MAINNET",
@@ -171,14 +189,21 @@ export class Aftermath extends Caller {
 	// =========================================================================
 
 	/**
-	 * The Sui network this provider is configured for (e.g. "MAINNET").
+	 * The Sui network this provider is configured for.
+	 *
+	 * @returns One of `"DEVNET"`, `"TESTNET"`, `"LOCAL"`, or `"MAINNET"`.
 	 */
 	get network(): SuiNetwork {
 		return (this.config.network as SuiNetwork) ?? "MAINNET";
 	}
 
 	/**
-	 * The resolved API base URL for this instance.
+	 * Returns the resolved Aftermath API base URL for this instance.
+	 *
+	 * The value is the configured `baseUrl`, or the canonical URL selected from
+	 * `network` when no override was supplied.
+	 *
+	 * @returns The API base URL, or `undefined` when the inherited caller has no endpoint.
 	 */
 	getApiBaseUrl(): Url | undefined {
 		return this.apiBaseUrl;
@@ -188,6 +213,10 @@ export class Aftermath extends Caller {
 	 * Fetches the Aftermath on-chain addresses (object IDs, packages, etc.)
 	 * directly from the API. Typically you don't need to call this — the
 	 * `create` factory handles it. Useful for cache warmers or tooling.
+	 *
+	 * @param abortSignal - Optional signal that cancels the HTTP request.
+	 * @returns A promise for the package and object addresses returned by the API.
+	 * @throws A transport error when the request fails, the response cannot be decoded, or the signal aborts it.
 	 */
 	getAddresses(abortSignal?: AbortSignal): Promise<ConfigAddresses> {
 		return this.fetchApi<ConfigAddresses>("addresses", undefined, abortSignal);
@@ -200,6 +229,9 @@ export class Aftermath extends Caller {
 	 *
 	 * Thin pass-through to the underlying {@link AftermathApi} so consumers
 	 * don't need to reach into the private `api` field.
+	 *
+	 * @param inputs.errorMessage - Raw Sui Move-abort text to parse and translate.
+	 * @returns The parsed error and registered message, or `undefined` when the text is malformed or unregistered.
 	 */
 	translateMoveErrorMessage(inputs: {
 		errorMessage: string;
@@ -211,92 +243,155 @@ export class Aftermath extends Caller {
 	//  Packages
 	// =========================================================================
 
-	/** DEX pool operations. */
+	/**
+	 * Creates the DEX pool provider.
+	 * @returns A new `Pools` provider configured with this instance's network and addresses.
+	 */
 	Pools = () => new Pools(this.config, this.api);
 
-	/** Liquid staking and unstaking. */
+	/**
+	 * Creates the liquid-staking provider.
+	 * @returns A new `Staking` provider configured with this instance's network and addresses.
+	 */
 	Staking = () => new Staking(this.config, this.api);
 
-	/** SuiFrens — specialized social/utility package. */
+	/**
+	 * Creates the SuiFrens provider.
+	 * @returns A new `SuiFrens` provider configured with this instance's network and addresses.
+	 */
 	SuiFrens = () => new SuiFrens(this.config, this.api);
 
-	/** Test-network faucet for dispensing tokens. */
+	/**
+	 * Creates the faucet provider for supported development and test networks.
+	 * @returns A new `Faucet` provider configured with this instance's network and addresses.
+	 */
 	Faucet = () => new Faucet(this.config, this.api);
 
-	/** Smart order router across DEX protocols. */
+	/**
+	 * Creates the smart order router provider.
+	 * @returns A new `Router` provider configured with this instance's caller settings.
+	 */
 	Router = () => new Router(this.config);
 
-	/** NFT AMM operations. */
+	/**
+	 * Creates the NFT AMM provider.
+	 * @returns A new `NftAmm` provider configured with this instance's network and addresses.
+	 */
 	NftAmm = () => new NftAmm(this.config, this.api);
 
 	/**
 	 * Referral vault interactions.
+	 *
+	 * @returns A new deprecated `ReferralVault` provider.
 	 * @deprecated Use `Referrals` instead.
 	 */
 	ReferralVault = () => new ReferralVault(this.config);
 
-	/** Referral-program interactions. */
+	/**
+	 * Creates the referral-program provider.
+	 * @returns A new `Referrals` provider configured with this instance's caller settings.
+	 */
 	Referrals = () => new Referrals(this.config);
 
-	/** Shared gas pool interactions. */
+	/**
+	 * Creates the shared gas-pool provider.
+	 * @returns A new `GasPools` provider configured with this instance's network and low-level API.
+	 */
 	GasPools = () => new GasPools(this.config, this.api);
 
-	/** Perpetual / futures contracts. */
+	/**
+	 * Creates the perpetuals provider.
+	 * @returns A new `Perpetuals` provider configured with this instance's network and addresses.
+	 */
 	Perpetuals = () => new Perpetuals(this.config, this.api);
 
-	/** User reward-point queries. */
+	/**
+	 * Creates the rewards provider.
+	 * @returns A new `Rewards` provider configured with this instance's caller settings.
+	 */
 	Rewards = () => new Rewards(this.config, this.api);
 
-	/** Yield farming / liquidity mining. */
+	/**
+	 * Creates the farms provider.
+	 * @returns A new `Farms` provider configured with this instance's network and addresses.
+	 */
 	Farms = () => new Farms(this.config, this.api);
 
-	/** Dollar-cost averaging. */
+	/**
+	 * Creates the dollar-cost-averaging provider.
+	 * @returns A new `Dca` provider configured with this instance's caller settings.
+	 */
 	Dca = () => new Dca(this.config);
 
-	/** Multi-signature address creation and management. */
+	/**
+	 * Creates the multisig provider.
+	 * @returns A new `Multisig` provider configured with this instance's network and addresses.
+	 */
 	Multisig = () => new Multisig(this.config, this.api);
 
-	/** Limit orders on supported DEX protocols. */
+	/**
+	 * Creates the limit-orders provider.
+	 * @returns A new `LimitOrders` provider configured with this instance's caller settings.
+	 */
 	LimitOrders = () => new LimitOrders(this.config);
 
-	/** User-specific data / key storage. */
+	/**
+	 * Creates the user-data provider.
+	 * @returns A new `UserData` provider configured with this instance's caller settings.
+	 */
 	UserData = () => new UserData(this.config);
 
 	// =========================================================================
 	//  General
 	// =========================================================================
 
-	/** Low-level Sui chain utilities. */
+	/**
+	 * Creates the low-level Sui provider.
+	 * @returns A new `Sui` provider configured with this instance's network and API.
+	 */
 	Sui = () => new Sui(this.config, this.api);
 
-	/** Coin price feeds. */
+	/**
+	 * Creates the coin price-feed provider.
+	 * @returns A new `Prices` provider configured with this instance's caller settings.
+	 */
 	Prices = () => new Prices(this.config);
 
 	/**
 	 * Creates a `Wallet` instance scoped to a specific user address.
 	 * @param address - The Sui address (e.g., `"0x..."`).
+	 * @returns A new `Wallet` provider scoped to `address`.
 	 */
 	Wallet = (address: SuiAddress) => new Wallet(address, this.config, this.api);
 
 	/**
 	 * Returns a `Coin` helper for the given coin type. Pass `undefined`
 	 * for generic coin-metadata utilities.
+	 *
+	 * @param coinType - Optional fully qualified Move coin type, such as `"0x2::sui::SUI"`.
+	 * @returns A new `Coin` provider for the requested type or for generic coin metadata.
 	 */
 	Coin = (coinType?: CoinType) => new Coin(coinType, this.config, this.api);
 
-	/** Dynamic gas-object assignment for sponsored transactions. */
+	/**
+	 * Creates the dynamic-gas provider for sponsored transaction preparation.
+	 * @returns A new `DynamicGas` provider configured with this instance's caller settings.
+	 */
 	DynamicGas = () => new DynamicGas(this.config);
 
-	/** Authentication / token-based flows. */
+	/**
+	 * Creates the authentication provider for Aftermath API access tokens.
+	 * @returns A new `Auth` provider configured with this instance's caller settings.
+	 */
 	Auth = () => new Auth(this.config);
 
 	// =========================================================================
 	//  Static utilities
 	// =========================================================================
 
-	/** General-purpose helpers (math, logging, etc.). */
+	/** Reusable static helpers for parsing, validation, math, and transaction utilities. */
 	static helpers = Helpers;
 
-	/** Casting utilities for data type conversions (BigInt <-> IFixed, etc.). */
+	/** Static casting utilities for conversions such as `bigint` and `IFixed`. */
 	static casting = Casting;
 }

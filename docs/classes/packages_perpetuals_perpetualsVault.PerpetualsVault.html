@@ -1,0 +1,1009 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>PerpetualsVault | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_perpetuals_perpetualsVault.html">packages/perpetuals/perpetualsVault</a></li>
+<li><a href="" aria-current="page">PerpetualsVault</a></li></ul>
+<h1>Class PerpetualsVault</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>High-level wrapper around a single Perpetuals vault.</p>
+<p>A vault is a managed perpetuals account that accepts user deposits (LP),
+trades across up to a bounded set of markets, and supports withdrawals via
+a request flow.</p>
+<p>This class provides:</p>
+<ul>
+<li>Transaction builders for:
+<ul>
+<li>User actions (deposit, create/cancel withdraw request, update slippage)</li>
+<li>Force-withdraw processing (close positions and settle a request)</li>
+<li>Owner admin actions (update params, process requests, withdraw fees/collateral)</li>
+</ul>
+</li>
+<li>Read helpers for:
+<ul>
+<li>Vault withdraw requests</li>
+<li>LP token pricing</li>
+<li>Accessing the vault’s underlying perpetuals account</li>
+</ul>
+</li>
+<li>Static validation helpers for LP coin metadata (name/symbol constraints)</li>
+<li>A small calculation helper for withdraw-request slippage</li>
+</ul>
+<p>Typical usage:</p>
+<pre><code class="ts"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">perps</span><span class="hl-1"> = </span><span class="hl-4">afSdk</span><span class="hl-1">.</span><span class="hl-0">Perpetuals</span><span class="hl-1">();</span><br/><span class="hl-5">const</span><span class="hl-1"> { </span><span class="hl-6">vaults</span><span class="hl-1"> } = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">perps</span><span class="hl-1">.</span><span class="hl-0">getAllVaults</span><span class="hl-1">();</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">vault</span><span class="hl-1"> = </span><span class="hl-4">vaults</span><span class="hl-1">[</span><span class="hl-8">0</span><span class="hl-1">];</span><br/><br/><span class="hl-5">const</span><span class="hl-1"> { </span><span class="hl-6">tx</span><span class="hl-1"> } = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">vault</span><span class="hl-1">.</span><span class="hl-0">getDepositTx</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x...&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">depositAmount:</span><span class="hl-1"> </span><span class="hl-0">BigInt</span><span class="hl-1">(</span><span class="hl-2">&quot;1000000000&quot;</span><span class="hl-1">),</span><br/><span class="hl-1">  </span><span class="hl-4">minLpAmountOut:</span><span class="hl-1"> </span><span class="hl-8">0</span><span class="hl-5">n</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></section>
+<section class="tsd-panel tsd-hierarchy" data-refl="9360">
+<h4>Hierarchy (<a href="../hierarchy.html#packages/perpetuals/perpetualsVault.PerpetualsVault">View Summary</a>)</h4>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><a href="general_utils_caller.Caller.html" class="tsd-signature-type tsd-kind-class">Caller</a>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><span class="tsd-hierarchy-target">PerpetualsVault</span></li></ul></li></ul></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L94">packages/perpetuals/perpetualsVault.ts:94</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#api" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api?</span></a>
+<a href="#config" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a>
+<a href="#vaultobject" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>vault<wbr/>Object</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#getaccount" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Account</span></a>
+<a href="#getaccountobject" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Account<wbr/>Object</span></a>
+<a href="#getallwithdrawrequests" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>All<wbr/>Withdraw<wbr/>Requests</span></a>
+<a href="#getcancelwithdrawrequesttx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Cancel<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a>
+<a href="#getcreatewithdrawrequesttx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a>
+<a href="#getdeposittx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Tx</span></a>
+<a href="#getgrantagentwallettx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Grant<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span></a>
+<a href="#getlpcoinprice" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Lp<wbr/>Coin<wbr/>Price</span></a>
+<a href="#getownerprocesswithdrawrequeststx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests<wbr/>Tx</span></a>
+<a href="#getownerupdateforcewithdrawdelaytx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Force<wbr/>Withdraw<wbr/>Delay<wbr/>Tx</span></a>
+<a href="#getownerupdatelockperiodtx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Lock<wbr/>Period<wbr/>Tx</span></a>
+<a href="#getownerupdateperformancefeetx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Performance<wbr/>Fee<wbr/>Tx</span></a>
+<a href="#getownerwithdrawcollateraltx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral<wbr/>Tx</span></a>
+<a href="#getownerwithdrawlockedliquiditytx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity<wbr/>Tx</span></a>
+<a href="#getownerwithdrawperformancefeestx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees<wbr/>Tx</span></a>
+<a href="#getpausevaultforforcewithdrawrequesttx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a>
+<a href="#getpreviewcreatewithdrawrequest" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Create<wbr/>Withdraw<wbr/>Request</span></a>
+<a href="#getpreviewdeposit" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Deposit</span></a>
+<a href="#getpreviewownerprocesswithdrawrequests" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests</span></a>
+<a href="#getpreviewownerwithdrawcollateral" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral</span></a>
+<a href="#getpreviewownerwithdrawlockedliquidity" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity</span></a>
+<a href="#getpreviewownerwithdrawperformancefees" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees</span></a>
+<a href="#getpreviewpausevaultforforcewithdrawrequest" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request</span></a>
+<a href="#getpreviewprocessforcewithdrawrequest" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request</span></a>
+<a href="#getprocessforcewithdrawrequesttx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a>
+<a href="#getrevokeagentwallettx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Revoke<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span></a>
+<a href="#getupdatewithdrawrequestslippagetx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Update<wbr/>Withdraw<wbr/>Request<wbr/>Slippage<wbr/>Tx</span></a>
+<a href="#ispaused" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Paused</span></a>
+<a href="#partialvaultcap" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Vault<wbr/>Cap</span></a>
+<a href="#apibaseurlfornetwork" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a>
+<a href="#calcwithdrawrequestslippage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>calc<wbr/>Withdraw<wbr/>Request<wbr/>Slippage</span></a>
+<a href="#defaultfullnodeurl" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a>
+<a href="#isvalidlpcoinname" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Name</span></a>
+<a href="#isvalidlpcointypesymbol" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Type<wbr/>Symbol</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorperpetualsvault"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">PerpetualsVault</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">vaultObject</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultObject.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultObject</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">config</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">PerpetualsVault</a><a href="#constructorperpetualsvault" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Create a new <a href="#" class="tsd-kind-class">PerpetualsVault</a> wrapper.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">vaultObject</span>: <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultObject.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultObject</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw on-chain vault object snapshot.</p>
+</div></li>
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">config</span>: <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-kind-interface">CallerConfig</a> (network, auth, base URL).</p>
+</div></li>
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">api</span>: <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional shared <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-kind-class">AftermathApi</a> provider. When provided,
+transaction builders will serialize Transactions into <code>txKind</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">PerpetualsVault</a></h4><aside class="tsd-sources">
+<p>Overrides <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#constructor">constructor</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L107">packages/perpetuals/perpetualsVault.ts:107</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="api"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Readonly</code><span>api</span><a href="#api" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></div>
+<div class="tsd-comment tsd-typography"><p>Optional shared <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-kind-class">AftermathApi</a> provider. When provided,
+transaction builders will serialize Transactions into <code>txKind</code>.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L110">packages/perpetuals/perpetualsVault.ts:110</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="config"><span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></div>
+<div class="tsd-comment tsd-typography"><p>The mutable configuration used for subsequent requests.</p>
+</div><aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#config">config</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L51">general/utils/caller.ts:51</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="vaultobject"><code class="tsd-tag">Readonly</code><span>vault<wbr/>Object</span><a href="#vaultobject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">vaultObject</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultObject.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultObject</a></div>
+<div class="tsd-comment tsd-typography"><p>Raw on-chain vault object snapshot.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L108">packages/perpetuals/perpetualsVault.ts:108</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getaccount"><span>get<wbr/>Account</span><a href="#getaccount" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getaccount-1"><span class="tsd-kind-call-signature">getAccount</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">account</span><span class="tsd-signature-symbol">:</span> <a href="packages_perpetuals_perpetualsAccount.PerpetualsAccount.html" class="tsd-signature-type tsd-kind-class">PerpetualsAccount</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getaccount-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetch a <a href="packages_perpetuals_perpetualsAccount.PerpetualsAccount.html" class="tsd-kind-class">PerpetualsAccount</a> wrapper for the vault’s underlying account.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">account</span><span class="tsd-signature-symbol">:</span> <a href="packages_perpetuals_perpetualsAccount.PerpetualsAccount.html" class="tsd-signature-type tsd-kind-class">PerpetualsAccount</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p><code>{ account }</code> where <code>account</code> is a high-level <a href="packages_perpetuals_perpetualsAccount.PerpetualsAccount.html" class="tsd-kind-class">PerpetualsAccount</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L906">packages/perpetuals/perpetualsVault.ts:906</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getaccountobject"><span>get<wbr/>Account<wbr/>Object</span><a href="#getaccountobject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getaccountobject-1"><span class="tsd-kind-call-signature">getAccountObject</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">account</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsAccountObject.html" class="tsd-signature-type tsd-kind-interface">PerpetualsAccountObject</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getaccountobject-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetch the underlying perpetuals account object for this vault.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">account</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsAccountObject.html" class="tsd-signature-type tsd-kind-interface">PerpetualsAccountObject</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p><code>{ account }</code> where <code>account</code> is the on-chain <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsAccountObject.html" class="tsd-kind-interface">PerpetualsAccountObject</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L889">packages/perpetuals/perpetualsVault.ts:889</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getallwithdrawrequests"><span>get<wbr/>All<wbr/>Withdraw<wbr/>Requests</span><a href="#getallwithdrawrequests" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getallwithdrawrequests-1"><span class="tsd-kind-call-signature">getAllWithdrawRequests</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultsWithdrawRequestsResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultsWithdrawRequestsResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getallwithdrawrequests-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetch all withdraw requests for this vault.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultsWithdrawRequestsResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultsWithdrawRequestsResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>ApiPerpetualsVaultsWithdrawRequestsResponse</code> containing requests
+scoped to <code>this.vaultObject.objectId</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-remarks">
+<h4 class="tsd-anchor-link" id="remarks">Remarks<a href="#remarks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>This currently calls the <code>vaults/withdraw-requests</code> endpoint with a single vault ID.
+This may be moved to <a href="packages_perpetuals_perpetuals.Perpetuals.html" class="tsd-kind-class">Perpetuals</a> as a shared helper.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L676">packages/perpetuals/perpetualsVault.ts:676</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getcancelwithdrawrequesttx"><span>get<wbr/>Cancel<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span><a href="#getcancelwithdrawrequesttx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getcancelwithdrawrequesttx-1"><span class="tsd-kind-call-signature">getCancelWithdrawRequestTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getcancelwithdrawrequesttx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a user transaction to cancel an existing vault withdraw request.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet canceling the request.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L572">packages/perpetuals/perpetualsVault.ts:572</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getcreatewithdrawrequesttx"><span>get<wbr/>Create<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span><a href="#getcreatewithdrawrequesttx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getcreatewithdrawrequesttx-1"><span class="tsd-kind-call-signature">getCreateWithdrawRequestTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getcreatewithdrawrequesttx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a user transaction to create a vault withdraw request.</p>
+<p>Withdrawals are request-based: the user specifies how much LP to redeem
+and a minimum collateral output amount.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of LP to withdraw.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Minimum collateral out (slippage guard).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet creating the request.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L539">packages/perpetuals/perpetualsVault.ts:539</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getdeposittx"><span>get<wbr/>Deposit<wbr/>Tx</span><a href="#getdeposittx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getdeposittx-1"><span class="tsd-kind-call-signature">getDepositTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">isSponsoredTx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">minLpAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span> <span class="tsd-signature-symbol">&amp;</span> (<br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><br/>        <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositCoinArg</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TransactionObjectArgument</span> <span class="tsd-signature-symbol">}</span><br/>    )<span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getdeposittx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a user transaction to deposit collateral into the vault in exchange for LP.</p>
+<p>You can specify the deposit as:</p>
+<ul>
+<li><code>depositAmount</code> (wallet pays directly), OR</li>
+<li><code>depositCoinArg</code> (use an existing transaction argument)</li>
+</ul>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">isSponsoredTx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">minLpAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span> <span class="tsd-signature-symbol">&amp;</span> (<br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><br/>    <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositCoinArg</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TransactionObjectArgument</span> <span class="tsd-signature-symbol">}</span><br/>)</span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">isSponsoredTx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p>Whether the tx is sponsored (gas paid by another party).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">minLpAmountOut</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Minimum LP out (slippage guard).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Depositor wallet.</p>
+</div></li></ul>
+<ul>
+<li><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of collateral to deposit (mutually exclusive with <code>depositCoinArg</code>).</p>
+</div></li></ul></li>
+<li><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositCoinArg</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TransactionObjectArgument</span> <span class="tsd-signature-symbol">}</span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">depositCoinArg</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionObjectArgument</span></h5>
+<div class="tsd-comment tsd-typography"><p>Transaction argument referencing collateral coin.</p>
+</div></li></ul></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="ts"><span class="hl-5">const</span><span class="hl-1"> { </span><span class="hl-6">txKind</span><span class="hl-1"> } = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">vault</span><span class="hl-1">.</span><span class="hl-0">getDepositTx</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x...&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">depositAmount:</span><span class="hl-1"> </span><span class="hl-8">1_000_000_000</span><span class="hl-5">n</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">minLpAmountOut:</span><span class="hl-1"> </span><span class="hl-8">0</span><span class="hl-5">n</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L621">packages/perpetuals/perpetualsVault.ts:621</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getgrantagentwallettx"><span>get<wbr/>Grant<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span><a href="#getgrantagentwallettx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getgrantagentwallettx-1"><span class="tsd-kind-call-signature">getGrantAgentWalletTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getgrantagentwallettx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction that grants assistant permissions for this vault.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L333">packages/perpetuals/perpetualsVault.ts:333</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getlpcoinprice"><span>get<wbr/>Lp<wbr/>Coin<wbr/>Price</span><a href="#getlpcoinprice" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getlpcoinprice-1"><span class="tsd-kind-call-signature">getLpCoinPrice</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span><a href="#getlpcoinprice-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetch the current LP coin price for this vault (in collateral units).</p>
+<p>Internally calls <a href="packages_perpetuals_perpetuals.Perpetuals.html#getlpcoinprices" class="tsd-kind-method">Perpetuals.getLpCoinPrices</a> and returns the first price.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></h4><p>LP coin price as a <code>number</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L856">packages/perpetuals/perpetualsVault.ts:856</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerprocesswithdrawrequeststx"><span>get<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests<wbr/>Tx</span><a href="#getownerprocesswithdrawrequeststx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerprocesswithdrawrequeststx-1"><span class="tsd-kind-call-signature">getOwnerProcessWithdrawRequestsTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getownerprocesswithdrawrequeststx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to process one or more users' withdraw requests.</p>
+<p>This is the normal (non-force) processing path for withdrawals. The owner
+batches users and settles their requests in a single transaction.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p>Users whose requests should be processed.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L391">packages/perpetuals/perpetualsVault.ts:391</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerupdateforcewithdrawdelaytx"><span>get<wbr/>Owner<wbr/>Update<wbr/>Force<wbr/>Withdraw<wbr/>Delay<wbr/>Tx</span><a href="#getownerupdateforcewithdrawdelaytx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerupdateforcewithdrawdelaytx-1"><span class="tsd-kind-call-signature">getOwnerUpdateForceWithdrawDelayTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">forceWithdrawDelayMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getownerupdateforcewithdrawdelaytx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to update the vault's force withdraw delay.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">forceWithdrawDelayMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">forceWithdrawDelayMs</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>New delay (ms). Should be no greater than the current <code>maxForceWithdrawDelayMs</code> from <a href="packages_perpetuals_perpetuals.Perpetuals.html#getvaultsconfig" class="tsd-kind-method">Perpetuals.getVaultsConfig</a>.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L242">packages/perpetuals/perpetualsVault.ts:242</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerupdatelockperiodtx"><span>get<wbr/>Owner<wbr/>Update<wbr/>Lock<wbr/>Period<wbr/>Tx</span><a href="#getownerupdatelockperiodtx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerupdatelockperiodtx-1"><span class="tsd-kind-call-signature">getOwnerUpdateLockPeriodTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">lockPeriodMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getownerupdatelockperiodtx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to update the vault's lock period.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lockPeriodMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">lockPeriodMs</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>New lock period (ms). Should be no greater than the current <code>maxLockPeriodMs</code> from <a href="packages_perpetuals_perpetuals.Perpetuals.html#getvaultsconfig" class="tsd-kind-method">Perpetuals.getVaultsConfig</a>.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L273">packages/perpetuals/perpetualsVault.ts:273</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerupdateperformancefeetx"><span>get<wbr/>Owner<wbr/>Update<wbr/>Performance<wbr/>Fee<wbr/>Tx</span><a href="#getownerupdateperformancefeetx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerupdateperformancefeetx-1"><span class="tsd-kind-call-signature">getOwnerUpdatePerformanceFeeTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">performanceFeePercentage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getownerupdateperformancefeetx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to update the vault performance fee.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">performanceFeePercentage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">performanceFeePercentage</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>New fee as a fraction (e.g. <code>0.2</code> = 20%).
+Should be no greater than the current <code>maxPerformanceFeePercentage</code> from <a href="packages_perpetuals_perpetuals.Perpetuals.html#getvaultsconfig" class="tsd-kind-method">Perpetuals.getVaultsConfig</a>.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L305">packages/perpetuals/perpetualsVault.ts:305</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerwithdrawcollateraltx"><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral<wbr/>Tx</span><a href="#getownerwithdrawcollateraltx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerwithdrawcollateraltx-1"><span class="tsd-kind-call-signature">getOwnerWithdrawCollateralTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getownerwithdrawcollateraltx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to withdraw vault collateral by redeeming LP.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of LP to redeem.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Minimum collateral out to protect from slippage.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional recipient address for withdrawn collateral.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span></h4><p>Response containing <code>tx</code> and any extra outputs described by
+<a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse.html" class="tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawCollateralTxResponse</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L458">packages/perpetuals/perpetualsVault.ts:458</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerwithdrawlockedliquiditytx"><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity<wbr/>Tx</span><a href="#getownerwithdrawlockedliquiditytx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerwithdrawlockedliquiditytx-1"><span class="tsd-kind-call-signature">getOwnerWithdrawLockedLiquidityTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getownerwithdrawlockedliquiditytx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to withdraw locked liquidity from the vault.</p>
+<p>Owner-locked liquidity is LP that was locked at vault creation time.
+This flow allows the owner to withdraw a portion without going through
+the standard withdraw-request lifecycle. Owner-locked withdrawals are
+exempt from performance fees.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of locked LP to withdraw (native units).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Minimum collateral out to protect from slippage.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional recipient address for withdrawn collateral.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span></h4><p>Response containing <code>tx</code> and any extra outputs described by
+<a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse.html" class="tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawLockedLiquidityTxResponse</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L498">packages/perpetuals/perpetualsVault.ts:498</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getownerwithdrawperformancefeestx"><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees<wbr/>Tx</span><a href="#getownerwithdrawperformancefeestx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getownerwithdrawperformancefeestx-1"><span class="tsd-kind-call-signature">getOwnerWithdrawPerformanceFeesTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">withdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getownerwithdrawperformancefeestx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction to withdraw accrued performance fees.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">withdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional recipient address for the withdrawn fees.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">withdrawAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of collateral to withdraw as fees.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span></h4><p>Response containing <code>tx</code> and any extra outputs described by
+<a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse.html" class="tsd-kind-interface">ApiPerpetualsVaultOwnerWithdrawPerformanceFeesTxResponse</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L424">packages/perpetuals/perpetualsVault.ts:424</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpausevaultforforcewithdrawrequesttx"><span>get<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span><a href="#getpausevaultforforcewithdrawrequesttx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpausevaultforforcewithdrawrequesttx-1"><span class="tsd-kind-call-signature">getPauseVaultForForceWithdrawRequestTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getpausevaultforforcewithdrawrequesttx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a transaction that pauses this vault for force-withdraw processing.</p>
+<p>The builder adds this vault's object ID, serializes the supplied transaction
+as <code>txKind</code> when an <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-kind-class">AftermathApi</a> is available, and leaves signing
+and execution to the caller. Optional sponsor data is forwarded to the API.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5>
+<div class="tsd-comment tsd-typography"><p>Cached gas-pool sponsorship data, if required.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Existing transaction to extend; otherwise a new one is used.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The backend transaction response.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L174">packages/perpetuals/perpetualsVault.ts:174</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewcreatewithdrawrequest"><span>get<wbr/>Preview<wbr/>Create<wbr/>Withdraw<wbr/>Request</span><a href="#getpreviewcreatewithdrawrequest" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewcreatewithdrawrequest-1"><span class="tsd-kind-call-signature">getPreviewCreateWithdrawRequest</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewcreatewithdrawrequest-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview creating a withdraw request.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>LP amount to withdraw.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Requesting wallet.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response including estimated collateral out and constraints.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L773">packages/perpetuals/perpetualsVault.ts:773</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewdeposit"><span>get<wbr/>Preview<wbr/>Deposit</span><a href="#getpreviewdeposit" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewdeposit-1"><span class="tsd-kind-call-signature">getPreviewDeposit</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewDepositResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewDepositResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewdeposit-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview depositing into the vault.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">depositAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Deposit amount in collateral coin units.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewDepositResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewDepositResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response including estimated LP out.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L792">packages/perpetuals/perpetualsVault.ts:792</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewownerprocesswithdrawrequests"><span>get<wbr/>Preview<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests</span><a href="#getpreviewownerprocesswithdrawrequests" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewownerprocesswithdrawrequests-1"><span class="tsd-kind-call-signature">getPreviewOwnerProcessWithdrawRequests</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewownerprocesswithdrawrequests-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview the results of an owner processing one or more withdraw requests.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userAddresses</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p>Users to process.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response with expected effects.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L695">packages/perpetuals/perpetualsVault.ts:695</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewownerwithdrawcollateral"><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral</span><a href="#getpreviewownerwithdrawcollateral" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewownerwithdrawcollateral-1"><span class="tsd-kind-call-signature">getPreviewOwnerWithdrawCollateral</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewownerwithdrawcollateral-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview an owner collateral withdrawal (LP redemption).</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">lpWithdrawAmount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>LP amount to redeem.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response including estimated collateral out.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L728">packages/perpetuals/perpetualsVault.ts:728</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewownerwithdrawlockedliquidity"><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity</span><a href="#getpreviewownerwithdrawlockedliquidity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewownerwithdrawlockedliquidity-1"><span class="tsd-kind-call-signature">getPreviewOwnerWithdrawLockedLiquidity</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewownerwithdrawlockedliquidity-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview an owner locked liquidity withdrawal.</p>
+<p>Returns the estimated collateral output for withdrawing a given amount
+of the owner's locked LP tokens. Owner-locked withdrawals are exempt
+from performance fees.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">amount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of locked LP to withdraw (native units).</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response including estimated collateral out and price.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L750">packages/perpetuals/perpetualsVault.ts:750</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewownerwithdrawperformancefees"><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees</span><a href="#getpreviewownerwithdrawperformancefees" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewownerwithdrawperformancefees-1"><span class="tsd-kind-call-signature">getPreviewOwnerWithdrawPerformanceFees</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewownerwithdrawperformancefees-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview the amount available for the owner to withdraw as performance fees.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response including withdrawable fees and related metadata.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L713">packages/perpetuals/perpetualsVault.ts:713</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewpausevaultforforcewithdrawrequest"><span>get<wbr/>Preview<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request</span><a href="#getpreviewpausevaultforforcewithdrawrequest" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewpausevaultforforcewithdrawrequest-1"><span class="tsd-kind-call-signature">getPreviewPauseVaultForForceWithdrawRequest</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewpausevaultforforcewithdrawrequest-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview whether this vault can be paused for force-withdraw processing.</p>
+<p>The wallet address identifies the caller for the backend preview. This
+method performs HTTP I/O and does not build, sign, or submit a transaction.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Address whose force-withdraw request is checked.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewPauseVaultForForceWithdrawRequestResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Either an error string or <code>{ isPausable, minNextPauseTimestamp }</code>.
+The timestamp is a Unix timestamp in milliseconds as a <code>bigint</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L833">packages/perpetuals/perpetualsVault.ts:833</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpreviewprocessforcewithdrawrequest"><span>get<wbr/>Preview<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request</span><a href="#getpreviewprocessforcewithdrawrequest" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpreviewprocessforcewithdrawrequest-1"><span class="tsd-kind-call-signature">getPreviewProcessForceWithdrawRequest</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpreviewprocessforcewithdrawrequest-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Preview processing a force withdraw request for a user.</p>
+<p>This is useful to determine what positions/sizes must be closed or what
+the expected outputs are prior to building the actual transaction.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>User wallet with a pending force-withdraw.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse.html" class="tsd-signature-type tsd-kind-type-alias">ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Preview response describing expected processing effects.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L811">packages/perpetuals/perpetualsVault.ts:811</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getprocessforcewithdrawrequesttx"><span>get<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span><a href="#getprocessforcewithdrawrequesttx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getprocessforcewithdrawrequesttx-1"><span class="tsd-kind-call-signature">getProcessForceWithdrawRequestTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sizesToClose</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.PerpetualsMarketId.html" class="tsd-signature-type tsd-kind-type-alias">PerpetualsMarketId</a><span class="tsd-signature-symbol">,</span> <a href="../types/general_types_generalTypes.Balance.html" class="tsd-signature-type tsd-kind-type-alias">Balance</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span><a href="#getprocessforcewithdrawrequesttx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a <code>process-force-withdraw-request</code> transaction.</p>
+<p>Force-withdraw is a mechanism that closes required positions and processes
+a withdraw request after a delay window (see vault params).</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sizesToClose</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.PerpetualsMarketId.html" class="tsd-signature-type tsd-kind-type-alias">PerpetualsMarketId</a><span class="tsd-signature-symbol">,</span> <a href="../types/general_types_generalTypes.Balance.html" class="tsd-signature-type tsd-kind-type-alias">Balance</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">recipientAddress</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional recipient of the withdrawn collateral.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">sizesToClose</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/packages_perpetuals_perpetualsTypes.PerpetualsMarketId.html" class="tsd-signature-type tsd-kind-type-alias">PerpetualsMarketId</a><span class="tsd-signature-symbol">,</span> <a href="../types/general_types_generalTypes.Balance.html" class="tsd-signature-type tsd-kind-type-alias">Balance</a><span class="tsd-signature-symbol">&gt;</span></h5>
+<div class="tsd-comment tsd-typography"><p>Mapping of marketId -&gt; size (base units) to close.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">walletAddress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>User wallet that owns the withdraw request.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><br/>    <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_perpetuals_perpetualsTypes.ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse.html" class="tsd-signature-type tsd-kind-interface">ApiPerpetualsVaultProcessForceWithdrawRequestTxResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code> (and any additional outputs
+provided by the backend response type).</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L137">packages/perpetuals/perpetualsVault.ts:137</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getrevokeagentwallettx"><span>get<wbr/>Revoke<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span><a href="#getrevokeagentwallettx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getrevokeagentwallettx-1"><span class="tsd-kind-call-signature">getRevokeAgentWalletTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">accountCapId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getrevokeagentwallettx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an owner transaction that revokes an assistant from this vault.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">accountCapId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L357">packages/perpetuals/perpetualsVault.ts:357</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getupdatewithdrawrequestslippagetx"><span>get<wbr/>Update<wbr/>Withdraw<wbr/>Request<wbr/>Slippage<wbr/>Tx</span><a href="#getupdatewithdrawrequestslippagetx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getupdatewithdrawrequestslippagetx-1"><span class="tsd-kind-call-signature">getUpdateWithdrawRequestSlippageTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getupdatewithdrawrequestslippagetx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build an <code>update-withdraw-request-slippage</code> transaction.</p>
+<p>This updates the user's minimum acceptable collateral output amount
+for an existing withdraw request.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">minCollateralAmountOut</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span></h5>
+<div class="tsd-comment tsd-typography"><p>New minimum collateral amount out.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">sponsor</span><span class="tsd-signature-symbol">?: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsSponsorConfig.html" class="tsd-signature-type tsd-kind-interface">PerpetualsSponsorConfig</a></h5></li>
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.ApiTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">ApiTransactionResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Transaction response containing <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L207">packages/perpetuals/perpetualsVault.ts:207</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="ispaused"><span>is<wbr/>Paused</span><a href="#ispaused" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="ispaused-1"><span class="tsd-kind-call-signature">isPaused</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#ispaused-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Reports whether the vault is currently paused for force withdrawals.</p>
+<p>The comparison uses <code>vaultObject.pausedUntilTimestamp</code> in Unix
+milliseconds. A missing timestamp or a timestamp at or before <code>Date.now()</code>
+means that the vault is not paused.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> while the current time is before the pause deadline.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L925">packages/perpetuals/perpetualsVault.ts:925</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="partialvaultcap"><span>partial<wbr/>Vault<wbr/>Cap</span><a href="#partialvaultcap" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="partialvaultcap-1"><span class="tsd-kind-call-signature">partialVaultCap</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_perpetuals_perpetualsTypes.PerpetualsPartialVaultCap.html" class="tsd-signature-type tsd-kind-type-alias">PerpetualsPartialVaultCap</a><a href="#partialvaultcap-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Build a lightweight “cap-like” object for the vault’s underlying account.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="../types/packages_perpetuals_perpetualsTypes.PerpetualsPartialVaultCap.html" class="tsd-signature-type tsd-kind-type-alias">PerpetualsPartialVaultCap</a></h4><p><code>PerpetualsPartialVaultCap</code> suitable for account fetch helpers
+such as <a href="packages_perpetuals_perpetuals.Perpetuals.html#getaccount" class="tsd-kind-method">Perpetuals.getAccount</a>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L874">packages/perpetuals/perpetualsVault.ts:874</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="apibaseurlfornetwork"><code class="tsd-tag">Static</code><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span><a href="#apibaseurlfornetwork" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="apibaseurlfornetwork-1"><span class="tsd-kind-call-signature">apiBaseUrlForNetwork</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#apibaseurlfornetwork-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Aftermath API host for a Sui network.</p>
+<p>To target a custom or local host, pass <code>baseUrl</code> in <code>CallerConfig</code> to the
+constructor instead.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a></span>
+<div class="tsd-comment tsd-typography"><p>The Sui network whose host to return.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's HTTPS or local HTTP API host.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#apibaseurlfornetwork">apiBaseUrlForNetwork</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L151">general/utils/caller.ts:151</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="calcwithdrawrequestslippage"><code class="tsd-tag">Static</code><span>calc<wbr/>Withdraw<wbr/>Request<wbr/>Slippage</span><a href="#calcwithdrawrequestslippage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="calcwithdrawrequestslippage-1"><span class="tsd-kind-call-signature">calcWithdrawRequestSlippage</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">withdrawRequest</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultWithdrawRequest.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultWithdrawRequest</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#calcwithdrawrequestslippage-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Compute the implied slippage tolerance for a withdraw request.</p>
+<p>Defined as:</p>
+<pre><code class="text">(lpAmountInUsd - minCollateralAmountOutUsd) / lpAmountInUsd
+</code><button type="button">Copy</button></pre>
+
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">withdrawRequest</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultWithdrawRequest.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultWithdrawRequest</a> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">withdrawRequest</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/packages_perpetuals_perpetualsTypes.PerpetualsVaultWithdrawRequest.html" class="tsd-signature-type tsd-kind-interface">PerpetualsVaultWithdrawRequest</a></h5>
+<div class="tsd-comment tsd-typography"><p>Withdraw request to analyze.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>Slippage fraction (0..1). Returns <code>0</code> if <code>lpAmountInUsd</code> is missing/zero.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L977">packages/perpetuals/perpetualsVault.ts:977</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="defaultfullnodeurl"><code class="tsd-tag">Static</code><span>default<wbr/>Fullnode<wbr/>Url</span><a href="#defaultfullnodeurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="defaultfullnodeurl-1"><span class="tsd-kind-call-signature">defaultFullnodeUrl</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#defaultfullnodeurl-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Sui fullnode URL for a network.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></span>
+<div class="tsd-comment tsd-typography"><p>The network whose fullnode URL to return. <code>undefined</code>
+defaults to mainnet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's fullnode URL.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#defaultfullnodeurl">defaultFullnodeUrl</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L162">general/utils/caller.ts:162</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isvalidlpcoinname"><code class="tsd-tag">Static</code><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Name</span><a href="#isvalidlpcoinname" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isvalidlpcoinname-1"><span class="tsd-kind-call-signature">isValidLpCoinName</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isvalidlpcoinname-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks if a string is a valid LP coin name.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">value</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The string to check.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if <code>value</code> can be used as a valid LP coin name, otherwise <code>false</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-remarks">
+<h4 class="tsd-anchor-link" id="remarks-1">Remarks<a href="#remarks-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Current rule: ASCII-only. This aligns with many on-chain metadata constraints.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L945">packages/perpetuals/perpetualsVault.ts:945</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isvalidlpcointypesymbol"><code class="tsd-tag">Static</code><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Type<wbr/>Symbol</span><a href="#isvalidlpcointypesymbol" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="isvalidlpcointypesymbol-1"><span class="tsd-kind-call-signature">isValidLpCoinTypeSymbol</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><a href="#isvalidlpcointypesymbol-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Checks if a string is a valid LP coin type symbol.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">value</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The string to check.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p><code>true</code> if <code>value</code> can be used as a valid LP coin type symbol, otherwise <code>false</code>.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-remarks">
+<h4 class="tsd-anchor-link" id="remarks-2">Remarks<a href="#remarks-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Current rule: uppercase A–Z plus underscore.</p>
+</div></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/perpetuals/perpetualsVault.ts#L958">packages/perpetuals/perpetualsVault.ts:958</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#api"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api</span></a><a href="#config" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a><a href="#vaultobject"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>vault<wbr/>Object</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#getaccount"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Account</span></a><a href="#getaccountobject"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Account<wbr/>Object</span></a><a href="#getallwithdrawrequests"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>All<wbr/>Withdraw<wbr/>Requests</span></a><a href="#getcancelwithdrawrequesttx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Cancel<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a><a href="#getcreatewithdrawrequesttx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a><a href="#getdeposittx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Tx</span></a><a href="#getgrantagentwallettx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Grant<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span></a><a href="#getlpcoinprice"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Lp<wbr/>Coin<wbr/>Price</span></a><a href="#getownerprocesswithdrawrequeststx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests<wbr/>Tx</span></a><a href="#getownerupdateforcewithdrawdelaytx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Force<wbr/>Withdraw<wbr/>Delay<wbr/>Tx</span></a><a href="#getownerupdatelockperiodtx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Lock<wbr/>Period<wbr/>Tx</span></a><a href="#getownerupdateperformancefeetx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Update<wbr/>Performance<wbr/>Fee<wbr/>Tx</span></a><a href="#getownerwithdrawcollateraltx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral<wbr/>Tx</span></a><a href="#getownerwithdrawlockedliquiditytx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity<wbr/>Tx</span></a><a href="#getownerwithdrawperformancefeestx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees<wbr/>Tx</span></a><a href="#getpausevaultforforcewithdrawrequesttx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a><a href="#getpreviewcreatewithdrawrequest"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Create<wbr/>Withdraw<wbr/>Request</span></a><a href="#getpreviewdeposit"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Deposit</span></a><a href="#getpreviewownerprocesswithdrawrequests"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Process<wbr/>Withdraw<wbr/>Requests</span></a><a href="#getpreviewownerwithdrawcollateral"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Collateral</span></a><a href="#getpreviewownerwithdrawlockedliquidity"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Locked<wbr/>Liquidity</span></a><a href="#getpreviewownerwithdrawperformancefees"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Owner<wbr/>Withdraw<wbr/>Performance<wbr/>Fees</span></a><a href="#getpreviewpausevaultforforcewithdrawrequest"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Pause<wbr/>Vault<wbr/>For<wbr/>Force<wbr/>Withdraw<wbr/>Request</span></a><a href="#getpreviewprocessforcewithdrawrequest"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Preview<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request</span></a><a href="#getprocessforcewithdrawrequesttx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Process<wbr/>Force<wbr/>Withdraw<wbr/>Request<wbr/>Tx</span></a><a href="#getrevokeagentwallettx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Revoke<wbr/>Agent<wbr/>Wallet<wbr/>Tx</span></a><a href="#getupdatewithdrawrequestslippagetx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Update<wbr/>Withdraw<wbr/>Request<wbr/>Slippage<wbr/>Tx</span></a><a href="#ispaused"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Paused</span></a><a href="#partialvaultcap"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Vault<wbr/>Cap</span></a><a href="#apibaseurlfornetwork" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a><a href="#calcwithdrawrequestslippage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>calc<wbr/>Withdraw<wbr/>Request<wbr/>Slippage</span></a><a href="#defaultfullnodeurl" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a><a href="#isvalidlpcoinname"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Name</span></a><a href="#isvalidlpcointypesymbol"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>is<wbr/>Valid<wbr/>Lp<wbr/>Coin<wbr/>Type<wbr/>Symbol</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

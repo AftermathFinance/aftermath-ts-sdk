@@ -47,7 +47,12 @@ import { Pools } from "../pools";
  * @packageDocumentation
  */
 /**
- * Provides methods to interact with the Pools API.
+ * Provides pool API reads, Move transaction commands, and pool-specific Move
+ * error tables for `AftermathApi`.
+ *
+ * Most methods only build commands. The `fetchBuild*` methods also select the
+ * caller's coin objects and may register a referrer before returning a
+ * `Transaction`.
  */
 export class PoolsApi implements MoveErrorsInterface {
 	// =========================================================================
@@ -88,27 +93,40 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Class Members
 	// =========================================================================
 
-	/**
-	 * Object containing the addresses of various contracts.
-	 */
+	/** Addresses of the pool, referral-vault, and optional DAO-fee packages. */
 	readonly addresses: {
+		/** Package and object addresses for the main pool contracts. */
 		pools: PoolsAddresses;
+		/** The referral vault used by referral-aware pool commands. */
 		referralVault: ReferralVaultAddresses;
+		/** Optional DAO-fee package addresses. */
 		daoFeePools?: DaoFeePoolsAddresses;
 	};
+	/** Fully qualified object types recognized by pool object reads. */
 	readonly objectTypes: {
+		/** The on-chain `Pool<L>` object type prefix. */
 		pool: AnyObjectType;
+		/** The optional DAO fee pool object type. */
 		daoFeePool?: AnyObjectType;
+		/** The optional DAO fee owner-cap object type. */
 		daoFeePoolOwnerCap?: AnyObjectType;
 	};
+	/** Fully qualified event types recognized by pool indexer reads. */
 	readonly eventTypes: {
+		/** The original pool swap event type. */
 		trade: AnyObjectType;
+		/** The original pool deposit event type. */
 		deposit: AnyObjectType;
+		/** The original pool withdrawal event type. */
 		withdraw: AnyObjectType;
+		/** The version-two pool swap event type. */
 		tradeV2: AnyObjectType;
+		/** The version-two pool deposit event type. */
 		depositV2: AnyObjectType;
+		/** The version-two pool withdrawal event type. */
 		withdrawV2: AnyObjectType;
 	};
+	/** Move errors grouped by package, module, and numeric error code. */
 	readonly moveErrors: MoveErrors;
 
 	// =========================================================================
@@ -116,9 +134,14 @@ export class PoolsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * Creates an instance of PoolsApi.
-	 * @param {AftermathApi} api - An instance of AftermathApi.
-	 * @throws {Error} Throws an error if not all required addresses have been set in AfSdk
+	 * Creates the provider-side pool metadata and Move error table.
+	 *
+	 * This constructor does not make a network request. It requires both pool
+	 * package addresses and referral-vault addresses. DAO-fee commands are
+	 * available only when the provider also supplies DAO-fee addresses.
+	 *
+	 * @param api - The configured `AftermathApi` provider.
+	 * @throws `Error` when pool or referral-vault addresses are missing.
 	 */
 	constructor(private readonly api: AftermathApi) {
 		const pools = api.addresses.pools;
@@ -298,6 +321,16 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Fetches DAO fee owner-cap objects owned by a wallet.
+	 *
+	 * This method performs an object API read and casts each response to
+	 * `DaoFeePoolOwnerCapObject`. It requires DAO-fee addresses in the provider.
+	 *
+	 * @param inputs - The wallet address whose capabilities should be returned.
+	 * @returns A promise for the owned DAO fee owner capabilities.
+	 * @throws `Error` when DAO-fee addresses are not configured.
+	 */
 	fetchOwnedDaoFeePoolOwnerCaps = (
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	): Promise<DaoFeePoolOwnerCapObject[]> => {
@@ -490,7 +523,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Withdraws all coins from a liquidity pool.
 	 * @param inputs - The inputs required for the transaction.
 	 * @param inputs.tx - The transaction block.
-	 * @param inputs.poolId - The ID of the liquidity pool.
+	 * `poolId` identifies the liquidity pool.
 	 * @param inputs.lpCoinId - The ID of the LP coin.
 	 * @param inputs.lpCoinType - The type of the LP coin.
 	 * @param inputs.coinTypes - An array of coin types.
@@ -716,6 +749,17 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Adds a DAO fee pool creation command to a transaction.
+	 *
+	 * The command wraps an existing pool, stores `feeBps` in basis points, and
+	 * stores `feeRecipient` as a Sui address. It is available only when the
+	 * provider has DAO-fee package addresses.
+	 *
+	 * @param inputs - The transaction, pool object, LP type, fee, and recipient.
+	 * @returns The transaction result for the Move `pool::new` call.
+	 * @throws `Error` when DAO-fee addresses are not configured.
+	 */
 	daoFeePoolNewTx = (inputs: {
 		tx: Transaction;
 		poolId: ObjectId | TransactionObjectArgument;
@@ -744,6 +788,16 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Adds a DAO fee basis-point update command to a transaction.
+	 *
+	 * The caller must provide the owner-cap object for the DAO fee pool. The
+	 * `newFeeBps` value is encoded as Move `u16` basis points, where `100` is 1%.
+	 *
+	 * @param inputs - The transaction, owner cap, DAO fee pool, LP type, and new fee.
+	 * @returns The transaction result for the Move `pool::update_fee_bps` call.
+	 * @throws `Error` when DAO-fee addresses are not configured.
+	 */
 	daoFeePoolUpdateFeeBpsTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolOwnerCapId: ObjectId;
@@ -772,6 +826,16 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Adds a DAO fee recipient update command to a transaction.
+	 *
+	 * The caller must provide the owner-cap object for the DAO fee pool. The new
+	 * recipient is encoded as a Sui address by the Move command.
+	 *
+	 * @param inputs - The transaction, owner cap, DAO fee pool, LP type, and recipient.
+	 * @returns The transaction result for the Move `pool::update_fee_recipient` call.
+	 * @throws `Error` when DAO-fee addresses are not configured.
+	 */
 	daoFeePoolUpdateFeeRecipientTx = (inputs: {
 		tx: Transaction;
 		daoFeePoolOwnerCapId: ObjectId;
@@ -911,7 +975,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Withdraws all coins from a liquidity pool.
 	 * @param inputs - The inputs required for the transaction.
 	 * @param inputs.tx - The transaction block.
-	 * @param inputs.poolId - The ID of the liquidity pool.
+	 * `poolId` identifies the liquidity pool.
 	 * @param inputs.lpCoinId - The ID of the LP coin.
 	 * @param inputs.lpCoinType - The type of the LP coin.
 	 * @param inputs.coinTypes - An array of coin types.
@@ -958,7 +1022,6 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	/**
 	 * Fetches a transaction block for trading in a pool.
-	 * @async
 	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
 	 * @param {Pool} inputs.pool - The pool to trade in.
 	 * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
@@ -1044,6 +1107,17 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
+	/**
+	 * Appends an exact-input pool swap to an existing transaction.
+	 *
+	 * The method uses `coinInAmount` and the local `Pool` math to calculate the
+	 * expected output, then passes the supplied coin object to `tradeTx`. It does
+	 * not select or merge coin objects and does not serialize the transaction.
+	 *
+	 * @param inputs - The existing transaction, input coin, pool, types, amount, and slippage.
+	 * @returns The output coin transaction argument produced by the swap command.
+	 * @throws When local AMM math rejects the requested trade.
+	 */
 	fetchAddTradeTx = (inputs: {
 		tx: Transaction;
 		coinInId: ObjectId | TransactionObjectArgument;
@@ -1086,7 +1160,6 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	/**
 	 * Fetches a transaction block for depositing in a pool.
-	 * @async
 	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
 	 * @param {Pool} inputs.pool - The pool to deposit in.
 	 * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
@@ -1170,7 +1243,6 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	/**
 	 * Fetches a transaction block for withdrawing from a pool.
-	 * @async
 	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
 	 * @param {Pool} inputs.pool - The pool to withdraw from.
 	 * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
@@ -1320,10 +1392,22 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
+	/**
+	 * Builds a standalone transaction that updates a DAO fee in basis points.
+	 *
+	 * The helper creates a `Transaction`, sets its sender from `walletAddress`,
+	 * and delegates to `daoFeePoolUpdateFeeBpsTx`.
+	 */
 	buildDaoFeePoolUpdateFeeBpsTx = Helpers.transactions.createBuildTxFunc(
 		this.daoFeePoolUpdateFeeBpsTx
 	);
 
+	/**
+	 * Builds a standalone transaction that updates a DAO fee recipient.
+	 *
+	 * The helper creates a `Transaction`, sets its sender from `walletAddress`,
+	 * and delegates to `daoFeePoolUpdateFeeRecipientTx`.
+	 */
 	buildDaoFeePoolUpdateFeeRecipientTx = Helpers.transactions.createBuildTxFunc(
 		this.daoFeePoolUpdateFeeRecipientTx
 	);

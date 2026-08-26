@@ -135,7 +135,7 @@ export class PerpetualsMarket extends Caller {
 	 * Under the hood, this calls {@link Perpetuals.getMarkets24hrStats} and
 	 * returns the first (and only) entry.
 	 *
-	 * @returns {@link PerpetualsMarket24hrStats}.
+	 * @returns `PerpetualsMarket24hrStats`.
 	 *
 	 * @remarks
 	 * This method creates a new {@link Perpetuals} instance using `this.config`.
@@ -318,7 +318,7 @@ export class PerpetualsMarket extends Caller {
 	 * @param inputs.beforeTimestampCursor - Optional pagination cursor.
 	 * @param inputs.limit - Optional page size.
 	 *
-	 * @returns {@link ApiPerpetualsMarketOrderHistoryResponse} containing:
+	 * @returns `ApiPerpetualsMarketOrderHistoryResponse` containing:
 	 * - `orders`
 	 * - `nextBeforeTimestampCursor`
 	 */

@@ -10,6 +10,13 @@ import type {
 import { GrpcCasting, type SuiObjectView } from "../utils/grpcCasting";
 import { Helpers } from "../utils/helpers";
 
+/**
+ * Converts gRPC object views into NFT and kiosk domain objects.
+ *
+ * All methods are local casts. They perform no network I/O and expect the
+ * caller to have requested the gRPC `json` view. NFT methods also require the
+ * Display view when they need to read `display`.
+ */
 export class NftsApiCasting {
 	// =========================================================================
 	//  Public Methods
@@ -19,6 +26,17 @@ export class NftsApiCasting {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Casts and filters a list of gRPC object views into renderable NFTs.
+	 *
+	 * Objects without a Display response are omitted. Objects whose Display
+	 * response has no suggested or other fields are also omitted. The remaining
+	 * objects preserve input order.
+	 *
+	 * @param objects - gRPC object views with JSON and Display data requested.
+	 * @returns Renderable NFT objects in input order.
+	 * @throws Errors from the NFT caster when an included object lacks identity.
+	 */
 	public static nftsFromSuiObjects = (objects: SuiObjectView[]): Nft[] => {
 		// @dev: gRPC returns `display: undefined` when `include.display` was not
 		// requested and `null` when the object's type has no Display template.
@@ -34,6 +52,17 @@ export class NftsApiCasting {
 			);
 	};
 
+	/**
+	 * Casts one gRPC object view into an NFT.
+	 *
+	 * Display data with an error or no output becomes empty `suggested` and
+	 * `other` maps. This method does not filter the result, so it can return an
+	 * NFT with empty display maps even though `nftsFromSuiObjects` would omit it.
+	 *
+	 * @param object - The gRPC object view with JSON and Display data.
+	 * @returns The object's identity and normalized Display fields.
+	 * @throws `Error` when the object ID or Move type is absent.
+	 */
 	public static nftFromSuiObject = (object: SuiObjectView): Nft => {
 		const info = this.nftInfoFromSuiObject(object);
 
@@ -46,6 +75,18 @@ export class NftsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a regular `KioskOwnerCap` gRPC object view.
+	 *
+	 * The gRPC JSON view must contain the cap's `for` field. The field is
+	 * normalized to a zero-padded object ID, and the returned object keeps the
+	 * source object's ID and Move type.
+	 *
+	 * @param object - A gRPC object view for
+	 * `0x2::kiosk::KioskOwnerCap`.
+	 * @returns The owner cap and the kiosk object ID it controls.
+	 * @throws `Error` when the object identity, type, or `for` field is missing.
+	 */
 	public static kioskOwnerCapFromSuiObject = (
 		object: SuiObjectView
 	): KioskOwnerCapObject => {
@@ -59,6 +100,17 @@ export class NftsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a Mysten personal-kiosk owner-cap gRPC object view.
+	 *
+	 * The gRPC JSON view must contain `cap.for`. The nested `cap` struct is
+	 * unwrapped before the kiosk ID is normalized to a zero-padded object ID.
+	 *
+	 * @param object - A gRPC object view for the personal-kiosk cap type.
+	 * @returns The owner cap and the personal kiosk object ID it controls.
+	 * @throws `Error` when the object identity, type, nested cap, or `for` field
+	 * is missing.
+	 */
 	public static kioskOwnerCapFromPersonalKioskCapSuiObject = (
 		object: SuiObjectView
 	): KioskOwnerCapObject => {

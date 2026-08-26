@@ -12,13 +12,18 @@ import type { CoinType } from "../coin/coinTypes";
 // =========================================================================
 
 /**
- * A multiplier type (in fixed-point bigint) used to scale a staked amount based on lock duration.
- * Typically, 1.0 is represented as 1e9 (i.e., `FixedUtils.fixedOneB`).
+ * A lock multiplier stored as an 18-decimal fixed-point `bigint`.
+ *
+ * `1_000_000_000_000_000_000n` represents `1.0`. The multiplier scales the
+ * position's principal for reward-share calculations.
  */
 export type FarmsMultiplier = bigint;
 
 /**
- * Enumerates the supported farm system versions.
+ * Identifies the farm contract version that produced an object or event.
+ *
+ * Version 1 uses the legacy `afterburner_vault` modules. Version 2 uses the
+ * `vault` modules and wraps its event payloads under `parsedJson.pos0`.
  */
 export type FarmsVersion = 1 | 2;
 
@@ -27,12 +32,18 @@ export type FarmsVersion = 1 | 2;
 // =========================================================================
 
 /**
- * A union type indicating whether an action is authorized by the `ownerCapId`
- * or by a `oneTimeAdminCapId`.
+ * Identifies the capability that authorizes a staking-pool administration
+ * transaction.
  */
 export type FarmOwnerOrOneTimeAdminCap =
-	| { ownerCapId: ObjectId }
-	| { oneTimeAdminCapId: ObjectId };
+	| {
+		/** Object ID of the pool owner capability. */
+		ownerCapId: ObjectId;
+	}
+	| {
+		/** Object ID of the one-time admin capability. */
+		oneTimeAdminCapId: ObjectId;
+	};
 
 // =========================================================================
 //  Objects
@@ -43,136 +54,88 @@ export type FarmOwnerOrOneTimeAdminCap =
 // =========================================================================
 
 /**
- * Indicates how strictly the lock duration is enforced in the vault.
- * - **Strict**: The position cannot be unlocked before the lock period ends.
- * - **Relaxed**: The position can be unlocked early, but may have penalized rewards.
+ * Defines how a staking pool treats a position whose lock has not expired.
+ *
+ * `Strict` prevents principal withdrawal while the position is locked.
+ * `Relaxed` permits principal withdrawal while the position is locked, with
+ * the on-chain contract applying the relaxed-lock reward rules.
  */
 export type FarmsLockEnforcement = "Strict" | "Relaxed";
 
 /**
- * Describes a single reward coin's parameters and state within a staking pool.
+ * Describes one reward coin's emission schedule and balances in a staking
+ * pool. Amounts are in the reward coin's smallest unit, and timestamps and
+ * intervals are in milliseconds.
  */
 export interface FarmsStakingPoolRewardCoin {
-	/**
-	 * The coin type of this reward (e.g., "0x2::sui::SUI").
-	 */
+	/** The fully qualified Move type of the reward coin. */
 	coinType: CoinType;
-	/**
-	 * The total number of reward tokens allocated for this pool (in smallest units).
-	 */
+	/** The total reward amount configured for this coin, in base units. */
 	rewards: Balance;
-	/**
-	 * Represents how many rewards are allocated per share in the pool. The share
-	 * is typically the "stakedAmountWithMultiplier".
-	 */
+	/** Cumulative rewards allocated per fixed-point unit of pool share. */
 	rewardsAccumulatedPerShare: Balance;
-	/**
-	 * The emission rate per emission schedule for this reward coin. For example, if
-	 * `emissionSchedulesMs` is 1 hour, then this emissionRate is distributed each hour.
-	 */
+	/** The reward amount emitted at each completed emission interval, in base units. */
 	emissionRate: Balance;
-	/**
-	 * The interval (in ms) at which the emissionRate is released.
-	 */
+	/** The emission interval in milliseconds. */
 	emissionSchedulesMs: Timestamp;
-	/**
-	 * The timestamp (ms) when emission for this reward coin starts.
-	 */
+	/** The timestamp in milliseconds when emission for this reward coin starts. */
 	emissionStartTimestamp: Timestamp;
-	/**
-	 * The last timestamp (ms) at which rewards were emitted for this reward coin.
-	 */
+	/** The last emission checkpoint in milliseconds. */
 	lastRewardTimestamp: Timestamp;
-	/**
-	 * The total number of rewards still available. If we have distributed
-	 * part of `rewards`, the remainder is `rewardsRemaining`.
-	 */
+	/** The configured reward balance that has not yet been emitted. */
 	rewardsRemaining: Balance;
-	/**
-	 * The actual number of reward tokens in the pool's on-chain object. This can differ
-	 * from `rewards` for internal or reserved logic.
-	 */
+	/** The reward balance currently held by the pool object, in base units. */
 	actualRewards: Balance;
 }
 
 /**
- * Represents the core object for a staking pool (a "vault"). It includes
- * information about staking amounts, locking constraints, reward coins,
- * and emission parameters.
+ * The normalized SDK view of a staking pool, also called a vault on chain.
+ *
+ * The pool defines the stake coin, minimum and maximum lock durations, the
+ * fixed-point multiplier range, and the reward schedules used for positions.
  */
 export interface FarmsStakingPoolObject extends Object {
-	/**
-	 * The coin type that users stake into this pool.
-	 */
+	/** The fully qualified Move type of the coin that users stake. */
 	stakeCoinType: CoinType;
-	/**
-	 * The total amount of staked tokens (principal) in this pool, in smallest units.
-	 */
+	/** The total staked principal, in the stake coin's base units. */
 	stakedAmount: Balance;
-	/**
-	 * The total staked amount multiplied by users' lock multipliers. Used for reward calculations.
-	 */
+	/** The total reward-weighted stake, in base units scaled by each position's multiplier. */
 	stakedAmountWithMultiplier: Balance;
-	/**
-	 * The minimum time (ms) that a position can be locked for a valid multiplier.
-	 */
+	/** The shortest accepted lock duration, in milliseconds. */
 	minLockDurationMs: Timestamp;
-	/**
-	 * The maximum time (ms) that a position can be locked. The position's lock multiplier is derived from
-	 * minLockDurationMs to maxLockDurationMs.
-	 */
+	/** The longest lock duration used when calculating a position's multiplier, in milliseconds. */
 	maxLockDurationMs: Timestamp;
-	/**
-	 * The maximum lock multiplier in fixed-point representation (1.0 = 1e9).
-	 */
+	/** The largest lock multiplier, using 18-decimal fixed-point scaling. */
 	maxLockMultiplier: FarmsMultiplier;
-	/**
-	 * An array of reward coins that this pool distributes.
-	 */
+	/** Reward coin schedules and balances configured for this pool. */
 	rewardCoins: FarmsStakingPoolRewardCoin[];
-	/**
-	 * The timestamp (ms) after which no further emissions occur.
-	 */
+	/** The timestamp in milliseconds after which the pool stops emitting rewards. */
 	emissionEndTimestamp: Timestamp;
-	/**
-	 * The minimum stake required to open a position in this pool.
-	 */
+	/** The minimum principal required for a position, in stake-coin base units. */
 	minStakeAmount: Balance;
-	/**
-	 * Whether the pool is forcibly unlocked. If `true`, positions might be able to exit early.
-	 */
+	/** Whether the pool is forcibly open for position actions, even before lock expiry. */
 	isUnlocked: boolean;
-	/**
-	 * The lock enforcement policy for this pool.
-	 * - "Strict": positions must be unlocked before any principal can be withdrawn
-	 * - "Relaxed": positions can withdraw principal while locked, forfeiting pro-rata locked rewards
-	 */
+	/** The policy that controls principal withdrawal before a position's lock expires. */
 	lockEnforcement: FarmsLockEnforcement;
-	/**
-	 * Indicates whether this is version 1 or version 2 of the farm system.
-	 */
+	/** The farm contract version represented by this object. */
 	version: FarmsVersion;
 }
 
 /**
- * Represents the owner's capability to manage a specific staking pool. Typically
- * allows updating emission rates, reward coins, or other parameters.
+ * An owner capability that authorizes administrative mutations for one staking
+ * pool, such as changing emissions or minimum amounts.
  */
 export interface StakingPoolOwnerCapObject extends Object {
-	/**
-	 * The staking pool (vault) ID associated with this owner cap.
-	 */
+	/** The object ID of the staking pool controlled by this capability. */
 	stakingPoolId: ObjectId;
 }
 
 /**
- * Represents a one-time admin capability object for a specific staking pool. Allows
- * the holder to initialize a new reward coin once.
+ * A one-time admin capability for a staking pool. The capability can authorize
+ * the one-time reward initialization flow before it is consumed on chain.
  */
 export interface StakingPoolOneTimeAdminCapObject extends Object {
-	/**
-	 * The staking pool (vault) ID associated with this admin cap.
-	 */
+	/** The object ID of the staking pool associated with this capability. */
 	stakingPoolId: ObjectId;
 }
 
@@ -181,86 +144,63 @@ export interface StakingPoolOneTimeAdminCapObject extends Object {
 // =========================================================================
 
 /**
- * Represents the rewards accumulated and owed to a staked position for a specific coin type.
+ * A position's reward accounting for one reward coin. All amounts are in the
+ * reward coin's base units; debt fields are the last per-share checkpoints used
+ * to avoid counting the same emission twice.
  */
 export interface FarmsStakedPositionRewardCoin {
-	/**
-	 * The coin type of the reward.
-	 */
+	/** The fully qualified Move type of the reward coin. */
 	coinType: CoinType;
-	/**
-	 * The base (non-multiplied) rewards accrued since the position was opened or last updated.
-	 */
+	/** Base rewards accrued for the position since its last accounting update. */
 	baseRewardsAccumulated: Balance;
-	/**
-	 * The base rewards debt, representing the total base rewards from time t0 to the last update checkpoint.
-	 */
+	/** The total base reward recorded at the last accounting checkpoint. */
 	baseRewardsDebt: Balance;
-	/**
-	 * The multiplier-based rewards accrued, factoring in the lock multiplier, since the position was opened or last updated.
-	 */
+	/** Additional rewards accrued from the position's lock multiplier. */
 	multiplierRewardsAccumulated: Balance;
-	/**
-	 * The multiplier-based rewards debt, from time t0 to the last update checkpoint.
-	 */
+	/** The total multiplier reward recorded at the last accounting checkpoint. */
 	multiplierRewardsDebt: Balance;
 }
 
 /**
- * Represents a user's staked position in a specific staking pool, including
- * the lock parameters, staked amounts, and accumulated rewards.
+ * The normalized SDK view of a user's staked position.
+ *
+ * A position keeps its principal, the reward-weighted amount derived from its
+ * lock multiplier, its lock window, and per-reward-coin accounting fields.
  */
 export interface FarmsStakedPositionObject extends Object {
-	/**
-	 * The on-chain object ID of the pool in which this position is staked.
-	 */
+	/** The object ID of the staking pool that owns this position. */
 	stakingPoolObjectId: ObjectId;
-	/**
-	 * The coin type that was staked into this position (matching the pool's stakeCoinType).
-	 */
+	/** The fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
-	/**
-	 * The amount of principal staked in smallest units.
-	 */
+	/** The position's principal, in stake-coin base units. */
 	stakedAmount: Balance;
-	/**
-	 * The principal multiplied by the lock multiplier.
-	 */
+	/** The position's reward-weighted stake, in fixed-point-scaled base units. */
 	stakedAmountWithMultiplier: Balance;
-	/**
-	 * The timestamp (ms) when this position’s lock started.
-	 */
+	/** The lock start timestamp, in milliseconds. */
 	lockStartTimestamp: Timestamp;
-	/**
-	 * The duration (ms) for which this position is locked.
-	 */
+	/** The lock duration, in milliseconds. */
 	lockDurationMs: Timestamp;
-	/**
-	 * The current lock multiplier in fixed-point representation.
-	 */
+	/** The position's lock multiplier using 18-decimal fixed-point scaling. */
 	lockMultiplier: FarmsMultiplier;
-	/**
-	 * An array of reward coins that track base + multiplier rewards for this position.
-	 */
+	/** Reward accounting records for the pool's reward coin types. */
 	rewardCoins: FarmsStakedPositionRewardCoin[];
-	/**
-	 * The last time (ms) that rewards were updated or harvested for this position.
-	 */
+	/** The last reward-accounting or harvest timestamp, in milliseconds. */
 	lastHarvestRewardsTimestamp: Timestamp;
-	/**
-	 * The farm system version of this staked position (1 or 2).
-	 */
+	/** The farm contract version represented by this position. */
 	version: FarmsVersion;
 }
 
 /**
- * A partial staked position structure sometimes used internally, excluding
- * certain fields like `coinType`.
+ * A staked-position view used by legacy ownership reads.
+ *
+ * The reward entries omit `coinType` because the legacy object response does
+ * not include the reward type alongside each parallel reward array.
  */
 export type PartialFarmsStakedPositionObject = Omit<
 	FarmsStakedPositionObject,
 	"rewardCoins"
 > & {
+	/** Reward accounting entries without a coin type, in on-chain array order. */
 	rewardCoins: Omit<FarmsStakedPositionRewardCoin, "coinType">[];
 };
 
@@ -269,7 +209,10 @@ export type PartialFarmsStakedPositionObject = Omit<
 // =========================================================================
 
 /**
- * A union type representing any possible event from a farm (vault) system.
+ * Union of normalized farm lifecycle events.
+ *
+ * The variants cover pool creation and reward setup, position creation and
+ * mutation, locking and unlocking, reward harvesting, and principal changes.
  */
 export type FarmEvent =
 	| FarmsAddedRewardEvent
@@ -288,8 +231,11 @@ export type FarmEvent =
 	| FarmsWithdrewPrincipalEvent;
 
 /**
- * A union type for events that specifically involve user interactions with a farm,
- * such as depositing principal, harvesting, or unlocking.
+ * Union of farm events returned by the user-interaction event read.
+ *
+ * It includes staking, locking, harvesting, principal deposits, unlocks, and
+ * principal withdrawals. Pool administration and position join or split
+ * events are not part of this union.
  */
 export type FarmUserEvent =
 	| FarmsDepositedPrincipalEvent
@@ -303,200 +249,219 @@ export type FarmUserEvent =
 // | FarmsSplitEvent
 // | FarmsStakedRelaxedEvent
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsDepositedPrincipalEvent`.
- */
+/** Returns `true` when an interaction event records a principal deposit. */
 export const isFarmsDepositedPrincipalEvent = (
 	event: FarmUserEvent
 ): event is FarmsDepositedPrincipalEvent => {
 	return event.type.toLowerCase().includes("::depositedprincipalevent");
 };
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsHarvestedRewardsEvent`.
- */
+/** Returns `true` when an interaction event records reward harvesting. */
 export const isFarmsHarvestedRewardsEvent = (
 	event: FarmUserEvent
 ): event is FarmsHarvestedRewardsEvent => {
 	return event.type.toLowerCase().includes("::harvestedrewardsevent");
 };
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsLockedEvent`.
- */
+/** Returns `true` when an interaction event records a position lock. */
 export const isFarmsLockedEvent = (
 	event: FarmUserEvent
 ): event is FarmsLockedEvent => {
 	return event.type.toLowerCase().includes("::lockedevent");
 };
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsStakedEvent`.
- */
+/** Returns `true` when an interaction event records strict staking. */
 export const isFarmsStakedEvent = (
 	event: FarmUserEvent
 ): event is FarmsStakedEvent => {
 	return event.type.toLowerCase().includes("::stakedevent");
 };
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsUnlockedEvent`.
- */
+/** Returns `true` when an interaction event records an unlock. */
 export const isFarmsUnlockedEvent = (
 	event: FarmUserEvent
 ): event is FarmsUnlockedEvent => {
 	return event.type.toLowerCase().includes("::unlockedevent");
 };
 
-/**
- * Type guard to determine if a `FarmUserEvent` is a `FarmsWithdrewPrincipalEvent`.
- */
+/** Returns `true` when an interaction event records a principal withdrawal. */
 export const isFarmsWithdrewPrincipalEvent = (
 	event: FarmUserEvent
 ): event is FarmsWithdrewPrincipalEvent => {
 	return event.type.toLowerCase().includes("::withdrewprincipalevent");
 };
 
-/**
- * Fired when additional reward tokens are added to a vault after creation.
- */
+/** Fired when additional reward tokens are added to a staking pool. */
 export interface FarmsAddedRewardEvent extends Event {
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the reward coin. */
 	rewardType: CoinType;
+	/** The added reward amount, in the reward coin's base units. */
 	rewardAmount: Balance;
 }
 
-/**
- * Fired when a new vault (staking pool) is created.
- */
+/** Fired when a new staking pool is created. */
 export interface FarmsCreatedVaultEvent extends Event {
+	/** The object ID of the created staking pool. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the staked coin. */
 	stakeType: CoinType;
+	/** The pool's minimum lock duration, in milliseconds. */
 	minLockDurationMs: Timestamp;
+	/** The pool's maximum lock duration, in milliseconds. */
 	maxLockDurationMs: Timestamp;
+	/** The pool's maximum lock multiplier in 18-decimal fixed-point units. */
 	maxLockMultiplier: FarmsMultiplier;
+	/** The minimum principal required for a position, in base units. */
 	minStakeAmount: Balance;
 }
 
-/**
- * Fired when principal is deposited into a staked position in the vault.
- */
+/** Fired when additional principal is deposited into a staked position. */
 export interface FarmsDepositedPrincipalEvent extends Event {
+	/** The staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The deposited amount, in the stake coin's base units. */
 	amount: Balance;
+	/** The fully qualified Move type of the staked coin. */
 	stakeType: CoinType;
 }
 
-/**
- * Fired when a staked position object is destroyed.
- */
+/** Fired when an empty staked-position object is destroyed. */
 export interface FarmsDestroyedStakedPositionEvent extends Event {
+	/** The destroyed staked-position object ID. */
 	stakedPositionId: ObjectId;
 }
 
-/**
- * Fired when a user harvests their rewards from one or more staked positions.
- */
+/** Fired when rewards are harvested from one or more staked positions. */
 export interface FarmsHarvestedRewardsEvent extends Event {
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** Reward coin types in the same order as `rewardAmounts`. */
 	rewardTypes: CoinType[];
+	/** Harvested amounts in base units, parallel to `rewardTypes`. */
 	rewardAmounts: Balance[];
 }
 
-/**
- * Fired when emissions (or the emission schedule) are increased for a specific reward coin.
- */
+/** Fired when a reward coin's emission schedule or rate is increased. */
 export interface FarmsIncreasedEmissionsEvent extends Event {
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the reward coin. */
 	rewardType: CoinType;
+	/** The emission interval in milliseconds. */
 	emissionScheduleMs: Timestamp;
+	/** The amount emitted per interval, in the reward coin's base units. */
 	emissionRate: Balance;
 }
 
-/**
- * Fired when a new reward coin is initialized in the vault.
- */
+/** Fired when a reward coin is initialized in a staking pool. */
 export interface FarmsInitializedRewardEvent extends Event {
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the initialized reward coin. */
 	rewardType: CoinType;
+	/** The initial reward amount, in the reward coin's base units. */
 	rewardAmount: Balance;
+	/** The amount emitted at each interval, in base units. */
 	emissionRate: Balance;
+	/** The emission start timestamp in milliseconds. */
 	emissionStartMs: Timestamp;
 }
 
-/**
- * Fired when two staked positions are combined (joined) into one.
- */
+/** Fired when two staked positions are joined. */
 export interface FarmsJoinedEvent extends Event {
+	/** The object ID of the position that remains after the join. */
 	stakedPositionId: ObjectId;
+	/** The object ID of the position consumed by the join. */
 	otherStakedPositionId: ObjectId;
 }
 
-/**
- * Fired when a position is locked, specifying the lock duration and multiplier.
- */
+/** Fired when a position is locked with a duration and multiplier. */
 export interface FarmsLockedEvent extends Event {
+	/** The staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the staked coin. */
 	stakedType: CoinType;
+	/** The position's principal, in the stake coin's base units. */
 	stakedAmount: Balance;
+	/** The lock start timestamp in milliseconds. */
 	lockStartTimestampMs: Timestamp;
+	/** The lock duration in milliseconds. */
 	lockDurationMs: Timestamp;
+	/** The position's lock multiplier in 18-decimal fixed-point units. */
 	lockMultiplier: FarmsMultiplier;
 }
 
-/**
- * Fired when a staked position is split into two separate positions.
- */
+/** Fired when a staked position is split into two positions. */
 export interface FarmsSplitEvent extends Event {
+	/** The original staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The newly created split-position object ID. */
 	splitStakedPositionId: ObjectId;
 }
 
-/**
- * Fired when a user stakes a new position in the vault (version 1 only).
- */
+/** Fired when a user creates a strictly locked position. */
 export interface FarmsStakedEvent extends Event {
+	/** The created staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the staked coin. */
 	stakedType: CoinType;
+	/** The deposited principal, in the stake coin's base units. */
 	stakedAmount: Balance;
+	/** The principal after applying the lock multiplier. */
 	multipliedStakedAmount: Balance;
+	/** The lock start timestamp in milliseconds. */
 	lockStartTimestampMs: Timestamp;
+	/** The lock duration in milliseconds. */
 	lockDurationMs: Timestamp;
+	/** The position's lock multiplier in 18-decimal fixed-point units. */
 	lockMultiplier: FarmsMultiplier;
 }
 
-/**
- * Fired when a user stakes a new position in the vault under "relaxed" locking (version 2).
- */
+/** Fired when a user creates a position under relaxed lock enforcement. */
 export interface FarmsStakedRelaxedEvent extends Event {
+	/** The created staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the staked coin. */
 	stakedType: CoinType;
+	/** The deposited principal, in the stake coin's base units. */
 	stakedAmount: Balance;
+	/** The lock start timestamp in milliseconds. */
 	lockStartTimestampMs: Timestamp;
+	/** The lock end timestamp in milliseconds. */
 	lockEndTimestampMs: Timestamp;
 }
 
-/**
- * Fired when a position is unlocked.
- */
+/** Fired when a staked position is unlocked. */
 export interface FarmsUnlockedEvent extends Event {
+	/** The staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The fully qualified Move type of the staked coin. */
 	stakedType: CoinType;
+	/** The principal unlocked, in the stake coin's base units. */
 	stakedAmount: Balance;
 }
 
-/**
- * Fired when principal is withdrawn from a staked position.
- */
+/** Fired when principal is withdrawn from a staked position. */
 export interface FarmsWithdrewPrincipalEvent extends Event {
+	/** The staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** The staking pool object ID. */
 	vaultId: ObjectId;
+	/** The withdrawn amount, in the stake coin's base units. */
 	amount: Balance;
+	/** The fully qualified Move type of the staked coin. */
 	stakeType: CoinType;
 }
 
@@ -504,20 +469,19 @@ export interface FarmsWithdrewPrincipalEvent extends Event {
 //  API
 // =========================================================================
 
-/**
- * Represents the TVL and reward TVL metrics returned for a farm.
- */
+/** TVL and reward TVL metrics returned for one staking pool. */
 export interface FarmSummary {
+	/** The staking pool object ID represented by the row. */
 	farmId: ObjectId;
+	/** The pool's total value locked, in the API's reporting currency. */
 	tvl: number;
+	/** The value of reward balances locked in the pool, in the API's reporting currency. */
 	rewardsTvl: number;
 }
 
-/**
- * Request body for fetching TVL and reward TVL for multiple farms in one
- * response.
- */
+/** Optional filter for a batch farm-summary read. */
 export interface ApiFarmsSummaryBody {
+	/** Pool IDs to include. Omit the field to request all pools. */
 	farmIds?: ObjectId[];
 }
 
@@ -525,13 +489,9 @@ export interface ApiFarmsSummaryBody {
 //  Staked Positions API
 // =========================================================================
 
-/**
- * Request body for fetching all staked positions owned by a given user.
- */
+/** Request body for reading all staked positions owned by one address. */
 export interface ApiFarmsOwnedStakedPositionsBody {
-	/**
-	 * The user's wallet address whose positions are being queried.
-	 */
+	/** Wallet address whose owned positions the indexer should return. */
 	walletAddress: SuiAddress;
 }
 
@@ -539,53 +499,74 @@ export interface ApiFarmsOwnedStakedPositionsBody {
 //  Staking API
 // =========================================================================
 
-/**
- * Request body for staking tokens in a pool (version 2).
- */
+/** Parameters for building a V2 transaction that creates a staked position. */
 export interface ApiFarmsStakeBody {
+	/** Staking pool object ID. */
 	stakingPoolId: ObjectId;
+	/** Requested lock duration, in milliseconds. */
 	lockDurationMs: Timestamp;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Principal to stake, in the stake coin's base units. */
 	stakeAmount: Balance;
+	/** Address that supplies the coin and signs the transaction. */
 	walletAddress: SuiAddress;
 	// lockEnforcement: FarmsLockEnforcement;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }
 
 /**
- * **Deprecated**: Use `ApiFarmsStakeBody` instead.
+ * Parameters for the deprecated V1 stake transaction builder.
+ *
+ * @deprecated Use `ApiFarmsStakeBody`.
  */
 export interface ApiFarmsStakeBodyV1 {
+	/** Staking pool object ID. */
 	stakingPoolId: ObjectId;
+	/** Requested lock duration, in milliseconds. */
 	lockDurationMs: Timestamp;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Principal to stake, in the stake coin's base units. */
 	stakeAmount: Balance;
+	/** Address that supplies the coin and signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }
 
-/**
- * Request body for depositing additional principal into an existing staked position.
- */
+/** Parameters for adding principal to an existing staked position. */
 export interface ApiFarmsDepositPrincipalBody {
+	/** Staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** Staking pool object ID that owns the position. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Additional principal, in the stake coin's base units. */
 	depositAmount: Balance;
+	/** Address that supplies the coin and signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }
 
-/**
- * Request body for fully or partially unstaking a position.
- */
+/** Parameters for withdrawing principal and optionally harvesting rewards. */
 export interface ApiFarmsUnstakeBody {
+	/** Staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** Staking pool object ID that owns the position. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Reward coin types to harvest before the position is destroyed. */
 	rewardCoinTypes: CoinType[];
+	/** Principal to withdraw, in the stake coin's base units. */
 	withdrawAmount: Balance;
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether SUI rewards should be claimed as afSUI when supported. */
 	claimSuiAsAfSui?: boolean;
 }
 
@@ -593,34 +574,41 @@ export interface ApiFarmsUnstakeBody {
 //  Locking API
 // =========================================================================
 
-/**
- * Request body for locking a staked position to gain a multiplier (version 2).
- */
+/** Parameters for building a V2 transaction that applies a lock multiplier. */
 export interface ApiFarmsLockBody {
+	/** Staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** Staking pool object ID that owns the position. */
 	stakingPoolId: ObjectId;
+	/** Requested lock duration, in milliseconds. */
 	lockDurationMs: Timestamp;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
 }
 
-/**
- * Request body for renewing an existing lock on a staked position.
- */
+/** Parameters for renewing a position's existing lock. */
 export interface ApiFarmsRenewLockBody {
+	/** Staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** Staking pool object ID that owns the position. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
 }
 
-/**
- * Request body for unlocking a staked position prior to or at lock expiry.
- */
+/** Parameters for building a transaction that removes a position's lock. */
 export interface ApiFarmsUnlockBody {
+	/** Staked-position object ID. */
 	stakedPositionId: ObjectId;
+	/** Staking pool object ID that owns the position. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
 }
 
@@ -628,15 +616,19 @@ export interface ApiFarmsUnlockBody {
 //  Harvest Rewards API
 // =========================================================================
 
-/**
- * Request body for harvesting rewards from one or more staked positions.
- */
+/** Parameters for harvesting selected reward types from one or more positions. */
 export interface ApiHarvestFarmsRewardsBody {
+	/** Staking pool object ID that owns the positions. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Staked-position object IDs to harvest. */
 	stakedPositionIds: ObjectId[];
+	/** Reward coin types to harvest for each position. */
 	rewardCoinTypes: CoinType[];
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether SUI rewards should be claimed as afSUI when supported. */
 	claimSuiAsAfSui?: boolean;
 }
 
@@ -648,31 +640,45 @@ export interface ApiHarvestFarmsRewardsBody {
 //  Staking Pool Creation API
 // =========================================================================
 
-/**
- * Request body for creating a new staking pool (version 2).
- */
+/** Parameters for creating a V2 staking pool. */
 export interface ApiFarmsCreateStakingPoolBody {
 	// lockEnforcements: FarmsLockEnforcement[];
+	/** Minimum accepted lock duration, in milliseconds. */
 	minLockDurationMs: Timestamp;
+	/** Maximum multiplier-bearing lock duration, in milliseconds. */
 	maxLockDurationMs: Timestamp;
+	/** Maximum lock multiplier in 18-decimal fixed-point units. */
 	maxLockMultiplier: FarmsMultiplier;
+	/** Minimum principal for a position, in stake-coin base units. */
 	minStakeAmount: Balance;
+	/** Fully qualified Move type of the coin users will stake. */
 	stakeCoinType: CoinType;
+	/** Address that creates the pool and receives its owner capability. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }
 
 /**
- * **Deprecated**: Use `ApiFarmsCreateStakingPoolBody` instead.
+ * Parameters for creating a V1 staking pool.
+ *
+ * @deprecated Use `ApiFarmsCreateStakingPoolBody`.
  */
 export interface ApiFarmsCreateStakingPoolBodyV1 {
 	// lockEnforcement: FarmsLockEnforcement;
+	/** Minimum accepted lock duration, in milliseconds. */
 	minLockDurationMs: Timestamp;
+	/** Maximum multiplier-bearing lock duration, in milliseconds. */
 	maxLockDurationMs: Timestamp;
+	/** Maximum lock multiplier in 18-decimal fixed-point units. */
 	maxLockMultiplier: FarmsMultiplier;
+	/** Minimum principal for a position, in stake-coin base units. */
 	minStakeAmount: Balance;
+	/** Fully qualified Move type of the coin users will stake. */
 	stakeCoinType: CoinType;
+	/** Address that creates the pool and receives its owner capability. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }
 
@@ -680,71 +686,90 @@ export interface ApiFarmsCreateStakingPoolBodyV1 {
 //  Staking Pool Mutation API
 // =========================================================================
 
-/**
- * Request body for initializing a new reward in a staking pool, requiring either `ownerCapId` or `oneTimeAdminCapId`.
- */
+/** Parameters for initializing one reward coin in a staking pool. */
 export type ApiFarmsInitializeStakingPoolRewardBody = {
+	/** Staking pool object ID. */
 	stakingPoolId: ObjectId;
+	/** Initial reward amount, in the reward coin's base units. */
 	rewardAmount: Balance;
+	/** Emission interval, in milliseconds. */
 	emissionScheduleMs: Timestamp;
+	/** Reward amount emitted at each interval, in base units. */
 	emissionRate: bigint;
+	/** Emission start or delay timestamp, in milliseconds. */
 	emissionDelayTimestampMs: Timestamp;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Fully qualified Move type of the reward coin. */
 	rewardCoinType: CoinType;
+	/** Address that supplies the reward coin and signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 } & FarmOwnerOrOneTimeAdminCap;
 
-/**
- * Request body for topping up multiple reward coins in a staking pool, requiring either `ownerCapId` or `oneTimeAdminCapId`.
- */
+/** Parameters for adding reward balances to existing reward coins. */
 export type ApiFarmsTopUpStakingPoolRewardsBody = {
+	/** Staking pool object ID. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Reward top-ups to append to the transaction. */
 	rewards: {
+		/** Fully qualified Move type of the reward coin. */
 		rewardCoinType: CoinType;
+		/** Reward amount to add, in the reward coin's base units. */
 		rewardAmount: Balance;
 	}[];
+	/** Address that supplies the reward coins and signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 } & FarmOwnerOrOneTimeAdminCap;
 
-/**
- * Request body for increasing the emissions for specified reward coins in a pool (owner only).
- */
+/** Parameters for increasing emission schedules for existing reward coins. */
 export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
+	/** Object ID of the owner capability authorizing the update. */
 	ownerCapId: ObjectId;
+	/** Staking pool object ID. */
 	stakingPoolId: ObjectId;
+	/** Fully qualified Move type of the staked coin. */
 	stakeCoinType: CoinType;
+	/** Emission updates, one entry per reward coin. */
 	rewards: {
+		/** Fully qualified Move type of the reward coin. */
 		rewardCoinType: CoinType;
+		/** New emission interval, in milliseconds. */
 		emissionScheduleMs: Timestamp;
+		/** New amount emitted per interval, in the reward coin's base units. */
 		emissionRate: bigint;
 	}[];
+	/** Address that signs the transaction. */
 	walletAddress: SuiAddress;
 }
 
-/**
- * Request body for fetching staking pool owner caps owned by a user.
- */
+/** Request body for reading owner capabilities owned by an address. */
 export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
+	/** Wallet address whose owner capabilities should be returned. */
 	walletAddress: SuiAddress;
 }
 
-/**
- * Request body for fetching staking pool one-time admin caps owned by a user.
- */
+/** Request body for reading one-time admin capabilities owned by an address. */
 export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
+	/** Wallet address whose one-time admin capabilities should be returned. */
 	walletAddress: SuiAddress;
 }
 
-/**
- * Request body for granting a one-time admin cap of a particular reward coin to another user.
- */
+/** Parameters for granting a one-time admin capability for one reward coin. */
 export interface ApiFarmsGrantOneTimeAdminCapBody {
+	/** Object ID of the pool owner capability authorizing the grant. */
 	ownerCapId: ObjectId;
+	/** Address that receives the one-time admin capability. */
 	recipientAddress: SuiAddress;
+	/** Fully qualified Move type of the reward coin the recipient may initialize. */
 	rewardCoinType: CoinType;
+	/** Address that owns `ownerCapId` and signs the transaction. */
 	walletAddress: SuiAddress;
+	/** Whether to request the sponsored transaction flow. */
 	isSponsoredTx?: boolean;
 }

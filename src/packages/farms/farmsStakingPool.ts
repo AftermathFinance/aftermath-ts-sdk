@@ -25,19 +25,20 @@ import type {
 } from "./farmsTypes";
 
 /**
- * The `FarmsStakingPool` class represents a staking pool (also referred
- * to as a "vault" in some contexts). It allows reading details about
- * emission schedules, reward tokens, stake coin type, and lock durations,
- * as well as constructing transactions to stake, harvest, and mutate the
- * pool parameters if the user has the correct admin privileges.
+ * A local view of a staking pool, also called a vault on chain.
+ *
+ * The class exposes pool state, reward and multiplier calculations, TVL reads,
+ * and version-aware transaction builders. Calculations mutate this instance's
+ * `stakingPool` object but do not make network requests. Transaction builders
+ * require an `AftermathApi` provider and return unsigned transaction data.
  */
 export class FarmsStakingPool extends Caller {
 	/**
-	 * Creates a `FarmsStakingPool` instance based on on-chain pool data.
+	 * Creates a `FarmsStakingPool` instance from normalized pool data.
 	 *
-	 * @param stakingPool - The on-chain data object describing the pool.
-	 * @param config - An optional `CallerConfig` for network settings.
-	 * @param api - An optional `AftermathApi` for transaction building.
+	 * @param stakingPool - Normalized pool data returned by a farm object read.
+	 * @param config - Optional network and API-host configuration for TVL reads.
+	 * @param api - Optional provider required by transaction builders.
 	 */
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
@@ -59,7 +60,8 @@ export class FarmsStakingPool extends Caller {
 	/**
 	 * Fetches the total value locked (TVL) for this staking pool alone.
 	 *
-	 * @returns A `number` representing this pool's TVL in USD (or another currency).
+	 * @param abortSignal - Optional signal that cancels the API request.
+	 * @returns A `number` representing this pool's TVL in the API's reporting currency.
 	 *
 	 * @example
 	 * ```typescript
@@ -79,6 +81,7 @@ export class FarmsStakingPool extends Caller {
 	/**
 	 * Fetches the total value locked (TVL) of the reward coins in this specific staking pool.
 	 *
+	 * @param abortSignal - Optional signal that cancels the API request.
 	 * @returns A `number` representing this pool's reward TVL.
 	 *
 	 * @example
@@ -109,7 +112,9 @@ export class FarmsStakingPool extends Caller {
 
 	/**
 	 * Returns whether this pool uses strict lock enforcement.
-	 * Strict: positions must be unlocked before any principal can be withdrawn.
+	 *
+	 * A strictly locked position must reach its unlock time, or the pool must be
+	 * forcibly opened, before principal can be withdrawn.
 	 */
 	public isStrictLockEnforcement = (): boolean => {
 		return this.stakingPool.lockEnforcement === "Strict";
@@ -117,7 +122,9 @@ export class FarmsStakingPool extends Caller {
 
 	/**
 	 * Returns whether this pool uses relaxed lock enforcement.
-	 * Relaxed: positions can withdraw principal while locked, forfeiting pro-rata locked rewards.
+	 *
+	 * The on-chain contract permits relaxed-lock principal withdrawals while the
+	 * position is locked and applies its relaxed-lock reward rules.
 	 */
 	public isRelaxedLockEnforcement = (): boolean => {
 		return this.stakingPool.lockEnforcement === "Relaxed";
@@ -133,9 +140,12 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Lists all reward coin types for which this pool currently has a non-zero actual reward balance.
+	 * Lists reward coin types that can currently be included in harvest inputs.
 	 *
-	 * @returns An array of `CoinType` strings that have > 0 actual rewards.
+	 * A reward is included only when its actual pool balance is positive and at
+	 * least one emission amount is available.
+	 *
+	 * @returns An array of eligible `CoinType` strings.
 	 */
 	public nonZeroRewardCoinTypes = (): CoinType[] => {
 		return this.stakingPool.rewardCoins
@@ -148,11 +158,11 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Retrieves the on-chain record for a specific reward coin type in this pool.
+	 * Retrieves the local record for a specific reward coin type in this pool.
 	 *
 	 * @param inputs - Contains the `coinType` to look up.
-	 * @throws If the specified coinType is not found in `rewardCoins`.
-	 * @returns A `FarmsStakingPoolRewardCoin` object.
+	 * @throws `Error` with `"Invalid coin type"` when the pool has no matching reward record.
+	 * @returns The matching `FarmsStakingPoolRewardCoin` record.
 	 */
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
 		const foundCoin = this.stakingPool.rewardCoins.find(
@@ -166,8 +176,10 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Computes the maximum lock duration (in ms) that remains valid in this staking pool,
-	 * factoring in the current time and the pool's emission end.
+	 * Computes the maximum lock duration that remains valid in this pool.
+	 *
+	 * The result is the smaller of the configured maximum and the time until
+	 * emission ends. It uses `Date.now()` and returns zero after emissions end.
 	 *
 	 * @returns The maximum possible lock duration in milliseconds, or 0 if the pool is effectively closed.
 	 */
@@ -186,9 +198,12 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Calculates and applies newly emitted rewards for each reward coin in this pool,
-	 * updating the `rewardsAccumulatedPerShare`. This simulates the on-chain
-	 * `emitRewards` logic.
+	 * Applies completed emission intervals to this local pool view.
+	 *
+	 * The method updates `rewardsAccumulatedPerShare` and each reward's last
+	 * checkpoint. It emits nothing when the pool has no stake, waits until a full
+	 * interval has elapsed, and caps emission at `rewardsRemaining`. It does not
+	 * fetch fresh pool data or submit a transaction.
 	 *
 	 * @example
 	 * ```typescript
@@ -241,12 +256,16 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Computes an approximate APR for a specific reward coin, based on the current
-	 * emission rate, coin price, pool TVL, and the lock multiplier range. This assumes
-	 * maximum lock multiplier for the final APR result.
+	 * Computes an approximate APR for one reward coin.
+	 *
+	 * The calculation annualizes the current discrete emission rate, converts the
+	 * rate to USD with `price` and `decimals`, divides by `tvlUsd`, and assumes
+	 * the pool's maximum lock multiplier. It returns zero when the price or TVL
+	 * is not positive, emissions have not started or have ended, or the actual
+	 * reward balance is below one emission amount.
 	 *
 	 * @param inputs - Includes the `coinType`, its `price` and `decimals`, plus the total `tvlUsd` in the pool.
-	 * @returns A numeric APR (0.05 = 5%).
+	 * @returns APR as a decimal fraction, such as `0.05` for 5%.
 	 */
 	public calcApr = (inputs: {
 		coinType: CoinType;
@@ -291,11 +310,12 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Computes the total APR contributed by all reward coin types in this pool, summing
-	 * up the individual APR for each coin type. This also assumes max lock multiplier.
+	 * Computes the sum of the approximate APR for every reward coin in the pool.
+	 * Each component uses the maximum lock multiplier and the supplied price and
+	 * decimal maps.
 	 *
 	 * @param inputs - Contains price data (`coinsToPrice`), decimal data (`coinsToDecimals`), and the total TVL in USD.
-	 * @returns The sum of all coin APRs (0.10 = 10%).
+	 * @returns The combined APR as a decimal fraction, such as `0.10` for 10%.
 	 */
 	public calcTotalApr = (inputs: {
 		coinsToPrice: CoinsToPrice;
@@ -316,12 +336,14 @@ export class FarmsStakingPool extends Caller {
 	};
 
 	/**
-	 * Given a lock duration in ms, calculates the lock multiplier to be used by staked positions.
-	 * This function clamps the input duration between the pool's `minLockDurationMs` and
-	 * `maxLockDurationMs`.
+	 * Calculates the lock multiplier for a duration in milliseconds.
+	 *
+	 * The duration is clamped to the pool's minimum and maximum. The result is
+	 * linearly interpolated between `1.0` and `maxLockMultiplier`; if the pool's
+	 * minimum and maximum durations are equal, the result is `1.0`.
 	 *
 	 * @param inputs - An object containing the `lockDurationMs` for which to calculate a multiplier.
-	 * @returns A `FarmsMultiplier` (bigint) representing the scaled factor (1.0 = 1e9 if using fixedOneB).
+	 * @returns An 18-decimal fixed-point `FarmsMultiplier`; `1e18n` represents `1.0`.
 	 */
 	public calcMultiplier = (inputs: {
 		lockDurationMs: number;
@@ -357,10 +379,24 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to stake tokens into this pool, optionally locking them.
+	 * Builds a version-aware transaction to stake tokens into this pool.
 	 *
-	 * @param inputs - Contains `stakeAmount`, `lockDurationMs`, `walletAddress`, and optional sponsorship.
-	 * @returns A transaction object (or bytes) that can be signed and executed to create a staked position.
+	 * The pool ID and stake coin type come from `this.stakingPool`. The requested
+	 * duration is in milliseconds, and the amount is in stake-coin base units.
+	 * V1 and V2 builders are selected from `version()`.
+	 *
+	 * @param inputs - Principal, lock duration, sender address, and optional sponsorship.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
+	 *
+	 * @example
+	 * ```typescript
+	 * const tx = await pool.getStakeTransaction({
+	 *	 stakeAmount: 1_000_000n,
+	 *	 lockDurationMs: 604_800_000,
+	 *	 walletAddress: "0x<address>",
+	 * });
+	 * ```
 	 */
 	public async getStakeTransaction(inputs: {
 		stakeAmount: Balance;
@@ -386,10 +422,14 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to harvest rewards from multiple staked positions in this pool.
+	 * Builds a version-aware transaction to harvest rewards from multiple positions.
 	 *
-	 * @param inputs - Contains `stakedPositionIds`, the `walletAddress`, and optionally any others.
-	 * @returns A transaction that can be signed and executed to claim rewards from multiple positions.
+	 * The reward coin types are derived from `nonZeroRewardCoinTypes()` and the
+	 * pool's stake coin type and ID are added automatically.
+	 *
+	 * @param inputs - Position object IDs and the signing wallet address.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getHarvestRewardsTransaction(inputs: {
 		stakedPositionIds: ObjectId[];
@@ -411,10 +451,14 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to increase the emission rate (or schedule) for specific reward coins.
+	 * Builds a version-aware transaction to increase emission schedules for reward coins.
 	 *
-	 * @param inputs - Contains the `ownerCapId` that authorizes changes, plus an array of `rewards` with new emission details.
-	 * @returns A transaction to be signed and executed by the owner cap holder.
+	 * The on-chain contract requires the owner capability and rejects updates that
+	 * do not increase the configured emissions.
+	 *
+	 * @param inputs - Owner capability, reward emission updates, and signing wallet.
+	 * @returns An unsigned transaction to be signed by the owner-cap holder.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getIncreaseRewardsEmissionsTransaction(inputs: {
 		ownerCapId: ObjectId;
@@ -436,10 +480,14 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to update the pool's minimum stake amount, only authorized by the `ownerCapId`.
+	 * Builds a transaction to update the pool's minimum stake amount.
 	 *
-	 * @param inputs - Contains the new `minStakeAmount`, the `ownerCapId`, and the calling `walletAddress`.
-	 * @returns A transaction that can be signed and executed to change the minimum stake requirement.
+	 * The amount is in stake-coin base units, and the owner capability must
+	 * authorize the mutation.
+	 *
+	 * @param inputs - New minimum amount, owner capability, and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getUpdateMinStakeAmountTransaction(inputs: {
 		ownerCapId: ObjectId;
@@ -457,8 +505,14 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to set the pool's minimum lock duration (ms).
-	 * Owner-cap only. V2 pools only — V1 vaults do not expose this entry.
+	 * Builds a V2 transaction to set the pool's minimum lock duration.
+	 *
+	 * `lockDurationMs` is in milliseconds. The owner capability must authorize
+	 * the mutation. V1 pools do not expose this entry point.
+	 *
+	 * @param inputs - Owner capability, new duration, and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws `Error` when this is a V1 pool or no `AftermathApi` is available.
 	 */
 	public getSetMinLockDurationMsTransaction(inputs: {
 		ownerCapId: ObjectId;
@@ -478,8 +532,14 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to set the pool's maximum lock duration (ms).
-	 * Owner-cap only. V2 pools only.
+	 * Builds a V2 transaction to set the pool's maximum lock duration.
+	 *
+	 * `lockDurationMs` is in milliseconds. The owner capability must authorize
+	 * the mutation. V1 pools do not expose this entry point.
+	 *
+	 * @param inputs - Owner capability, new duration, and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws `Error` when this is a V1 pool or no `AftermathApi` is available.
 	 */
 	public getSetMaxLockDurationMsTransaction(inputs: {
 		ownerCapId: ObjectId;
@@ -499,11 +559,14 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction granting a one-time admin cap to another address, allowing them to perform specific
-	 * one-time administrative actions (like initializing a reward).
+	 * Builds a transaction granting a one-time admin capability to another address.
 	 *
-	 * @param inputs - Body containing the `ownerCapId`, the `recipientAddress`, and the `rewardCoinType`.
-	 * @returns A transaction to be executed by the current pool owner.
+	 * The capability is scoped to the pool and reward coin supplied in `inputs`.
+	 * Only the current owner can grant it.
+	 *
+	 * @param inputs - Owner capability, recipient, reward coin type, and signing wallet.
+	 * @returns An unsigned transaction to be executed by the pool owner.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public getGrantOneTimeAdminCapTransaction(
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
@@ -518,11 +581,15 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to initialize a new reward coin in this pool, specifying the amount, emission rate,
-	 * and schedule parameters. This can be done by either the `ownerCapId` or a `oneTimeAdminCapId`.
+	 * Builds a version-aware transaction to initialize a new reward coin in this pool.
 	 *
-	 * @param inputs - Contains emission info (rate, schedule) and which cap is used (`ownerCapId` or `oneTimeAdminCapId`).
-	 * @returns A transaction object for the reward initialization.
+	 * The reward amount and rate are in the reward coin's base units. The schedule
+	 * and delay timestamps are in milliseconds. V1 and V2 choose different Move
+	 * entry points, and V2 can consume a one-time admin capability.
+	 *
+	 * @param inputs - Reward amount, emission settings, reward type, authorizing capability, and wallet.
+	 * @returns An unsigned transaction for reward initialization.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getInitializeRewardTransaction(
 		inputs: {
@@ -546,11 +613,14 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to add more reward coins (top-up) to an existing reward
-	 * coin configuration, either as the owner or via a one-time admin cap.
+	 * Builds a version-aware transaction to add balances to existing reward coins.
 	 *
-	 * @param inputs - Contains an array of reward objects, each specifying amount and coin type.
-	 * @returns A transaction that can be signed and executed to increase the reward distribution pool.
+	 * Each amount is in the corresponding reward coin's base units. The owner or
+	 * one-time admin capability must authorize the operation.
+	 *
+	 * @param inputs - Reward top-ups, authorizing capability, and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getTopUpRewardsTransaction(
 		inputs: {
@@ -585,9 +655,8 @@ export class FarmsStakingPool extends Caller {
 	 * - V1 → calls `buildRemoveStakingPoolRewardTxV1`
 	 * - V2 → calls `buildRemoveStakingPoolRewardTxV2`
 	 *
-	 * Notes:
-	 * - The effective `stakingPoolId` and `stakeCoinType` are taken from this instance’s
-	 *   `this.stakingPool` and override any values passed in `inputs`.
+	 * The effective `stakingPoolId` and `stakeCoinType` always come from this
+	 * instance's `stakingPool`.
 	 *
 	 * @param inputs Parameters for reward removal.
 	 * @param inputs.rewards Array of removal entries. Each entry specifies:
@@ -597,6 +666,7 @@ export class FarmsStakingPool extends Caller {
 	 * @param inputs.walletAddress Address that will sign/submit the transaction.
 	 * @returns A transaction object ready to sign and execute that removes the specified
 	 *          undistributed rewards for each entry in `inputs.rewards`.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public getRemoveRewardsTransaction(inputs: {
 		rewards: {

@@ -59,11 +59,37 @@ import type {
 	FarmsWithdrewPrincipalEventOnChainV2,
 } from "./farmsApiCastingTypes";
 
+/**
+ * Converts raw farm object and event responses into the SDK's normalized
+ * farm types.
+ *
+ * V1 casters read direct `parsedJson` or legacy object fields. V2 event casters
+ * read the payload under `parsedJson.pos0`. Numeric strings are converted to
+ * `bigint` for balances and fixed-point multipliers, or to `number` for
+ * millisecond timestamps.
+ *
+ * @example
+ * ```typescript
+ * import { Casting, type SuiObjectView } from "aftermath-ts-sdk";
+ *
+ * declare const response: SuiObjectView;
+ * const position = Casting.farms.partialStakedPositionObjectFromSuiObjectResponseV2(
+ *	 response,
+ * );
+ * ```
+ */
 export class FarmsApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Casts a V1 staked-position object into the partial SDK position shape.
+	 *
+	 * @param data - Raw Sui object view with V1 legacy fields.
+	 * @returns A partial position with normalized coin type, `bigint` balances,
+	 * and reward entries in the source array order.
+	 */
 	public static partialStakedPositionObjectFromSuiObjectResponseV1 = (
 		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
@@ -101,6 +127,13 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a V2 staked-position object into the partial SDK position shape.
+	 *
+	 * @param data - Raw Sui object view with V2 vault fields.
+	 * @returns A partial V2 position with normalized coin type, `bigint`
+	 * balances, and reward entries in the source array order.
+	 */
 	public static partialStakedPositionObjectFromSuiObjectResponseV2 = (
 		data: SuiObjectView
 	): PartialFarmsStakedPositionObject => {
@@ -138,6 +171,12 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a V1 staking-pool owner capability object.
+	 *
+	 * @param data - Raw Sui object view containing `afterburner_vault_id`.
+	 * @returns The normalized owner-cap object and its V1 pool ID.
+	 */
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV1 = (
 		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
@@ -154,6 +193,12 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a V2 staking-pool owner capability object.
+	 *
+	 * @param data - Raw Sui object view containing the authority `for` field.
+	 * @returns The normalized owner-cap object and its V2 pool ID.
+	 */
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV2 = (
 		data: SuiObjectView
 	): StakingPoolOwnerCapObject => {
@@ -170,6 +215,12 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a V1 staking-pool one-time admin capability object.
+	 *
+	 * @param data - Raw Sui object view containing `afterburner_vault_id`.
+	 * @returns The normalized one-time admin capability and its V1 pool ID.
+	 */
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1 = (
 		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
@@ -186,6 +237,15 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a V2 one-time admin capability from either JSON-RPC or gRPC shape.
+	 *
+	 * The nested `cap` field is unwrapped before the authority `for` field is
+	 * read, so callers receive the same result from both transports.
+	 *
+	 * @param data - Raw Sui object view containing the nested authority cap.
+	 * @returns The normalized one-time admin capability and its V2 pool ID.
+	 */
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2 = (
 		data: SuiObjectView
 	): StakingPoolOneTimeAdminCapObject => {
@@ -213,6 +273,7 @@ export class FarmsApiCasting {
 	//  Events
 	// =========================================================================
 
+	/** Casts a V1 direct `AddedRewardEvent` payload to the normalized event type. */
 	public static addedRewardEventFromOnChainV1 = (
 		eventOnChain: FarmsAddedRewardEventOnChainV1
 	): FarmsAddedRewardEvent => {
@@ -227,6 +288,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 `AddedRewardEvent` whose payload is wrapped under `pos0`. */
 	public static addedRewardEventFromOnChainV2 = (
 		eventOnChain: FarmsAddedRewardEventOnChainV2
 	): FarmsAddedRewardEvent => {
@@ -241,6 +303,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct pool-created event and converts its numeric fields. */
 	public static createdVaultEventFromOnChainV1 = (
 		eventOnChain: FarmsCreatedVaultEventOnChainV1
 	): FarmsCreatedVaultEvent => {
@@ -258,6 +321,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped pool-created event and converts its numeric fields. */
 	public static createdVaultEventFromOnChainV2 = (
 		eventOnChain: FarmsCreatedVaultEventOnChainV2
 	): FarmsCreatedVaultEvent => {
@@ -275,6 +339,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct principal-deposit event. */
 	public static depositedPrincipalEventFromOnChainV1 = (
 		eventOnChain: FarmsDepositedPrincipalEventOnChainV1
 	): FarmsDepositedPrincipalEvent => {
@@ -290,6 +355,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped principal-deposit event. */
 	public static depositedPrincipalEventFromOnChainV2 = (
 		eventOnChain: FarmsDepositedPrincipalEventOnChainV2
 	): FarmsDepositedPrincipalEvent => {
@@ -305,6 +371,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct staked-position-destroyed event. */
 	public static destroyedStakedPositionEventFromOnChainV1 = (
 		eventOnChain: FarmsDestroyedStakedPositionEventOnChainV1
 	): FarmsDestroyedStakedPositionEvent => {
@@ -317,6 +384,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped staked-position-destroyed event. */
 	public static destroyedStakedPositionEventFromOnChainV2 = (
 		eventOnChain: FarmsDestroyedStakedPositionEventOnChainV2
 	): FarmsDestroyedStakedPositionEvent => {
@@ -329,6 +397,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct reward-harvest event and preserves parallel reward arrays. */
 	public static harvestedRewardsEventFromOnChainV1 = (
 		eventOnChain: FarmsHarvestedRewardsEventOnChainV1
 	): FarmsHarvestedRewardsEvent => {
@@ -345,6 +414,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped reward-harvest event and preserves parallel reward arrays. */
 	public static harvestedRewardsEventFromOnChainV2 = (
 		eventOnChain: FarmsHarvestedRewardsEventOnChainV2
 	): FarmsHarvestedRewardsEvent => {
@@ -361,6 +431,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct emission-increase event. */
 	public static increasedEmissionsEventFromOnChainV1 = (
 		eventOnChain: FarmsIncreasedEmissionsEventOnChainV1
 	): FarmsIncreasedEmissionsEvent => {
@@ -376,6 +447,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped emission-update event into the normalized increase-event type. */
 	public static updatedEmissionsEventFromOnChainV2 = (
 		eventOnChain: FarmsUpdatedEmissionsEventOnChainV2
 	): FarmsIncreasedEmissionsEvent => {
@@ -391,6 +463,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct reward-initialized event. */
 	public static initializedRewardEventFromOnChainV1 = (
 		eventOnChain: FarmsInitializedRewardEventOnChainV1
 	): FarmsInitializedRewardEvent => {
@@ -407,6 +480,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped reward-initialized event. */
 	public static initializedRewardEventFromOnChainV2 = (
 		eventOnChain: FarmsInitializedRewardEventOnChainV2
 	): FarmsInitializedRewardEvent => {
@@ -423,6 +497,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct position-joined event. */
 	public static joinedEventFromOnChainV1 = (
 		eventOnChain: FarmsJoinedEventOnChainV1
 	): FarmsJoinedEvent => {
@@ -436,6 +511,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped position-joined event. */
 	public static joinedEventFromOnChainV2 = (
 		eventOnChain: FarmsJoinedEventOnChainV2
 	): FarmsJoinedEvent => {
@@ -449,6 +525,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct position-locked event. */
 	public static lockedEventFromOnChainV1 = (
 		eventOnChain: FarmsLockedEventOnChainV1
 	): FarmsLockedEvent => {
@@ -467,6 +544,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped position-locked event. */
 	public static lockedEventFromOnChainV2 = (
 		eventOnChain: FarmsLockedEventOnChainV2
 	): FarmsLockedEvent => {
@@ -485,6 +563,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct position-split event. */
 	public static splitEventFromOnChainV1 = (
 		eventOnChain: FarmsSplitEventOnChainV1
 	): FarmsSplitEvent => {
@@ -498,6 +577,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped position-split event. */
 	public static splitEventFromOnChainV2 = (
 		eventOnChain: FarmsSplitEventOnChainV2
 	): FarmsSplitEvent => {
@@ -511,6 +591,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct strict-stake event. */
 	public static stakedEventFromOnChainV1 = (
 		eventOnChain: FarmsStakedEventOnChainV1
 	): FarmsStakedEvent => {
@@ -530,6 +611,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped strict-stake event. */
 	public static stakedEventFromOnChainV2 = (
 		eventOnChain: FarmsStakedEventOnChainV2
 	): FarmsStakedEvent => {
@@ -549,6 +631,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct relaxed-stake event. */
 	public static stakedRelaxedEventFromOnChainV1 = (
 		eventOnChain: FarmsStakedRelaxedEventOnChainV1
 	): FarmsStakedRelaxedEvent => {
@@ -566,6 +649,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct position-unlocked event. */
 	public static unlockedEventFromOnChainV1 = (
 		eventOnChain: FarmsUnlockedEventOnChainV1
 	): FarmsUnlockedEvent => {
@@ -581,6 +665,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped position-unlocked event. */
 	public static unlockedEventFromOnChainV2 = (
 		eventOnChain: FarmsUnlockedEventOnChainV2
 	): FarmsUnlockedEvent => {
@@ -596,6 +681,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V1 direct principal-withdrawal event. */
 	public static withdrewPrincipalEventFromOnChainV1 = (
 		eventOnChain: FarmsWithdrewPrincipalEventOnChainV1
 	): FarmsWithdrewPrincipalEvent => {
@@ -611,6 +697,7 @@ export class FarmsApiCasting {
 		};
 	};
 
+	/** Casts a V2 wrapped principal-withdrawal event. */
 	public static withdrewPrincipalEventFromOnChainV2 = (
 		eventOnChain: FarmsWithdrewPrincipalEventOnChainV2
 	): FarmsWithdrewPrincipalEvent => {

@@ -1,0 +1,483 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>GasPools | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_gasPools_gasPools.html">packages/gasPools/gasPools</a></li>
+<li><a href="" aria-current="page">GasPools</a></li></ul>
+<h1>Class GasPools</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>The <code>GasPools</code> class provides methods for interacting with shared gas pool
+endpoints on the Aftermath platform. This includes querying pool details
+and building transactions for creating, depositing into, withdrawing from,
+sponsoring, granting access to, and revoking access from gas pools.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">gasPools</span><span class="hl-1"> = </span><span class="hl-5">new</span><span class="hl-1"> </span><span class="hl-0">GasPools</span><span class="hl-1">({ </span><span class="hl-4">network:</span><span class="hl-1"> </span><span class="hl-2">&quot;MAINNET&quot;</span><span class="hl-1"> });</span><br/><br/><span class="hl-7">// Get gas pool details</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">pool</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">gasPools</span><span class="hl-1">.</span><span class="hl-0">getPool</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x...&quot;</span><br/><span class="hl-1">});</span><br/><br/><span class="hl-7">// Build a deposit transaction</span><br/><span class="hl-5">const</span><span class="hl-1"> { </span><span class="hl-6">tx</span><span class="hl-1"> } = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">gasPools</span><span class="hl-1">.</span><span class="hl-0">getDepositTx</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-4">walletAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;0x...&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-4">depositAmount:</span><span class="hl-1"> </span><span class="hl-8">100_000_000</span><span class="hl-5">n</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div></section>
+<section class="tsd-panel tsd-hierarchy" data-refl="5144">
+<h4>Hierarchy (<a href="../hierarchy.html#packages/gasPools/gasPools.GasPools">View Summary</a>)</h4>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><a href="general_utils_caller.Caller.html" class="tsd-signature-type tsd-kind-class">Caller</a>
+<ul class="tsd-hierarchy">
+<li class="tsd-hierarchy-item"><span class="tsd-hierarchy-target">GasPools</span></li></ul></li></ul></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L46">packages/gasPools/gasPools.ts:46</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#api" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api?</span></a>
+<a href="#config" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#getcreatetx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Tx</span></a>
+<a href="#getdeposittx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Tx</span></a>
+<a href="#getgranttx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Grant<wbr/>Tx</span></a>
+<a href="#getpool" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Pool</span></a>
+<a href="#getrevoketx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Revoke<wbr/>Tx</span></a>
+<a href="#getsharetx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Share<wbr/>Tx</span></a>
+<a href="#getsponsoredtransaction" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Sponsored<wbr/>Transaction</span></a>
+<a href="#getwithdrawtx" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Withdraw<wbr/>Tx</span></a>
+<a href="#apibaseurlfornetwork" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a>
+<a href="#defaultfullnodeurl" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorgaspools"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">GasPools</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">GasPools</a><a href="#constructorgaspools" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates a gas-pool facade.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">config</span>: <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional caller configuration, such as the network and access token.</p>
+</div></li>
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">api</span>: <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></span>
+<div class="tsd-comment tsd-typography"><p>Optional provider used to serialize transactions supplied to gas-pool endpoints.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">GasPools</a></h4><aside class="tsd-sources">
+<p>Overrides <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#constructor">constructor</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L57">packages/gasPools/gasPools.ts:57</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="api"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Readonly</code><span>api</span><a href="#api" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">api</span><span class="tsd-signature-symbol">?:</span> <a href="general_providers_aftermathApi.AftermathApi.html" class="tsd-signature-type tsd-kind-class">AftermathApi</a></div>
+<div class="tsd-comment tsd-typography"><p>Optional provider used to serialize transactions supplied to gas-pool endpoints.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L59">packages/gasPools/gasPools.ts:59</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="config"><span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/general_types_generalTypes.CallerConfig.html" class="tsd-signature-type tsd-kind-interface">CallerConfig</a></div>
+<div class="tsd-comment tsd-typography"><p>The mutable configuration used for subsequent requests.</p>
+</div><aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#config">config</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L51">general/utils/caller.ts:51</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getcreatetx"><span>get<wbr/>Create<wbr/>Tx</span><a href="#getcreatetx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getcreatetx-1"><span class="tsd-kind-call-signature">getCreateTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolCreateBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolCreateBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolCreateResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolCreateResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getcreatetx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to create a new gas pool for the given wallet.</p>
+<p>When <code>deferShare</code> is <code>true</code>, the response includes <code>gasPoolArg</code> and
+<code>sharePolicyArg</code> so you can compose additional commands (e.g. deposit,
+grant) before calling <a href="#getsharetx" class="tsd-kind-method">getShareTx</a> to finalize.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolCreateBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolCreateBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address to create the gas pool for.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>initialDepositAmount</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional initial deposit amount in MIST.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>deferShare</span></h5>
+<div class="tsd-comment tsd-typography"><p>When true, returns args without sharing yet.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolCreateResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolCreateResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p><code>tx</code> plus optional <code>gasPoolArg</code> and <code>sharePolicyArg</code> when deferred.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L95">packages/gasPools/gasPools.ts:95</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getdeposittx"><span>get<wbr/>Deposit<wbr/>Tx</span><a href="#getdeposittx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getdeposittx-1"><span class="tsd-kind-call-signature">getDepositTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolDepositBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolDepositBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getdeposittx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to deposit into the gas pool.</p>
+<p>Supports SUI and non-SUI deposits. For non-SUI deposits, the input coin
+is swapped into SUI via the Aftermath router before depositing.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolDepositBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolDepositBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address submitting the deposit.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>isSponsoredTx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Whether to build the transaction for sponsored gas. Defaults to false.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>coinType</span></h5>
+<div class="tsd-comment tsd-typography"><p>Coin type to deposit. Defaults to SUI.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>amount</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount to deposit (required when sourcing from wallet or for non-SUI).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>coinArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>PTB coin argument to use as input (if omitted, sourced from wallet).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>slippage</span></h5>
+<div class="tsd-comment tsd-typography"><p>Slippage tolerance for non-SUI swaps (defaults to 0.01).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>gasPoolArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional gas pool argument from a previously-built PTB command.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>SdkTransactionResponse</code> with <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L129">packages/gasPools/gasPools.ts:129</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getgranttx"><span>get<wbr/>Grant<wbr/>Tx</span><a href="#getgranttx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getgranttx-1"><span class="tsd-kind-call-signature">getGrantTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolGrantBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolGrantBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getgranttx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to grant another wallet access to the gas pool.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolGrantBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolGrantBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Owner wallet address.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>targetWalletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address to grant access to.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>gasPoolArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional gas pool argument from a previously-built PTB command.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>SdkTransactionResponse</code> with <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L212">packages/gasPools/gasPools.ts:212</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getpool"><span>get<wbr/>Pool</span><a href="#getpool" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getpool-1"><span class="tsd-kind-call-signature">getPool</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolBody</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getpool-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Fetches the gas pool details for a given wallet address.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolBody</a></span>
+<div class="tsd-comment tsd-typography"><p><code>ApiGasPoolBody</code> containing the wallet address.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>ApiGasPoolResponse</code> containing pool ID, balance, and whitelisted addresses.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L74">packages/gasPools/gasPools.ts:74</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getrevoketx"><span>get<wbr/>Revoke<wbr/>Tx</span><a href="#getrevoketx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getrevoketx-1"><span class="tsd-kind-call-signature">getRevokeTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolRevokeBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolRevokeBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getrevoketx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to revoke another wallet's access to the gas pool.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolRevokeBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolRevokeBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Owner wallet address.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>targetWalletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address to revoke access from.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>SdkTransactionResponse</code> with <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L235">packages/gasPools/gasPools.ts:235</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getsharetx"><span>get<wbr/>Share<wbr/>Tx</span><a href="#getsharetx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getsharetx-1"><span class="tsd-kind-call-signature">getShareTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolShareBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolShareBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getsharetx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to share a gas pool that was created with <code>deferShare: true</code>.</p>
+<p>Use this after composing additional commands (deposit, grant, etc.) with
+the <code>gasPoolArg</code> returned by <a href="#getcreatetx" class="tsd-kind-method">getCreateTx</a>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolShareBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolShareBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>gasPoolArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>Gas pool argument from a deferred create.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>sharePolicyArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>Share policy argument from a deferred create.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/general_types_generalTypes.SdkTransactionResponse.html" class="tsd-signature-type tsd-kind-interface">SdkTransactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>SdkTransactionResponse</code> with <code>tx</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L261">packages/gasPools/gasPools.ts:261</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getsponsoredtransaction"><span>get<wbr/>Sponsored<wbr/>Transaction</span><a href="#getsponsoredtransaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getsponsoredtransaction-1"><span class="tsd-kind-call-signature">getSponsoredTransaction</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolSponsorBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolSponsorBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolSponsorResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolSponsorResponse</a><span class="tsd-signature-symbol">&gt;</span><a href="#getsponsoredtransaction-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Requests a gas-pool-sponsored transaction. Returns a complete transaction
+with the gas payment and epoch bound attached, the sponsor's signature, and
+the digest both signatures commit to — the caller signs <code>transaction</code> as the
+sender and submits it together with <code>sponsorSignature</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolSponsorBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolSponsorBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address requesting the sponsorship.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>bytes</span></h5>
+<div class="tsd-comment tsd-typography"><p>Base64 of the signed <code>SPONSOR_GAS</code> auth message.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>signature</span></h5>
+<div class="tsd-comment tsd-typography"><p>Signature over <code>bytes</code>.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to sponsor (appended as a tx kind).</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to sponsor (appended as a tx kind).</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolSponsorResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolSponsorResponse</a><span class="tsd-signature-symbol">&gt;</span></h4><p><code>ApiGasPoolSponsorResponse</code>.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L188">packages/gasPools/gasPools.ts:188</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getwithdrawtx"><span>get<wbr/>Withdraw<wbr/>Tx</span><a href="#getwithdrawtx" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getwithdrawtx-1"><span class="tsd-kind-call-signature">getWithdrawTx</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">inputs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolWithdrawBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolWithdrawBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolWithdrawResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolWithdrawResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><a href="#getwithdrawtx-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a transaction to withdraw SUI from the gas pool.</p>
+<p>When <code>deferTransfer</code> is <code>true</code>, the withdrawn coin is not transferred.
+Instead, <code>withdrawnCoinArg</code> is returned for further PTB composition.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">inputs</span>: <span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolWithdrawBody.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolWithdrawBody</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span></span>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span>walletAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Wallet address submitting the withdrawal.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>amount</span></h5>
+<div class="tsd-comment tsd-typography"><p>Amount of SUI to withdraw in MIST.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>recipientAddress</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional recipient (defaults to <code>walletAddress</code>).</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>deferTransfer</span></h5>
+<div class="tsd-comment tsd-typography"><p>When true, returns the withdrawn coin arg instead of transferring.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>gasPoolArg</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional gas pool argument from a previously-built PTB command.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span>tx</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><code class="tsd-tag">Optional</code><span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type external">Transaction</span></h5>
+<div class="tsd-comment tsd-typography"><p>Optional transaction to extend.</p>
+</div></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Omit</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/packages_gasPools_gasPoolsTypes.ApiGasPoolWithdrawResponse.html" class="tsd-signature-type tsd-kind-interface">ApiGasPoolWithdrawResponse</a><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">&quot;txKind&quot;</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">tx</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type external">Transaction</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><p><code>tx</code> plus optional <code>withdrawnCoinArg</code> when deferred.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/gasPools/gasPools.ts#L158">packages/gasPools/gasPools.ts:158</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="apibaseurlfornetwork"><code class="tsd-tag">Static</code><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span><a href="#apibaseurlfornetwork" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="apibaseurlfornetwork-1"><span class="tsd-kind-call-signature">apiBaseUrlForNetwork</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#apibaseurlfornetwork-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Aftermath API host for a Sui network.</p>
+<p>To target a custom or local host, pass <code>baseUrl</code> in <code>CallerConfig</code> to the
+constructor instead.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a></span>
+<div class="tsd-comment tsd-typography"><p>The Sui network whose host to return.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's HTTPS or local HTTP API host.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#apibaseurlfornetwork">apiBaseUrlForNetwork</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L151">general/utils/caller.ts:151</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-inherited">
+<h3 class="tsd-anchor-link" id="defaultfullnodeurl"><code class="tsd-tag">Static</code><span>default<wbr/>Fullnode<wbr/>Url</span><a href="#defaultfullnodeurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-inherited">
+<li class="tsd-is-inherited">
+<div class="tsd-signature tsd-anchor-link" id="defaultfullnodeurl-1"><span class="tsd-kind-call-signature">defaultFullnodeUrl</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">network</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><a href="#defaultfullnodeurl-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the canonical Sui fullnode URL for a network.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">network</span>: <a href="../types/general_types_suiTypes.SuiNetwork.html" class="tsd-signature-type tsd-kind-type-alias">SuiNetwork</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></span>
+<div class="tsd-comment tsd-typography"><p>The network whose fullnode URL to return. <code>undefined</code>
+defaults to mainnet.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The network's fullnode URL.</p>
+<aside class="tsd-sources">
+<p>Inherited from <a href="general_utils_caller.Caller.html">Caller</a>.<a href="general_utils_caller.Caller.html#defaultfullnodeurl">defaultFullnodeUrl</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/general/utils/caller.ts#L162">general/utils/caller.ts:162</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#api"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>api</span></a><a href="#config" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>config</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#getcreatetx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Create<wbr/>Tx</span></a><a href="#getdeposittx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Deposit<wbr/>Tx</span></a><a href="#getgranttx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Grant<wbr/>Tx</span></a><a href="#getpool"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Pool</span></a><a href="#getrevoketx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Revoke<wbr/>Tx</span></a><a href="#getsharetx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Share<wbr/>Tx</span></a><a href="#getsponsoredtransaction"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Sponsored<wbr/>Transaction</span></a><a href="#getwithdrawtx"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Withdraw<wbr/>Tx</span></a><a href="#apibaseurlfornetwork" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>api<wbr/>Base<wbr/>Url<wbr/>For<wbr/>Network</span></a><a href="#defaultfullnodeurl" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>default<wbr/>Fullnode<wbr/>Url</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

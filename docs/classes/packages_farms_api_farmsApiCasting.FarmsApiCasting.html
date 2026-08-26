@@ -1,0 +1,627 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>FarmsApiCasting | aftermath-ts-sdk - v3.3.3</title><meta name="description" content="Documentation for aftermath-ts-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">aftermath-ts-sdk - v3.3.3</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/packages_farms_api_farmsApiCasting.html">packages/farms/api/farmsApiCasting</a></li>
+<li><a href="" aria-current="page">FarmsApiCasting</a></li></ul>
+<h1>Class FarmsApiCasting</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Converts raw farm object and event responses into the SDK's normalized
+farm types.</p>
+<p>V1 casters read direct <code>parsedJson</code> or legacy object fields. V2 event casters
+read the payload under <code>parsedJson.pos0</code>. Numeric strings are converted to
+<code>bigint</code> for balances and fixed-point multipliers, or to <code>number</code> for
+millisecond timestamps.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-3">import</span><span class="hl-1"> { </span><span class="hl-4">Casting</span><span class="hl-1">, </span><span class="hl-3">type</span><span class="hl-1"> </span><span class="hl-4">SuiObjectView</span><span class="hl-1"> } </span><span class="hl-3">from</span><span class="hl-1"> </span><span class="hl-2">&quot;aftermath-ts-sdk&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-5">declare</span><span class="hl-1"> </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">response</span><span class="hl-1">: </span><span class="hl-11">SuiObjectView</span><span class="hl-1">;</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">position</span><span class="hl-1"> = </span><span class="hl-4">Casting</span><span class="hl-1">.</span><span class="hl-4">farms</span><span class="hl-1">.</span><span class="hl-0">partialStakedPositionObjectFromSuiObjectResponseV2</span><span class="hl-1">(</span><br/><span class="hl-1">	 </span><span class="hl-4">response</span><span class="hl-1">,</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L81">packages/farms/api/farmsApiCasting.ts:81</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#addedrewardeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#addedrewardeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#createdvaulteventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#createdvaulteventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#depositedprincipaleventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#depositedprincipaleventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#destroyedstakedpositioneventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#destroyedstakedpositioneventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#harvestedrewardseventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#harvestedrewardseventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#increasedemissionseventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>increased<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#initializedrewardeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#initializedrewardeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#joinedeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#joinedeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#lockedeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#lockedeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#partialstakedpositionobjectfromsuiobjectresponsev1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a>
+<a href="#partialstakedpositionobjectfromsuiobjectresponsev2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a>
+<a href="#spliteventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#spliteventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#stakedeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#stakedeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#stakedrelaxedeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Relaxed<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a>
+<a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a>
+<a href="#stakingpoolownercapobjectfromsuiobjectresponsev1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a>
+<a href="#stakingpoolownercapobjectfromsuiobjectresponsev2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a>
+<a href="#unlockedeventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#unlockedeventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#updatedemissionseventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+<a href="#withdrewprincipaleventfromonchainv1" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a>
+<a href="#withdrewprincipaleventfromonchainv2" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorfarmsapicasting"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">FarmsApiCasting</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">FarmsApiCasting</a><a href="#constructorfarmsapicasting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">FarmsApiCasting</a></h4></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="addedrewardeventfromonchainv1"><code class="tsd-tag">Static</code><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#addedrewardeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="addedrewardeventfromonchainv1-1"><span class="tsd-kind-call-signature">addedRewardEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsAddedRewardEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsAddedRewardEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsAddedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsAddedRewardEvent</a><a href="#addedrewardeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct <code>AddedRewardEvent</code> payload to the normalized event type.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsAddedRewardEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsAddedRewardEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsAddedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsAddedRewardEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L277">packages/farms/api/farmsApiCasting.ts:277</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="addedrewardeventfromonchainv2"><code class="tsd-tag">Static</code><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#addedrewardeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="addedrewardeventfromonchainv2-1"><span class="tsd-kind-call-signature">addedRewardEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsAddedRewardEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsAddedRewardEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsAddedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsAddedRewardEvent</a><a href="#addedrewardeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 <code>AddedRewardEvent</code> whose payload is wrapped under <code>pos0</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsAddedRewardEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsAddedRewardEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsAddedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsAddedRewardEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L292">packages/farms/api/farmsApiCasting.ts:292</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createdvaulteventfromonchainv1"><code class="tsd-tag">Static</code><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#createdvaulteventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createdvaulteventfromonchainv1-1"><span class="tsd-kind-call-signature">createdVaultEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsCreatedVaultEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsCreatedVaultEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsCreatedVaultEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsCreatedVaultEvent</a><a href="#createdvaulteventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct pool-created event and converts its numeric fields.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsCreatedVaultEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsCreatedVaultEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsCreatedVaultEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsCreatedVaultEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L307">packages/farms/api/farmsApiCasting.ts:307</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createdvaulteventfromonchainv2"><code class="tsd-tag">Static</code><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#createdvaulteventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createdvaulteventfromonchainv2-1"><span class="tsd-kind-call-signature">createdVaultEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsCreatedVaultEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsCreatedVaultEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsCreatedVaultEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsCreatedVaultEvent</a><a href="#createdvaulteventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped pool-created event and converts its numeric fields.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsCreatedVaultEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsCreatedVaultEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsCreatedVaultEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsCreatedVaultEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L325">packages/farms/api/farmsApiCasting.ts:325</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="depositedprincipaleventfromonchainv1"><code class="tsd-tag">Static</code><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#depositedprincipaleventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="depositedprincipaleventfromonchainv1-1"><span class="tsd-kind-call-signature">depositedPrincipalEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDepositedPrincipalEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDepositedPrincipalEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsDepositedPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDepositedPrincipalEvent</a><a href="#depositedprincipaleventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct principal-deposit event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDepositedPrincipalEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDepositedPrincipalEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsDepositedPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDepositedPrincipalEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L343">packages/farms/api/farmsApiCasting.ts:343</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="depositedprincipaleventfromonchainv2"><code class="tsd-tag">Static</code><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#depositedprincipaleventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="depositedprincipaleventfromonchainv2-1"><span class="tsd-kind-call-signature">depositedPrincipalEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDepositedPrincipalEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDepositedPrincipalEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsDepositedPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDepositedPrincipalEvent</a><a href="#depositedprincipaleventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped principal-deposit event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDepositedPrincipalEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDepositedPrincipalEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsDepositedPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDepositedPrincipalEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L359">packages/farms/api/farmsApiCasting.ts:359</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="destroyedstakedpositioneventfromonchainv1"><code class="tsd-tag">Static</code><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#destroyedstakedpositioneventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="destroyedstakedpositioneventfromonchainv1-1"><span class="tsd-kind-call-signature">destroyedStakedPositionEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDestroyedStakedPositionEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDestroyedStakedPositionEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsDestroyedStakedPositionEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDestroyedStakedPositionEvent</a><a href="#destroyedstakedpositioneventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct staked-position-destroyed event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDestroyedStakedPositionEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDestroyedStakedPositionEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsDestroyedStakedPositionEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDestroyedStakedPositionEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L375">packages/farms/api/farmsApiCasting.ts:375</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="destroyedstakedpositioneventfromonchainv2"><code class="tsd-tag">Static</code><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#destroyedstakedpositioneventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="destroyedstakedpositioneventfromonchainv2-1"><span class="tsd-kind-call-signature">destroyedStakedPositionEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDestroyedStakedPositionEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDestroyedStakedPositionEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsDestroyedStakedPositionEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDestroyedStakedPositionEvent</a><a href="#destroyedstakedpositioneventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped staked-position-destroyed event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsDestroyedStakedPositionEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsDestroyedStakedPositionEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsDestroyedStakedPositionEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsDestroyedStakedPositionEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L388">packages/farms/api/farmsApiCasting.ts:388</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="harvestedrewardseventfromonchainv1"><code class="tsd-tag">Static</code><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#harvestedrewardseventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="harvestedrewardseventfromonchainv1-1"><span class="tsd-kind-call-signature">harvestedRewardsEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsHarvestedRewardsEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsHarvestedRewardsEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsHarvestedRewardsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsHarvestedRewardsEvent</a><a href="#harvestedrewardseventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct reward-harvest event and preserves parallel reward arrays.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsHarvestedRewardsEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsHarvestedRewardsEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsHarvestedRewardsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsHarvestedRewardsEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L401">packages/farms/api/farmsApiCasting.ts:401</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="harvestedrewardseventfromonchainv2"><code class="tsd-tag">Static</code><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#harvestedrewardseventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="harvestedrewardseventfromonchainv2-1"><span class="tsd-kind-call-signature">harvestedRewardsEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsHarvestedRewardsEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsHarvestedRewardsEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsHarvestedRewardsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsHarvestedRewardsEvent</a><a href="#harvestedrewardseventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped reward-harvest event and preserves parallel reward arrays.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsHarvestedRewardsEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsHarvestedRewardsEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsHarvestedRewardsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsHarvestedRewardsEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L418">packages/farms/api/farmsApiCasting.ts:418</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="increasedemissionseventfromonchainv1"><code class="tsd-tag">Static</code><span>increased<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#increasedemissionseventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="increasedemissionseventfromonchainv1-1"><span class="tsd-kind-call-signature">increasedEmissionsEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsIncreasedEmissionsEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsIncreasedEmissionsEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsIncreasedEmissionsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsIncreasedEmissionsEvent</a><a href="#increasedemissionseventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct emission-increase event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsIncreasedEmissionsEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsIncreasedEmissionsEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsIncreasedEmissionsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsIncreasedEmissionsEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L435">packages/farms/api/farmsApiCasting.ts:435</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="initializedrewardeventfromonchainv1"><code class="tsd-tag">Static</code><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#initializedrewardeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="initializedrewardeventfromonchainv1-1"><span class="tsd-kind-call-signature">initializedRewardEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsInitializedRewardEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsInitializedRewardEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsInitializedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsInitializedRewardEvent</a><a href="#initializedrewardeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct reward-initialized event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsInitializedRewardEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsInitializedRewardEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsInitializedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsInitializedRewardEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L467">packages/farms/api/farmsApiCasting.ts:467</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="initializedrewardeventfromonchainv2"><code class="tsd-tag">Static</code><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#initializedrewardeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="initializedrewardeventfromonchainv2-1"><span class="tsd-kind-call-signature">initializedRewardEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsInitializedRewardEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsInitializedRewardEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsInitializedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsInitializedRewardEvent</a><a href="#initializedrewardeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped reward-initialized event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsInitializedRewardEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsInitializedRewardEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsInitializedRewardEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsInitializedRewardEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L484">packages/farms/api/farmsApiCasting.ts:484</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="joinedeventfromonchainv1"><code class="tsd-tag">Static</code><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#joinedeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="joinedeventfromonchainv1-1"><span class="tsd-kind-call-signature">joinedEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsJoinedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsJoinedEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsJoinedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsJoinedEvent</a><a href="#joinedeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct position-joined event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsJoinedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsJoinedEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsJoinedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsJoinedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L501">packages/farms/api/farmsApiCasting.ts:501</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="joinedeventfromonchainv2"><code class="tsd-tag">Static</code><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#joinedeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="joinedeventfromonchainv2-1"><span class="tsd-kind-call-signature">joinedEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsJoinedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsJoinedEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsJoinedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsJoinedEvent</a><a href="#joinedeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped position-joined event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsJoinedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsJoinedEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsJoinedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsJoinedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L515">packages/farms/api/farmsApiCasting.ts:515</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="lockedeventfromonchainv1"><code class="tsd-tag">Static</code><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#lockedeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="lockedeventfromonchainv1-1"><span class="tsd-kind-call-signature">lockedEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsLockedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsLockedEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsLockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsLockedEvent</a><a href="#lockedeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct position-locked event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsLockedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsLockedEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsLockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsLockedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L529">packages/farms/api/farmsApiCasting.ts:529</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="lockedeventfromonchainv2"><code class="tsd-tag">Static</code><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#lockedeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="lockedeventfromonchainv2-1"><span class="tsd-kind-call-signature">lockedEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsLockedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsLockedEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsLockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsLockedEvent</a><a href="#lockedeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped position-locked event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsLockedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsLockedEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsLockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsLockedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L548">packages/farms/api/farmsApiCasting.ts:548</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="partialstakedpositionobjectfromsuiobjectresponsev1"><code class="tsd-tag">Static</code><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span><a href="#partialstakedpositionobjectfromsuiobjectresponsev1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="partialstakedpositionobjectfromsuiobjectresponsev1-1"><span class="tsd-kind-call-signature">partialStakedPositionObjectFromSuiObjectResponseV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_farmsTypes.PartialFarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-type-alias">PartialFarmsStakedPositionObject</a><a href="#partialstakedpositionobjectfromsuiobjectresponsev1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 staked-position object into the partial SDK position shape.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view with V1 legacy fields.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../types/packages_farms_farmsTypes.PartialFarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-type-alias">PartialFarmsStakedPositionObject</a></h4><p>A partial position with normalized coin type, <code>bigint</code> balances,
+and reward entries in the source array order.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L93">packages/farms/api/farmsApiCasting.ts:93</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="partialstakedpositionobjectfromsuiobjectresponsev2"><code class="tsd-tag">Static</code><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span><a href="#partialstakedpositionobjectfromsuiobjectresponsev2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="partialstakedpositionobjectfromsuiobjectresponsev2-1"><span class="tsd-kind-call-signature">partialStakedPositionObjectFromSuiObjectResponseV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_farmsTypes.PartialFarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-type-alias">PartialFarmsStakedPositionObject</a><a href="#partialstakedpositionobjectfromsuiobjectresponsev2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 staked-position object into the partial SDK position shape.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view with V2 vault fields.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../types/packages_farms_farmsTypes.PartialFarmsStakedPositionObject.html" class="tsd-signature-type tsd-kind-type-alias">PartialFarmsStakedPositionObject</a></h4><p>A partial V2 position with normalized coin type, <code>bigint</code>
+balances, and reward entries in the source array order.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L137">packages/farms/api/farmsApiCasting.ts:137</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="spliteventfromonchainv1"><code class="tsd-tag">Static</code><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#spliteventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="spliteventfromonchainv1-1"><span class="tsd-kind-call-signature">splitEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsSplitEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsSplitEventOnChainV1</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsSplitEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsSplitEvent</a><a href="#spliteventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct position-split event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsSplitEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsSplitEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsSplitEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsSplitEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L567">packages/farms/api/farmsApiCasting.ts:567</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="spliteventfromonchainv2"><code class="tsd-tag">Static</code><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#spliteventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="spliteventfromonchainv2-1"><span class="tsd-kind-call-signature">splitEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsSplitEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsSplitEventOnChainV2</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsSplitEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsSplitEvent</a><a href="#spliteventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped position-split event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsSplitEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsSplitEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsSplitEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsSplitEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L581">packages/farms/api/farmsApiCasting.ts:581</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakedeventfromonchainv1"><code class="tsd-tag">Static</code><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#stakedeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakedeventfromonchainv1-1"><span class="tsd-kind-call-signature">stakedEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedEvent</a><a href="#stakedeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct strict-stake event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L595">packages/farms/api/farmsApiCasting.ts:595</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakedeventfromonchainv2"><code class="tsd-tag">Static</code><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#stakedeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakedeventfromonchainv2-1"><span class="tsd-kind-call-signature">stakedEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedEvent</a><a href="#stakedeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped strict-stake event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L615">packages/farms/api/farmsApiCasting.ts:615</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakedrelaxedeventfromonchainv1"><code class="tsd-tag">Static</code><span>staked<wbr/>Relaxed<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#stakedrelaxedeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakedrelaxedeventfromonchainv1-1"><span class="tsd-kind-call-signature">stakedRelaxedEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedRelaxedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedRelaxedEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedRelaxedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedRelaxedEvent</a><a href="#stakedrelaxedeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct relaxed-stake event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsStakedRelaxedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsStakedRelaxedEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsStakedRelaxedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsStakedRelaxedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L635">packages/farms/api/farmsApiCasting.ts:635</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1"><code class="tsd-tag">Static</code><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1-1"><span class="tsd-kind-call-signature">stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOneTimeAdminCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOneTimeAdminCapObject</a><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 staking-pool one-time admin capability object.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view containing <code>afterburner_vault_id</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOneTimeAdminCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOneTimeAdminCapObject</a></h4><p>The normalized one-time admin capability and its V1 pool ID.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L224">packages/farms/api/farmsApiCasting.ts:224</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2"><code class="tsd-tag">Static</code><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2-1"><span class="tsd-kind-call-signature">stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOneTimeAdminCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOneTimeAdminCapObject</a><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 one-time admin capability from either JSON-RPC or gRPC shape.</p>
+<p>The nested <code>cap</code> field is unwrapped before the authority <code>for</code> field is
+read, so callers receive the same result from both transports.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view containing the nested authority cap.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOneTimeAdminCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOneTimeAdminCapObject</a></h4><p>The normalized one-time admin capability and its V2 pool ID.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L249">packages/farms/api/farmsApiCasting.ts:249</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakingpoolownercapobjectfromsuiobjectresponsev1"><code class="tsd-tag">Static</code><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span><a href="#stakingpoolownercapobjectfromsuiobjectresponsev1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakingpoolownercapobjectfromsuiobjectresponsev1-1"><span class="tsd-kind-call-signature">stakingPoolOwnerCapObjectFromSuiObjectResponseV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOwnerCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOwnerCapObject</a><a href="#stakingpoolownercapobjectfromsuiobjectresponsev1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 staking-pool owner capability object.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view containing <code>afterburner_vault_id</code>.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOwnerCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOwnerCapObject</a></h4><p>The normalized owner-cap object and its V1 pool ID.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L180">packages/farms/api/farmsApiCasting.ts:180</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stakingpoolownercapobjectfromsuiobjectresponsev2"><code class="tsd-tag">Static</code><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span><a href="#stakingpoolownercapobjectfromsuiobjectresponsev2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="stakingpoolownercapobjectfromsuiobjectresponsev2-1"><span class="tsd-kind-call-signature">stakingPoolOwnerCapObjectFromSuiObjectResponseV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOwnerCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOwnerCapObject</a><a href="#stakingpoolownercapobjectfromsuiobjectresponsev2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 staking-pool owner capability object.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">data</span>: <a href="../types/general_utils_grpcCasting.SuiObjectView.html" class="tsd-signature-type tsd-kind-type-alias">SuiObjectView</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw Sui object view containing the authority <code>for</code> field.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.StakingPoolOwnerCapObject.html" class="tsd-signature-type tsd-kind-interface">StakingPoolOwnerCapObject</a></h4><p>The normalized owner-cap object and its V2 pool ID.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L202">packages/farms/api/farmsApiCasting.ts:202</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="unlockedeventfromonchainv1"><code class="tsd-tag">Static</code><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#unlockedeventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="unlockedeventfromonchainv1-1"><span class="tsd-kind-call-signature">unlockedEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUnlockedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUnlockedEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsUnlockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsUnlockedEvent</a><a href="#unlockedeventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct position-unlocked event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUnlockedEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUnlockedEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsUnlockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsUnlockedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L653">packages/farms/api/farmsApiCasting.ts:653</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="unlockedeventfromonchainv2"><code class="tsd-tag">Static</code><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#unlockedeventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="unlockedeventfromonchainv2-1"><span class="tsd-kind-call-signature">unlockedEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUnlockedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUnlockedEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsUnlockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsUnlockedEvent</a><a href="#unlockedeventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped position-unlocked event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUnlockedEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUnlockedEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsUnlockedEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsUnlockedEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L669">packages/farms/api/farmsApiCasting.ts:669</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedemissionseventfromonchainv2"><code class="tsd-tag">Static</code><span>updated<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#updatedemissionseventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="updatedemissionseventfromonchainv2-1"><span class="tsd-kind-call-signature">updatedEmissionsEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUpdatedEmissionsEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUpdatedEmissionsEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsIncreasedEmissionsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsIncreasedEmissionsEvent</a><a href="#updatedemissionseventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped emission-update event into the normalized increase-event type.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsUpdatedEmissionsEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsUpdatedEmissionsEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsIncreasedEmissionsEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsIncreasedEmissionsEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L451">packages/farms/api/farmsApiCasting.ts:451</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="withdrewprincipaleventfromonchainv1"><code class="tsd-tag">Static</code><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span><a href="#withdrewprincipaleventfromonchainv1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="withdrewprincipaleventfromonchainv1-1"><span class="tsd-kind-call-signature">withdrewPrincipalEventFromOnChainV1</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsWithdrewPrincipalEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsWithdrewPrincipalEventOnChainV1</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsWithdrewPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsWithdrewPrincipalEvent</a><a href="#withdrewprincipaleventfromonchainv1-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V1 direct principal-withdrawal event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsWithdrewPrincipalEventOnChainV1.html" class="tsd-signature-type tsd-kind-type-alias">FarmsWithdrewPrincipalEventOnChainV1</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsWithdrewPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsWithdrewPrincipalEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L685">packages/farms/api/farmsApiCasting.ts:685</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="withdrewprincipaleventfromonchainv2"><code class="tsd-tag">Static</code><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span><a href="#withdrewprincipaleventfromonchainv2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="withdrewprincipaleventfromonchainv2-1"><span class="tsd-kind-call-signature">withdrewPrincipalEventFromOnChainV2</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">eventOnChain</span><span class="tsd-signature-symbol">:</span> <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsWithdrewPrincipalEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsWithdrewPrincipalEventOnChainV2</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/packages_farms_farmsTypes.FarmsWithdrewPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsWithdrewPrincipalEvent</a><a href="#withdrewprincipaleventfromonchainv2-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Casts a V2 wrapped principal-withdrawal event.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">eventOnChain</span>: <a href="../types/packages_farms_api_farmsApiCastingTypes.FarmsWithdrewPrincipalEventOnChainV2.html" class="tsd-signature-type tsd-kind-type-alias">FarmsWithdrewPrincipalEventOnChainV2</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/packages_farms_farmsTypes.FarmsWithdrewPrincipalEvent.html" class="tsd-signature-type tsd-kind-interface">FarmsWithdrewPrincipalEvent</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AftermathFinance/aftermath-ts-sdk/blob/f14032815c9b132df97d4532b4e286ef6b0ab559/src/packages/farms/api/farmsApiCasting.ts#L701">packages/farms/api/farmsApiCasting.ts:701</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#addedrewardeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#addedrewardeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>added<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#createdvaulteventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#createdvaulteventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>created<wbr/>Vault<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#depositedprincipaleventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#depositedprincipaleventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>deposited<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#destroyedstakedpositioneventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#destroyedstakedpositioneventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroyed<wbr/>Staked<wbr/>Position<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#harvestedrewardseventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#harvestedrewardseventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>harvested<wbr/>Rewards<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#increasedemissionseventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>increased<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#initializedrewardeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#initializedrewardeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>initialized<wbr/>Reward<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#joinedeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#joinedeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>joined<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#lockedeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#lockedeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>locked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#partialstakedpositionobjectfromsuiobjectresponsev1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a><a href="#partialstakedpositionobjectfromsuiobjectresponsev2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>partial<wbr/>Staked<wbr/>Position<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a><a href="#spliteventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#spliteventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#stakedeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#stakedeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#stakedrelaxedeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staked<wbr/>Relaxed<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a><a href="#stakingpoolonetimeadmincapobjectfromsuiobjectresponsev2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>One<wbr/>Time<wbr/>Admin<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a><a href="#stakingpoolownercapobjectfromsuiobjectresponsev1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V1</span></a><a href="#stakingpoolownercapobjectfromsuiobjectresponsev2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>staking<wbr/>Pool<wbr/>Owner<wbr/>Cap<wbr/>Object<wbr/>From<wbr/>Sui<wbr/>Object<wbr/>Response<wbr/>V2</span></a><a href="#unlockedeventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#unlockedeventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unlocked<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#updatedemissionseventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>updated<wbr/>Emissions<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a><a href="#withdrewprincipaleventfromonchainv1"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V1</span></a><a href="#withdrewprincipaleventfromonchainv2"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>withdrew<wbr/>Principal<wbr/>Event<wbr/>From<wbr/>On<wbr/>Chain<wbr/>V2</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">aftermath-ts-sdk - v3.3.3</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

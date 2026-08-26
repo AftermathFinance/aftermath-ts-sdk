@@ -48,6 +48,12 @@ export class GasPools extends Caller {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a gas-pool facade.
+	 *
+	 * @param config - Optional caller configuration, such as the network and access token.
+	 * @param api - Optional provider used to serialize transactions supplied to gas-pool endpoints.
+	 */
 	constructor(
 		config?: CallerConfig,
 		public readonly api?: AftermathApi
@@ -62,8 +68,8 @@ export class GasPools extends Caller {
 	/**
 	 * Fetches the gas pool details for a given wallet address.
 	 *
-	 * @param inputs - {@link ApiGasPoolBody}
-	 * @returns {@link ApiGasPoolResponse} containing pool ID, balance, and whitelisted addresses.
+	 * @param inputs - `ApiGasPoolBody` containing the wallet address.
+	 * @returns `ApiGasPoolResponse` containing pool ID, balance, and whitelisted addresses.
 	 */
 	public async getPool(inputs: ApiGasPoolBody): Promise<ApiGasPoolResponse> {
 		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>("pool", inputs);
@@ -118,7 +124,7 @@ export class GasPools extends Caller {
 	 * @param inputs.slippage - Slippage tolerance for non-SUI swaps (defaults to 0.01).
 	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getDepositTx(
 		inputs: Omit<ApiGasPoolDepositBody, "txKind"> & { tx?: Transaction }
@@ -177,7 +183,7 @@ export class GasPools extends Caller {
 	 * @param inputs.bytes - Base64 of the signed `SPONSOR_GAS` auth message.
 	 * @param inputs.signature - Signature over `bytes`.
 	 * @param inputs.tx - Optional transaction to sponsor (appended as a tx kind).
-	 * @returns {@link ApiGasPoolSponsorResponse}.
+	 * @returns `ApiGasPoolSponsorResponse`.
 	 */
 	public async getSponsoredTransaction(
 		inputs: Omit<ApiGasPoolSponsorBody, "txKind"> & { tx?: Transaction }
@@ -201,7 +207,7 @@ export class GasPools extends Caller {
 	 * @param inputs.targetWalletAddress - Wallet address to grant access to.
 	 * @param inputs.gasPoolArg - Optional gas pool argument from a previously-built PTB command.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getGrantTx(
 		inputs: Omit<ApiGasPoolGrantBody, "txKind"> & { tx?: Transaction }
@@ -224,7 +230,7 @@ export class GasPools extends Caller {
 	 * @param inputs.walletAddress - Owner wallet address.
 	 * @param inputs.targetWalletAddress - Wallet address to revoke access from.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getRevokeTx(
 		inputs: Omit<ApiGasPoolRevokeBody, "txKind"> & { tx?: Transaction }
@@ -250,7 +256,7 @@ export class GasPools extends Caller {
 	 * @param inputs.gasPoolArg - Gas pool argument from a deferred create.
 	 * @param inputs.sharePolicyArg - Share policy argument from a deferred create.
 	 * @param inputs.tx - Optional transaction to extend.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getShareTx(
 		inputs: Omit<ApiGasPoolShareBody, "txKind"> & { tx?: Transaction }

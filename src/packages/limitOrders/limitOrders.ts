@@ -33,7 +33,8 @@ export class LimitOrders extends Caller {
 	 */
 	public static readonly constants = {
 		/**
-		 * The default gas budget for limit orders. This may be subject to change.
+		 * The default gas budget for limit-order transactions, in MIST.
+		 * `50_000_000n` equals `0.05` SUI.
 		 */
 		gasAmount: BigInt(50_000_000),
 	};
@@ -46,7 +47,8 @@ export class LimitOrders extends Caller {
 	 * Creates a new `LimitOrders` instance for interacting with limit order functionality
 	 * on Aftermath.
 	 *
-	 * @param config - Optional configuration, including network and access token.
+	 * @param config - Optional configuration, including network, API host,
+	 * access token, and API path.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "limit-orders");
@@ -57,11 +59,15 @@ export class LimitOrders extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the list of **active** limit orders for a given user. The user must
-	 * provide a signature for identification.
+	 * Fetches the user's active limit orders from the Aftermath API.
+	 *
+	 * The `bytes` and `signature` fields authenticate the request. They are the
+	 * signed terms-message credential, not a transaction or a limit-order
+	 * cancellation payload.
 	 *
 	 * @param inputs - Contains the `walletAddress`, as well as `bytes` and `signature` if needed for auth.
 	 * @returns A promise resolving to an array of `LimitOrderObject`, representing the active orders.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -82,10 +88,12 @@ export class LimitOrders extends Caller {
 	}
 
 	/**
-	 * Fetches the list of **past** limit orders for a given user (e.g., completed, canceled, or expired).
+	 * Fetches the user's past limit orders from the Aftermath API, including
+	 * completed, canceled, expired, and failed orders.
 	 *
 	 * @param inputs - An object containing the `walletAddress`.
 	 * @returns A promise resolving to an array of `LimitOrderObject` representing past orders.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -106,11 +114,14 @@ export class LimitOrders extends Caller {
 	// =========================================================================
 
 	/**
-	 * Constructs a limit order creation transaction on the Aftermath API, returning a `Transaction`
-	 * object that can be signed and submitted to the network.
+	 * Requests a limit-order creation transaction from the Aftermath API.
+	 * The returned `Transaction` is not signed or executed.
 	 *
-	 * @param inputs - The limit order details, including coin types, amounts, expiry, etc.
-	 * @returns A promise resolving to a `Transaction` that can be locally signed and executed.
+	 * @param inputs - Limit-order details. Coin amounts are in the smallest units
+	 * of their coin, and `expiryDurationMs` is in milliseconds.
+	 * @returns A parsed `Transaction` with the wallet address set as its sender.
+	 * @throws `AftermathTransportError` when the API request, response decoding,
+	 * or transaction parsing fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -135,11 +146,18 @@ export class LimitOrders extends Caller {
 	}
 
 	/**
-	 * Cancels an existing limit order by sending a request to the Aftermath API
-	 * with the user's signed cancellation message.
+	 * Sends a signed request to cancel one or more limit orders.
 	 *
-	 * @param inputs - Contains the user's `walletAddress`, plus `bytes` and `signature`.
-	 * @returns A boolean indicating whether the cancellation was successful.
+	 * Sign the exact string returned by
+	 * `UserData.createTermsAndConditionsMessage()` as a personal message over
+	 * its UTF-8 bytes. Send those signed bytes and the signature in `inputs`.
+	 * The order IDs are sent in `orderObjectIds`; the deprecated per-action
+	 * message from `cancelLimitOrdersMessageToSign` is not the current credential.
+	 *
+	 * @param inputs - Wallet address, signed terms-message bytes, signature, and
+	 * the order object IDs to cancel.
+	 * @returns The backend cancellation result. `false` is a valid response.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -164,15 +182,17 @@ export class LimitOrders extends Caller {
 	// =========================================================================
 
 	/**
-	 * Generates the JSON message needed to cancel one or more limit orders. The user
-	 * signs this message (converted to bytes), and the resulting signature is passed
-	 * to `cancelLimitOrder`.
+	 * Builds the legacy per-action message for canceling limit orders.
+	 *
+	 * This method performs no network I/O. The current cancellation endpoint
+	 * authenticates with the canonical terms message instead. Put the order IDs
+	 * in `cancelLimitOrder`'s `orderObjectIds` field.
 	 *
 	 * @deprecated af-fe no longer accepts this per-action message. Sign
 	 * `UserData.createTermsAndConditionsMessage` and pass `orderObjectIds` in the
 	 * `cancelLimitOrder` body instead.
 	 * @param inputs - Object with `orderIds`, an array of order object IDs to cancel.
-	 * @returns A JSON structure with the action and order IDs to be canceled.
+	 * @returns `{ action: "CANCEL_LIMIT_ORDERS", order_object_ids: inputs.orderIds }`.
 	 */
 	public cancelLimitOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
@@ -189,9 +209,10 @@ export class LimitOrders extends Caller {
 	// =========================================================================
 
 	/**
-	 * Retrieves the minimum allowable order size (in USD) for limit orders on Aftermath.
+	 * Fetches the minimum allowable limit-order size in USD.
 	 *
 	 * @returns A promise resolving to a `number` (USD value) or `undefined` if not configured.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript

@@ -6,11 +6,23 @@ import type {
 	FaucetMintCoinEventOnChain,
 } from "./faucetApiCastingTypes";
 
+/**
+ * Converts faucet events from the on-chain representation to SDK event types.
+ */
 export class FaucetApiCasting {
 	// =========================================================================
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Converts an on-chain `MintedCoin` event to a `FaucetMintCoinEvent`.
+	 *
+	 * The coin amount is converted from its serialized string to `bigint`, and
+	 * the event's addresses and coin type are normalized with leading zeroes.
+	 *
+	 * @param eventOnChain - On-chain faucet mint event to convert.
+	 * @returns The normalized SDK faucet mint event.
+	 */
 	public static faucetMintCoinEventFromOnChain = (
 		eventOnChain: FaucetMintCoinEventOnChain
 	): FaucetMintCoinEvent => {
@@ -28,6 +40,12 @@ export class FaucetApiCasting {
 		};
 	};
 
+	/**
+	 * Converts an on-chain `AddedCoin` event to a `FaucetAddCoinEvent`.
+	 *
+	 * @param eventOnChain - On-chain faucet coin-registration event to convert.
+	 * @returns The normalized SDK faucet registration event.
+	 */
 	public static faucetAddCoinEventFromOnChain = (
 		eventOnChain: FaucetAddCoinEventOnChain
 	): FaucetAddCoinEvent => {

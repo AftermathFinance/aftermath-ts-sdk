@@ -40,6 +40,19 @@ import type {
 import { Coin } from "../..";
 import { Sui } from "../../sui";
 
+/**
+ * Low-level farm API for reading farm-owned objects and composing Move
+ * transaction commands for V1 and V2 staking pools.
+ *
+	 * Command methods such as `stakeTxV2` append one Move command to a
+	 * caller-owned `Transaction`. Methods beginning with `build` or `fetchBuild`
+	 * assemble a complete transaction. The `fetchBuild` methods may read owned coins through
+ * `AftermathApi` before they append commands. None of these methods submits a
+ * transaction to the network.
+ *
+ * Move abort descriptions are exposed through {@link moveErrors}. On-chain
+ * validation still applies when the completed transaction executes.
+ */
 export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
@@ -88,59 +101,90 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Class Members
 	// =========================================================================
 
+	/** Package and shared-object addresses used by the farm contracts. */
 	public readonly addresses: FarmsAddresses;
+	/** Fully qualified object types used for V1 and V2 ownership reads. */
 	public readonly objectTypes: {
+		/** V1 staked-position object type. */
 		stakedPositionV1: AnyObjectType;
+		/** V1 owner-cap object type. */
 		stakingPoolOwnerCapV1: AnyObjectType;
+		/** V1 one-time-admin-cap object type. */
 		stakingPoolOneTimeAdminCapV1: AnyObjectType;
+		/** V2 staked-position object type. */
 		stakedPositionV2: AnyObjectType;
+		/** V2 owner-cap object type, including its authority type arguments. */
 		stakingPoolOwnerCapV2: AnyObjectType;
+		/** V2 one-time-admin-cap object type. */
 		stakingPoolOneTimeAdminCapV2: AnyObjectType;
 	};
+	/** Fully qualified event types used by the farm event queries. */
 	public readonly eventTypes: {
 		// v1
 		// staking pools
 		// creation
+		/** V1 pool-created event type. */
 		createdVaultV1: AnyObjectType;
 		// mutation
+		/** V1 reward-initialized event type. */
 		initializedRewardV1: AnyObjectType;
+		/** V1 reward-added event type. */
 		addedRewardV1: AnyObjectType;
+		/** V1 emission-increase event type. */
 		increasedEmissionsV1: AnyObjectType;
 
 		// staking positions
 		// creation
+		/** V1 strict-stake event type. */
 		stakedV1: AnyObjectType;
+		/** V1 relaxed-stake event type. */
 		stakedRelaxedV1: AnyObjectType;
 		// locking
+		/** V1 lock event type. */
 		lockedV1: AnyObjectType;
+		/** V1 unlock event type. */
 		unlockedV1: AnyObjectType;
 		// staking
+		/** V1 principal-deposit event type. */
 		depositedPrincipalV1: AnyObjectType;
+		/** V1 principal-withdrawal event type. */
 		withdrewPrincipalV1: AnyObjectType;
 		// reward harvesting
+		/** V1 reward-harvest event type. */
 		harvestedRewardsV1: AnyObjectType;
 
 		// v2
 		// staking pools
 		// creation
+		/** V2 pool-created event type. */
 		createdVaultV2: AnyObjectType;
 		// mutation
+		/** V2 reward-initialized event type. */
 		initializedRewardV2: AnyObjectType;
+		/** V2 reward-added event type. */
 		addedRewardV2: AnyObjectType;
+		/** V2 emission-update event type. */
 		updatedEmissionsV2: AnyObjectType;
 
 		// staking positions
 		// creation
+		/** V2 strict-stake event type. */
 		stakedV2: AnyObjectType;
 		// locking
+		/** V2 lock event type. */
 		lockedV2: AnyObjectType;
+		/** V2 unlock event type. */
 		unlockedV2: AnyObjectType;
 		// staking
+		/** V2 principal-deposit event type. */
 		depositedPrincipalV2: AnyObjectType;
+		/** V2 principal-withdrawal event type. */
 		withdrewPrincipalV2: AnyObjectType;
 		// reward harvesting
+		/** V2 reward-harvest event type. */
 		harvestedRewardsV2: AnyObjectType;
 	};
+	/** Move abort messages keyed by package, module, and numeric error code. */
 	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
@@ -148,9 +192,10 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * Constructor for FarmsApi
-	 * @param api The AftermathApi provider instance
-	 * @throws Error if not all required addresses have been set in provider
+	 * Creates a low-level farm API from an initialized provider.
+	 *
+	 * @param api - Provider containing the farm package and object addresses.
+	 * @throws `Error` if the provider has no farm address configuration.
 	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.farms;
@@ -2058,7 +2103,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildUpdatePositionTxV2 instead
 	 * Builds a transaction for updating a staked position
-	 * @param parameters for updatePositionTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildUpdatePositionTxV1 = Helpers.transactions.createBuildTxFunc(
@@ -2067,7 +2111,6 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Builds a transaction for updating a staked position
-	 * @param parameters for updatePositionTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildUpdatePositionTx2 = Helpers.transactions.createBuildTxFunc(
@@ -2081,14 +2124,12 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildLockTxV2 instead
 	 * Builds a transaction for locking a staked position
-	 * @param parameters for lockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildLockTxV1 = Helpers.transactions.createBuildTxFunc(this.lockTxV1);
 
 	/**
 	 * Builds a transaction for locking a staked position
-	 * @param parameters for lockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildLockTxV2 = Helpers.transactions.createBuildTxFunc(this.lockTxV2);
@@ -2096,7 +2137,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildRenewLockTxV2 instead
 	 * Builds a transaction for renewing the lock on a staked position
-	 * @param parameters for renewLockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildRenewLockTxV1 = Helpers.transactions.createBuildTxFunc(
@@ -2105,7 +2145,6 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Builds a transaction for renewing the lock on a staked position
-	 * @param parameters for renewLockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildRenewLockTxV2 = Helpers.transactions.createBuildTxFunc(
@@ -2115,7 +2154,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildUnlockTxV2 instead
 	 * Builds a transaction for unlocking a staked position
-	 * @param parameters for unlockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildUnlockTxV1 = Helpers.transactions.createBuildTxFunc(
@@ -2124,7 +2162,6 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Builds a transaction for unlocking a staked position
-	 * @param parameters for unlockTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildUnlockTxV2 = Helpers.transactions.createBuildTxFunc(
@@ -2517,7 +2554,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildSetStakingPoolMinStakeAmountTxV2 instead
 	 * Builds a transaction for setting the minimum stake amount for a staking pool
-	 * @param parameters for setStakingPoolMinStakeAmountTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildSetStakingPoolMinStakeAmountTxV1 =
@@ -2527,7 +2563,6 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Builds a transaction for setting the minimum stake amount for a staking pool
-	 * @param parameters for setStakingPoolMinStakeAmountTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildSetStakingPoolMinStakeAmountTxV2 =
@@ -2535,11 +2570,13 @@ export class FarmsApi implements MoveErrorsInterface {
 			this.setStakingPoolMinStakeAmountTxV2
 		);
 
+	/** Builds a V2 transaction that updates the pool's minimum lock duration in milliseconds. */
 	public buildSetStakingPoolMinLockDurationMsTxV2 =
 		Helpers.transactions.createBuildTxFunc(
 			this.setStakingPoolMinLockDurationMsTxV2
 		);
 
+	/** Builds a V2 transaction that updates the pool's maximum lock duration in milliseconds. */
 	public buildSetStakingPoolMaxLockDurationMsTxV2 =
 		Helpers.transactions.createBuildTxFunc(
 			this.setStakingPoolMaxLockDurationMsTxV2
@@ -2549,7 +2586,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Builds a transaction for **removing undistributed reward coins** from a staking pool (V1).
 	 * Requires the pool **OwnerCap**. The removal is specific to a `rewardCoinType`.
 	 *
-	 * @param parameters Inputs accepted by `removeStakingPoolRewardTxV1`
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildRemoveStakingPoolRewardTxV1 = (inputs: {
@@ -2582,7 +2618,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Builds a transaction for **removing undistributed reward coins** from a staking pool (V2).
 	 * Requires the pool **OwnerCap** and includes the on-chain **version object**.
 	 *
-	 * @param parameters Inputs accepted by `removeStakingPoolRewardTxV2`
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildRemoveStakingPoolRewardTxV2 = (inputs: {
@@ -2614,7 +2649,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	/**
 	 * @deprecated use buildGrantOneTimeAdminCapTxV2 instead
 	 * Builds a transaction for granting a one-time admin capability for a staking pool
-	 * @param parameters for grantOneTimeAdminCapTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildGrantOneTimeAdminCapTxV1 = Helpers.transactions.createBuildTxFunc(
@@ -2623,7 +2657,6 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	/**
 	 * Builds a transaction for granting a one-time admin capability for a staking pool
-	 * @param parameters for grantOneTimeAdminCapTx
 	 * @returns Complete transaction ready for signing and execution
 	 */
 	public buildGrantOneTimeAdminCapTxV2 = Helpers.transactions.createBuildTxFunc(
