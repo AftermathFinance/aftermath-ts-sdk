@@ -1,8 +1,10 @@
 /**
- * Transactions sent to the services must use the v2 JSON shape (`gasData`,
- * `commands`). The deprecated `Transaction.serialize()` emits the v1
- * `blockData` shape (`gasConfig`, `transactions`), which the Rust services
- * reject as invalid input.
+ * The dynamic gas service requires the v2 JSON shape (`gasData`, `commands`)
+ * and rejects the v1 `blockData` shape (`gasConfig`, `transactions`) that the
+ * deprecated `Transaction.serialize()` emits.
+ *
+ * This is per-endpoint, not global: `Router.addTransactionForCompleteTradeRoute`
+ * still sends v1, because the service behind it still reads that shape.
  *
  * ## Running
  *
@@ -13,7 +15,6 @@
 
 import { Transaction } from "@mysten/sui/transactions";
 import { DynamicGas } from "../src/general/dynamicGas/dynamicGas";
-import { Router } from "../src/packages/router/router";
 
 const SENDER =
 	"0x0000000000000000000000000000000000000000000000000000000000000abc";
@@ -67,25 +68,6 @@ describe("DynamicGas.getUseDynamicGasForTx", () => {
 			walletAddress: SENDER,
 			gasCoinType: "0x2::sui::SUI",
 		});
-
-		expectV2(body().serializedTx);
-	});
-});
-
-describe("Router.addTransactionForCompleteTradeRoute", () => {
-	it("sends the transaction as v2 JSON", async () => {
-		const router = new Router();
-		const body = captureBody(router, {
-			tx: await buildTx().toJSON(),
-			coinOutId: undefined,
-		});
-
-		await router.addTransactionForCompleteTradeRoute({
-			tx: buildTx(),
-			walletAddress: SENDER,
-			completeRoute: undefined as never,
-			slippage: 0.01,
-		} as never);
 
 		expectV2(body().serializedTx);
 	});
