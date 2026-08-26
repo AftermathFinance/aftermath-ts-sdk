@@ -28,6 +28,7 @@
     "docs:audit:strict": "node scripts/auditDocumentation.mjs --strict",
     "docs:generate": "typedoc --options typedoc.json",
     "docs:check-links": "node scripts/checkDocumentationLinks.mjs",
+    "docs:check-site": "node scripts/checkDocumentationSite.mjs",
     "package:check": "node scripts/checkPackage.mjs",
     "test:surface": "node scripts/testSurface.mjs",
     "test:surface:strict": "node scripts/testSurface.mjs --strict",
