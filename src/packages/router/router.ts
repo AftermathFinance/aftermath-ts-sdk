@@ -288,7 +288,7 @@ export class Router extends Caller {
 			ApiRouterAddTransactionForCompleteTradeRouteBody
 		>("transactions/add-trade", {
 			...otherInputs,
-			serializedTx: tx.serialize(),
+			serializedTx: await tx.toJSON(),
 		});
 		return {
 			tx: Transaction.from(newTx),
