@@ -97,13 +97,40 @@ Generate the HTML reference with:
 npm run docs:generate
 ```
 
-The generator reads `typedoc.json`, uses `src` as the entry point, and includes
-the authored guides and research notes as project documents. Run the strict
-audit before generation so a successful TypeDoc build cannot hide an
-undocumented source declaration. Review the generated output and the source
-diff together. A generated page must not hide an undocumented public symbol or
-claim a parameter, unit, endpoint, or error that the current source does not
-support.
+The generator reads `typedoc.json`, expands the `src/` entry point to cover the
+SDK source modules, and writes the generated site to `.docs-site/`. That
+directory is a local and CI build artifact; it is intentionally not committed
+to the repository or included in the npm package. The authored guides and
+research notes remain in `docs/` and are included as TypeDoc project
+documents.
+
+Run the repository checks before committing documentation:
+
+```bash
+npm run docs:check-links
+npm run package:check
+```
+
+The GitHub Actions documentation workflow runs the audit, TypeDoc generation,
+link check, and package check for documentation pull requests. On `main`, it
+uploads `.docs-site/` as a Pages artifact and deploys it with the GitHub Pages
+deployment action. Configure the final custom hostname in the repository's
+Pages settings after the DNS record has been created; do not add credentials or
+generated HTML to the repository for that configuration.
+
+The default Pages address is
+`https://aftermathfinance.github.io/aftermath-ts-sdk/`. For a custom subdomain,
+create a DNS `CNAME` from that hostname to `AftermathFinance.github.io`, verify
+the domain with GitHub, and then set the hostname under the repository's
+**Settings > Pages > Custom domain**. Enable HTTPS after DNS validation
+completes. The artifact-based workflow does not require a committed `CNAME`
+file, which keeps the hostname configuration separate from generated output.
+
+Run the strict audit before generation so a successful TypeDoc build cannot
+hide an undocumented public source declaration. Review the generated output
+and the source diff together. A generated page must not hide an undocumented
+public symbol or claim a parameter, unit, endpoint, or error that the current
+source does not support.
 
 Use `README.md` for the first successful integration path. Keep package-specific
 details close to the package they describe, and link from the README instead of

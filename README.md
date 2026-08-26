@@ -15,14 +15,14 @@ For a first integration, follow the [high-level provider quick start](#create-th
 
 For a focused task, use these guides:
 
-- [Configure and bootstrap the SDK](./docs/guides/configure-and-bootstrap.md)
-- [Build and execute a transaction](./docs/guides/build-and-execute-transactions.md)
-- [Handle cancellation and transport errors](./docs/guides/handle-cancellation-and-errors.md)
-- [Query Sui data](./docs/guides/query-sui-data.md)
+- [Configure and bootstrap the SDK](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/configure-and-bootstrap.md)
+- [Build and execute a transaction](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/build-and-execute-transactions.md)
+- [Handle cancellation and transport errors](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/handle-cancellation-and-errors.md)
+- [Query Sui data](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/query-sui-data.md)
 
-For the provider and transport model, read [Understand the provider layers](./docs/explanation/provider-layers.md).
-For complete symbol-level facts, open the [generated API reference](https://github.com/AftermathFinance/aftermath-ts-sdk/tree/docs/docs).
-For documentation maintenance rules, see the [SDK documentation guide](./docs/DOCUMENTATION_GUIDE.md).
+For the provider and transport model, read [Understand the provider layers](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/explanation/provider-layers.md).
+For complete symbol-level facts, open the [generated API reference](https://aftermathfinance.github.io/aftermath-ts-sdk/).
+For documentation maintenance rules, see the [SDK documentation guide](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/DOCUMENTATION_GUIDE.md).
 
 ## Install the package
 
@@ -84,7 +84,7 @@ application owns the Sui client lifecycle. The `api` option also supplies the
 address configuration, so the factory skips address discovery and client
 construction.
 
-See [Configure and bootstrap the SDK](./docs/guides/configure-and-bootstrap.md)
+See [Configure and bootstrap the SDK](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/configure-and-bootstrap.md)
 for complete setup variants.
 
 ## Select a protocol or utility
@@ -150,7 +150,7 @@ SUI. Read the method's reference entry before using another transaction
 builder because inputs, return types, and network requirements differ by
 package.
 
-See [Build and execute a transaction](./docs/guides/build-and-execute-transactions.md)
+See [Build and execute a transaction](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/build-and-execute-transactions.md)
 for sender, exact-amount, and sponsored-transaction guidance.
 
 ## Use the low-level API provider
@@ -263,7 +263,7 @@ The gRPC and optional JSON-RPC clients used by `AftermathApi` do not normalize
 their errors to `AftermathTransportError`. Sui Move execution errors and errors
 from a wallet or signer also remain outside this HTTP error boundary.
 
-See [Handle cancellation and transport errors](./docs/guides/handle-cancellation-and-errors.md)
+See [Handle cancellation and transport errors](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/handle-cancellation-and-errors.md)
 for the error-handling flow.
 
 ## Work with pagination and typed values
@@ -283,9 +283,10 @@ authority.
 general type aliases. For example, `0.01` represents 1%. `Bps` uses integer
 basis points, so `100` represents 1%.
 
-The SDK exports the request and response interfaces used by each package. Let
-TypeScript infer a method's return type when possible, and use the generated
-reference to look up a named type before constructing an input object.
+The package root re-exports the request and response interfaces listed in
+`src/index.ts`. Let TypeScript infer a method's return type when possible, and
+use the generated reference to look up an exported named type before
+constructing an input object.
 
 ## Rate limits and support
 

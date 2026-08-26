@@ -3,7 +3,7 @@
 	"name": "aftermath-ts-sdk",
 	"entryPoints": ["src"],
 	"entryPointStrategy": "expand",
-	"out": "docs",
+	"out": ".docs-site",
 	"readme": "README.md",
 	"tsconfig": "tsconfig.json",
 	"projectDocuments": [
@@ -12,7 +12,7 @@
 		"docs/explanation/*.md",
 		"docs/research/*.md"
 	],
-	"cleanOutputDir": false,
+	"cleanOutputDir": true,
 	"excludeExternals": true,
 	"excludePrivate": true,
   "excludeProtected": true,
@@ -30,7 +30,7 @@
 		"invalidLink": true,
 		"invalidPath": true,
 		"rewrittenLink": true,
-		"notDocumented": false
+    "notDocumented": false
 	},
 	"treatValidationWarningsAsErrors": true,
 	"requiredToBeDocumented": [

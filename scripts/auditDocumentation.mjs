@@ -1,31 +1,26 @@
-import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import ts from "typescript";
 
 const root = process.cwd();
 const sourceRoot = path.join(root, "src");
+const entryPoint = path.join(sourceRoot, "index.ts");
 const strict = process.argv.includes("--strict");
 const json = process.argv.includes("--json");
 
-async function filesUnder(directory) {
-	const entries = await readdir(directory, { withFileTypes: true });
-	const files = [];
-
-	for (const entry of entries) {
-		const entryPath = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await filesUnder(entryPath)));
-		} else if (entry.name.endsWith(".ts")) {
-			files.push(entryPath);
-		}
-	}
-
-	return files;
+function relativePath(fileName) {
+	return path.relative(root, fileName).split(path.sep).join("/");
 }
 
-function hasModifier(node, kind) {
-	return node.modifiers?.some((modifier) => modifier.kind === kind) ?? false;
+function sourceLocation(node) {
+	const sourceFile = node.getSourceFile();
+	const position = sourceFile.getLineAndCharacterOfPosition(
+		node.getStart(sourceFile)
+	);
+	return {
+		file: relativePath(sourceFile.fileName),
+		line: position.line + 1,
+	};
 }
 
 function commentPartText(part) {
@@ -64,19 +59,33 @@ function documentationNode(node) {
 	return node;
 }
 
-function isMeaningfullyDocumented(node) {
+function nodeHasDocumentation(node) {
 	return documentationText(documentationNode(node)).length > 0;
 }
 
-function sourceLocation(node) {
-	const sourceFile = node.getSourceFile();
-	const position = sourceFile.getLineAndCharacterOfPosition(
-		node.getStart(sourceFile)
+function symbolHasDocumentation(symbol, checker) {
+	const description = ts
+		.displayPartsToString(symbol.getDocumentationComment(checker))
+		.trim();
+	if (description.length > 0) {
+		return true;
+	}
+
+	return symbol
+		.getJsDocTags(checker)
+		.some((tag) => `${tag.name} ${tag.text ?? ""}`.trim().length > 0);
+}
+
+function hasModifier(node, kind) {
+	return node.modifiers?.some((modifier) => modifier.kind === kind) ?? false;
+}
+
+function isPublicMember(node) {
+	return !(
+		hasModifier(node, ts.SyntaxKind.PrivateKeyword) ||
+		hasModifier(node, ts.SyntaxKind.ProtectedKeyword) ||
+		node.name?.getText().startsWith("#")
 	);
-	return {
-		file: path.relative(root, sourceFile.fileName),
-		line: position.line + 1,
-	};
 }
 
 function nameOf(node) {
@@ -144,176 +153,244 @@ function kindOf(node) {
 	if (ts.isVariableDeclaration(node)) {
 		return "constant";
 	}
-	return ts.SyntaxKind[node.kind];
+	return undefined;
 }
 
-function addRequirement(
-	requirements,
-	node,
-	kind,
-	name = nameOf(node),
-	container = undefined
-) {
-	if (!name || name.startsWith("__")) {
-		return;
-	}
-	const location = sourceLocation(node);
-	requirements.push({
-		...location,
-		kind,
-		name,
-		...(container ? { container } : {}),
-		documented: isMeaningfullyDocumented(node),
+function declarationsOf(symbol) {
+	return (symbol.getDeclarations() ?? []).filter((declaration) => {
+		const fileName = declaration.getSourceFile().fileName;
+		return fileName.startsWith(`${sourceRoot}${path.sep}`);
 	});
 }
 
-function isPublicMember(node) {
-	return !(
-		hasModifier(node, ts.SyntaxKind.PrivateKeyword) ||
-		hasModifier(node, ts.SyntaxKind.ProtectedKeyword) ||
-		node.name?.getText().startsWith("#")
+function resolveSymbol(symbol, checker) {
+	// biome-ignore lint/suspicious/noBitwiseOperators: TypeScript symbol flags are bitmasks.
+	if ((symbol.flags & ts.SymbolFlags.Alias) === 0) {
+		return symbol;
+	}
+	try {
+		return checker.getAliasedSymbol(symbol);
+	} catch {
+		return symbol;
+	}
+}
+
+function unwrapTypeNode(typeNode) {
+	let current = typeNode;
+	while (
+		current &&
+		(ts.isParenthesizedTypeNode(current) || ts.isJSDocNullableType(current))
+	) {
+		current = current.type;
+	}
+	return current;
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: The compiler API traversal keeps public-surface cases together.
+function collectRequirements(checker, moduleSymbol) {
+	const requirements = new Map();
+
+	function addRequirement({ node, kind, name, container, documented }) {
+		if (!name || name.startsWith("__")) {
+			return;
+		}
+
+		const key = `${container ?? "<module>"}|${kind}|${name}`;
+		const existing = requirements.get(key);
+		if (existing) {
+			existing.documented ||= documented;
+			return;
+		}
+
+		requirements.set(key, {
+			...sourceLocation(node),
+			kind,
+			name,
+			...(container ? { container } : {}),
+			documented,
+		});
+	}
+
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TypeScript type-literal traversal keeps nested public fields together.
+	function addMembersToTypeLiteral(typeNode, container, visitedTypeNodes) {
+		const unwrapped = unwrapTypeNode(typeNode);
+		if (!unwrapped || visitedTypeNodes.has(unwrapped)) {
+			return;
+		}
+
+		if (ts.isUnionTypeNode(unwrapped) || ts.isIntersectionTypeNode(unwrapped)) {
+			visitedTypeNodes.add(unwrapped);
+			for (const memberType of unwrapped.types) {
+				addMembersToTypeLiteral(memberType, container, visitedTypeNodes);
+			}
+			return;
+		}
+
+		if (!ts.isTypeLiteralNode(unwrapped)) {
+			return;
+		}
+
+		visitedTypeNodes.add(unwrapped);
+		for (const member of unwrapped.members) {
+			if (
+				!(
+					ts.isPropertySignature(member) ||
+					ts.isMethodSignature(member) ||
+					ts.isCallSignatureDeclaration(member) ||
+					ts.isConstructSignatureDeclaration(member) ||
+					ts.isIndexSignatureDeclaration(member)
+				)
+			) {
+				continue;
+			}
+
+			const memberName = nameOf(member);
+			addRequirement({
+				node: member,
+				kind: kindOf(member),
+				name: memberName,
+				container,
+				documented: nodeHasDocumentation(member),
+			});
+
+			if (member.type && ts.isPropertySignature(member)) {
+				addMembersToTypeLiteral(
+					member.type,
+					`${container}.${memberName}`,
+					visitedTypeNodes
+				);
+			}
+		}
+	}
+
+	function addClassMembers(declaration, container) {
+		for (const member of declaration.members) {
+			if (
+				isPublicMember(member) &&
+				(ts.isConstructorDeclaration(member) ||
+					ts.isMethodDeclaration(member) ||
+					ts.isGetAccessorDeclaration(member) ||
+					ts.isSetAccessorDeclaration(member) ||
+					ts.isPropertyDeclaration(member))
+			) {
+				addRequirement({
+					node: member,
+					kind: kindOf(member),
+					name: nameOf(member),
+					container,
+					documented: nodeHasDocumentation(member),
+				});
+			}
+		}
+	}
+
+	function addInterfaceMembers(declaration, container) {
+		for (const member of declaration.members) {
+			addRequirement({
+				node: member,
+				kind: kindOf(member),
+				name: nameOf(member),
+				container,
+				documented: nodeHasDocumentation(member),
+			});
+		}
+	}
+
+	function addEnumMembers(declaration, container) {
+		for (const member of declaration.members) {
+			addRequirement({
+				node: member,
+				kind: "enum member",
+				name: nameOf(member),
+				container,
+				documented: nodeHasDocumentation(member),
+			});
+		}
+	}
+
+	for (const exportedSymbol of checker.getExportsOfModule(moduleSymbol)) {
+		const symbol = resolveSymbol(exportedSymbol, checker);
+		const declarations = declarationsOf(symbol);
+		if (declarations.length === 0) {
+			continue;
+		}
+
+		const rootDeclaration = declarations.find((declaration) =>
+			kindOf(declaration)
+		);
+		const rootKind = rootDeclaration && kindOf(rootDeclaration);
+		if (!(rootDeclaration && rootKind)) {
+			continue;
+		}
+
+		const exportedName = exportedSymbol.getName();
+		addRequirement({
+			node: rootDeclaration,
+			kind: rootKind,
+			name: exportedName,
+			documented:
+				symbolHasDocumentation(symbol, checker) ||
+				declarations.some(nodeHasDocumentation),
+		});
+
+		for (const declaration of declarations) {
+			if (ts.isClassDeclaration(declaration)) {
+				addClassMembers(declaration, exportedName);
+			} else if (ts.isInterfaceDeclaration(declaration)) {
+				addInterfaceMembers(declaration, exportedName);
+			} else if (ts.isEnumDeclaration(declaration)) {
+				addEnumMembers(declaration, exportedName);
+			} else if (ts.isTypeAliasDeclaration(declaration)) {
+				addMembersToTypeLiteral(declaration.type, exportedName, new Set());
+			}
+		}
+	}
+
+	return [...requirements.values()].sort((left, right) => {
+		const leftLocation = `${left.file}:${left.line}`;
+		const rightLocation = `${right.file}:${right.line}`;
+		return leftLocation.localeCompare(rightLocation);
+	});
+}
+
+const configPath = path.join(root, "tsconfig.json");
+const config = ts.readConfigFile(configPath, ts.sys.readFile);
+if (config.error) {
+	throw new Error(
+		ts.flattenDiagnosticMessageText(config.error.messageText, "\n")
 	);
 }
 
-function visitTypeMembers(typeNode, requirements, container) {
-	if (!(typeNode && ts.isTypeLiteralNode(typeNode))) {
-		return;
-	}
-	for (const member of typeNode.members) {
-		if (
-			ts.isPropertySignature(member) ||
-			ts.isMethodSignature(member) ||
-			ts.isCallSignatureDeclaration(member) ||
-			ts.isConstructSignatureDeclaration(member) ||
-			ts.isIndexSignatureDeclaration(member)
-		) {
-			addRequirement(
-				requirements,
-				member,
-				kindOf(member),
-				nameOf(member),
-				container
-			);
-		}
-	}
+const parsedConfig = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
+const program = ts.createProgram([entryPoint], {
+	...parsedConfig.options,
+	noEmit: true,
+});
+const checker = program.getTypeChecker();
+const entrySourceFile = program.getSourceFile(entryPoint);
+if (!entrySourceFile) {
+	throw new Error(
+		`Could not load documentation entry point: ${relativePath(entryPoint)}`
+	);
 }
 
-function collectRequirements(sourceFiles) {
-	const requirements = [];
-
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: AST traversal keeps the public-symbol rules together.
-	function visit(node) {
-		if (ts.isSourceFile(node)) {
-			for (const statement of node.statements) {
-				if (hasModifier(statement, ts.SyntaxKind.ExportKeyword)) {
-					if (ts.isVariableStatement(statement)) {
-						for (const declaration of statement.declarationList.declarations) {
-							addRequirement(requirements, declaration, "constant");
-						}
-					} else if (
-						ts.isFunctionDeclaration(statement) ||
-						ts.isClassDeclaration(statement) ||
-						ts.isInterfaceDeclaration(statement) ||
-						ts.isTypeAliasDeclaration(statement) ||
-						ts.isEnumDeclaration(statement)
-					) {
-						addRequirement(requirements, statement, kindOf(statement));
-					}
-				}
-			}
-		} else if (ts.isClassDeclaration(node)) {
-			for (const member of node.members) {
-				if (
-					isPublicMember(member) &&
-					(ts.isConstructorDeclaration(member) ||
-						ts.isMethodDeclaration(member) ||
-						ts.isGetAccessorDeclaration(member) ||
-						ts.isSetAccessorDeclaration(member) ||
-						ts.isPropertyDeclaration(member))
-				) {
-					addRequirement(
-						requirements,
-						member,
-						kindOf(member),
-						nameOf(member),
-						node.name?.getText()
-					);
-				}
-			}
-		} else if (ts.isInterfaceDeclaration(node)) {
-			for (const member of node.members) {
-				addRequirement(
-					requirements,
-					member,
-					kindOf(member),
-					nameOf(member),
-					node.name?.getText()
-				);
-			}
-		} else if (ts.isEnumDeclaration(node)) {
-			for (const member of node.members) {
-				addRequirement(
-					requirements,
-					member,
-					"enum member",
-					nameOf(member),
-					node.name?.getText()
-				);
-			}
-		} else if (ts.isTypeAliasDeclaration(node)) {
-			visitTypeMembers(node.type, requirements, node.name?.getText());
-		}
-
-		ts.forEachChild(node, visit);
-	}
-
-	for (const sourceFile of sourceFiles) {
-		visit(sourceFile);
-	}
-
-	// TypeScript merges repeated interface declarations into one public shape.
-	// Treat a repeated member name in the same container as one requirement so
-	// the audit matches the public API rather than requiring duplicate comments
-	// for the same merged field.
-	const seenDeclarations = new Set();
-	const seenMembers = new Set();
-	return requirements.filter((requirement) => {
-		if (requirement.kind === "interface") {
-			const key = `${requirement.file}:${requirement.kind}:${requirement.name}`;
-			if (seenDeclarations.has(key)) {
-				return false;
-			}
-			seenDeclarations.add(key);
-			return true;
-		}
-		if (!requirement.container) {
-			return true;
-		}
-		const key = `${requirement.file}:${requirement.container}:${requirement.kind}:${requirement.name}`;
-		if (seenMembers.has(key)) {
-			return false;
-		}
-		seenMembers.add(key);
-		return true;
-	});
+const moduleSymbol = checker.getSymbolAtLocation(entrySourceFile);
+if (!moduleSymbol) {
+	throw new Error(
+		`Could not resolve module symbol: ${relativePath(entryPoint)}`
+	);
 }
 
-const sourceFiles = await filesUnder(sourceRoot);
-const sourceFileNodes = await Promise.all(
-	sourceFiles.map(async (file) =>
-		ts.createSourceFile(
-			file,
-			await readFile(file, "utf8"),
-			ts.ScriptTarget.Latest,
-			true,
-			ts.ScriptKind.TS
-		)
-	)
-);
-const requirements = collectRequirements(sourceFileNodes);
+const requirements = collectRequirements(checker, moduleSymbol);
 const missing = requirements.filter((requirement) => !requirement.documented);
+const sourceFiles = program
+	.getSourceFiles()
+	.filter((sourceFile) =>
+		sourceFile.fileName.startsWith(`${sourceRoot}${path.sep}`)
+	).length;
 const result = {
-	sourceFiles: sourceFiles.length,
+	entryPoint: relativePath(entryPoint),
+	sourceFiles,
 	requiredSymbols: requirements.length,
 	documentedSymbols: requirements.length - missing.length,
 	missingSymbols: missing.length,
@@ -324,6 +401,7 @@ if (json) {
 	console.log(JSON.stringify(result, null, 2));
 } else {
 	console.log("SDK documentation audit");
+	console.log(`entry point: ${result.entryPoint}`);
 	console.log(`source files: ${result.sourceFiles}`);
 	console.log(`required symbols: ${result.requiredSymbols}`);
 	console.log(`documented symbols: ${result.documentedSymbols}`);
@@ -331,8 +409,11 @@ if (json) {
 	if (missing.length > 0) {
 		console.log("");
 		for (const requirement of missing) {
+			const container = requirement.container
+				? `${requirement.container}.`
+				: "";
 			console.log(
-				`${requirement.file}:${requirement.line} ${requirement.kind} ${requirement.name}`
+				`${requirement.file}:${requirement.line} ${requirement.kind} ${container}${requirement.name}`
 			);
 		}
 	}

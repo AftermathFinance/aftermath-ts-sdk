@@ -137,10 +137,22 @@ export type CoinMetadaWithInfo = CoinMetadata & {
  * or an input index or result index from a transaction.
  */
 export type ServiceCoinData =
-	| { Coin: ObjectId }
-	| { Input: number }
-	| { Result: number }
-	| { NestedResult: [number, number] };
+	| {
+		/** On-chain object ID of the coin argument. */
+		Coin: ObjectId;
+	}
+	| {
+		/** Transaction input index that supplies the coin argument. */
+		Input: number;
+	}
+	| {
+		/** Transaction result index that supplies the coin argument. */
+		Result: number;
+	}
+	| {
+		/** Nested transaction result as `[commandIndex, resultIndex]`. */
+		NestedResult: [number, number];
+	};
 
 /**
  * **Legacy type** representing a coin reference in the Move environment, using
@@ -148,6 +160,15 @@ export type ServiceCoinData =
  */
 export type ServiceCoinDataV2 =
 	| "Gas"
-	| { Input: number }
-	| { Result: number }
-	| { NestedResult: [number, number] };
+	| {
+		/** Transaction input index that supplies the coin argument. */
+		Input: number;
+	}
+	| {
+		/** Transaction result index that supplies the coin argument. */
+		Result: number;
+	}
+	| {
+		/** Nested transaction result as `[commandIndex, resultIndex]`. */
+		NestedResult: [number, number];
+	};

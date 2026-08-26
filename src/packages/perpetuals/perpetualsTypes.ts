@@ -205,19 +205,28 @@ export type PerpetualsStopOrderTriggerPriceType = ValueOf<
  * Execution details for a stop order that has been executed.
  */
 export type PerpetualsExecutionInfo =
-	| { notSpecified: EmptyObject }
 	| {
+		/** Indicates that no stop-order execution category applies. */
+		notSpecified: EmptyObject;
+	}
+	| {
+			/** Details for an executed standalone stop order. */
 			standaloneExecuted: {
+				/** Price at which the standalone stop order executed. */
 				executionPrice: number;
 			};
 	  }
 	| {
+			/** Details for an executed stop-loss order. */
 			stopLossExecuted: {
+				/** Price at which the stop-loss order executed. */
 				executionPrice: number;
 			};
 	  }
 	| {
+			/** Details for an executed take-profit order. */
 			takeProfitExecuted: {
+				/** Price at which the take-profit order executed. */
 				executionPrice: number;
 			};
 	  };
@@ -226,18 +235,41 @@ export type PerpetualsExecutionInfo =
  * Current state of a stop order in its lifecycle.
  */
 export type PerpetualsOrderState =
-	| { unknown: EmptyObject }
 	| {
+		/** Indicates that the order state is unknown to the client. */
+		unknown: EmptyObject;
+	}
+	| {
+			/** Indicates that the order is invalid; inspect `error` for the reason. */
 			invalid: {
+				/** Reason the order is invalid. */
 				error: string;
 			};
 	  }
-	| { pending: EmptyObject }
-	| { active: EmptyObject }
-	| { executed: PerpetualsExecutionInfo }
-	| { cancelled: EmptyObject }
-	| { inExecution: EmptyObject }
-	| { toCancel: EmptyObject };
+	| {
+		/** Indicates that the order is pending activation. */
+		pending: EmptyObject;
+	}
+	| {
+		/** Indicates that the order is active and eligible for execution. */
+		active: EmptyObject;
+	}
+	| {
+		/** Indicates that the order has executed. */
+		executed: PerpetualsExecutionInfo;
+	}
+	| {
+		/** Indicates that the order has been cancelled. */
+		cancelled: EmptyObject;
+	}
+	| {
+		/** Indicates that the order is currently being executed. */
+		inExecution: EmptyObject;
+	}
+	| {
+		/** Indicates that the order is marked for cancellation. */
+		toCancel: EmptyObject;
+	};
 
 // =========================================================================
 //  Market
@@ -1977,6 +2009,7 @@ export interface ApiPerpetualsAccountMarginHistoryResponse {
  */
 export type ApiPerpetualsMarketOrderHistoryBody =
 	ApiPerpetualsHistoricalDataWithCursorBody & {
+		/** Market ID associated with the request. */
 		marketId: PerpetualsMarketId;
 	};
 
@@ -1985,10 +2018,15 @@ export type ApiPerpetualsMarketOrderHistoryBody =
  */
 export type ApiPerpetualsAccountOrderHistoryBody =
 	ApiPerpetualsHistoricalDataWithCursorBody & {
+		/** Account ID associated with the request. */
 		accountId: PerpetualsAccountId;
+		/** Optional wallet authentication data used to authorize the request. */
 		authentication?: {
+			/** Wallet address used to identify the signer or owner. */
 			walletAddress: SuiAddress;
+			/** Serialized message bytes covered by `signature`. */
 			bytes: string;
+			/** Wallet signature over `bytes` from `walletAddress`. */
 			signature: string;
 		};
 		/**
@@ -2004,10 +2042,15 @@ export type ApiPerpetualsAccountOrderHistoryBody =
  */
 export type ApiPerpetualsAccountCollateralHistoryBody =
 	ApiPerpetualsHistoricalDataWithCursorBody & {
+		/** Account ID associated with the request. */
 		accountId: PerpetualsAccountId;
+		/** Optional wallet authentication data used to authorize the request. */
 		authentication?: {
+			/** Wallet address used to identify the signer or owner. */
 			walletAddress: SuiAddress;
+			/** Serialized message bytes covered by `signature`. */
 			bytes: string;
+			/** Wallet signature over `bytes` from `walletAddress`. */
 			signature: string;
 		};
 		/**
@@ -2077,10 +2120,12 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 } & (
 		| {
 				// TODO: remove eventually ?
+				/** Account ID associated with the request. */
 				accountId: PerpetualsAccountId | undefined;
 		  }
 		| {
 				// TODO: remove eventually ?
+				/** Vault object ID used instead of an account. */
 				vaultId: ObjectId | undefined;
 		  }
 	);
@@ -2113,10 +2158,12 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 } & (
 		| {
 				// TODO: remove eventually ?
+				/** Account ID associated with the request. */
 				accountId: PerpetualsAccountId | undefined;
 		  }
 		| {
 				// TODO: remove eventually ?
+				/** Vault object ID used instead of an account. */
 				vaultId: ObjectId | undefined;
 		  }
 	);
@@ -2125,7 +2172,9 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
  * Request body for previewing a scale order placement (before sending a tx).
  */
 export type ApiPerpetualsPreviewPlaceScaleOrderBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Order side: `0` for bid or long, `1` for ask or short. */
 	side: PerpetualsOrderSide;
 	/** Total size distributed across all orders (scaled bigint). */
 	totalSize: bigint;
@@ -2155,10 +2204,12 @@ export type ApiPerpetualsPreviewPlaceScaleOrderBody = {
 } & (
 	| {
 			// TODO: remove eventually ?
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId | undefined;
 	  }
 	| {
 			// TODO: remove eventually ?
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId | undefined;
 	  }
 );
@@ -2188,10 +2239,13 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
 	shouldAbortOnMissingId?: boolean;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2216,15 +2270,20 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
  * Request body for previewing a leverage change for a given position.
  */
 export type ApiPerpetualsPreviewSetLeverageBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Leverage applied by the request or preview. */
 	leverage: number;
 	// collateralCoinType: CoinType;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2233,14 +2292,19 @@ export type ApiPerpetualsPreviewSetLeverageBody = {
  * Request body for previewing a collateral allocation/deallocation for a given position.
  */
 export type ApiPerpetualsPreviewEditCollateralBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Collateral amount to allocate, deallocate, or change. */
 	collateralChange: Balance;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2261,10 +2325,13 @@ export type ApiPerpetualsPreviewEditCollateralBody = {
  */
 export type ApiPerpetualsPreviewSetLeverageResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
+			/** Position after the simulated operation. */
 			updatedPosition: PerpetualsPosition;
+			/** Collateral amount to allocate, deallocate, or change. */
 			collateralChange: number;
 	  };
 
@@ -2275,10 +2342,13 @@ export type ApiPerpetualsPreviewSetLeverageResponse =
  */
 export type ApiPerpetualsPreviewEditCollateralResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
+			/** Position after the simulated operation. */
 			updatedPosition: PerpetualsPosition;
+			/** Collateral amount to allocate, deallocate, or change. */
 			collateralChange: number;
 	  };
 
@@ -2287,6 +2357,7 @@ export type ApiPerpetualsPreviewEditCollateralResponse =
  */
 export type ApiPerpetualsPreviewPlaceOrderResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -2322,9 +2393,11 @@ export type ApiPerpetualsPreviewPlaceOrderResponse =
  */
 export type ApiPerpetualsPreviewCancelOrdersResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
+			/** Per-market map of order IDs or preview results. */
 			marketIdsToData: Record<
 				PerpetualsMarketId,
 				{
@@ -2517,16 +2590,23 @@ export interface ApiPerpetualsMaxOrderSizeBody {
  * validated using a wallet signature.
  */
 export type ApiPerpetualsStopOrderDatasBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Serialized message bytes covered by `signature`. */
 	bytes: string;
+	/** Wallet signature over `bytes` from `walletAddress`. */
 	signature: string;
+	/** Optional market IDs used to limit the query. */
 	marketIds?: PerpetualsMarketId[];
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2665,6 +2745,7 @@ export type SdkPerpetualsCreateTwapOrdersInputs = Omit<
 	ApiPerpetualsCreateTwapOrdersBody,
 	PerpetualsServerInjectedTxFields
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
 };
 
@@ -2673,18 +2754,27 @@ export type SdkPerpetualsCreateTwapOrdersInputs = Omit<
  * account or vault.
  */
 export type ApiPerpetualsCreateTwapOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** TWAP orders to create. */
 	twapOrders: PerpetualsTwapOrderDetails[];
+	/** Optional gas coin argument used when extending the transaction. */
 	gasCoinArg?: TransactionObjectArgument;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2695,16 +2785,23 @@ export type ApiPerpetualsCreateTwapOrdersBody = {
  * `newTwapOrders` maps each TWAP order object id to the edit to apply.
  */
 export type ApiPerpetualsEditTwapOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Mapping from TWAP order object IDs to the edits to apply. */
 	newTwapOrders: Record<ObjectId, PerpetualsTwapOrderEdit>;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2717,6 +2814,7 @@ export type SdkPerpetualsEditTwapOrdersInputs = Omit<
 	ApiPerpetualsEditTwapOrdersBody,
 	PerpetualsServerInjectedTxFields
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
 };
 
@@ -2725,16 +2823,23 @@ export type SdkPerpetualsEditTwapOrdersInputs = Omit<
  * account or vault.
  */
 export type ApiPerpetualsCancelTwapOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** TWAP order object IDs to cancel. */
 	twapOrderIds: ObjectId[];
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2747,6 +2852,7 @@ export type SdkPerpetualsCancelTwapOrdersInputs = Omit<
 	ApiPerpetualsCancelTwapOrdersBody,
 	PerpetualsServerInjectedTxFields
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
 };
 
@@ -2755,15 +2861,21 @@ export type SdkPerpetualsCancelTwapOrdersInputs = Omit<
  * wallet signature.
  */
 export type ApiPerpetualsTwapOrderDatasBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Serialized message bytes covered by `signature`. */
 	bytes: string;
+	/** Wallet signature over `bytes` from `walletAddress`. */
 	signature: string;
+	/** Optional market IDs used to limit the query. */
 	marketIds?: PerpetualsMarketId[];
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -2809,7 +2921,9 @@ export interface ApiPerpetualsCreateVaultCapBody {
  * - As an existing `depositCoinArg` (coin object).
  */
 export type ApiPerpetualsCreateVaultBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Metadata used to create the vault's LP asset. */
 	metadata: {
 		/**
 		 * A human-readable name for the `Vault`.
@@ -2836,20 +2950,31 @@ export type ApiPerpetualsCreateVaultBody = {
 		 */
 		extraFields?: Record<string, string>;
 	};
+	/** Object ID of the collateral coin metadata. */
 	coinMetadataId: ObjectId;
+	/** Treasury-cap object ID used to create the vault asset. */
 	treasuryCapId: ObjectId;
+	/** Move coin type used as collateral. */
 	collateralCoinType: CoinType;
+	/** Vault lock period in milliseconds. */
 	lockPeriodMs: bigint;
+	/** Vault performance fee percentage. */
 	performanceFeePercentage: Percentage;
+	/** Delay before a force withdrawal can be processed, in milliseconds. */
 	forceWithdrawDelayMs: bigint;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Initial deposit amount in collateral units. */
 			initialDepositAmount: Balance;
 	  }
 	| {
+			/** Coin argument containing the initial deposit. */
 			initialDepositCoinArg: TransactionObjectArgument;
 	  }
 );
@@ -3138,18 +3263,27 @@ export interface ApiPerpetualsCreateAccountResponse {
  * - `depositCoinArg` (Sui coin object).
  */
 export type ApiPerpetualsDepositCollateralBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Account ID associated with the request. */
 	accountId: PerpetualsAccountId;
+	/** Optional account capability object ID used to authorize the account operation. */
 	accountCapId?: ObjectId;
+	/** Move coin type used as collateral. */
 	collateralCoinType: CoinType;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Collateral amount to deposit. */
 			depositAmount: Balance;
 	  }
 	| {
+			/** Coin argument containing the collateral deposit. */
 			depositCoinArg: TransactionObjectArgument;
 	  }
 );
@@ -3210,7 +3344,9 @@ export interface ApiPerpetualsTransferCollateralBody {
  * Request body for allocating collateral to a given market (account/vault).
  */
 export type ApiPerpetualsAllocateCollateralBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Collateral amount to allocate to the position. */
 	allocateAmount: Balance;
 	/**
 	 * Caller wallet. For vault-backed accounts, when the caller is a vault
@@ -3218,14 +3354,19 @@ export type ApiPerpetualsAllocateCollateralBody = {
 	 * resolve the correct assistant cap.
 	 */
 	walletAddress?: SuiAddress;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3234,7 +3375,9 @@ export type ApiPerpetualsAllocateCollateralBody = {
  * Request body for deallocating collateral from a given market (account/vault).
  */
 export type ApiPerpetualsDeallocateCollateralBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Collateral amount to deallocate from the position. */
 	deallocateAmount: Balance;
 	/**
 	 * Caller wallet. For vault-backed accounts, when the caller is a vault
@@ -3242,14 +3385,19 @@ export type ApiPerpetualsDeallocateCollateralBody = {
 	 * resolve the correct assistant cap.
 	 */
 	walletAddress?: SuiAddress;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3276,18 +3424,27 @@ export interface SdkPerpetualsPlaceStopOrdersInputs {
  * Request body for placing stop orders via the API.
  */
 export type ApiPerpetualsPlaceStopOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Stop orders to create or update. */
 	stopOrders: Omit<PerpetualsStopOrderData, "objectId" | "orderState">[];
+	/** Optional gas coin argument used when extending the transaction. */
 	gasCoinArg?: TransactionObjectArgument;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3339,11 +3496,17 @@ export interface SdkPerpetualsPlaceSlTpOrdersInputs {
  * API request body for placing SL/TP orders bound to a position.
  */
 export type ApiPerpetualsPlaceSlTpOrdersBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Position side to which the stop-loss or take-profit order applies. */
 	positionSide: PerpetualsOrderSide;
+	/** Order size in base units. */
 	size?: bigint;
+	/** Stop-loss trigger price. */
 	stopLossPrice?: number;
+	/** Take-profit trigger price. */
 	takeProfitPrice?: number;
 	/**
 	 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
@@ -3351,18 +3514,27 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	triggerPriceType?: PerpetualsStopOrderTriggerPriceType;
 	/** Optional integrator fee configuration applied when the SL/TP fires. */
 	builderCode?: PerpetualsBuilderCodeParamaters;
+	/** Optional limit-order ID associated with the stop-loss or take-profit order. */
 	limitOrderId?: PerpetualsOrderId;
+	/** Optional gas coin argument used when extending the transaction. */
 	gasCoinArg?: TransactionObjectArgument;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
+	/** Leverage applied by the request or preview. */
 	leverage?: number;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3384,6 +3556,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
  * account or vault.
  */
 export type ApiPerpetualsEditStopOrdersBody = {
+	/** Stop orders to create or update. */
 	stopOrders: PerpetualsStopOrderData[];
 	/**
 	 * Caller wallet. For vault-backed accounts, when the caller is a vault
@@ -3391,14 +3564,19 @@ export type ApiPerpetualsEditStopOrdersBody = {
 	 * resolve the correct assistant cap.
 	 */
 	walletAddress?: SuiAddress;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3410,8 +3588,11 @@ export type ApiPerpetualsEditStopOrdersBody = {
  * like `accountId` or `vaultId`.
  */
 export type ApiPerpetualsMarketOrderBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Order side: `0` for bid or long, `1` for ask or short. */
 	side: PerpetualsOrderSide;
 	/** Order size in scaled base units. */
 	size: bigint;
@@ -3429,10 +3610,15 @@ export type ApiPerpetualsMarketOrderBody = {
 	leverage?: number;
 	/** Optional SL/TP instructions to be placed along with the market order. */
 	slTp?: {
+		/** Optional gas coin argument used when extending the transaction. */
 		gasCoinArg?: TransactionObjectArgument;
+		/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 		isSponsoredTx?: boolean;
+		/** Order size in base units. */
 		size?: bigint;
+		/** Stop-loss trigger price. */
 		stopLossPrice?: number;
+		/** Take-profit trigger price. */
 		takeProfitPrice?: number;
 		/**
 		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
@@ -3465,13 +3651,17 @@ export type ApiPerpetualsMarketOrderBody = {
 	builderCode?: PerpetualsBuilderCodeParamaters;
 	/** Optional serialized transaction kind if assembled by the API. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3480,8 +3670,11 @@ export type ApiPerpetualsMarketOrderBody = {
  * API request body for placing a limit order in a given market.
  */
 export type ApiPerpetualsLimitOrderBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Order side: `0` for bid or long, `1` for ask or short. */
 	side: PerpetualsOrderSide;
 	/** Order size in scaled base units. */
 	size: bigint;
@@ -3503,10 +3696,15 @@ export type ApiPerpetualsLimitOrderBody = {
 	leverage?: number;
 	/** Optional SL/TP instructions to be placed along with the limit order. */
 	slTp?: {
+		/** Optional gas coin argument used when extending the transaction. */
 		gasCoinArg?: TransactionObjectArgument;
+		/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 		isSponsoredTx?: boolean;
+		/** Order size in base units. */
 		size?: bigint;
+		/** Stop-loss trigger price. */
 		stopLossPrice?: number;
+		/** Take-profit trigger price. */
 		takeProfitPrice?: number;
 		/**
 		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
@@ -3544,13 +3742,17 @@ export type ApiPerpetualsLimitOrderBody = {
 	clientOrderId?: PerpetualsClientOrderId;
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3560,8 +3762,11 @@ export type ApiPerpetualsLimitOrderBody = {
  * distributed across a price range) in a given market.
  */
 export type ApiPerpetualsScaleOrderBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Order side: `0` for bid or long, `1` for ask or short. */
 	side: PerpetualsOrderSide;
 	/** Total size distributed across all orders (base asset amount, scaled bigint). */
 	totalSize: bigint;
@@ -3597,13 +3802,17 @@ export type ApiPerpetualsScaleOrderBody = {
 	clientOrderIds?: PerpetualsClientOrderId[];
 	/** Optionally pre-built transaction payload. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3627,7 +3836,9 @@ export interface ApiPerpetualsOrderToPlace {
  * new ones in a single transaction.
  */
 export type ApiPerpetualsCancelAndPlaceOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
 	/** Order IDs to cancel. */
 	orderIdsToCancel: PerpetualsOrderId[];
@@ -3664,10 +3875,13 @@ export type ApiPerpetualsCancelAndPlaceOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3677,7 +3891,9 @@ export type ApiPerpetualsCancelAndPlaceOrdersBody = {
  * account or vault, per market.
  */
 export type ApiPerpetualsCancelOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Per-market map of order IDs or preview results. */
 	marketIdsToData: Record<
 		PerpetualsMarketId,
 		{
@@ -3696,14 +3912,19 @@ export type ApiPerpetualsCancelOrdersBody = {
 	 * on-chain. If false (default), missing IDs are tolerated.
 	 */
 	shouldAbortOnMissingId?: boolean;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3712,16 +3933,23 @@ export type ApiPerpetualsCancelOrdersBody = {
  * API request body for canceling stop orders identified by object IDs.
  */
 export type ApiPerpetualsCancelStopOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
 	walletAddress: SuiAddress;
+	/** Stop-order object IDs to cancel. */
 	stopOrderIds: ObjectId[];
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -3746,8 +3974,11 @@ export type ApiPerpetualsCancelStopOrdersBody = {
  * API body for setting leverage on an existing position.
  */
 export type ApiPerpetualsSetLeverageTxBody = {
+	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
+	/** Collateral amount to allocate, deallocate, or change. */
 	collateralChange: number;
+	/** Leverage applied by the request or preview. */
 	leverage: number;
 	/**
 	 * Caller wallet. For vault-backed accounts, when the caller is a vault
@@ -3755,14 +3986,19 @@ export type ApiPerpetualsSetLeverageTxBody = {
 	 * resolve the correct assistant cap.
 	 */
 	walletAddress?: SuiAddress;
+	/** Serialized transaction kind sent to the service. */
 	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
 	sponsor?: PerpetualsSponsorConfig;
 } & (
 	| {
+			/** Account ID associated with the request. */
 			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
 			accountCapId?: ObjectId;
 	  }
 	| {
+			/** Vault object ID used instead of an account. */
 			vaultId: ObjectId;
 	  }
 );
@@ -4494,6 +4730,7 @@ export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
  */
 export type ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -4518,6 +4755,7 @@ export interface ApiPerpetualsVaultPreviewOwnerWithdrawCollateralBody {
  */
 export type ApiPerpetualsVaultPreviewOwnerWithdrawCollateralResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -4542,6 +4780,7 @@ export interface ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityBody {
  */
 export type ApiPerpetualsVaultPreviewOwnerWithdrawLockedLiquidityResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -4567,6 +4806,7 @@ export interface ApiPerpetualsVaultPreviewDepositBody {
  */
 export type ApiPerpetualsVaultPreviewDepositResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -4593,6 +4833,7 @@ export interface ApiPerpetualsVaultPreviewProcessForceWithdrawRequestBody {
  */
 export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
@@ -4601,10 +4842,15 @@ export type ApiPerpetualsVaultPreviewProcessForceWithdrawRequestResponse =
 			/** Collateral price used by the preview, in USD. */
 			collateralPrice: number;
 			// TODO: change to arr ?
+			/** Position sizes that must be closed to process the force-withdraw request. */
 			sizesToClose: Record<PerpetualsMarketId, bigint>;
+			/** Estimated price impact of processing the force-withdraw request. */
 			priceImpact: Percentage;
+			/** Performance fees charged by the operation, denominated in USD. */
 			performanceFeesChargedUsd: number;
+			/** Whether the result remains within the withdrawal request's slippage tolerance. */
 			isWithinWithdrawRequestSlippage: boolean;
+			/** Minimum collateral amount that must be received to satisfy the request. */
 			minCollateralAmountOut: Balance;
 	  };
 
@@ -4644,13 +4890,16 @@ export interface ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsBody {
  */
 export type ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
+			/** Per-user withdrawal previews returned by the operation. */
 			userPreviews: {
 				userAddress: SuiAddress;
 				collateralAmountOut: Balance;
 			}[];
+			/** Collateral asset price used by the preview. */
 			collateralPrice: number;
 	  };
 
@@ -4667,11 +4916,14 @@ export interface ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesBody {
  */
 export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 	| {
+			/** Error message returned when the operation cannot be completed. */
 			error: string;
 	  }
 	| {
+			/** Maximum performance-fee amount available to withdraw. */
 			maxFeesToWithdraw: Balance;
 			// maxFeesToWithdrawUsd: number;
+			/** Coin type used to pay or receive the performance fees. */
 			feeCoinType: CoinType;
 	  };
 
@@ -4847,12 +5099,19 @@ export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
 	"accountId" | "txKind" | "slTp" | "walletAddress"
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
+	/** Optional stop-loss and take-profit configuration. */
 	slTp?: {
+		/** Optional gas coin argument used when extending the transaction. */
 		gasCoinArg?: TransactionObjectArgument;
+		/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 		isSponsoredTx?: boolean;
+		/** Order size in base units. */
 		size?: bigint;
+		/** Stop-loss trigger price. */
 		stopLossPrice?: number;
+		/** Take-profit trigger price. */
 		takeProfitPrice?: number;
 		/**
 		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
@@ -4882,12 +5141,19 @@ export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
 	"accountId" | "txKind" | "slTp" | "walletAddress"
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
+	/** Optional stop-loss and take-profit configuration. */
 	slTp?: {
+		/** Optional gas coin argument used when extending the transaction. */
 		gasCoinArg?: TransactionObjectArgument;
+		/** Whether the transaction is sponsored rather than paid directly by the wallet. */
 		isSponsoredTx?: boolean;
+		/** Order size in base units. */
 		size?: bigint;
+		/** Stop-loss trigger price. */
 		stopLossPrice?: number;
+		/** Take-profit trigger price. */
 		takeProfitPrice?: number;
 		/**
 		 * Which on-chain price the trigger uses: 0 = index (default), 1 = book, 2 = mark.
@@ -4938,6 +5204,7 @@ export type SdkPerpetualsPlaceScaleOrderInputs = Omit<
 	ApiPerpetualsScaleOrderBody,
 	"accountId" | "txKind" | "walletAddress"
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
 };
 
@@ -4956,6 +5223,7 @@ export type SdkPerpetualsCancelAndPlaceOrdersInputs = Omit<
 	ApiPerpetualsCancelAndPlaceOrdersBody,
 	"accountId" | "txKind" | "walletAddress"
 > & {
+	/** Optional transaction to extend with the operation. */
 	tx?: Transaction;
 };
 
@@ -5240,17 +5508,42 @@ export interface PerpetualsWsUpdatesSubscriptionMessage {
  * Each response includes exactly one of the following discriminated unions.
  */
 export type PerpetualsWsUpdatesResponseMessage =
-	| { market: PerpetualsMarketData }
-	| { user: PerpetualsWsUpdatesUserPayload }
-	| { oracle: PerpetualsWsUpdatesOraclePayload }
-	| { orderbook: PerpetualsWsUpdatesOrderbookPayload }
-	| { marketOrders: PerpetualsWsUpdatesMarketOrdersPayload }
-	| { userOrders: PerpetualsWsUpdatesUserOrdersPayload }
 	| {
+		/** Latest market update, when present. */
+		market: PerpetualsMarketData;
+	}
+	| {
+		/** Latest user or account update, when present. */
+		user: PerpetualsWsUpdatesUserPayload;
+	}
+	| {
+		/** Latest oracle update, when present. */
+		oracle: PerpetualsWsUpdatesOraclePayload;
+	}
+	| {
+		/** Latest orderbook update, when present. */
+		orderbook: PerpetualsWsUpdatesOrderbookPayload;
+	}
+	| {
+		/** Market-order updates, when present. */
+		marketOrders: PerpetualsWsUpdatesMarketOrdersPayload;
+	}
+	| {
+		/** User-order updates, when present. */
+		userOrders: PerpetualsWsUpdatesUserOrdersPayload;
+	}
+	| {
+			/** User collateral-change updates, when present. */
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
 	  }
-	| { topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload }
-	| { marketCandles: PerpetualsWsUpdatesMarketCandlesPayload };
+	| {
+		/** Top-of-book update, when present. */
+		topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload;
+	}
+	| {
+		/** Market candle updates, when present. */
+		marketCandles: PerpetualsWsUpdatesMarketCandlesPayload;
+	};
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 
