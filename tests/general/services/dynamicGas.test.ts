@@ -7,13 +7,13 @@ import {
 } from "@test/general/fixtures/services.js";
 
 describe("Caller-backed general services", () => {
-	it("DynamicGas posts the serialized transaction and coin preference to its service prefix", async () => {
+	it("DynamicGas posts v2 JSON and the coin preference to its service prefix", async () => {
 		const calls = installFetch({
 			txBytes: "updated-tx",
 			sponsoredSignature: "sig",
 		});
 		const tx = {
-			serialize: jest.fn(() => "serialized-tx"),
+			toJSON: jest.fn(() => Promise.resolve("serialized-tx")),
 		} as unknown as Transaction;
 		const dynamicGas = new DynamicGas({ baseUrl: "https://sdk.test" });
 
@@ -25,7 +25,7 @@ describe("Caller-backed general services", () => {
 			})
 		).resolves.toEqual({ txBytes: "updated-tx", sponsoredSignature: "sig" });
 
-		expect(tx.serialize).toHaveBeenCalledTimes(1);
+		expect(tx.toJSON).toHaveBeenCalledTimes(1);
 		expect(calls[0]?.input).toBe("https://sdk.test/api/dynamic-gas");
 		expect(requestBody(calls)).toEqual({
 			serializedTx: "serialized-tx",
