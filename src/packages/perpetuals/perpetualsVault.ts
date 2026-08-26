@@ -160,7 +160,17 @@ export class PerpetualsVault extends Caller {
 		);
 	}
 
-	// TODO: docs
+	/**
+	 * Build a transaction that pauses this vault for force-withdraw processing.
+	 *
+	 * The builder adds this vault's object ID, serializes the supplied transaction
+	 * as `txKind` when an {@link AftermathApi} is available, and leaves signing
+	 * and execution to the caller. Optional sponsor data is forwarded to the API.
+	 *
+	 * @param inputs.sponsor - Cached gas-pool sponsorship data, if required.
+	 * @param inputs.tx - Existing transaction to extend; otherwise a new one is used.
+	 * @returns The backend transaction response.
+	 */
 	public async getPauseVaultForForceWithdrawRequestTx(inputs: {
 		sponsor?: PerpetualsSponsorConfig;
 		tx?: Transaction;
@@ -655,7 +665,7 @@ export class PerpetualsVault extends Caller {
 	/**
 	 * Fetch all withdraw requests for this vault.
 	 *
-	 * @returns {@link ApiPerpetualsVaultsWithdrawRequestsResponse} containing requests
+	 * @returns `ApiPerpetualsVaultsWithdrawRequestsResponse` containing requests
 	 * scoped to `this.vaultObject.objectId`.
 	 *
 	 * @remarks
@@ -810,7 +820,16 @@ export class PerpetualsVault extends Caller {
 		});
 	}
 
-	// TODO: docs
+	/**
+	 * Preview whether this vault can be paused for force-withdraw processing.
+	 *
+	 * The wallet address identifies the caller for the backend preview. This
+	 * method performs HTTP I/O and does not build, sign, or submit a transaction.
+	 *
+	 * @param inputs.walletAddress - Address whose force-withdraw request is checked.
+	 * @returns Either an error string or `{ isPausable, minNextPauseTimestamp }`.
+	 * The timestamp is a Unix timestamp in milliseconds as a `bigint`.
+	 */
 	public async getPreviewPauseVaultForForceWithdrawRequest(inputs: {
 		walletAddress: SuiAddress;
 	}) {
@@ -849,7 +868,7 @@ export class PerpetualsVault extends Caller {
 	/**
 	 * Build a lightweight “cap-like” object for the vault’s underlying account.
 	 *
-	 * @returns {@link PerpetualsPartialVaultCap} suitable for account fetch helpers
+	 * @returns `PerpetualsPartialVaultCap` suitable for account fetch helpers
 	 * such as {@link Perpetuals.getAccount}.
 	 */
 	public partialVaultCap(): PerpetualsPartialVaultCap {
@@ -894,7 +913,15 @@ export class PerpetualsVault extends Caller {
 	//  Getters
 	// =========================================================================
 
-	// TODO: docs
+	/**
+	 * Reports whether the vault is currently paused for force withdrawals.
+	 *
+	 * The comparison uses `vaultObject.pausedUntilTimestamp` in Unix
+	 * milliseconds. A missing timestamp or a timestamp at or before `Date.now()`
+	 * means that the vault is not paused.
+	 *
+	 * @returns `true` while the current time is before the pause deadline.
+	 */
 	public isPaused(): boolean {
 		return !!(
 			this.vaultObject.pausedUntilTimestamp &&

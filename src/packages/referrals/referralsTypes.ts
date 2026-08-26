@@ -4,13 +4,14 @@ import type { SuiAddress, Timestamp } from "../../types";
 //  Data
 // =========================================================================
 
+/** A wallet that joined through a referral code. */
 export interface ReferralsRefereeInfo {
 	/**
-	 *  The wallet address of the referee
+	 * The wallet address of the referred user.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 *  When the referee joined via this ref link
+	 * Unix timestamp, in milliseconds, when the user joined through the code.
 	 */
 	joinedAt: Timestamp;
 }
@@ -19,35 +20,38 @@ export interface ReferralsRefereeInfo {
 //  API
 // =========================================================================
 
+/** Request body for fetching a wallet's referral code. */
 export interface ApiReferralsGetRefCodeBody {
 	/**
-	 *  The wallet address to get referral code of
+	 * The wallet address whose referral code to fetch.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The bytes of the message signed by the user's wallet. Required for authentication.
+	 * Serialized bytes of the message signed by the wallet for authentication.
 	 */
 	bytes: string;
 	/**
-	 * The signature of the message signed by the user's wallet. Required for authentication.
+	 * Signature corresponding to `bytes`.
 	 */
 	signature: string;
 }
 
+/** Response containing a wallet's referral code, when one exists. */
 export interface ApiReferralsGetRefCodeResponse {
 	/**
-	 *  The wallet address queried
+	 * The wallet address queried.
 	 */
 	address: SuiAddress;
 	/**
-	 * The referral code of queried wallet address
+	 * The wallet's referral code, or `undefined` when no code is linked.
 	 */
 	refCode: string | undefined;
 }
 
+/** Request body for fetching the referral code linked to a wallet. */
 export interface ApiReferralsGetLinkedRefCodeBody {
 	/**
-	 *  The wallet address to get linked referral code of
+	 * The wallet address whose linked referral code to fetch.
 	 */
 	walletAddress: SuiAddress;
 	/**
@@ -60,137 +64,149 @@ export interface ApiReferralsGetLinkedRefCodeBody {
 	signature: string;
 }
 
+/** Response containing the referral code linked to a wallet, when one exists. */
 export interface ApiReferralsGetLinkedRefCodeResponse {
 	/**
 	 *  The wallet address queried
 	 */
 	address: SuiAddress;
 	/**
-	 * The referral code linked to the queried wallet address
+	 * The referral code linked to the queried wallet address, or `undefined`.
 	 */
 	linkedRefCode: string | undefined;
 	/**
-	 * Timestamp when the referral link was created (None if not linked)
+	 * Unix timestamp, in milliseconds, when the link was created, or `undefined`
+	 * when no code is linked.
 	 */
 	linkedAt: Timestamp | undefined;
 }
 
+/** Request body for one page of referees for a referral code. */
 export interface ApiReferralsGetRefereesBody {
 	/**
-	 * Ref code to get referees for
+	 * Referral code whose referees to fetch.
 	 */
 	refCode: string;
+	/** Maximum number of referees to return in this page. */
 	limit?: number;
+	/** Number of referees to skip before this page. */
 	offset?: number;
 }
 
+/** Response containing one page of referees and the unpaginated total count. */
 export interface ApiReferralsGetRefereesResponse {
 	/**
-	 * The referral code queried
+	 * The referral code queried.
 	 */
 	refCode: string;
 	/**
-	 * List of referees
+	 * Referees returned for the requested page.
 	 */
 	referees: ReferralsRefereeInfo[];
 	/**
-	 * Total number of referees (before pagination)
+	 * Total number of referees for the code before applying `limit` and `offset`.
 	 */
 	totalCount: number;
 }
 
+/** Request body for checking referral-code availability. */
 export interface ApiReferralsIsRefCodeTakenBody {
 	/**
-	 * The referral code queried if taken
+	 * Referral code to check.
 	 */
 	refCode: string;
 }
 
+/** Response containing a referral-code availability result. */
 export interface ApiReferralsIsRefCodeTakenResponse {
 	/**
-	 * The referral code that was checked
+	 * Referral code that was checked.
 	 */
 	refCode: string;
 	/**
-	 * Whether this ref code is available for use (true = available, false = taken)
+	 * `true` when the code is available for use, or `false` when it is taken.
 	 */
 	isAvailable: boolean;
 }
 
+/** Request body for creating a referral link for a wallet. */
 export interface ApiReferralsCreateReferralLinkBody {
 	/**
-	 * The wallet address of the user creating the ref link. Required for authentication.
+	 * Wallet address of the user creating the link.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The bytes of the message signed by the user's wallet. Required for authentication.
+	 * Serialized bytes of the message signed by the wallet for authentication.
 	 */
 	bytes: string;
 	/**
-	 * The signature of the message signed by the user's wallet. Required for authentication.
+	 * Signature corresponding to `bytes`.
 	 */
 	signature: string;
 	/**
-	 * The referral code to create. The signed message no longer carries it, so
-	 * it travels in the body.
+	 * Referral code to create. The current signed terms message does not carry
+	 * this code, so the code travels in the body.
 	 */
 	refCode: string;
 }
 
+/** Response returned after creating a referral link. */
 export interface ApiReferralsCreateReferralLinkResponse {
 	/**
-	 * The unique referral code/ID
+	 * The created referral code.
 	 */
 	refCode: string;
 	/**
-	 * The wallet address of the referrer
+	 * Wallet address of the referrer.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * Timestamp when the ref link was created
+	 * Unix timestamp, in milliseconds, when the link was created.
 	 */
 	createdAt: Timestamp;
 	/**
-	 * Status of the creation
+	 * Backend status for the creation result.
 	 */
 	status: string;
 }
 
+/** Request body for linking a wallet to an existing referral code. */
 export interface ApiReferralsSetReferrerBody {
 	/**
-	 * The wallet address of the referee. Required for authentication.
+	 * Wallet address of the user being linked.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The bytes of the message signed by the referee's wallet. Required for authentication.
+	 * Serialized bytes of the message signed by the wallet for authentication.
 	 */
 	bytes: string;
 	/**
-	 * The signature of the message signed by the referee's wallet. Required for authentication.
+	 * Signature corresponding to `bytes`.
 	 */
 	signature: string;
 	/**
-	 * The referral code to link the referee to. Required: the signed message no
-	 * longer carries it, so it must travel in the body.
+	 * Referral code to link. The current signed terms message does not carry the
+	 * code, so the code travels in the body.
 	 */
 	refCode: string;
 }
 
+/** Response returned after linking a wallet to a referral code. */
 export interface ApiReferralsSetReferrerResponse {
 	/**
-	 * The wallet address of the referee
+	 * Wallet address of the referred user.
 	 */
 	refereeAddress: SuiAddress;
 	/**
-	 * The referral code used
+	 * Referral code used for the link.
 	 */
 	refCode: string;
 	/**
-	 * Timestamp when the referral relationship was established
+	 * Unix timestamp, in milliseconds, when the relationship was established.
 	 */
 	createdAt: Timestamp;
 	/**
-	 * Status of the operation
+	 * Backend status for the link result.
 	 */
 	status: string;
 }

@@ -1,151 +1,300 @@
-﻿# Aftermath SDK
+# Aftermath TypeScript SDK
 
-The Aftermath SDK provides easy access to Aftermath Finance's protocols on the Sui blockchain. Please note that not all of our protocols are on Testnet, but all of them are Mainnet.
+The Aftermath TypeScript SDK provides typed access to Aftermath Finance
+protocols and Sui on-chain data. It supports the Sui `MAINNET`, `TESTNET`,
+`DEVNET`, and `LOCAL` networks. A protocol can be unavailable on a selected
+network.
 
-## Installation
+Use the high-level `Aftermath` provider for most applications. Use
+`AftermathApi` when you need direct control of Sui clients, package addresses,
+or low-level transaction and object helpers.
+
+## Choose a path
+
+For a first integration, follow the [high-level provider quick start](#create-the-high-level-provider).
+
+For a focused task, use these guides:
+
+- [Configure and bootstrap the SDK](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/configure-and-bootstrap.md)
+- [Build and execute a transaction](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/build-and-execute-transactions.md)
+- [Handle cancellation and transport errors](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/handle-cancellation-and-errors.md)
+- [Query Sui data](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/query-sui-data.md)
+
+For the provider and transport model, read [Understand the provider layers](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/explanation/provider-layers.md).
+For complete symbol-level facts, open the [generated API reference](https://aftermathfinance.github.io/aftermath-ts-sdk/).
+For documentation maintenance rules, see the [SDK documentation guide](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/DOCUMENTATION_GUIDE.md).
+
+## Install the package
+
+Install the SDK and its `@mysten/sui` peer dependency in the application that
+imports them:
 
 ```bash
-npm i aftermath-ts-sdk
+npm install aftermath-ts-sdk @mysten/sui@^2
 ```
 
-## Quick Start (Aftermath SDK)
+The SDK supports `@mysten/sui` versions `>=2.0.0` and `<3.0.0`.
 
-For most integrations, use the Aftermath SDK for simplified access:
+## Create the high-level provider
 
-```typescript
-// "MAINNET" | "TESTNET" | "DEVNET" | "LOCAL"
-const afSdk = await Aftermath.create({ network: "MAINNET" });
+```ts
+import { Aftermath } from "aftermath-ts-sdk";
 
-// Access protocols
-const router = afSdk.Router();
-const pools = afSdk.Pools();
-const staking = afSdk.Staking();
-const farms = afSdk.Farms();
-const dca = afSdk.Dca();
+const sdk = await Aftermath.create({ network: "MAINNET" });
+const supportedCoins = await sdk.Router().getSupportedCoins();
+
+console.log(supportedCoins);
 ```
 
-## Cancellation and transport errors
+The call to `Aftermath.create` is asynchronous because the factory discovers
+the selected network's Aftermath addresses. The factory skips address
+discovery when you provide `addresses` or a pre-built `api`.
 
-`Aftermath.create(config, abortSignal)` accepts a caller-owned `AbortSignal`
-for cancellation during address discovery. The same final positional
-`abortSignal` is available on the SDK's pool, farm, price, coin metadata, and
-decimal read methods. Signals are runtime inputs and are not serialized into
-configuration or request bodies; supplying `addresses` or `api` keeps the
-existing no-network initialization fast path.
+The quick start calls the Aftermath HTTP API and returns an array of Sui coin
+type strings. Check protocol availability before using an accessor on a
+network that does not publish that protocol's address section.
 
-Transport failures are exposed as `AftermathTransportError` with structured
-`kind`, optional `status`, `retryAfterMs`, `code`, `cause`, and `abortSource`
-fields. These fields are additive: existing error messages and names are
-preserved, including the legacy HTTP format
-`HTTP <status> <statusText>: <body>`. Caller cancellation uses
-`kind: "abort"` and `abortSource: "caller"`; timeout facts use
-`kind: "timeout"` and `abortSource: "timeout"`. Arbitrary response headers
-are not exposed.
+### Configure a network or endpoint
 
-```typescript
+Pass `network` to use the SDK's canonical Aftermath API and Sui fullnode URLs:
+
+```ts
+const sdk = await Aftermath.create({ network: "TESTNET" });
+```
+
+Use `baseUrl` for the Aftermath API host. Use `fullnodeUrl` for the Sui fullnode
+host. When the factory creates the clients, it passes `fullnodeUrl` to
+`SuiGrpcClient` as `baseUrl` and to `SuiJsonRpcClient` as `url`.
+
+```ts
+const sdk = await Aftermath.create({
+	network: "MAINNET",
+	baseUrl: "https://api.example.test",
+	fullnodeUrl: "https://fullnode.example.test",
+});
+```
+
+Use `apiEndpoint` for the path segment between `baseUrl` and a provider path.
+It defaults to `api`. Keep the host in `baseUrl` and the path segment in
+`apiEndpoint`.
+
+Use `addresses` when your application already has a trusted
+`ConfigAddresses` value for the selected network. Use `api` when your
+application owns the Sui client lifecycle. The `api` option also supplies the
+address configuration, so the factory skips address discovery and client
+construction.
+
+See [Configure and bootstrap the SDK](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/configure-and-bootstrap.md)
+for complete setup variants.
+
+## Select a protocol or utility
+
+Each accessor returns a configured object. Call the accessor before calling a
+package method.
+
+| Accessor | Purpose |
+| --- | --- |
+| `sdk.Pools()` | AMM pool reads, liquidity transactions, and pool math. |
+| `sdk.Router()` | Multi-pool trade routes and router transactions. |
+| `sdk.Staking()` | afSUI staking, unstaking, validator data, and staking transactions. |
+| `sdk.Farms()` | Staking pools, farm positions, lock periods, and rewards. |
+| `sdk.Dca()` | Dollar-cost averaging orders and DCA transactions. |
+| `sdk.LimitOrders()` | Limit-order reads and transaction builders. |
+| `sdk.Perpetuals()` | Perpetual markets, accounts, orders, previews, and vaults. |
+| `sdk.NftAmm()` | NFT AMM markets, NFT reads, and NFT transactions. |
+| `sdk.SuiFrens()` | SuiFren objects, accessories, staking, and related events. |
+| `sdk.Faucet()` | Faucet reads and mint transactions on supported networks. |
+| `sdk.GasPools()` | Shared gas-pool reads and sponsored transactions. |
+| `sdk.Multisig()` | Multisig address data and transaction-related requests. |
+| `sdk.Referrals()` | Referral-program reads and transactions. |
+| `sdk.Rewards()` | User reward data and claim transactions. |
+| `sdk.UserData()` | User public-key and account message flows. |
+| `sdk.Coin(coinType?)` | Coin metadata, decimals, prices, and verified coins. |
+| `sdk.Wallet(address)` | Balance and transaction-history reads for an address. |
+| `sdk.Sui()` | Sui chain data and system operations. |
+| `sdk.Prices()` | Coin price and price-info reads. |
+| `sdk.DynamicGas()` | Dynamic-gas transaction preparation through the Aftermath API. |
+| `sdk.Auth()` | Authentication and access-token flows. |
+
+`sdk.ReferralVault()` remains available for compatibility and is deprecated.
+Use `sdk.Referrals()` for new code.
+
+## Build a transaction
+
+Transaction builders are package-specific. For example,
+`sdk.Staking().getStakeTransaction` returns an unsigned Sui `Transaction`,
+performs gRPC coin selection, and does not sign or execute the transaction.
+The `walletAddress` becomes the transaction sender and recipient. The selected
+validator must be active on the target network.
+
+```ts
+import { Aftermath } from "aftermath-ts-sdk";
+
+const sdk = await Aftermath.create({ network: "MAINNET" });
+
+// Replace these example addresses with addresses on the selected network.
+const walletAddress = "0x1";
+const validatorAddress = "0x4";
+
+const stakeTx = await sdk.Staking().getStakeTransaction({
+	walletAddress,
+	suiStakeAmount: 1_000_000_000n,
+	validatorAddress,
+});
+
+// Sign and execute `stakeTx` with the wallet integration used by your app.
+```
+
+`suiStakeAmount` is a raw SUI amount in MIST. `1_000_000_000n` represents 1
+SUI. Read the method's reference entry before using another transaction
+builder because inputs, return types, and network requirements differ by
+package.
+
+See [Build and execute a transaction](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/build-and-execute-transactions.md)
+for sender, exact-amount, and sponsored-transaction guidance.
+
+## Use the low-level API provider
+
+`AftermathApi` accepts a `SuiGrpcClient`, the resolved `ConfigAddresses`, and an
+optional `SuiJsonRpcClient`:
+
+```ts
+import { Aftermath, AftermathApi } from "aftermath-ts-sdk";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+
+const bootstrap = await Aftermath.create({ network: "MAINNET" });
+const addresses = await bootstrap.getAddresses();
+const fullnodeUrl = "https://fullnode.mainnet.sui.io:443";
+
+const client = new SuiGrpcClient({
+	network: "mainnet",
+	baseUrl: fullnodeUrl,
+});
+
+const api = new AftermathApi(client, addresses);
+const poolsApi = api.Pools();
+```
+
+The low-level provider exposes `DynamicFields()`, `Events()`, `Inspections()`,
+`Objects()`, `Transactions()`, `Wallet()`, `Nfts()`, `Coin()`, `Sui()`,
+`Pools()`, `Faucet()`, `SuiFrens()`, `Staking()`, `NftAmm()`,
+`ReferralVault()`, `Perpetuals()`, `Farms()`, `Dca()`, `Multisig()`,
+`LimitOrders()`, and `Router()`.
+
+These accessors are low-level helpers. They use the configured Sui client,
+build Move transactions, or run local conversions. They are not the same
+surface as the high-level HTTP accessors on `Aftermath`.
+
+## Understand the remaining JSON-RPC calls
+
+Most `AftermathApi` fullnode operations use `SuiGrpcClient`. These direct
+helpers require the optional `SuiJsonRpcClient` in the current source:
+
+| Helper | Reason |
+| --- | --- |
+| `api.Events().fetchCastEventsWithCursor` | `suix_queryEvents` has no equivalent on `SuiGrpcClient`. |
+| `api.Transactions().fetchTransactionsWithCursor` | `suix_queryTransactionBlocks` has no equivalent on `SuiGrpcClient`. |
+| `api.Sui().fetchSystemState` | The gRPC API does not return `SuiSystemStateSummary`. This compatibility method is deprecated. |
+
+Construct `AftermathApi` with a `SuiJsonRpcClient` only when your application
+uses one of those helpers or a low-level wrapper that delegates to one. The
+following wrappers also need the optional client:
+
+- `api.Wallet().fetchPastTransactions`
+- `api.Faucet().fetchMintCoinEvents`, `api.Faucet().fetchAddCoinEvents`, and
+  `api.Faucet().fetchSupportedCoins`
+- `api.SuiFrens().fetchHarvestSuiFrenFeesEvents`,
+  `api.SuiFrens().fetchMixSuiFrensEvents`,
+  `api.SuiFrens().fetchStakeSuiFrenEvents`,
+  `api.SuiFrens().fetchUnstakeSuiFrenEvents`, and
+  `api.SuiFrens().fetchSuiFrenStats`
+
+Without that third constructor argument, these methods throw a configuration
+`Error`. The factory creates both clients when it performs its own bootstrap.
+If you pass a pre-built `api`, the factory uses the clients already present in
+that instance.
+
+The high-level `sdk.Sui().getSystemState()` method is a different HTTP API
+call. Do not confuse it with the low-level `api.Sui().fetchSystemState`
+compatibility method.
+
+## Cancel requests and handle transport errors
+
+Pass a caller-owned `AbortSignal` to `Aftermath.create` to cancel address
+discovery. Pass a signal only to methods whose signature accepts a final
+`AbortSignal` parameter. The signal is a runtime input. The SDK does not
+serialize it into configuration or request bodies.
+
+```ts
+import {
+	Aftermath,
+	isAftermathTransportError,
+} from "aftermath-ts-sdk";
+
+const sdk = await Aftermath.create({ network: "MAINNET" });
 const controller = new AbortController();
-const sdk = await Aftermath.create({ network: "MAINNET" }, controller.signal);
+const request = sdk.Pools().getAllPools(controller.signal);
+
+controller.abort();
 
 try {
-	await sdk.Pools().getAllPools(controller.signal);
+	await request;
 } catch (error) {
-	if (isAftermathTransportError(error)) {
-		if (error.kind === "abort" && error.abortSource === "caller") {
-			return;
-		}
+	if (!isAftermathTransportError(error)) throw error;
+
+	if (error.kind === "abort" && error.abortSource === "caller") {
+		console.log("The caller cancelled the request.");
+	} else {
 		console.error(error.kind, error.status, error.retryAfterMs);
 	}
 }
 ```
 
-## Advanced Usage (AftermathApi)
+`AftermathTransportError` normalizes failures from the SDK's HTTP caller:
 
-For complex transaction construction, use AftermathApi for direct control:
+- `kind` is `http`, `network`, `abort`, `timeout`, or `decode`.
+- `status` contains the HTTP status for an HTTP failure, when available.
+- `retryAfterMs` contains a parsed, safe delay from `Retry-After`, when available.
+- `code` contains an underlying transport code, when one exists.
+- `cause` contains the original thrown value, when one exists.
+- `abortSource` distinguishes caller cancellation from timeout cancellation.
 
-```typescript
-import { SuiGrpcClient } from "@mysten/sui/grpc";
-import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+The gRPC and optional JSON-RPC clients used by `AftermathApi` do not normalize
+their errors to `AftermathTransportError`. Sui Move execution errors and errors
+from a wallet or signer also remain outside this HTTP error boundary.
 
-const afSdk = await Aftermath.create({ network: "MAINNET" });
-const addresses = await afSdk.getAddresses();
+See [Handle cancellation and transport errors](https://github.com/AftermathFinance/aftermath-ts-sdk/blob/main/docs/guides/handle-cancellation-and-errors.md)
+for the error-handling flow.
 
-const fullnodeUrl = "https://fullnode.mainnet.sui.io";
+## Work with pagination and typed values
 
-const afApi = new AftermathApi(
-	new SuiGrpcClient({ network: "mainnet", baseUrl: fullnodeUrl }),
-	addresses, // Configuration addresses
-	// Still required by the few helpers that have no gRPC equivalent — see below
-	new SuiJsonRpcClient({ network: "mainnet", url: fullnodeUrl })
-);
+Cursor-returning methods expose a page and a cursor. Pass `nextCursor` to the
+next request while it is not `null`. Cursor shapes differ by API. Event pages
+use `EventId`, transaction pages use a transaction digest, and dynamic-field
+pages use a field object ID.
 
-// Access protocol APIs
-const poolsApi = afApi.Pools();
-const stakingApi = afApi.Staking();
-const farmsApi = afApi.Farms();
-```
+`Balance` is `bigint` and usually represents the coin's smallest unit. Check
+the method or field documentation when a value uses another unit. `Timestamp`
+is a `number` and can represent milliseconds or seconds. A field name ending
+in `Ms` identifies milliseconds, but the containing method remains the final
+authority.
 
-`Aftermath.create`'s `fullnodeUrl` option takes a **gRPC base URL** (it is passed
-to `SuiGrpcClient` as `baseUrl`, and to `SuiJsonRpcClient` as `url`). Sui
-fullnodes serve both protocols from the same host, so a single URL is enough.
+`Slippage`, `Percentage`, `Apr`, and `Apy` are decimal fractions in the SDK's
+general type aliases. For example, `0.01` represents 1%. `Bps` uses integer
+basis points, so `100` represents 1%.
 
-### Remaining JSON-RPC surface
+The package root re-exports the request and response interfaces listed in
+`src/index.ts`. Let TypeScript infer a method's return type when possible, and
+use the generated reference to look up an exported named type before
+constructing an input object.
 
-Sui JSON-RPC is deprecated and scheduled for removal from fullnodes in
-mid-October 2026. Every fullnode call this SDK makes goes over gRPC **except**
-the following, which cannot be expressed with `SuiGrpcClient` without changing
-what they return:
+## Rate limits and support
 
-| Helper | Why |
-| --- | --- |
-| `Events().fetchCastEventsWithCursor` | `suix_queryEvents` has no `SuiGrpcClient` equivalent; `ledgerService.ListEvents` has a different filter model and BCS-only payloads |
-| `Transactions().fetchTransactionsWithCursor` | `suix_queryTransactionBlocks` has no gRPC equivalent at all |
-| `Objects().fetchObject` / `fetchObjectGeneral` / `fetchObjectBatch` / `fetchOwnedObjects` | gRPC returns Move object contents as BCS bytes or as a differently-shaped `json` view, so the parsed `content.fields` these helpers' casters consume cannot be reproduced |
-| `DynamicFields().fetchDynamicFieldObject` | same; gRPC returns the field value as BCS bytes |
-| `Sui().fetchSystemState` (deprecated) | gRPC has no `SuiSystemStateSummary` equivalent |
+The default Aftermath API rate limit is 1,000 requests per 10 seconds. Contact
+Aftermath if your application needs a higher limit:
 
-Prefer the Aftermath API (`Aftermath.create(...)`'s high-level providers) for
-events, transaction history and system state — those already avoid the fullnode
-entirely.
+- [Telegram](https://t.me/aftermath_fi)
+- [Discord](https://discord.gg/VFqMUqKHF3)
+- [X](https://x.com/AftermathFi)
 
-## Available Protocols
-
-### Pools (AMM)
-
--   Automated Market Maker pools for trading
--   Support for stable and uncorrelated assets
--   Up to 8 assets per pool
--   [View Pools Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/pools)
-
-### Router
-
--   Smart order routing across multiple pools
--   Optimal trade execution via split routes
--   [View Router Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/router)
-
-### Staking
-
--   Liquid staking for SUI tokens
--   Earn yield with afSUI
--   [View Staking Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/liquid-staking)
-
-### Farms
-
--   Yield farming opportunities
--   Stake LP tokens and earn rewards
--   [View Farms Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/farms)
-
-### DCA (Dollar-Cost Averaging)
-
--   Automated periodic investments
--   Reduce impact of market volatility
--   [View DCA Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/DCA)
-
-## Rate Limits
-
-Default rate limit: 1000 requests per 10 seconds
-
-For higher limits, contact us via:
-
--   [Telegram](https://t.me/aftermath_fi)
--   [Discord](https://discord.gg/VFqMUqKHF3)
--   [X/Twitter](https://x.com/AftermathFi)
+Report SDK issues in the [GitHub issue tracker](https://github.com/AftermathFinance/aftermath-ts-sdk/issues).

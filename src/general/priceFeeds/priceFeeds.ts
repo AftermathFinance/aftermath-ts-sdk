@@ -27,4 +27,11 @@
 // 	}
 // }
 
+/**
+ * Empty placeholder for the inactive price-feed service.
+ *
+ * This export has no methods and performs no network I/O. The previous Pyth
+ * implementation is commented out, so callers cannot fetch prices through
+ * this module.
+ */
 export default {};

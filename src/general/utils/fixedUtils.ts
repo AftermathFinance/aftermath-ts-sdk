@@ -1,87 +1,110 @@
 import type { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
 
 /**
- * The `FixedUtils` class provides utilities for fixed-point arithmetic
- * with a standard 18-decimal precision, along with some convenience
- * methods for normalizing/un-normalizing amounts based on token decimals.
+ * Provides fixed-point conversions and token-decimal normalization.
+ *
+ * Direct fixed-point conversions use an 18-decimal scale. Normalization uses
+ * the caller-supplied token decimal scalar and keeps on-chain amounts as
+ * `bigint` values until a direct cast produces a JavaScript `number`.
  */
 export class FixedUtils {
 	/**
-	 * Represents 1.0 in 18-decimal fixed math as a float: 1_000_000_000_000_000_000.
+	 * The JavaScript-number scale for 18-decimal fixed-point values, `1e18`.
+	 *
+	 * JavaScript numbers do not represent every integer at this magnitude exactly.
 	 */
 	public static readonly fixedOneN: number = 1_000_000_000_000_000_000;
 
 	/**
-	 * Represents 1.0 in 18-decimal fixed math as a bigint: 1000000000000000000n.
+	 * The exact bigint scale for 18-decimal fixed-point values, `1000000000000000000n`.
 	 */
 	public static readonly fixedOneB: bigint = BigInt("1000000000000000000");
 
 	/**
-	 * Represents 1.0 in 9-decimal fixed math as a float: 1_000_000_000.
+	 * The JavaScript-number scale for 9-decimal fixed-point values, `1e9`.
 	 */
 	public static readonly fixedOneN9 = 1_000_000_000;
 
 	/**
-	 * Represents 1.0 in 9-decimal fixed math as a bigint: 1000000000n.
+	 * The exact bigint scale for 9-decimal fixed-point values, `1000000000n`.
 	 */
 	public static readonly fixedOneB9 = BigInt(1_000_000_000);
 
 	// These methods relate to direct cast/un-cast logic for on-chain usage:
 
 	/**
-	 * Directly convert an on-chain `u64` (stored as a bigint) into a float, effectively no scaling.
+	 * Converts a raw on-chain bigint to a JavaScript number without scaling.
 	 *
-	 * @param n - The on-chain number as a bigint.
-	 * @returns The converted number as a float.
+	 * Values larger than JavaScript's safe integer range can lose precision.
+	 *
+	 * @param n - The raw on-chain integer.
+	 * @returns The raw value as a JavaScript `number`.
 	 */
 	public static readonly convertFromInt = (n: OnChainNumber): LocalNumber =>
 		Number(n);
 
 	/**
-	 * Convert a floating number back to an on-chain integer (bigint),
-	 * truncating decimals.
+	 * Converts a JavaScript number to a raw on-chain bigint without scaling.
 	 *
-	 * @param n - The local float.
-	 * @returns The truncated bigint.
+	 * The method applies `Math.floor`, so negative fractional values round toward
+	 * negative infinity rather than toward zero. `NaN` and infinite values throw
+	 * during the `bigint` conversion.
+	 *
+	 * @param n - The local number to convert.
+	 * @returns The floored value as a `bigint`.
+	 * @throws `RangeError` when `n` is not finite.
 	 */
 	public static readonly convertToInt = (n: LocalNumber): OnChainNumber =>
 		BigInt(Math.floor(n));
 
 	/**
-	 * Converts a fixed-18 on-chain number to a floating local number by dividing by `fixedOneN`.
+	 * Converts an 18-decimal fixed-point bigint to a JavaScript number.
 	 *
-	 * @param n - The on-chain 18-decimal fixed number (as a bigint).
-	 * @returns A float representing the unscaled value.
+	 * The method divides by `fixedOneN`; large values can lose precision when
+	 * converted to `number`.
+	 *
+	 * @param n - The 18-decimal fixed-point integer.
+	 * @returns The unscaled local number.
 	 */
 	public static readonly directCast = (n: OnChainNumber): LocalNumber =>
 		Number(n) / FixedUtils.fixedOneN;
 
 	/**
-	 * Converts a floating local number to an on-chain 18-decimal fixed bigint by multiplying by `fixedOneN`.
+	 * Converts a JavaScript number to an 18-decimal fixed-point bigint.
 	 *
-	 * @param n - The local float to be scaled.
-	 * @returns The scaled 18-decimal fixed as a bigint.
+	 * The method multiplies by `fixedOneN` and applies `Math.floor` before the
+	 * `bigint` conversion. Negative fractional values therefore floor toward
+	 * negative infinity, and JavaScript number precision applies before flooring.
+	 *
+	 * @param n - The local number to scale.
+	 * @returns The scaled value as a `bigint`.
+	 * @throws `RangeError` when the scaled value is not finite.
 	 */
 	public static readonly directUncast = (n: LocalNumber): OnChainNumber =>
 		BigInt(Math.floor(n * FixedUtils.fixedOneN));
 
 	/**
-	 * Returns the complement of the number in `[0,1]`, i.e., `1 - n`.
-	 * If `n` is negative, it's treated as zero; if `n` > 1, also treated as zero for the complement.
+	 * Returns a clamped complement of a local number.
 	 *
-	 * @param n - The local float in [0,1].
-	 * @returns The complement of `n` in [0,1].
+	 * For `0 <= n <= 1`, the result is `1 - n`. Negative inputs are treated as
+	 * zero before subtraction, and inputs greater than `1` produce `0` after the
+	 * result is clamped. `NaN` is not validated and produces `NaN`.
+	 *
+	 * @param n - The local number to complement.
+	 * @returns A value no less than `0` for finite inputs.
 	 */
 	public static readonly complement = (n: LocalNumber) =>
 		Math.max(0, 1 - Math.max(0, n));
 
 	/**
-	 * Multiplies a raw integer `amount` by a `decimalsScalar` to produce
-	 * a "normalized" form. E.g., if decimals = 9, we store it as 10^9 scale.
+	 * Multiplies a raw balance by a token decimal scalar.
 	 *
-	 * @param decimalsScalar - The scale factor for the coin (e.g., 1e9).
-	 * @param amount - The raw integer (balance) to be scaled.
-	 * @returns The scaled (normalized) amount as a `number`.
+	 * For a token with 9 decimals, pass `1000000000n` as the scalar. The
+	 * multiplication remains exact because both operands are `bigint` values.
+	 *
+	 * @param decimalsScalar - The token's scale factor, such as `1000000000n`.
+	 * @param amount - The raw on-chain balance.
+	 * @returns The normalized balance as a `bigint`.
 	 */
 	public static readonly normalizeAmount = (
 		decimalsScalar: DecimalsScalar,
@@ -89,12 +112,15 @@ export class FixedUtils {
 	): NormalizedBalance => amount * decimalsScalar;
 
 	/**
-	 * Divides a normalized amount by the `decimalsScalar` to get back the
-	 * raw on-chain integer. This is typically used after floating computations.
+	 * Divides a normalized bigint by a token decimal scalar.
 	 *
-	 * @param decimalsScalar - The scale factor for the coin (e.g., 1e9).
-	 * @param normalizedAmount - The scaled amount to reduce.
-	 * @returns The raw integer balance.
+	 * Bigint division discards a remainder toward zero. A zero scalar throws a
+	 * division-by-zero error.
+	 *
+	 * @param decimalsScalar - The token's scale factor as a bigint.
+	 * @param normalizedAmount - The normalized balance.
+	 * @returns The raw balance as a `bigint`.
+	 * @throws `RangeError` when `decimalsScalar` is `0n`.
 	 */
 	public static readonly unnormalizeAmount = (
 		decimalsScalar: DecimalsScalar,
@@ -102,11 +128,15 @@ export class FixedUtils {
 	): Balance => normalizedAmount / decimalsScalar;
 
 	/**
-	 * Directly cast a `Balance` to an 18-decimal float, factoring in token decimals.
+	 * Normalizes a raw balance and converts it to the 18-decimal local scale.
 	 *
-	 * @param decimalsScalar - The token's decimal scale factor.
-	 * @param amount - The raw integer `Balance`.
-	 * @returns A float representing the 18-decimal scale cast.
+	 * The method multiplies `amount` by `decimalsScalar`, converts the product to
+	 * a JavaScript number, and divides by `fixedOneN`. Large products can lose
+	 * precision during the number conversion.
+	 *
+	 * @param decimalsScalar - The token's scale factor as a bigint.
+	 * @param amount - The raw on-chain balance.
+	 * @returns The normalized local value as a `number`.
 	 */
 	public static readonly castAndNormalize = (
 		decimalsScalar: DecimalsScalar,
@@ -115,12 +145,17 @@ export class FixedUtils {
 		FixedUtils.directCast(FixedUtils.normalizeAmount(decimalsScalar, amount));
 
 	/**
-	 * Reverse the cast of a normalized float back to a raw `Balance`,
-	 * factoring in the token decimals.
+	 * Converts an 18-decimal local value back to a raw balance.
 	 *
-	 * @param decimalsScalar - The token's decimal scale factor.
-	 * @param normalizedAmount - A local float in 18-decimal domain.
-	 * @returns A raw integer `Balance`.
+	 * The method first multiplies by `fixedOneN` and floors to a bigint, then
+	 * divides by `decimalsScalar`. The first step is subject to JavaScript number
+	 * precision; the second step discards any bigint remainder toward zero.
+	 *
+	 * @param decimalsScalar - The token's scale factor as a bigint.
+	 * @param normalizedAmount - The local value in the 18-decimal domain.
+	 * @returns The raw balance as a `bigint`.
+	 * @throws `RangeError` when `decimalsScalar` is `0n` or the scaled number is
+	 * not finite.
 	 */
 	public static readonly uncastAndUnnormalize = (
 		decimalsScalar: DecimalsScalar,
@@ -135,14 +170,16 @@ export class FixedUtils {
 // Distinguishes on-chain numeric usage in the codebase.
 
 /**
- * A numeric type used on chain, typically fixed 18 decimals or direct u64.
+ * A bigint used for raw on-chain integers and fixed-point values.
  */
 export type OnChainNumber = bigint;
 /**
- * A local floating value for user calculations or UI representation.
+ * A JavaScript number used for local calculations or display.
  */
 export type LocalNumber = number;
 /**
- * A scalar is any fixed 18-point number. They are stored on chain as a u128 and are always directly cast.
+ * An on-chain scalar represented in the same 18-decimal domain as `directCast`.
+ *
+ * The alias does not enforce a range or a particular unsigned integer width.
  */
 export type OnChainScalar = OnChainNumber;

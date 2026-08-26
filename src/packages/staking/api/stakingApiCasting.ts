@@ -26,11 +26,30 @@ import {
 } from "../../../general/utils";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 
+/**
+ * Converts staking object and event responses into the SDK's normalized types.
+ *
+ * These static methods perform local parsing only. They accept the transport
+ * shapes used by the Sui object and event clients, convert decimal integer
+ * strings to `bigint`, normalize addresses, and convert 18-decimal validator
+ * fees to decimal ratios. They do not perform network I/O.
+ */
 export class StakingApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Casts a validator operation-cap object response to its normalized shape.
+	 *
+	 * The caster reads `authorizer_validator_address` from the Move fields and
+	 * expands it to the SDK's normalized Sui address format.
+	 *
+	 * @param data - Sui object response containing validator operation-cap fields.
+	 * @returns The normalized `ValidatorOperationCapObject`.
+	 * @throws Errors from object-field or address parsing when the response shape
+	 * is incomplete or malformed.
+	 */
 	public static validatorOperationCapObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): ValidatorOperationCapObject => {
@@ -48,6 +67,18 @@ export class StakingApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a stakedSui vault state object response to its normalized shape.
+	 *
+	 * The caster accepts both bare gRPC JSON fields and JSON-RPC-style nested
+	 * `{ type, fields }` structs. It returns raw balances and epochs as `bigint`
+	 * and preserves atomic-unstake fees as 18-decimal fixed-point `bigint`s.
+	 *
+	 * @param data - Sui object response containing `StakedSuiVaultStateV1` fields.
+	 * @returns The normalized `StakedSuiVaultStateObject`.
+	 * @throws When a required nested field is missing or a numeric field cannot
+	 * be converted to `bigint`.
+	 */
 	public static stakedSuiVaultStateObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): StakedSuiVaultStateObject => {
@@ -89,6 +120,17 @@ export class StakingApiCasting {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Casts an on-chain `StakedEvent` to the normalized `StakedEvent` type.
+	 *
+	 * Decimal amount and epoch strings become `bigint`, the validator fee's
+	 * 18-decimal fixed-point value becomes a decimal ratio, and a nullable
+	 * on-chain referrer becomes an omitted value when it is `null`.
+	 *
+	 * @param eventOnChain - Event envelope with a parsed staking payload.
+	 * @returns The normalized staking event, including timestamp and transaction digest.
+	 * @throws When a required address or numeric event field cannot be parsed.
+	 */
 	public static stakedEventFromOnChain = (
 		eventOnChain: StakedEventOnChain
 	): StakedEvent => {
@@ -111,6 +153,16 @@ export class StakingApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a completed on-chain unstake event to `UnstakedEvent`.
+	 *
+	 * The afSUI and SUI amounts and epoch become `bigint`; address fields are
+	 * normalized; `timestampMs` becomes the event timestamp number.
+	 *
+	 * @param eventOnChain - Event envelope with a parsed completed-unstake payload.
+	 * @returns The normalized completed-unstake event.
+	 * @throws When a required address or numeric event field cannot be parsed.
+	 */
 	public static unstakedEventFromOnChain = (
 		eventOnChain: UnstakedEventOnChain
 	): UnstakedEvent => {
@@ -128,6 +180,17 @@ export class StakingApiCasting {
 		};
 	};
 
+	/**
+	 * Casts a queued on-chain unstake request to `UnstakeRequestedEvent`.
+	 *
+	 * The afSUI amount and epoch become `bigint`; address fields are normalized;
+	 * `timestampMs` becomes the event timestamp number. A request has no returned
+	 * SUI coin or amount.
+	 *
+	 * @param eventOnChain - Event envelope with a parsed request payload.
+	 * @returns The normalized queued-unstake event.
+	 * @throws When a required address or numeric event field cannot be parsed.
+	 */
 	public static unstakeRequestedEventFromOnChain = (
 		eventOnChain: UnstakeRequestedEventOnChain
 	): UnstakeRequestedEvent => {

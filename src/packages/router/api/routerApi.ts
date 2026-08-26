@@ -7,23 +7,36 @@ import type {
 import type { AnyObjectType, RouterAddresses } from "../../../types";
 
 /**
- * RouterApi class provides methods for interacting with the Aftermath Router API.
- * @class
+ * Provides router package addresses, event types, and decoded Move errors for
+ * applications that use `AftermathApi` directly.
+ *
+ * The high-level `Router` class performs HTTP reads and transaction requests.
+ * `RouterApi` exposes the provider-side on-chain metadata used to interpret
+ * those requests and events.
  */
 export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
+	/** Names of the router Move modules used to build event and error keys. */
 	public static readonly constants = {
+		/** Move module names in the router utility package. */
 		moduleNames: {
+			/** The module that validates routed swaps. */
 			router: "router",
+			/** The module that emits router events. */
 			events: "events",
+			/** The module that charges protocol fees. */
 			protocolFee: "protocol_fee",
+			/** The module that guards package versions. */
 			version: "version",
+			/** The module that authorizes shared-object access. */
 			admin: "admin",
 		},
+		/** Event names emitted by the router utility package. */
 		eventNames: {
+			/** The event emitted after a routed swap completes. */
 			routerTrade: "SwapCompletedEvent",
 		},
 	};
@@ -32,10 +45,14 @@ export class RouterApi implements MoveErrorsInterface {
 	//  Class Members
 	// =========================================================================
 
+	/** The configured router package and object addresses. */
 	public readonly addresses: RouterAddresses;
+	/** Event types derived from the configured router package address. */
 	public readonly eventTypes: {
+		/** The fully qualified `SwapCompletedEvent` type. */
 		routerTrade: AnyObjectType;
 	};
+	/** Move error names grouped by package, module, and numeric code. */
 	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
@@ -43,9 +60,13 @@ export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * Creates an instance of RouterApi.
-	 * @constructor
-	 * @param {AftermathApi} api - The Aftermath API instance.
+	 * Creates the provider-side router metadata.
+	 *
+	 * This constructor does not make a network request. It throws before the
+	 * instance is usable when `api.addresses.router` is missing.
+	 *
+	 * @param api - The configured `AftermathApi` provider.
+	 * @throws `Error` when the provider has no router address configuration.
 	 */
 	constructor(private readonly api: AftermathApi) {
 		if (!this.api.addresses.router) {

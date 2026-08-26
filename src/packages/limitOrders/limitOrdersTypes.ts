@@ -70,12 +70,14 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	integratorFee?: LimitOrdersIntegratorFeeData;
 	/**
 	 * The "take-profit" exchange rate from `buyCoinType` to `allocateCoinType`.
-	 * For example, if `outputToInputExchangeRate` is 0.5, it means 1 buyCoin can be sold for 0.5 allocateCoin.
+	 * For example, `0.5` means one unit of `buyCoinType` exchanges for `0.5`
+	 * units of `allocateCoinType`.
 	 */
 	outputToInputExchangeRate: number;
 	/**
-	 * Optional "stop-loss" exchange rate. If the market moves such that the trade
-	 * would invert beyond this rate, the order might close early or fail, depending on logic.
+	 * Optional stop-loss exchange rate in the same units as
+	 * `outputToInputExchangeRate`. When the backend triggers this threshold, the
+	 * order can finish with `StopLossTriggered`.
 	 */
 	outputToInputStopLossExchangeRate?: number;
 }

@@ -12,6 +12,13 @@ import type {
 	ObjectId,
 } from "../../../types";
 
+/**
+ * Provides the low-level on-chain helpers used by the DCA package.
+ *
+ * The class reads DCA package addresses from `AftermathApi` and builds Move
+ * arguments or event type strings. It does not send HTTP requests or submit
+ * transactions.
+ */
 export class DcaApi {
 	// =========================================================================
 	// Constants
@@ -35,11 +42,17 @@ export class DcaApi {
 	// Class Members
 	// =========================================================================
 
+	/** Package and shared-object addresses required by DCA transactions and events. */
 	public readonly addresses: DcaAddresses;
+	/** Fully qualified event types for the DCA event versions exposed by this API. */
 	public readonly eventTypes: {
+		/** Type of the version-one order-created event. */
 		createdOrder: AnyObjectType;
+		/** Type of the version-two order-created event. */
 		createdOrderV2: AnyObjectType;
+		/** Type of the order-closed event. */
 		closedOrder: AnyObjectType;
+		/** Type of the executed-trade event. */
 		executedTrade: AnyObjectType;
 	};
 
@@ -47,6 +60,12 @@ export class DcaApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a low-level DCA helper from a configured `AftermathApi`.
+	 *
+	 * @param api - Provider containing the DCA package and object addresses.
+	 * @throws `Error` when the provider does not contain DCA addresses.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.dca;
 		if (!addresses) {
@@ -62,6 +81,33 @@ export class DcaApi {
 		};
 	}
 
+	/**
+	 * Appends the DCA `close_order` Move call to a transaction.
+	 *
+	 * This method only mutates the supplied transaction. It does not make a
+	 * network request, sign the transaction, or execute it. Pass the order ID
+	 * as a string to create an object argument, or pass an existing
+	 * `TransactionArgument` when composing a larger transaction.
+	 *
+	 * @param inputs - Transaction, coin type arguments, and the DCA order ID.
+	 * @returns The Move-call result appended to `inputs.tx`.
+	 * @throws `Error` when the configured DCA addresses are unavailable.
+	 * @example
+	 * ```typescript
+	 * import { Transaction } from "@mysten/sui/transactions";
+	 * import { DcaApi, type AftermathApi } from "aftermath-ts-sdk";
+	 *
+	 * declare const aftermathApi: AftermathApi;
+	 * const api = new DcaApi(aftermathApi);
+	 * const tx = new Transaction();
+	 * api.createCloseOrderTx({
+	 *	tx,
+	 *	allocateCoinType: "0x2::sui::SUI",
+	 *	buyCoinType: "0xcoin::asset::COIN",
+	 *	orderId: "0xorder",
+	 * });
+	 * ```
+	 */
 	public createCloseOrderTx = (inputs: {
 		tx: Transaction;
 		allocateCoinType: CoinType;

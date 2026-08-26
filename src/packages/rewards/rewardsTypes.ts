@@ -199,10 +199,15 @@ export interface RewardsClaimableReward {
  * shares. Omit to use the epoch's configured values.
  */
 export interface RewardsExpectedCalculationVariables {
+	/** Coefficient applied to the market-maker Q-score component. */
 	qScoreCoefficient: number;
+	/** Coefficient applied to market-maker uptime. */
 	uptimeCoefficient: number;
+	/** Coefficient applied to market-maker volume. */
 	mmVolumeCoefficient: number;
+	/** Coefficient applied to taker trading volume. */
 	takerVolumeCoefficient: number;
+	/** Coefficient applied to taker open interest. */
 	takerOiCoefficient: number;
 }
 
@@ -320,6 +325,9 @@ export interface ApiRewardsClaimRequestTxBody {
 	txKind?: SerializedTransaction;
 }
 
+
+/** Raw response from the reward-claim transaction endpoint. */
 export interface ApiRewardsClaimRequestTxResponse {
+	/** Base64-serialized full transaction bytes or `TransactionKind` bytes. */
 	txKind: SerializedTransaction;
 }

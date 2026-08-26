@@ -141,9 +141,13 @@ export interface ApiDcaTransactionForCloseOrderBody {
  * used in the standard approach.
  */
 export interface ApiDcaManualCloseOrderBody {
+	/** Wallet address that owns the DCA order. */
 	walletAddress: SuiAddress;
+	/** Coin type purchased by the order. */
 	buyCoinType: CoinType;
+	/** Coin type allocated to the order. */
 	allocateCoinType: CoinType;
+	/** On-chain object ID of the order to close. */
 	orderId: SuiAddress;
 }
 
@@ -206,7 +210,9 @@ export interface DcaOrderTradeObject {
  * of failure and the reason code.
  */
 export interface DcaOrderFailedTradeObject {
+	/** Unix timestamp, in milliseconds, when the trade attempt failed. */
 	timestamp: number;
+	/** Failure reason returned by the DCA service, when one is available. */
 	reason: DcaFailedTradeReason | undefined;
 }
 

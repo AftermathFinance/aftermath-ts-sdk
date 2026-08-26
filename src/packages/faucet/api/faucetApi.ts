@@ -26,6 +26,12 @@ import type {
 	FaucetMintCoinEventOnChain,
 } from "./faucetApiCastingTypes";
 
+/**
+ * Provides faucet transaction builders and event queries for `AftermathApi`.
+ *
+ * The transaction methods use the configured faucet and SuiFrens addresses,
+ * while the event methods query and cast the corresponding on-chain events.
+ */
 export class FaucetApi {
 	// =========================================================================
 	//  Constants
@@ -46,8 +52,14 @@ export class FaucetApi {
 	//  Class Members
 	// =========================================================================
 
+	/**
+	 * Package and shared-object addresses used by faucet transactions.
+	 */
 	public readonly addresses: FaucetAddresses;
 
+	/**
+	 * Move event type strings used by the faucet event queries.
+	 */
 	public readonly eventTypes: {
 		mintCoin: AnyObjectType;
 		addCoin: AnyObjectType;
@@ -57,6 +69,12 @@ export class FaucetApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a faucet API helper from an Aftermath provider.
+	 *
+	 * @param api - Provider that supplies faucet addresses, event queries, and coin helpers.
+	 * @throws `Error` when the provider does not include the required faucet addresses.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const addresses = this.api.addresses.faucet;
 		if (!addresses) {
@@ -75,6 +93,14 @@ export class FaucetApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Fetches the coin types registered with the faucet.
+	 *
+	 * The method reads `AddedCoin` events and returns each coin type with its
+	 * `0x` prefix.
+	 *
+	 * @returns The registered faucet coin types.
+	 */
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
 		const addCoinEvents = await this.fetchAddCoinEvents({});
 		const coins = addCoinEvents.events.map((event) => `0x${event.coinType}`);
@@ -89,6 +115,10 @@ export class FaucetApi {
 	 * Mints `coinType`'s configured default amount and returns the resulting
 	 * `Coin<T>`. Use {@link buildRequestCoinTx} to mint and transfer it to a
 	 * wallet in one transaction.
+	 *
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.coinType - Coin type to mint.
+	 * @returns The transaction result containing the minted coin.
 	 */
 	public requestCoinTx = (inputs: { tx: Transaction; coinType: CoinType }) => {
 		const { tx, coinType } = inputs;
@@ -107,6 +137,18 @@ export class FaucetApi {
 		});
 	};
 
+	/**
+	 * Adds a `mint_and_keep` Move call for a SuiFren.
+	 *
+	 * The payment coin may be an object ID or an argument from the supplied
+	 * transaction. The method mutates `inputs.tx` and leaves the minted result in
+	 * the transaction for the caller to compose.
+	 *
+	 * @param inputs.tx - Transaction to mutate.
+	 * @param inputs.suiPaymentCoinId - SUI payment coin object ID or transaction argument.
+	 * @param inputs.suiFrenType - SuiFren object type to mint.
+	 * @returns The result of the added Move call.
+	 */
 	public mintSuiFrenTx = (inputs: {
 		tx: Transaction;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
@@ -135,6 +177,14 @@ export class FaucetApi {
 	//  Transaction Builders
 	// =========================================================================
 
+	/**
+	 * Builds a transaction that mints and transfers one faucet coin.
+	 *
+	 * The returned transaction sets `walletAddress` as sender and recipient.
+	 *
+	 * @param inputs - Coin type to mint and wallet that receives it.
+	 * @returns A new transaction containing the mint and transfer commands.
+	 */
 	public buildRequestCoinTx = (inputs: ApiFaucetRequestBody): Transaction => {
 		const { walletAddress, coinType } = inputs;
 
@@ -147,6 +197,15 @@ export class FaucetApi {
 		return tx;
 	};
 
+	/**
+	 * Fetches a SUI payment coin and builds a SuiFren mint transaction.
+	 *
+	 * The payment amount is taken from `mintFee`, and the returned transaction
+	 * sets `walletAddress` as its sender.
+	 *
+	 * @param inputs - Mint fee, SuiFren type, and wallet that signs the transaction.
+	 * @returns A promise for the transaction that pays the fee and mints the SuiFren.
+	 */
 	public fetchBuildMintSuiFrenTx = async (inputs: ApiFaucetMintSuiFrenBody) => {
 		const { walletAddress, mintFee, suiFrenType } = inputs;
 
@@ -169,6 +228,12 @@ export class FaucetApi {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches faucet coin-mint events with cursor pagination.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns The cast mint events and the next pagination cursor.
+	 */
 	public fetchMintCoinEvents = async (inputs: EventsInputs) =>
 		await this.api
 			.Events()
@@ -183,6 +248,12 @@ export class FaucetApi {
 				eventFromEventOnChain: FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			});
 
+	/**
+	 * Fetches faucet coin-registration events with cursor pagination.
+	 *
+	 * @param inputs - Optional event cursor and page limit.
+	 * @returns The cast registration events and the next pagination cursor.
+	 */
 	public fetchAddCoinEvents = async (inputs: EventsInputs) =>
 		await this.api
 			.Events()

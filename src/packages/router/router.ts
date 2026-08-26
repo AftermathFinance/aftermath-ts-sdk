@@ -16,10 +16,13 @@ import type {
 } from "../../types";
 
 /**
- * The `Router` class provides a collection of methods to interact with Aftermath's
- * smart order routing system on the Sui Network. It handles routing trades through
- * various liquidity pools to achieve the best possible execution price, retrieving
- * trade volume, managing supported coins, and more.
+ * Provides HTTP reads, route construction, and transaction builders for
+ * Aftermath's smart order router.
+ *
+ * Route amounts and fees are `bigint` values in the corresponding coin's
+ * smallest unit. Decimal percentages such as slippage and external fees use
+ * `number` values where `0.01` means 1%. The router can split a trade across
+ * several sub-routes and can chain several protocol paths within each route.
  *
  * @example
  * ```typescript
@@ -37,13 +40,11 @@ export class Router extends Caller {
 	// =========================================================================
 
 	/**
-	 * Contains static information about the router, such as the maximum
-	 * allowable external fee percentage.
+	 * Static safety limits used by router requests.
 	 */
 	public static readonly constants = {
 		/**
-		 * The maximum external fee percentage that a third party can charge on router trades.
-		 * @remarks 0.5 = 50%
+	 * The maximum external fee fraction accepted in a route request. `0.5` is 50%.
 		 */
 		maxExternalFeePercentage: 0.5,
 	};
@@ -53,11 +54,12 @@ export class Router extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates a new `Router` instance to perform router-related calls on the
-	 * Aftermath platform.
+	 * Creates a router client without making a network request.
 	 *
-	 * @param config - Optional configuration settings, including network and access token.
-	 * @returns A new `Router` instance.
+	 * A later read or transaction request fails with an `AftermathTransportError`
+	 * of kind `network` when neither `config.baseUrl` nor `config.network` is set.
+	 *
+	 * @param config - Optional API host, network, endpoint, and access-token configuration.
 	 *
 	 * @example
 	 * ```typescript
@@ -79,9 +81,10 @@ export class Router extends Caller {
 	// =========================================================================
 
 	/**
-	 * Retrieves the total trading volume in the last 24 hours.
+	 * Fetches the router's total 24-hour trading volume.
 	 *
-	 * @returns A promise that resolves to a `number` representing the total volume in the last 24 hours.
+	 * @returns A promise for the numeric API value. This class does not convert its unit.
+	 * @throws `AftermathTransportError` for HTTP, network, abort, timeout, or decode failures.
 	 *
 	 * @example
 	 * ```typescript
@@ -94,9 +97,10 @@ export class Router extends Caller {
 	};
 
 	/**
-	 * Fetches a list of all coin types that are supported for trading through the router.
+	 * Fetches every coin type currently supported by the router.
 	 *
-	 * @returns A promise that resolves to an array of coin types (`CoinType[]`).
+	 * @returns A promise for fully qualified Sui coin type strings.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -109,11 +113,12 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * Searches the supported coins by applying a filter string.
+	 * Fetches supported coin types whose API path matches a filter string.
 	 *
-	 * @param inputs - An object containing a `filter` string to match against supported coins.
-	 * @param abortSignal - An optional `AbortSignal` to cancel the request if needed.
-	 * @returns A promise that resolves to an array of coin types matching the filter.
+	 * @param inputs - The filter segment appended to the supported-coins endpoint.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for matching fully qualified coin type strings.
+	 * @throws `AftermathTransportError` when the request is cancelled, fails, or cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
@@ -133,13 +138,17 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * Creates an optimal trade route for a given token input (`coinInType`) with a
-	 * specified input amount (`coinInAmount`). This route may consist of multiple
-	 * swaps across different DEX protocols to achieve the best price.
+	 * Requests an exact-input route for a specified coin amount.
+
+	 * The API may split the input across several `routes`. Each route can contain
+	 * several sequential `paths`, and each path identifies its DEX protocol and
+	 * pool. `referrer` and `externalFee` are forwarded to the API. Protocol and
+	 * pool allowlists and blocklists constrain route selection.
 	 *
-	 * @param inputs - Details required to construct the trade route, including `coinInType`, `coinOutType`, and `coinInAmount`.
-	 * @param abortSignal - An optional signal to abort the request if needed.
-	 * @returns A promise resolving to a `RouterCompleteTradeRoute` object containing the full route details.
+	 * @param inputs - Input and output types, input amount in smallest units, and optional routing constraints.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for the complete route, including split portions, path fees, and amounts.
+	 * @throws `AftermathTransportError` when the route request fails or the response cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
@@ -175,13 +184,16 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * Creates an optimal trade route for a given token output (`coinOutType`) with a
-	 * specified output amount (`coinOutAmount`). This route may consist of multiple
-	 * swaps to achieve the target output amount, factoring in slippage.
+	 * Requests an exact-output route for a target coin amount.
+
+	 * `slippage` is required because the router must protect the input needed to
+	 * reach the target. The API may split the trade across routes and chain paths
+	 * across protocols. Amounts are smallest-unit `bigint` values.
 	 *
-	 * @param inputs - Details required to construct the trade route, including `coinInType`, `coinOutType`, `coinOutAmount`, and `slippage`.
-	 * @param abortSignal - An optional signal to abort the request if needed.
-	 * @returns A promise resolving to a `RouterCompleteTradeRoute` object containing the full route details.
+	 * @param inputs - Input and output types, target output in smallest units, slippage, and optional constraints.
+	 * @param abortSignal - Optional caller-owned cancellation signal.
+	 * @returns A promise for the complete exact-output route.
+	 * @throws `AftermathTransportError` when the route request fails or the response cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
@@ -217,11 +229,15 @@ export class Router extends Caller {
 	// =========================================================================
 
 	/**
-	 * Generates a transaction to execute a previously calculated complete trade route.
-	 * This transaction can then be signed and executed by the user.
+	 * Fetches an unsigned transaction for a previously calculated complete route.
+
+	 * The request serializes nested `bigint` amounts and fixed split portions as
+	 * strings ending in `n`. The API response is parsed into a `Transaction`, and
+	 * `walletAddress` is assigned as its sender. The method does not sign or submit it.
 	 *
-	 * @param inputs - An object containing the wallet address, the complete trade route, slippage tolerance, and optional sponsorship settings.
-	 * @returns A promise resolving to a `Uint8Array` representing the serialized transaction.
+	 * @param inputs - Sender, complete route, route slippage, and optional sponsorship or recipient settings.
+	 * @returns A promise for the unsigned parsed `Transaction` returned by the API.
+	 * @throws `AftermathTransportError` for transport, response decoding, or transaction parsing failures.
 	 *
 	 * @example
 	 * ```typescript
@@ -244,14 +260,16 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * Adds a trade route to an existing transaction, allowing you to build complex
-	 * transactions containing multiple actions (swaps, transfers, etc.) in a single
-	 * atomic transaction.
+	 * Appends a complete route to an existing transaction.
+
+	 * The method serializes the supplied transaction for the API, sends the route
+	 * request, and parses the returned serialized transaction into a new
+	 * `Transaction`. The input transaction is not mutated. Use the returned
+	 * `coinOutId` when the response exposes the swap output. It can be `undefined`.
 	 *
-	 * @param inputs - Includes the existing `Transaction`, a complete route, slippage, wallet address, and an optional `coinInId`.
-	 * @returns An object containing:
-	 *  - `tx`: The updated `Transaction` including the route instructions
-	 *  - `coinOutId`: A `TransactionObjectArgument` referencing the output coin after the swap
+	 * @param inputs - Existing transaction, sender, complete route, slippage, and optional input coin argument.
+	 * @returns A new transaction and the optional output coin argument.
+	 * @throws `AftermathTransportError` when the API request, serialization response, or transaction parsing fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -301,10 +319,11 @@ export class Router extends Caller {
 	// =========================================================================
 
 	/**
-	 * Retrieves trade events (interactions) for a given user based on router usage.
+	 * Fetches routed trade events for one wallet from the indexer.
 	 *
-	 * @param inputs - Includes a `walletAddress`, cursor pagination, and limit.
-	 * @returns A promise resolving to the user's `RouterTradeEvent`s, potentially paginated.
+	 * @param inputs - Wallet address and optional numeric cursor and page limit.
+	 * @returns A promise for paginated `RouterTradeEvent` values. A full page advances `nextCursor`.
+	 * @throws `AftermathTransportError` when the indexer request or response fails.
 	 *
 	 * @example
 	 * ```typescript

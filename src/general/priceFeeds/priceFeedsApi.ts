@@ -36,4 +36,11 @@
 // 	};
 // }
 
+/**
+ * Empty placeholder for the inactive low-level price-feed API.
+ *
+ * This export has no methods and performs no network I/O. The prior Pyth
+ * client implementation is commented out, so this module does not expose a
+ * price-feed constructor or query method.
+ */
 export default {};

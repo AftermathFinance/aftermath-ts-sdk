@@ -82,22 +82,28 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Removes all leading zeroes (after the '0x') from a string that represents
-	 * a Sui address or object type. For instance, "0x0000123" => "0x123".
+	 * Removes zeroes from every `x0...` sequence in a type string.
 	 *
-	 * @param type - The hex string to process, potentially including "::" module syntax.
-	 * @returns The same string with unnecessary leading zeroes stripped out.
+	 * For example, `"0x0000123"` becomes `"0x123"`. The replacement also
+	 * affects addresses inside generic type arguments, and it does not validate
+	 * the rest of the string.
+	 *
+	 * @param type - The address or Move type string to process.
+	 * @returns A new string with those zero runs removed.
 	 */
 	static stripLeadingZeroesFromType = (type: AnyObjectType): AnyObjectType =>
 		type.replaceAll(/x0+/g, "x");
 
 	/**
-	 * Ensures the given Sui address or object type is zero-padded to 64 hex digits
-	 * after the "0x". If a "::" suffix is present, only the address portion is padded.
+	 * Left-pads the first type segment to 64 characters after `0x`.
 	 *
-	 * @param type - The "0x..." string or extended type (0x..::module).
-	 * @returns A new string normalized to a 64-hex-digit address or object ID.
-	 * @throws If the address portion is already longer than 64 hex digits.
+	 * When `type` contains `::`, the text after the first separator is appended
+	 * unchanged apart from the helper's existing removal of the next `0x` while
+	 * it splits the suffix. The method does not validate hexadecimal characters.
+	 *
+	 * @param type - The address or extended Move type string.
+	 * @returns A string whose first segment has 64 characters after `0x`.
+	 * @throws `Error` when the first segment is longer than 64 characters.
 	 */
 	static addLeadingZeroesToType = (type: AnyObjectType): AnyObjectType => {
 		const EXPECTED_TYPE_LENGTH = 64;
@@ -126,8 +132,13 @@ export class Helpers {
 	};
 
 	/**
-	 * Splits a non-SUI coin type string that may be prefixed by a chain ID for external usage,
-	 * returning the chain and the coin type. If no chain is recognized, defaults to `"sui"`.
+	 * Splits a coin string at colons for external coin-price lookups.
+	 *
+	 * When both the first and second segments are non-empty, the method returns
+	 * those two segments and discards later segments. When either segment is
+	 * empty or absent, it returns the original string with `chain: "sui"`.
+	 * The chain value is not validated against the `CoinGeckoChain` union at
+	 * runtime.
 	 *
 	 * @param coin - The coin string, which may look like `"bsc:0x<...>"` or just `"0x<...>"`.
 	 * @returns An object with the `chain` (e.g. "bsc") and the `coinType`.
@@ -135,7 +146,9 @@ export class Helpers {
 	static splitNonSuiCoinType = (
 		coin: CoinType
 	): {
+		/** The prefix before the first colon, or `"sui"` for an unsplit value. */
 		chain: CoinGeckoChain;
+		/** The text between the first and second colon when a prefix exists. */
 		coinType: CoinType;
 	} => {
 		const [uncastChain, coinType] = coin.split(":");
@@ -151,122 +164,138 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Checks if a given string represents a valid number (integer or decimal).
+	 * Checks whether a string matches the helper's unsigned decimal pattern.
+	 *
+	 * The pattern accepts digits with at most one decimal point, including an
+	 * empty string, a leading point such as `.5`, and a trailing point such as
+	 * `5.`. It rejects signs, exponents, and other characters.
 	 *
 	 * @param str - The string to test.
-	 * @returns `true` if it's a valid numeric string, otherwise `false`.
+	 * @returns `true` when `str` matches that pattern.
 	 */
 	static isNumber = (str: string): boolean => NUMERIC_STRING_REGEX.test(str);
 
 	/**
-	 * Sums an array of floating-point numbers, returning the numeric total.
+	 * Adds the numbers in an array from left to right.
 	 *
 	 * @param arr - The array of numbers to sum.
-	 * @returns The total as a float.
+	 * @returns The numeric total, or `0` for an empty array.
 	 */
 	static sum = (arr: number[]) => arr.reduce((prev, cur) => prev + cur, 0);
 
 	/**
-	 * Sums an array of bigints, returning the total as a bigint.
+	 * Adds the bigints in an array from left to right.
 	 *
 	 * @param arr - The array of bigints to sum.
-	 * @returns The resulting total as a bigint.
+	 * @returns The bigint total, or `0n` for an empty array.
 	 */
 	static sumBigInt = (arr: bigint[]) =>
 		arr.reduce((prev, cur) => prev + cur, BigInt(0));
 
 	/**
-	 * Determines if two numbers are close within a given tolerance factor,
-	 * i.e., `|a - b| <= tolerance * max(a, b)`.
+	 * Checks whether two numbers differ by at most a relative tolerance.
+	 *
+	 * The exact comparison is `Math.abs(a - b) <= tolerance * Math.max(a, b)`.
+	 * The method does not clamp `tolerance` or use absolute values for the
+	 * operands in the right-hand side.
 	 *
 	 * @param a - The first number.
 	 * @param b - The second number.
-	 * @param tolerance - A fraction representing the max allowed difference relative to max(a, b).
-	 * @returns `true` if within tolerance, otherwise `false`.
+	 * @param tolerance - The multiplier applied to `Math.max(a, b)`.
+	 * @returns `true` when the comparison passes.
 	 */
 	static closeEnough = (a: number, b: number, tolerance: number) =>
 		Math.abs(a - b) <= tolerance * Math.max(a, b);
 
 	/**
-	 * Determines if two bigints are close within a given tolerance factor,
-	 * by casting them to numbers internally.
+	 * Checks bigint closeness after converting both operands to numbers.
+	 *
+	 * The comparison is therefore subject to JavaScript number precision and uses
+	 * the same formula as `closeEnough`.
 	 *
 	 * @param a - First bigint.
 	 * @param b - Second bigint.
-	 * @param tolerance - A fraction representing the max allowed difference relative to max(a, b).
-	 * @returns `true` if within tolerance, otherwise `false`.
+	 * @param tolerance - The multiplier passed to `closeEnough`.
+	 * @returns `true` when the numeric comparison passes.
 	 */
 	static closeEnoughBigInt = (a: bigint, b: bigint, tolerance: number) =>
 		Helpers.closeEnough(Number(a), Number(b), tolerance);
 
 	/**
-	 * Checks whether the integer divisions of `a` and `b` (by `fixedOne`) differ
-	 * by at most 1. Typically used in fixed math scenarios to see if two scaled
-	 * values are "very close."
+	 * Compares the floored scale buckets of two numbers.
+	 *
+	 * The method computes `Math.floor(a / fixedOne)` and
+	 * `Math.floor(b / fixedOne)`, then checks whether their absolute difference
+	 * is at most `1`.
 	 *
 	 * @param a - First number (scaled).
 	 * @param b - Second number (scaled).
-	 * @param fixedOne - The scaling factor representing 1.0 in the same scale as `a` and `b`.
-	 * @returns `true` if the integer parts differ by <= 1, otherwise `false`.
+	 * @param fixedOne - The scale divisor shared by `a` and `b`.
+	 * @returns `true` when the bucket difference is at most `1`.
 	 */
 	static veryCloseInt = (a: number, b: number, fixedOne: number) =>
 		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
 
 	/**
-	 * A small object containing "blended" math operations that handle
-	 * mixed numeric types (number vs. bigint). This is primarily for
-	 * internal usage in advanced math scenarios.
+	 * Mixed `number` and `bigint` multiplication helpers.
+	 *
+	 * The suffix describes the argument and return types: `N` is `number` and
+	 * `B` is `bigint`. Helpers that return `bigint` apply `Math.floor` before the
+	 * conversion. Converting a bigint product to `number` can lose precision.
 	 */
 	static blendedOperations = {
 		/**
-		 * Multiply two floating-point numbers.
+		 * Multiplies two numbers and returns a number.
 		 */
 		mulNNN: (a: number, b: number): number => a * b,
 		/**
-		 * Multiply a float and a bigint, returning a bigint (floor).
+		 * Multiplies two numbers, floors the product, and returns a bigint.
 		 */
 		mulNNB: (a: number, b: number): bigint => BigInt(Math.floor(a * b)),
 		/**
-		 * Multiply a float and a bigint, returning a float.
+		 * Multiplies a number by a bigint after converting the bigint to a number.
 		 */
 		mulNBN: (a: number, b: bigint): number => a * Number(b),
 		/**
-		 * Multiply a float and a bigint, returning a bigint (floor).
+		 * Multiplies a number by a bigint after converting the bigint to a number,
+		 * floors the product, and returns a bigint.
 		 */
 		mulNBB: (a: number, b: bigint): bigint => BigInt(Math.floor(a * Number(b))),
 		/**
-		 * Multiply two bigints, returning a float.
+		 * Multiplies two bigints and converts the product to a number.
 		 */
 		mulBBN: (a: bigint, b: bigint): number => Number(a * b),
 		/**
-		 * Multiply two bigints, returning a bigint.
+		 * Multiplies two bigints and returns the exact bigint product.
 		 */
 		mulBBB: (a: bigint, b: bigint): bigint => a * b,
 	};
 
 	/**
-	 * Returns the maximum of multiple bigints.
+	 * Returns the largest bigint in the argument list.
 	 *
 	 * @param args - The bigints to compare.
-	 * @returns The largest bigint.
+	 * @returns The largest argument.
+	 * @throws `TypeError` when no arguments are supplied.
 	 */
 	static maxBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e > m ? e : m));
 
 	/**
-	 * Returns the minimum of multiple bigints.
+	 * Returns the smallest bigint in the argument list.
 	 *
 	 * @param args - The bigints to compare.
-	 * @returns The smallest bigint.
+	 * @returns The smallest argument.
+	 * @throws `TypeError` when no arguments are supplied.
 	 */
 	static minBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e < m ? e : m));
 
 	/**
-	 * Returns the absolute value of a bigint.
+	 * Returns the non-negative absolute value of a bigint.
 	 *
 	 * @param num - The input bigint.
-	 * @returns A bigint representing the absolute value of `num`.
+	 * @returns `num` when it is non-negative, or `-num` otherwise.
 	 */
 	static absBigInt = (num: bigint) => (num < BigInt(0) ? -num : num);
 
@@ -275,11 +304,12 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Capitalizes only the first letter of a string, making the rest lowercase.
-	 * E.g., "HELLO" => "Hello".
+	 * Uppercases the first character and lowercases the remaining characters.
+	 *
+	 * For example, `"HELLO"` becomes `"Hello"`. An empty string remains empty.
 	 *
 	 * @param str - The input string to transform.
-	 * @returns The resulting string with the first character in uppercase and the rest in lowercase.
+	 * @returns The transformed string.
 	 */
 	static capitalizeOnlyFirstLetter = (str: string) =>
 		str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -289,12 +319,23 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Parses a JSON string containing potential BigInt values.
-	 * By default, it only converts strings ending in 'n' (like `"123n"`) to BigInts.
+	 * Parses JSON while applying the SDK's bigint and null conversions.
 	 *
-	 * @param json - The JSON string to parse.
-	 * @param unsafeStringNumberConversion - If `true`, all numeric strings (e.g., "123") will also become BigInts.
-	 * @returns The parsed JSON object with BigInt conversions where applicable.
+	 * Every string containing an optional minus sign, decimal digits, and a trailing
+	 * `n` becomes a `bigint` after that suffix is removed. Every JSON `null` becomes
+	 * `undefined`, including nested values.
+	 * With `unsafeStringNumberConversion: true`, strings accepted by `isNumber`
+	 * are also passed to `BigInt`; this can convert decimal-looking strings only
+	 * when `BigInt` accepts them and can throw for strings that match the loose
+	 * pattern but are not valid bigint input.
+	 *
+	 * @param json - A valid JSON string.
+	 * @param unsafeStringNumberConversion - Whether to convert strings accepted by
+	 * `isNumber` to `bigint` as well.
+	 * @returns The parsed value after recursive reviver conversion. Top-level
+	 * `null` becomes `undefined`.
+	 * @throws `SyntaxError` for invalid JSON or a bigint conversion error from the
+	 * reviver.
 	 */
 	static parseJsonWithBigint = (
 		json: string,
@@ -326,11 +367,14 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Creates a deep copy of the given target, handling nested arrays and objects.
-	 * Dates are cloned by their timestamp.
+	 * Recursively copies arrays, enumerable object properties, and `Date` values.
+	 *
+	 * Dates are cloned from their timestamp. Other objects become plain objects
+	 * containing their enumerable string-keyed properties. Primitive values are
+	 * returned unchanged, and cyclic input is not supported.
 	 *
 	 * @param target - The data to clone deeply.
-	 * @returns A new object/array/date structure mirroring `target`.
+	 * @returns A copied structure with the same generic type.
 	 */
 	static deepCopy = <T>(target: T): T => {
 		if (target === null) {
@@ -353,10 +397,10 @@ export class Helpers {
 	};
 
 	/**
-	 * Finds the index of the maximum value in an array. Returns -1 if the array is empty.
+	 * Finds the first index containing the maximum comparable value.
 	 *
 	 * @param arr - The input array.
-	 * @returns The index of the maximum value, or -1 if the array is empty.
+	 * @returns The first maximum index, or `-1` when the array is empty.
 	 */
 	static indexOfMax = <T extends number | bigint | string | Date>(
 		arr: T[]
@@ -387,11 +431,15 @@ export class Helpers {
 	}
 
 	/**
-	 * Returns a new array with unique elements from the input array,
-	 * preserving the order of first occurrences.
+	 * Returns a new array with duplicate elements removed.
+	 *
+	 * If the first element is an object, the method compares every element by its
+	 * `JSON.stringify` result. Otherwise it uses `Set` equality. Both paths keep
+	 * the first occurrence's order, and the input array is not mutated.
 	 *
 	 * @param arr - The original array.
 	 * @returns An array of unique items.
+	 * @throws When the object path cannot serialize an element, such as a bigint.
 	 */
 	static uniqueArray = <T>(arr: T[]): T[] => {
 		if (arr.length === 0) {
@@ -404,28 +452,34 @@ export class Helpers {
 	};
 
 	/**
-	 * Returns a Promise that resolves after a specified number of milliseconds.
+	 * Returns a promise that resolves after a timer delay.
 	 *
-	 * @param ms - The delay time in milliseconds.
-	 * @returns A promise that resolves after `ms` milliseconds.
+	 * @param ms - The delay passed to `setTimeout`, in milliseconds.
+	 * @returns A promise that resolves with `undefined` after the timer fires.
 	 */
 	static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	/**
-	 * Creates a unique ID-like string by combining the current timestamp and random base36 digits.
+	 * Creates a timestamp-and-random base36 identifier string.
 	 *
-	 * @returns A short random string (base36) that can serve as a unique identifier.
+	 * The value combines `Date.now().toString(36)` with the random suffix from
+	 * `Math.random().toString(36)`. It is not guaranteed to be globally unique.
+	 *
+	 * @returns The generated base36 string.
 	 */
 	static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
 
 	/**
-	 * Splits an array into two groups: those for which `func` returns `true` (or truthy),
-	 * and those for which it returns `false`. The result is returned as a tuple `[trues, falses]`.
+	 * Splits an array according to a synchronous predicate.
+	 *
+	 * Truthy predicate results go to the first array and falsy results go to the
+	 * second. The method preserves input order and passes the item, index, and
+	 * original array to the predicate.
 	 *
 	 * @param array - The array to filter.
-	 * @param func - The function used to test each element.
-	 * @returns A tuple containing two arrays: `[elements that pass, elements that fail]`.
+	 * @param func - The predicate to call for each item.
+	 * @returns A tuple of `[truthyItems, falsyItems]`.
 	 */
 	static bifilter = <ArrayType>(
 		array: ArrayType[],
@@ -447,12 +501,15 @@ export class Helpers {
 	};
 
 	/**
-	 * An async version of `bifilter`, returning a tuple of `[trues, falses]`.
-	 * Each element is tested asynchronously in parallel via `func`.
+	 * Splits an array according to asynchronous predicate results.
+	 *
+	 * The method invokes the predicate for every item before awaiting
+	 * `Promise.all`, so the checks run in parallel. It preserves input order and
+	 * rejects if any predicate promise rejects.
 	 *
 	 * @param array - The array to filter.
-	 * @param func - An async function returning `true` or `false`.
-	 * @returns A tuple `[trues, falses]` after asynchronous evaluation.
+	 * @param func - An async predicate receiving the item, index, and original array.
+	 * @returns A promise for `[truthyItems, falsyItems]`.
 	 */
 	static bifilterAsync = async <ArrayType>(
 		array: ArrayType[],
@@ -463,13 +520,14 @@ export class Helpers {
 	};
 
 	/**
-	 * Filters the entries of an object based on a predicate function,
-	 * returning a new object with only those entries for which `predicate`
-	 * returns `true`.
+	 * Returns an object containing only entries accepted by a predicate.
+	 *
+	 * The method examines the object's enumerable own string-keyed entries and
+	 * returns a new object. It does not mutate `obj`.
 	 *
 	 * @param obj - The original object to filter.
-	 * @param predicate - A function taking `(key, value)` and returning a boolean.
-	 * @returns A new object with only the entries that pass the predicate.
+	 * @param predicate - A function taking a key and value and returning a boolean.
+	 * @returns A new object with the accepted entries.
 	 */
 	static filterObject = <Value>(
 		obj: Record<string, Value>,
@@ -480,35 +538,44 @@ export class Helpers {
 		);
 
 	/**
-	 * Applies downward slippage to a bigint amount by subtracting `slippage * amount`.
-	 * For instance, for 1% slippage, we reduce the amount by 1%.
+	 * Applies a percent reduction to a bigint amount.
 	 *
-	 * @param amount - The original bigint amount.
-	 * @param slippage - An integer percent (e.g., 1 => 1%).
-	 * @returns The adjusted bigint after subtracting the slippage portion.
+	 * The method computes `amount - floor((slippage / 100) * Number(amount))`.
+	 * Converting the amount to `number` can lose precision before the reduction is
+	 * converted back to bigint. It does not clamp the result or validate the
+	 * percent input.
+	 *
+	 * @param amount - The original amount.
+	 * @param slippage - The percent value, where `1` means 1%.
+	 * @returns The reduced amount as a `bigint`.
+	 * @throws `RangeError` when the computed reduction cannot be converted to a
+	 * `bigint`, such as for a non-finite result.
 	 */
 	static applySlippageBigInt = (amount: Balance, slippage: Slippage) => {
 		return amount - BigInt(Math.floor((slippage / 100) * Number(amount)));
 	};
 
 	/**
-	 * Applies downward slippage to a floating-point amount. E.g., for 1% slippage,
-	 * reduce by 1% of `amount`.
+	 * Applies a percent reduction to a JavaScript number.
 	 *
-	 * @param amount - The original float value.
-	 * @param slippage - An integer percent (e.g., 1 => 1%).
-	 * @returns The float after applying slippage.
+	 * The method returns `amount - (slippage / 100) * amount` without clamping or
+	 * validating the input.
+	 *
+	 * @param amount - The original numeric amount.
+	 * @param slippage - The percent value, where `1` means 1%.
+	 * @returns The reduced amount as a `number`.
 	 */
 	static applySlippage = (amount: number, slippage: Slippage) => {
 		return amount - (slippage / 100) * amount;
 	};
 
 	/**
-	 * Combines two arrays into a single array of pairs. The result length is the
-	 * minimum of the two input arrays' lengths.
+	 * Pairs corresponding elements from two arrays.
 	 *
-	 * @param firstCollection - The first array.
-	 * @param lastCollection - The second array.
+	 * The result stops at the shorter input and does not mutate either array.
+	 *
+	 * @param firstCollection - The first collection.
+	 * @param lastCollection - The second collection.
 	 * @returns An array of `[firstCollection[i], lastCollection[i]]` pairs.
 	 */
 	static zip<S1, S2>(firstCollection: S1[], lastCollection: S2[]): [S1, S2][] {
@@ -521,12 +588,16 @@ export class Helpers {
 	}
 
 	/**
-	 * Removes circular references from an object or array, returning a JSON-safe structure.
-	 * Any cyclic references are replaced with `undefined`.
+	 * Copies an object or array while replacing repeated references with `undefined`.
+	 *
+	 * The `seen` set tracks every object visited during this call. A cycle and a
+	 * later occurrence of an already visited shared object both become
+	 * `undefined`. The method returns new arrays and plain objects without
+	 * mutating the input, but it mutates the supplied `seen` set.
 	 *
 	 * @param obj - The object or array to remove circular references from.
-	 * @param seen - Internal usage to track references that have already been visited.
-	 * @returns A structure that can be safely JSON-stringified.
+	 * @param seen - The reference set used to track visited objects.
+	 * @returns A copied structure, or `undefined` for a repeated object reference.
 	 */
 	static removeCircularReferences<T>(
 		obj: T,
@@ -556,10 +627,10 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Checks if an unknown value is an array of strings.
+	 * Checks whether an unknown value is an array whose items are all strings.
 	 *
 	 * @param value - The value to check.
-	 * @returns `true` if `value` is a string array, otherwise `false`.
+	 * @returns `true` for an empty or string-only array, otherwise `false`.
 	 */
 	static isArrayOfStrings(value: unknown): value is string[] {
 		return (
@@ -568,11 +639,15 @@ export class Helpers {
 	}
 
 	/**
-	 * Roughly checks if a string is a valid Sui type (e.g., "0x2::sui::SUI").
-	 * This is not guaranteed to be perfect, but covers common cases.
+	 * Applies the helper's minimum-shape check for a Sui Move type.
+	 *
+	 * After trimming whitespace, the string must start with lowercase `0x`, have
+	 * length at least `9`, contain `::` at index `3` or later and again at index
+	 * `6` or later, and not end with `:`. The method does not validate the full
+	 * address, module, or type grammar.
 	 *
 	 * @param str - The string to validate.
-	 * @returns `true` if it meets the minimum structure, otherwise `false`.
+	 * @returns `true` when the minimum shape passes.
 	 */
 	static isValidType = (str: string): boolean => {
 		// TODO: use regex
@@ -587,10 +662,13 @@ export class Helpers {
 	};
 
 	/**
-	 * Checks if a string is a valid hex representation, optionally prefixed with "0x".
+	 * Checks whether a string contains one or more hexadecimal digits.
+	 *
+	 * The string may begin with `0x` or `0X`. Whitespace, signs, and an empty
+	 * `0x` prefix are rejected.
 	 *
 	 * @param hexString - The string to check.
-	 * @returns `true` if `hexString` is a valid hex, otherwise `false`.
+	 * @returns `true` when the string matches the hexadecimal pattern.
 	 */
 	static isValidHex = (hexString: string): boolean =>
 		HEX_STRING_REGEX.test(hexString);
@@ -600,39 +678,16 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Extracts the fully qualified type (e.g., "0x2::coin::Coin<...>") from a
-	 * gRPC object view, normalizing it with leading zeroes if necessary.
+	 * Returns the object type after applying `addLeadingZeroesToType`.
 	 *
-	 * ⚠️ **Not byte-invariant across protocols when the type has generic
-	 * parameters.** Measured on real mainnet objects:
-	 * - For a type with **no** generic parameters the two protocols agree after
-	 *   normalization: gRPC serves `0x0000…0002::kiosk::KioskOwnerCap` and
-	 *   JSON-RPC serves `0x2::kiosk::KioskOwnerCap`, and
-	 *   {@link Helpers.addLeadingZeroesToType} maps both to the same string.
-	 * - **Inside** a generic parameter they differ: gRPC fully zero-pads every
-	 *   address (`OneTimeAdminCap<0x0000…0002::sui::SUI>`) where JSON-RPC echoes
-	 *   the node's abbreviated form (`OneTimeAdminCap<0x2::sui::SUI>`), and gRPC
-	 *   emits no space after a generic's comma. `addLeadingZeroesToType`
-	 *   normalizes only the **outer** address — and separately strips `0x` from
-	 *   the first generic parameter — so the difference survives into this
-	 *   accessor's output.
+	 * The helper pads the outer address segment. Generic arguments keep their
+	 * source padding and spacing, so equivalent gRPC and JSON-RPC generic type
+	 * strings can remain textually different.
 	 *
-	 * That divergence is **cosmetic and accepted**: it is purely address padding
-	 * and comma spacing, semantically the same Move type. It is pinned by
-	 * `tests/objectCasters.test.ts` ("FINDING: generic `objectType` differs
-	 * across protocols"). The underlying `addLeadingZeroesToType` generics bug
-	 * pre-dates the gRPC migration and is filed as its own plan — do not fix it
-	 * here.
-	 *
-	 * Still **load-bearing**, and still safe for it: the type's *semantic* content
-	 * is protocol-invariant, which is what lets a caster recover the `type` of a
-	 * nested struct that gRPC's `json` view drops (see
-	 * {@link GrpcCasting.unwrapStructField}) from the enclosing object's own type
-	 * parameters — as `poolObjectFromSuiObject` does for its LP coin.
-	 *
-	 * @param data - The object view from Sui.
-	 * @returns The normalized object type string.
-	 * @throws If the type is not found.
+	 * @param data - The gRPC object view.
+	 * @returns The normalized fully qualified object type.
+	 * @throws `Error` when `data.type` is absent or empty, or when its first type
+	 * segment is too long.
 	 */
 	static getObjectType(data: SuiObjectView): ObjectId {
 		const objectType = data?.type;
@@ -644,12 +699,12 @@ export class Helpers {
 	}
 
 	/**
-	 * Extracts the object ID from a gRPC object view, normalizing it with
-	 * leading zeroes.
+	 * Returns the object ID after applying `addLeadingZeroesToType`.
 	 *
-	 * @param data - The object view from Sui.
-	 * @returns A zero-padded `ObjectId`.
-	 * @throws If the objectId is not found.
+	 * @param data - The gRPC object view.
+	 * @returns A zero-padded `ObjectId` string.
+	 * @throws `Error` when `data.objectId` is absent or empty, or when the ID is
+	 * longer than 64 hexadecimal characters.
 	 */
 	static getObjectId(data: SuiObjectView): ObjectId {
 		const objectId = data?.objectId;
@@ -661,25 +716,20 @@ export class Helpers {
 	}
 
 	/**
-	 * Retrieves the Move fields of an object from a gRPC object view.
+	 * Returns the Move fields from a gRPC object view.
 	 *
-	 * ⚠️ This is the gRPC **`json` view**, which is *not* shape-identical to
-	 * JSON-RPC's `content.fields`: nested structs arrive without their
-	 * `{ type, fields }` envelope, `vector<u8>` arrives base64-encoded, and
-	 * `UID` arrives as a bare string. Route those through
-	 * {@link GrpcCasting.unwrapStructField}, {@link GrpcCasting.bytesFieldToNumbers}
-	 * and {@link GrpcCasting.unwrapUid} respectively.
-	 *
-	 * ⚠️ The return type is `Record<string, any>`, so **no field read below this
-	 * point is typechecked**. A wrong read is a silently wrong value, not a
-	 * build error. `tests/objectCasters.test.ts` is the only guard.
+	 * The value is the gRPC `json` view, not JSON-RPC `content.fields`. Nested
+	 * structs can be bare, `vector<u8>` fields can be base64 strings, and `UID`
+	 * fields can be bare object IDs. Use the corresponding `GrpcCasting` helpers
+	 * before reading those shapes. The returned record is dynamic and is not
+	 * statically checked field by field.
 	 *
 	 * `json` is `undefined` unless `include: { json: true }` was passed at the
 	 * fetch site.
 	 *
-	 * @param data - The Sui object view containing a Move object.
-	 * @returns A record of fields for that object.
-	 * @throws If no fields are found.
+	 * @param data - The object view containing the requested `json` fields.
+	 * @returns The dynamic Move field record.
+	 * @throws `Error` when `data.json` is absent or falsy.
 	 */
 	// biome-ignore lint/suspicious/noExplicitAny: Move fields are dynamic — callers access nested properties directly; typing as `unknown` would cascade casts through dozens of call sites
 	static getObjectFields(data: SuiObjectView): Record<string, any> {
@@ -691,20 +741,21 @@ export class Helpers {
 	}
 
 	/**
-	 * Retrieves display metadata from a gRPC object view, if present.
+	 * Returns display metadata from a gRPC object view in JSON-RPC shape.
 	 *
 	 * Reshaped onto JSON-RPC's `DisplayFieldsResponse` so the display casters are
-	 * unaffected by the transport change — see
+	 * unaffected by the transport change; see
 	 * {@link GrpcCasting.displayFieldsResponseFromGrpcDisplay} for the two
 	 * semantic differences that reshape absorbs.
 	 *
-	 * `display` is `undefined` unless `include: { display: true }` was passed at
-	 * the fetch site (`withDisplay` on the `ObjectsApiHelpers` fetchers), and
-	 * `null` when the object's type has no Display template.
+	 * `display` is `undefined` when it was not requested and `null` when the
+	 * object's type has no Display template. A non-null value is reshaped by
+	 * `GrpcCasting.displayFieldsResponseFromGrpcDisplay`.
 	 *
-	 * @param data - The Sui object view.
-	 * @returns The display fields for that object.
-	 * @throws If display was not requested at the fetch site.
+	 * @param data - The object view containing display data.
+	 * @returns The JSON-RPC-shaped display response.
+	 * @throws `Error` when `data.display` is `undefined`, which indicates that
+	 * display data was not requested or was not returned.
 	 */
 	static getObjectDisplay(data: SuiObjectView): DisplayFieldsResponse {
 		const display = data?.display;
@@ -719,14 +770,15 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Utility for building transaction commands with either a string-based
-	 * `ObjectId` or an existing transaction object argument. If it's a string,
-	 * it's converted via `tx.object(...)`; if already a `TransactionObjectArgument`,
-	 * it's returned as-is.
+	 * Converts an object ID into a transaction object argument when needed.
 	 *
-	 * @param tx - The current `Transaction` block to add the object to.
-	 * @param object - Either an `ObjectId` or a `TransactionObjectArgument`.
-	 * @returns A `TransactionObjectArgument` referencing the provided object.
+	 * A string calls `tx.object(object)`, which adds an input to the transaction.
+	 * An existing `TransactionObjectArgument` is returned by identity and does
+	 * not call the transaction.
+	 *
+	 * @param tx - The transaction to update when `object` is a string.
+	 * @param object - An object ID or an existing transaction object argument.
+	 * @returns A transaction object argument for `object`.
 	 */
 	static addTxObject = (
 		tx: Transaction,
@@ -740,11 +792,15 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Checks if a given string is a valid Sui address by normalizing it to a
-	 * 64-hex-digit form and calling `isValidSuiAddress`.
+	 * Checks whether a string is a valid Sui address.
 	 *
-	 * @param address - The Sui address to validate.
-	 * @returns `true` if valid, `false` otherwise.
+	 * Lowercase-`0x` addresses of up to 64 hexadecimal characters are padded to
+	 * 64 characters before validation. Invalid prefixes, lengths, characters, and
+	 * address strings longer than 64 characters return `false`; normalization
+	 * errors are caught rather than thrown.
+	 *
+	 * @param address - The address string to validate.
+	 * @returns `true` when the normalized value passes Sui address validation.
 	 */
 	static isValidSuiAddress = (address: SuiAddress) =>
 		isValidSuiAddress(
@@ -765,11 +821,19 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Parses a MoveAbort error message from Sui into a possible `(errorCode, packageId, module)`,
-	 * if the message follows a known pattern. Otherwise returns undefined.
+	 * Extracts a Move abort code, package ID, and module from a Sui error message.
 	 *
-	 * @param inputs - The object containing the raw `errorMessage` from Sui.
-	 * @returns A partial structure of the error details or undefined.
+	 * The message must contain `MoveAbort` and the parser must find an integer
+	 * after the last comma, an `address: ... , name:` package segment, and an
+	 * `Identifier("...")` module segment. The package ID is normalized to 64
+	 * hexadecimal characters. An empty address segment is accepted by the current
+	 * padding logic and becomes the zero address. If any other required part is
+	 * missing or invalid, the method returns `undefined`.
+	 *
+	 * @param inputs - The raw Sui error message.
+	 * @param inputs.errorMessage - The error text to parse.
+	 * @returns The parsed error details, or `undefined` when the message does not
+	 * match the supported shape.
 	 */
 	static parseMoveErrorMessage(
 		inputs: { errorMessage: string }
@@ -853,15 +917,20 @@ export class Helpers {
 	}
 
 	/**
-	 * Translates a Move abort error message into a known error string if it matches
-	 * entries in a given `moveErrors` table. This is used to map on-chain error codes
-	 * to user-friendly messages.
+	 * Maps a parsed Move abort to a message in a package error table.
 	 *
-	 * @param inputs - Includes the raw `errorMessage` and a `moveErrors` object keyed by package, module, and code.
-	 * @returns A structure with `errorCode`, `packageId`, `module`, and a human-readable `error` string, or `undefined`.
+	 * The method first requires a package entry. It then prefers an exact module
+	 * and error-code entry, and falls back to the package's `ANY` table. It returns
+	 * `undefined` when parsing fails, the package is absent, or neither table has
+	 * the error code.
+	 *
+	 * @param inputs - The error text and lookup table.
+	 * @returns The parsed details with the translated message, or `undefined`.
 	 */
 	static translateMoveErrorMessage(inputs: {
+		/** The raw Sui Move abort message. */
 		errorMessage: string;
+		/** The package, module, and error-code message table. */
 		moveErrors: MoveErrors;
 	}): TranslatedMoveError | undefined {
 		const { errorMessage, moveErrors } = inputs;
@@ -897,13 +966,17 @@ export class Helpers {
 	// =========================================================================
 
 	/**
-	 * Constructs a `Keypair` instance from a private key string. The `privateKey`
-	 * may indicate the signing scheme (ED25519, Secp256k1, or Secp256r1) via prefix,
-	 * as recognized by `decodeSuiPrivateKey`.
+	 * Constructs a Sui keypair from an encoded private key.
 	 *
-	 * @param privateKey - The full private key string (e.g., "0x<64_hex_chars>").
-	 * @returns A new `Keypair` instance for signing transactions.
-	 * @throws If the schema is unsupported.
+	 * `decodeSuiPrivateKey` selects the scheme from the encoded key. This method
+	 * supports `ED25519`, `Secp256k1`, and `Secp256r1` and returns the matching
+	 * keypair implementation. It performs no network I/O.
+	 *
+	 * @param privateKey - The encoded private key accepted by
+	 * `decodeSuiPrivateKey`.
+	 * @returns A new keypair for signing.
+	 * @throws When the key is malformed, unsupported, or cannot be decoded by the
+	 * underlying cryptography library.
 	 */
 	static keypairFromPrivateKey = (privateKey: string): Keypair => {
 		const parsedKeypair = decodeSuiPrivateKey(privateKey);

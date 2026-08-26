@@ -16,15 +16,18 @@ import { Farms } from "./farms";
 import { FarmsStakingPool } from "./farmsStakingPool";
 
 /**
- * The `FarmsStakedPosition` class represents a user's individual staked position
- * in a particular staking pool. It provides methods to query position details,
- * calculate potential rewards, lock/unlock stake, and build transactions
- * for depositing, unstaking, or harvesting rewards.
+ * A local view of one user's staked position.
+ *
+ * The class exposes lock state, reward accounting, and version-aware builders
+ * for depositing, withdrawing, locking, unlocking, unstaking, and harvesting.
+ * Reward and lock calculations use the supplied pool view and do not fetch
+ * fresh data. Transaction builders require an `AftermathApi` provider and
+ * return unsigned transaction data.
  */
 export class FarmsStakedPosition extends Caller {
 	/**
-	 * The timestamp (in ms) when rewards were last harvested for this position, possibly overriding the
-	 * on-chain data if provided in the constructor.
+	 * The reward timestamp supplied by the constructor, or the position's stored
+	 * last-harvest timestamp when no override was supplied.
 	 */
 	public readonly trueLastHarvestRewardsTimestamp: Timestamp;
 
@@ -33,12 +36,12 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates a `FarmsStakedPosition` instance for a user's staked position in a farm.
+	 * Creates a `FarmsStakedPosition` instance from normalized position data.
 	 *
-	 * @param stakedPosition - The on-chain data object representing the user's staked position.
-	 * @param trueLastHarvestRewardsTimestamp - Optionally overrides the last harvest time from the on-chain data.
-	 * @param config - Optional configuration for the underlying `Caller`.
-	 * @param api - Optional `AftermathApi` instance for transaction building.
+	 * @param stakedPosition - Normalized object data for the user's position.
+	 * @param trueLastHarvestRewardsTimestamp - Optional timestamp override, in milliseconds.
+	 * @param config - Optional network and API-host configuration.
+	 * @param api - Optional provider required by transaction builders.
 	 */
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
@@ -62,16 +65,20 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Returns the version of the farm system that this position belongs to (1 or 2).
+	 * Returns the farm contract version that produced this position.
 	 */
 	public version = (): FarmsVersion => {
 		return this.stakedPosition.version;
 	};
 
 	/**
-	 * Checks whether the position is still locked, based on the current time and the lock parameters.
+	 * Checks whether the position is currently locked for this pool.
 	 *
-	 * @param inputs - Contains a `FarmsStakingPool` instance to check for system constraints.
+	 * The result is false when the lock has expired, the pool's emission period
+	 * has ended, or the pool is forcibly open. It uses `Date.now()` and does not
+	 * perform a network read.
+	 *
+	 * @param inputs - Pool view used for emission-end and forced-unlock rules.
 	 * @returns `true` if the position is locked; otherwise, `false`.
 	 */
 	public isLocked = (inputs: { stakingPool: FarmsStakingPool }): boolean => {
@@ -79,7 +86,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Checks if the position is strictly locked, meaning it is currently locked and the pool uses strict lock enforcement.
+	 * Checks whether the position is locked under strict pool enforcement.
 	 *
 	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
 	 * @returns `true` if locked with strict enforcement; otherwise, `false`.
@@ -94,7 +101,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Checks if the position is relaxed locked, meaning it is currently locked and the pool uses relaxed lock enforcement.
+	 * Checks whether the position is locked under relaxed pool enforcement.
 	 *
 	 * @param inputs - Contains a `FarmsStakingPool` instance to check lock state and enforcement.
 	 * @returns `true` if locked with relaxed enforcement; otherwise, `false`.
@@ -109,7 +116,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Checks whether the position has a non-zero lock duration.
+	 * Checks whether the position stores a non-zero lock duration.
 	 *
 	 * @returns `true` if the position was created with a lock duration > 0.
 	 */
@@ -118,7 +125,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Computes the timestamp (in ms) at which this position's lock will end.
+	 * Computes the timestamp in milliseconds at which this position's lock ends.
 	 *
 	 * @returns The unlock timestamp (lock start + lock duration).
 	 */
@@ -130,11 +137,14 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Computes the user's accrued rewards for each reward coin in this position,
-	 * returned as a `CoinsToBalance` object keyed by coin type.
+	 * Computes the claimable amount for each reward coin in this position.
 	 *
-	 * @param inputs - Contains a reference to the `FarmsStakingPool`.
-	 * @returns A mapping from `coinType` to the amount of earned rewards.
+	 * The returned map uses reward coin types as keys and base-unit `bigint`
+	 * amounts as values. It applies the minimum claim threshold and available
+	 * pool balance checks used by `rewardsEarned`.
+	 *
+	 * @param inputs - Pool view used to validate each reward balance.
+	 * @returns A mapping from `coinType` to claimable base-unit balance.
 	 */
 	public rewardCoinsToClaimableBalance = (inputs: {
 		stakingPool: FarmsStakingPool;
@@ -161,7 +171,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Returns only the reward coin types that currently have a non-zero claimable balance.
+	 * Returns reward coin types with a positive claimable balance.
 	 *
 	 * @param inputs - Contains a reference to the `FarmsStakingPool`.
 	 * @returns An array of `CoinType` strings that have pending rewards > 0.
@@ -175,11 +185,11 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Retrieves the reward coin record for a specific coin type in this position.
+	 * Retrieves the local reward-accounting record for one coin type.
 	 *
-	 * @param inputs - Must contain a `coinType` string to look up.
-	 * @throws If the coin type is not found in this position.
-	 * @returns The reward coin object from the position.
+	 * @param inputs - Reward coin type to look up.
+	 * @throws `Error` with `"Invalid coin type"` when no matching record exists.
+	 * @returns The matching reward-accounting record.
 	 */
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
 		const foundCoin = this.stakedPosition.rewardCoins.find(
@@ -193,7 +203,7 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Checks if this position has any claimable rewards across all reward coin types.
+	 * Checks whether this position has any claimable reward amount.
 	 *
 	 * @param inputs - Contains a reference to the `FarmsStakingPool`.
 	 * @returns `true` if there are unclaimed rewards; otherwise, `false`.
@@ -220,11 +230,16 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Calculates the current amount of earned rewards for a specific coin type,
-	 * factoring in any emission constraints and the pool's actual reward availability.
+	 * Returns the currently claimable amount for one reward coin.
 	 *
-	 * @param inputs - Contains the `coinType` to check and a reference to the `FarmsStakingPool`.
-	 * @returns The total `BigInt` amount of rewards earned for the specified coin type.
+	 * This local calculation adds base and multiplier rewards. It returns zero
+	 * when the pool has no actual balance, the amount is below
+	 * `Farms.constants.minRewardsToClaim`, or the amount exceeds the pool's
+	 * available balance. It does not call `updatePosition()` automatically.
+	 *
+	 * @param inputs - Reward coin type and the matching pool view.
+	 * @throws `Error` with `"Invalid coin type"` when either object has no matching reward record.
+	 * @returns The claimable amount in reward-coin base units.
 	 */
 	public rewardsEarned = (inputs: {
 		coinType: CoinType;
@@ -254,12 +269,16 @@ export class FarmsStakedPosition extends Caller {
 	};
 
 	/**
-	 * Updates the position's reward calculations based on the pool's current
-	 * emission state, effectively "syncing" the on-chain logic into this local
-	 * representation. Also checks if the lock duration has elapsed.
+	 * Updates this position's local reward accounting from a pool snapshot.
 	 *
-	 * @param inputs - Contains a reference to the `FarmsStakingPool`.
-	 * @remarks This method is typically called before computing `rewardsEarned()`.
+	 * The method emits completed pool intervals, clamps a stale lock to the
+	 * pool's maximum duration and multiplier, adds reward records introduced by
+	 * the pool, updates reward debts, and records the current timestamp. It does
+	 * not fetch from the network and does not automatically call the on-chain
+	 * unlock operation when the lock expires.
+	 *
+	 * @param inputs - Pool snapshot used for emission and per-share calculations.
+	 * @remarks Call this method before `rewardsEarned()` when the local position data is stale.
 	 */
 	public updatePosition = (inputs: { stakingPool: FarmsStakingPool }) => {
 		const stakingPool = new FarmsStakingPool(
@@ -392,10 +411,14 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to deposit additional principal into this staked position.
+	 * Builds a version-aware transaction to deposit additional principal.
 	 *
-	 * @param inputs - Contains `depositAmount`, the `walletAddress` performing the deposit, and optional sponsorship.
-	 * @returns A transaction object (or bytes) that can be signed and executed to increase stake.
+	 * The position, pool, and stake coin IDs are taken from this instance. The
+	 * amount is in stake-coin base units. The transaction does not submit itself.
+	 *
+	 * @param inputs - Deposit amount, signing wallet, and optional sponsorship.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getDepositPrincipalTransaction(inputs: {
 		depositAmount: Balance;
@@ -414,10 +437,15 @@ export class FarmsStakedPosition extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to unstake this entire position, optionally claiming SUI as afSUI.
+	 * Builds a version-aware transaction that withdraws this entire position and destroys it.
 	 *
-	 * @param inputs - Contains `walletAddress`, the `FarmsStakingPool` reference, and optional `claimSuiAsAfSui`.
-	 * @returns A transaction that can be signed and executed to fully withdraw principal and possibly rewards.
+	 * The builder includes reward types with a positive claimable balance before
+	 * it withdraws principal and appends the destroy command. Strict pools still
+	 * require the position to be unlocked when the transaction executes.
+	 *
+	 * @param inputs - Matching pool view, signing wallet, and optional SUI-to-afSUI claim flag.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getUnstakeTransaction(inputs: {
 		walletAddress: SuiAddress;
@@ -438,11 +466,15 @@ export class FarmsStakedPosition extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to withdraw a partial amount of principal from this staked position.
-	 * Unlike `getUnstakeTransaction`, this does NOT destroy the position.
+	 * Builds a version-aware transaction to withdraw part of the principal.
 	 *
-	 * @param inputs - Contains `walletAddress`, `withdrawAmount`, and the `FarmsStakingPool` reference.
-	 * @returns A transaction that can be signed and executed to withdraw principal without destroying the position.
+	 * Unlike `getUnstakeTransaction`, this operation keeps the position object.
+	 * The amount is in stake-coin base units, and the matching pool view is used
+	 * by the on-chain validation path.
+	 *
+	 * @param inputs - Withdraw amount, matching pool view, and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getWithdrawPrincipalTransaction(inputs: {
 		walletAddress: SuiAddress;
@@ -465,10 +497,15 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to lock this position for a specified duration, increasing its lock multiplier (if any).
+	 * Builds a version-aware transaction to lock this position for a duration.
 	 *
-	 * @param inputs - Contains the `lockDurationMs` and the `walletAddress`.
-	 * @returns A transaction that can be signed and executed to lock the position.
+	 * The duration is in milliseconds and is validated against the pool's lock
+	 * range when the transaction executes. V1 and V2 builders are selected from
+	 * the position version.
+	 *
+	 * @param inputs - Lock duration and signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getLockTransaction(inputs: {
 		lockDurationMs: Timestamp;
@@ -486,10 +523,13 @@ export class FarmsStakedPosition extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to re-lock this position (renew lock duration) at the current multiplier.
+	 * Builds a version-aware transaction to renew this position's lock.
 	 *
-	 * @param inputs - Contains the `walletAddress`.
-	 * @returns A transaction that can be signed and executed to extend or refresh the lock.
+	 * The on-chain command refreshes the lock without accepting a new duration.
+	 *
+	 * @param inputs - Signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getRenewLockTransaction(inputs: { walletAddress: SuiAddress }) {
 		const args = {
@@ -504,10 +544,15 @@ export class FarmsStakedPosition extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to unlock this position, removing any lock-based multiplier.
+	 * Builds a version-aware transaction to unlock this position.
 	 *
-	 * @param inputs - Contains the `walletAddress`.
-	 * @returns A transaction that can be signed and executed to unlock the position immediately.
+	 * The contract may reject the command while the position is still locked.
+	 * Emission end and the pool's forced-open flag are part of the local lock
+	 * checks used by the façade, but on-chain validation remains authoritative.
+	 *
+	 * @param inputs - Signing wallet.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getUnlockTransaction(inputs: { walletAddress: SuiAddress }) {
 		const args = {
@@ -526,11 +571,14 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds a transaction to harvest (claim) the rewards from this position,
-	 * optionally receiving SUI as afSUI.
+	 * Builds a version-aware transaction to harvest this position's rewards.
 	 *
-	 * @param inputs - Includes the `walletAddress`, the `FarmsStakingPool`, and optional `claimSuiAsAfSui`.
-	 * @returns A transaction that can be signed and executed to claim accrued rewards.
+	 * The builder includes only reward types with a positive locally claimable
+	 * balance. It can request SUI as afSUI when that option is supported.
+	 *
+	 * @param inputs - Matching pool view, signing wallet, and optional SUI-to-afSUI claim flag.
+	 * @returns An unsigned transaction that can be signed and executed.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 */
 	public async getHarvestRewardsTransaction(inputs: {
 		walletAddress: SuiAddress;

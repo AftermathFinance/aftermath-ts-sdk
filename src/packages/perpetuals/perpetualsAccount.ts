@@ -998,8 +998,8 @@ export class PerpetualsAccount extends Caller {
 	 * Build an `edit-twap-orders` transaction for this account.
 	 * `newTwapOrders` maps each TWAP order object id to the edit to apply.
 	 *
-	 * @param inputs.newTwapOrders - Map of TWAP order id to the edit to apply.
-	 * @param inputs.tx - Optional transaction to extend.
+	 * The input maps each TWAP order ID to its edit and can include an existing
+	 * transaction to extend.
 	 *
 	 * @returns Transaction response containing `tx`.
 	 */
@@ -1038,8 +1038,8 @@ export class PerpetualsAccount extends Caller {
 	 * Build a `cancel-twap-orders` transaction for this account.
 	 * This cancels TWAP order objects by their object IDs.
 	 *
-	 * @param inputs.tx - Optional transaction to extend.
-	 * @param inputs.twapOrderIds - Array of TWAP order object IDs to cancel.
+	 * The input can include an existing transaction to extend and the TWAP order
+	 * object IDs to cancel.
 	 *
 	 * @returns Transaction response containing `tx`.
 	 */
@@ -1083,7 +1083,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.signature - Signature over `bytes`.
 	 * @param inputs.marketIds - Optional subset of markets to filter results by.
 	 *
-	 * @returns {@link ApiPerpetualsTwapOrderDatasResponse} containing `twapOrderDatas`.
+	 * @returns `ApiPerpetualsTwapOrderDatasResponse` containing `twapOrderDatas`.
 	 */
 	public async getTwapOrderDatas(inputs: {
 		bytes: string;
@@ -1672,7 +1672,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.signature - Signature over `bytes`.
 	 * @param inputs.marketIds - Optional subset of markets to filter results by.
 	 *
-	 * @returns {@link ApiPerpetualsStopOrderDatasResponse} containing `stopOrderDatas`.
+	 * @returns `ApiPerpetualsStopOrderDatasResponse` containing `stopOrderDatas`.
 	 */
 	public async getStopOrderDatas(inputs: {
 		bytes: string;
@@ -1713,7 +1713,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
-	 * @returns {@link ApiPerpetualsAccountCollateralHistoryResponse} containing
+	 * @returns `ApiPerpetualsAccountCollateralHistoryResponse` containing
 	 * an array of changes and a `nextBeforeTimestampCursor`.
 	 */
 	public async getCollateralHistory(
@@ -1731,7 +1731,7 @@ export class PerpetualsAccount extends Caller {
 	/**
 	 * Fetch paginated order history for this account.
 	 *
-	 * This endpoint is distinct from {@link getOrderDatas}:
+	 * This endpoint is distinct from `getOrderDatas`:
 	 * - `getOrderDatas` resolves current/pending orders based on the snapshot.
 	 * - `getOrderHistory` returns historical order events (fills, cancels, etc.)
 	 *   over time with cursor-based pagination.
@@ -1739,7 +1739,7 @@ export class PerpetualsAccount extends Caller {
 	 * @param inputs.beforeTimestampCursor - Optional cursor for pagination.
 	 * @param inputs.limit - Optional limit per page.
 	 *
-	 * @returns {@link ApiPerpetualsAccountOrderHistoryResponse} containing a list of
+	 * @returns `ApiPerpetualsAccountOrderHistoryResponse` containing a list of
 	 * orders and a `nextBeforeTimestampCursor`.
 	 */
 	public async getOrderHistory(
@@ -1764,7 +1764,7 @@ export class PerpetualsAccount extends Caller {
 	 * - This is an account-level view (aggregated across markets).
 	 *
 	 * @param inputs - {@link ApiPerpetualsAccountMarginHistoryBody} without `accountId`.
-	 * @returns {@link ApiPerpetualsAccountMarginHistoryResponse} containing `marginHistoryDatas`.
+	 * @returns `ApiPerpetualsAccountMarginHistoryResponse` containing `marginHistoryDatas`.
 	 */
 	public async getMarginHistory(
 		inputs: Omit<ApiPerpetualsAccountMarginHistoryBody, "accountId">
@@ -1881,7 +1881,7 @@ export class PerpetualsAccount extends Caller {
 	 * Find the current position for a given market ID, if any.
 	 *
 	 * @param inputs.marketId - Market ID to search for.
-	 * @returns {@link PerpetualsPosition} if found, otherwise `undefined`.
+	 * @returns `PerpetualsPosition` if found, otherwise `undefined`.
 	 */
 	public positionForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
@@ -2094,6 +2094,18 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
+	/**
+	 * Splits SL/TP stop orders linked to one limit order into full and partial closes.
+	 *
+	 * A full close uses the protocol's `Casting.i64MaxBigInt` size sentinel.
+	 * Orders below that sentinel are returned as partial closes. The method does
+	 * not require a market ID because the link is carried by `slTp.limitOrderId`.
+	 *
+	 * @param inputs.stopOrderDatas - Stop-order tickets to inspect.
+	 * @param inputs.limitOrderId - Limit order ID referenced by the SL/TP tickets.
+	 * @returns Full close and partial close matches. Each result is `undefined`
+	 * when no matching order exists.
+	 */
 	public slTpStopOrderDatasForLimitOrder(inputs: {
 		stopOrderDatas: PerpetualsStopOrderData[];
 		limitOrderId: PerpetualsOrderId;
@@ -2135,6 +2147,14 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
+	/**
+	 * Flattens all pending position orders into reusable order data records.
+	 *
+	 * The returned sizes remain fixed-point bigint values. The order side is
+	 * decoded from each order ID, and the market ID comes from its position.
+	 *
+	 * @returns One {@link PerpetualsOrderData} record for each pending order.
+	 */
 	public orderDatas(): PerpetualsOrderData[] {
 		return this.account.positions.reduce(
 			(acc, position) => [
@@ -2207,7 +2227,7 @@ export class PerpetualsAccount extends Caller {
 	 *
 	 * This is the on-chain object that holds the account's state and positions.
 	 *
-	 * @returns {@link ObjectId} of the account object.
+	 * @returns `ObjectId` of the account object.
 	 */
 	public accountObjectId(): ObjectId {
 		return this.accountCap.accountObjectId;
@@ -2218,7 +2238,7 @@ export class PerpetualsAccount extends Caller {
 	 *
 	 * This is the protocol-level identifier (bigint-derived) used across API calls.
 	 *
-	 * @returns {@link PerpetualsAccountId} for this account.
+	 * @returns `PerpetualsAccountId` for this account.
 	 */
 	public accountId(): PerpetualsAccountId {
 		return this.accountCap.accountId;
@@ -2232,7 +2252,7 @@ export class PerpetualsAccount extends Caller {
 	 *
 	 * @throws If called for a vault-backed account.
 	 *
-	 * @returns {@link ObjectId} of the account cap.
+	 * @returns `ObjectId` of the account cap.
 	 */
 	public accountCapId(): ObjectId {
 		if ("vaultId" in this.accountCap) {

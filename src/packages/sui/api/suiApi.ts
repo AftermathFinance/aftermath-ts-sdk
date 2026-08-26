@@ -2,6 +2,13 @@ import type { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui/jsonRpc";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Helpers } from "../../../general/utils";
 
+/**
+ * Provides low-level Sui chain helpers that need the provider's transport.
+ *
+ * Most applications should use the high-level `Sui` facade for chain-level
+ * reads. This API helper is exposed through {@link AftermathApi.Sui} and currently retains the
+ * JSON-RPC-only system-state method for compatibility.
+ */
 export class SuiApi {
 	// =========================================================================
 	//  Class Members
@@ -11,6 +18,11 @@ export class SuiApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a helper bound to an {@link AftermathApi} provider.
+	 *
+	 * @param api - Provider that owns the optional JSON-RPC client.
+	 */
 	constructor(private readonly api: AftermathApi) {}
 
 	// =========================================================================

@@ -1,26 +1,27 @@
 import { SuiAddress } from "../../types";
 
 /**
- * Request body for creating or registering a user’s public key in Aftermath’s backend.
- * It typically includes proof of ownership by having the user sign a specific message.
+ * Request body for creating or updating a wallet's public key in Aftermath's
+ * backend. The `bytes` and `signature` fields carry proof of wallet ownership.
  */
 export interface ApiUserDataCreateUserBody {
 	/**
-	 * The user's Sui wallet address (e.g., "0x<address>").
+	 * The user's Sui wallet address.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The message bytes (in hex string form) that the user signed.
+	 * Serialized bytes of the message that the user signed. For the current
+	 * terms flow, these are the UTF-8 bytes of `Aftermath Terms and Conditions`.
 	 */
 	bytes: string;
 	/**
-	 * The signature (in hex string form) created by signing `bytes`.
+	 * Signature created by signing `bytes`.
 	 */
 	signature: string;
 }
 
 /**
- * Request body for fetching a user’s public key by their wallet address.
+ * Request body for fetching a wallet's stored public key.
  */
 export interface ApiUserDataPublicKeyBody {
 	/**

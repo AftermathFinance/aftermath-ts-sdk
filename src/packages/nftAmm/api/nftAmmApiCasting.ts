@@ -8,6 +8,12 @@ import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
 import type { NftAmmMarketObject } from "../nftAmmTypes";
 import type { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 
+/**
+ * Converts raw NFT AMM Sui object views into SDK market objects.
+ *
+ * These methods are local casts only. They do not fetch missing nested objects
+ * or recover Move type information that is absent from the input response.
+ */
 export class NftAmmApiCasting {
 	// =========================================================================
 	//  Public Methods
@@ -18,6 +24,13 @@ export class NftAmmApiCasting {
 	// =========================================================================
 
 	/**
+	 * Converts a raw Sui object view into an `NftAmmMarketObject`.
+	 *
+	 * @param suiObject - Top-level NFT AMM market object view with raw fields.
+	 * @returns The market object with bigint balances, table data, and Move types.
+	 * @throws `Error` when the top-level object type is missing or nested pool and
+	 * supply type information cannot be read by the current caster.
+	 *
 	 * @remarks ⚠️ **Two of this caster's reads need a *nested* Move struct's own
 	 * `type`, which neither protocol supplies — so it throws, exactly as it did
 	 * before the gRPC port.** It is kept source-compatible (same signature, same

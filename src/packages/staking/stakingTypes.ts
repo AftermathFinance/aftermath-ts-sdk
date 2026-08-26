@@ -13,141 +13,146 @@ import {
 } from "../../general/types/generalTypes";
 
 /**
- * Represents a validator's configuration object, including its Sui address,
- * operation cap ID, and fee percentage.
+ * Normalized validator configuration returned by the staking API.
+ *
+ * The object inherits `objectId` and `objectType` from `SuiObject`. `fee` is a
+ * decimal ratio, so `0.01` represents a 1% validator fee.
  */
 export interface ValidatorConfigObject extends SuiObject {
 	/**
-	 * The Sui address of the validator.
+	 * Address of the validator whose configuration this object describes.
 	 */
 	suiAddress: SuiAddress;
 	/**
-	 * The on-chain object ID referencing this validator's operation cap.
+	 * Object ID of the operation cap associated with this validator.
 	 */
 	operationCapId: ObjectId;
 	/**
-	 * The current fee percentage for this validator (0.01 = 1%).
+	 * Current validator fee as a decimal ratio. `0.01` represents 1%.
 	 */
 	fee: Percentage;
 }
 
 /**
- * Represents a validator's operation cap object, which authorizes changes to
- * validator settings like fees.
+ * Normalized validator operation-cap object returned for a wallet.
+ *
+ * The cap authorizes permissioned validator operations, including validator-fee
+ * updates when its authorizer address matches the target validator.
  */
 export interface ValidatorOperationCapObject extends SuiObject {
 	/**
-	 * The validator address authorized by this operation cap.
+	 * Validator address authorized by this operation cap.
 	 */
 	authorizerValidatorAddress: SuiAddress;
 }
 
 /**
- * Represents the on-chain state of the stakedSui vault, which tracks liquidity
- * for atomic unstakes, total SUI amounts, rewards, and fees.
+ * Normalized state of the Aftermath stakedSui vault.
+ *
+ * Balance fields are raw token amounts represented as `bigint`s. Fee fields
+ * use the unsigned 18-decimal fixed-point scale, where
+ * `1_000_000_000_000_000_000n` represents 100%.
  */
 export interface StakedSuiVaultStateObject extends SuiObject {
 	/**
-	 * The target size for atomic unstake SUI reserves.
+	 * Target SUI reserve for atomic unstakes, in raw SUI units.
 	 */
 	atomicUnstakeSuiReservesTargetValue: Balance;
 	/**
-	 * The current size of the SUI reserves for atomic unstakes.
+	 * Current SUI reserve available for atomic unstakes, in raw SUI units.
 	 */
 	atomicUnstakeSuiReserves: Balance;
 	/**
-	 * The minimum fee for atomic unstakes, expressed as a BigInt-based percentage
-	 * (e.g., 50000000n = 5% if using 1e9-based decimals).
+	 * Minimum atomic-unstake fee as an 18-decimal fixed-point value.
+	 * `50_000_000_000_000_000n` represents 5%.
 	 */
 	minAtomicUnstakeFee: bigint;
 	/**
-	 * The maximum fee for atomic unstakes.
+	 * Maximum atomic-unstake fee as an 18-decimal fixed-point value.
 	 */
 	maxAtomicUnstakeFee: bigint;
 	/**
-	 * The total amount of SUI rewards accumulated in the vault.
+	 * Total SUI rewards accumulated in the vault, in raw SUI units.
 	 */
 	totalRewardsAmount: Balance;
 	/**
-	 * The total amount of SUI staked in the vault.
+	 * Total SUI amount held by the vault, in raw SUI units.
 	 */
 	totalSuiAmount: Balance;
 	/**
-	 * The current epoch number, as a BigInt.
+	 * Current protocol epoch as a `bigint`.
 	 */
 	activeEpoch: bigint;
 }
 
 /**
- * Represents a dynamic field holding a stake balance. Useful for tracking
- * on-chain data related to a specific stake or delegator.
+ * Normalized dynamic-field record that stores a stake balance.
  */
 export interface StakeBalanceDynamicField {
 	/**
-	 * The on-chain object ID of this stake balance record.
+	 * Object ID of the dynamic-field record.
 	 */
 	objectId: ObjectId;
 	/**
-	 * The amount of SUI (or afSUI) represented by this field, expressed as a bigint.
+	 * Stored SUI or afSUI amount in the token's smallest unit.
 	 */
 	value: Balance;
 }
 
 /**
- * Enumerates the possible states of a delegated stake on the Sui network.
+ * State of a native Sui delegated stake.
  *
- * - **Active**: The stake is actively earning rewards.
- * - **Pending**: The stake has been requested but not yet activated.
- * - **Unstaked**: The stake has been removed or the SUI is no longer earning rewards.
+ * `"Active"` is delegated and active. `"Pending"` has not activated yet.
+ * `"Unstaked"` is no longer earning staking rewards.
  */
 export type SuiDelegatedStakeState = "Active" | "Pending" | "Unstaked";
 
 /**
- * Represents a delegated stake object in the Sui network. Unlike local
- * Aftermath-specific stake positions, this is a more general Sui system stake
- * that can earn protocol-level rewards.
+ * Native Sui delegated stake returned for a wallet.
+ *
+ * This type describes a Sui `StakedSui` delegation. It is distinct from an
+ * Aftermath `StakingPosition`, which also includes afSUI and unstake events.
  */
 export interface SuiDelegatedStake {
 	/**
-	 * The current state of the delegated stake (e.g., Active, Pending, Unstaked).
+	 * Current native delegation state.
 	 */
 	status: SuiDelegatedStakeState;
 	/**
-	 * The on-chain ID representing this stake position.
+	 * Object ID of the native staked SUI object.
 	 */
 	stakedSuiId: ObjectId;
 	/**
-	 * The epoch in which this stake request was made.
+	 * Epoch in which the delegation request was made.
 	 */
 	stakeRequestEpoch: bigint;
 	/**
-	 * The epoch in which this stake became (or will become) active.
+	 * Epoch in which the delegation became, or will become, active.
 	 */
 	stakeActiveEpoch: bigint;
 	/**
-	 * The principal amount of SUI delegated.
+	 * Delegated principal in raw SUI units.
 	 */
 	principal: Balance;
 	/**
-	 * The estimated rewards accumulated for this stake, if available.
+	 * Estimated rewards in raw SUI units, when the endpoint provides them.
 	 */
 	estimatedReward?: Balance | undefined;
 	/**
-	 * The validator to which this stake is delegated.
+	 * Address of the validator receiving the delegation.
 	 */
 	validatorAddress: SuiAddress;
 	/**
-	 * The staking pool on-chain object that manages this stake.
+	 * Address of the native Sui staking pool that manages this stake.
 	 */
 	stakingPool: SuiAddress;
 }
 
 /**
- * A type guard utility function to check if a position is a native Sui delegated stake
- * (`SuiDelegatedStake`) rather than an Aftermath-specific `StakingPosition`.
+ * Narrows a staking union to a native Sui delegated stake.
  *
- * @param stake - An object that could be either a `StakingPosition` or a `SuiDelegatedStake`.
- * @returns True if the object matches the shape of `SuiDelegatedStake`; otherwise, false.
+ * @param stake - A native delegated stake or an Aftermath staking position.
+ * @returns `true` when the object has the native delegated-stake fields.
  */
 export const isSuiDelegatedStake = (
 	stake: StakingPosition | SuiDelegatedStake
@@ -160,24 +165,21 @@ export const isSuiDelegatedStake = (
 	);
 };
 
-/**
- * Represents a single entry in the historical APY data, including a Unix
- * timestamp and an APY value.
- */
+/** A single data point returned by the historical staking-APY endpoint. */
 export interface StakingApyDataPoint {
 	/**
-	 * The Unix timestamp (in milliseconds or seconds) of the data point.
+	 * Timestamp supplied by the API. The `Timestamp` alias does not distinguish
+	 * seconds from milliseconds.
 	 */
 	timestamp: Timestamp;
 	/**
-	 * The APY value recorded at that time (e.g., 0.045 = 4.5%).
+	 * APY at that timestamp as a decimal ratio. `0.045` represents 4.5%.
 	 */
 	apy: number;
 }
 
 /**
- * Enumerates the timeframes available for retrieving historical APY data,
- * such as `"1W"`, `"1M"`, `"1Y"`, etc.
+ * Timeframe keys accepted by the historical staking-APY endpoint.
  */
 export type StakingApyTimeframeKey = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
 
@@ -186,117 +188,121 @@ export type StakingApyTimeframeKey = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
 /* -------------------------------------------------------------------------- */
 
 /**
- * Represents an event when SUI has been staked, either newly or restaked.
+ * Normalized event emitted when SUI is staked for afSUI.
+ *
+ * The event covers both a new stake and a restake of native `StakedSui`. Amounts
+ * are raw SUI or afSUI balances. `validatorFee` is a decimal ratio.
  */
 export interface StakedEvent extends Event {
 	/**
-	 * The on-chain object ID referencing the newly created staked SUI object.
+	 * Object ID of the newly created native staked SUI object.
 	 */
 	stakedSuiId: ObjectId;
 	/**
-	 * The original SUI coin ID used for staking.
+	 * Object ID of the SUI coin consumed by the stake.
 	 */
 	suiId: ObjectId;
 	/**
-	 * The address of the user who performed the staking.
+	 * Address that performed the stake.
 	 */
 	staker: SuiAddress;
 	/**
-	 * The validator address to which the user staked.
+	 * Validator that received the stake.
 	 */
 	validatorAddress: SuiAddress;
 	/**
-	 * The epoch in which staking took place.
+	 * Protocol epoch in which the stake occurred.
 	 */
 	epoch: bigint;
 	/**
-	 * The amount of SUI staked.
+	 * SUI amount staked, in raw SUI units.
 	 */
 	suiStakeAmount: Balance;
 	/**
-	 * The validator fee percentage for this stake (0.01 = 1%).
+	 * Validator fee as a decimal ratio. `0.01` represents 1%.
 	 */
 	validatorFee: number;
 	/**
-	 * Indicates whether this stake is a restake of an already staked position.
+	 * Whether the operation restaked an existing native staked SUI object.
 	 */
 	isRestaked: boolean;
 	/**
-	 * The on-chain ID of the afSUI object received in exchange for staking.
+	 * Object ID of the afSUI coin received by the staker.
 	 */
 	afSuiId: ObjectId;
 	/**
-	 * The amount of afSUI received.
+	 * afSUI amount received, in raw afSUI units.
 	 */
 	afSuiAmount: Balance;
 	/**
-	 * (Optional) Referrer address for the stake.
+	 * Referrer address recorded for the stake, when one was supplied.
 	 */
 	referrer?: SuiAddress;
 }
 
 /**
- * Represents an event when a user initiates an unstake request, converting
- * afSUI back into SUI.
+ * Normalized event emitted when a wallet requests a queued afSUI-to-SUI
+ * unstake.
  */
 export interface UnstakeRequestedEvent extends Event {
 	/**
-	 * The afSUI ID being provided to unstake.
+	 * Object ID of the afSUI coin provided for unstaking.
 	 */
 	afSuiId: ObjectId;
 	/**
-	 * The amount of afSUI provided by the user.
+	 * afSUI amount provided, in raw afSUI units.
 	 */
 	providedAfSuiAmount: Balance;
 	/**
-	 * The address requesting the unstake.
+	 * Address that requested the unstake.
 	 */
 	requester: SuiAddress;
 	/**
-	 * The epoch in which the unstake was requested.
+	 * Protocol epoch in which the request was emitted.
 	 */
 	epoch: bigint;
 }
 
 /**
- * Represents an event after an unstake has fully processed and SUI has
- * been returned to the user.
+ * Normalized event emitted when a queued unstake finishes and SUI is minted.
  */
 export interface UnstakedEvent extends Event {
 	/**
-	 * The afSUI ID that was burned or converted during the unstake.
+	 * Object ID of the afSUI coin burned or converted.
 	 */
 	afSuiId: ObjectId;
 	/**
-	 * The amount of afSUI provided.
+	 * afSUI amount provided, in raw afSUI units.
 	 */
 	providedAfSuiAmount: Balance;
 	/**
-	 * The resulting SUI coin ID received by the user.
+	 * Object ID of the SUI coin minted for the requester.
 	 */
 	suiId: ObjectId;
 	/**
-	 * The amount of SUI returned.
+	 * SUI amount returned, in raw SUI units.
 	 */
 	returnedSuiAmount: Balance;
 	/**
-	 * The address that initiated the unstake.
+	 * Address that requested the unstake.
 	 */
 	requester: SuiAddress;
 	/**
-	 * The epoch in which the unstake finalized.
+	 * Protocol epoch in which the unstake finished.
 	 */
 	epoch: bigint;
 }
 
 /**
- * Represents a union type covering all possible unstake events, either
- * requested or finalized.
+ * Union of queued-unstake and completed-unstake events.
  */
 export type UnstakeEvent = UnstakeRequestedEvent | UnstakedEvent;
 
 /**
- * Type guard to check if an event is a `StakedEvent`.
+ * Narrows a staking event union to a `StakedEvent`.
+ *
+ * @param event - A stake or unstake event.
+ * @returns `true` when the event contains the `StakedEvent` fields.
  */
 export const isStakeEvent = (
 	event: StakeEvent | UnstakeEvent
@@ -305,7 +311,10 @@ export const isStakeEvent = (
 };
 
 /**
- * Type guard to check if an event is an `UnstakeEvent`.
+ * Narrows a staking event union to an `UnstakeEvent`.
+ *
+ * @param event - A stake or unstake event.
+ * @returns `true` when the event is a queued or completed unstake event.
  */
 export const isUnstakeEvent = (
 	event: StakeEvent | UnstakeEvent
@@ -314,30 +323,32 @@ export const isUnstakeEvent = (
 };
 
 /**
- * Represents an event that indicates the epoch has changed, generally used
- * for distributing rewards and updating positions.
+ * Normalized event emitted while the afSUI vault records an epoch change.
+ *
+ * The event reports aggregate supply, rewards, and SUI values after the
+ * protocol's epoch-processing call.
  */
 export interface EpochWasChangedEvent extends Event {
 	/**
-	 * The new active epoch as a BigInt.
+	 * New active protocol epoch.
 	 */
 	activeEpoch: bigint;
 	/**
-	 * The total amount of afSUI in circulation.
+	 * Total afSUI supply in raw afSUI units.
 	 */
 	totalAfSuiSupply: Balance;
 	/**
-	 * The total amount of SUI rewards accrued in the system.
+	 * Total accrued SUI rewards in raw SUI units.
 	 */
 	totalSuiRewardsAmount: Balance;
 	/**
-	 * The total amount of SUI staked in the system.
+	 * Total SUI amount in the system, in raw SUI units.
 	 */
 	totalSuiAmount: Balance;
 }
 
 /**
- * Union type for stake events, which can represent any variant of staking.
+ * Union containing the normalized stake event variant.
  */
 export type StakeEvent = StakedEvent;
 
@@ -345,118 +356,120 @@ export type StakeEvent = StakedEvent;
 /*                          STAKING POSITIONS TYPES                           */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Represents a user's staking position, which could be either a `StakePosition`
- * or an `UnstakePosition`.
- */
+/** A user's normalized stake or unstake position. */
 export type StakingPosition = StakePosition | UnstakePosition;
 
 /**
- * Indicates a stake position, typically representing active or restaked SUI,
- * along with its associated `afSuiAmount`.
+ * A user's stake position created by a `StakedEvent`.
+ *
+ * Amounts are raw SUI or afSUI balances. `timestamp` can be absent when the
+ * source event did not include a timestamp.
  */
 export interface StakePosition {
 	/**
-	 * The staked SUI object ID referencing this position.
+	 * Object ID of the native staked SUI object.
 	 */
 	stakedSuiId: ObjectId;
 	/**
-	 * The original SUI coin ID.
+	 * Object ID of the SUI coin consumed by the stake.
 	 */
 	suiId: ObjectId;
 	/**
-	 * The address of the staker.
+	 * Address that performed the stake.
 	 */
 	staker: SuiAddress;
 	/**
-	 * The address of the validator to which SUI was staked.
+	 * Validator that received the stake.
 	 */
 	validatorAddress: SuiAddress;
 	/**
-	 * The epoch in which the stake was established.
+	 * Protocol epoch in which the stake was established.
 	 */
 	epoch: bigint;
 	/**
-	 * The amount of SUI staked.
+	 * SUI amount staked, in raw SUI units.
 	 */
 	suiStakeAmount: Balance;
 	/**
-	 * The validator fee percentage (0.01 = 1%).
+	 * Validator fee as a decimal ratio. `0.01` represents 1%.
 	 */
 	validatorFee: number;
 	/**
-	 * Indicates if this stake is a restake operation.
+	 * Whether this position came from a restake operation.
 	 */
 	isRestaked: boolean;
 	/**
-	 * The afSUI object ID generated from staking.
+	 * Object ID of the afSUI coin issued for the stake.
 	 */
 	afSuiId: ObjectId;
 	/**
-	 * The amount of afSUI issued to the user.
+	 * afSUI amount issued, in raw afSUI units.
 	 */
 	afSuiAmount: Balance;
 	/**
-	 * The timestamp when the stake was recorded.
+	 * Event timestamp, when the source event supplied one.
 	 */
 	timestamp: Timestamp | undefined;
 	/**
-	 * The transaction digest where the stake operation occurred.
+	 * Digest of the transaction that emitted the stake event.
 	 */
 	txnDigest: TransactionDigest;
 }
 
 /**
- * Indicates a position related to an unstake operation, either requested or
- * finalized, with optional references to the returned SUI coin and amount.
+ * A user's queued or completed afSUI-to-SUI unstake position.
+ *
+ * A `REQUEST` position has no returned SUI fields. A `SUI_MINTED` position has
+ * the returned coin ID and amount.
  */
 export interface UnstakePosition {
 	/**
-	 * The state of the unstake operation: `REQUEST` (in progress) or
-	 * `SUI_MINTED` (finalized).
+	 * Unstake state: `REQUEST` while queued or `SUI_MINTED` after SUI is returned.
 	 */
 	state: UnstakePositionState;
 	/**
-	 * The afSUI object ID being burned or converted.
+	 * Object ID of the afSUI coin burned or converted.
 	 */
 	afSuiId: ObjectId;
 	/**
-	 * The amount of afSUI used to initiate the unstake.
+	 * afSUI amount provided, in raw afSUI units.
 	 */
 	providedAfSuiAmount: Balance;
 	/**
-	 * The address of the requester.
+	 * Address that requested the unstake.
 	 */
 	requester: SuiAddress;
 	/**
-	 * The epoch in which the unstake was requested or finalized.
+	 * Epoch associated with the request. Position updates retain the request
+	 * epoch when a matching completion event arrives.
 	 */
 	epoch: bigint;
 	/**
-	 * The SUI object ID returned to the user, if unstake has finalized.
+	 * Object ID of the returned SUI coin, present after completion.
 	 */
 	suiId?: ObjectId;
 	/**
-	 * The amount of SUI returned to the user, if unstake has finalized.
+	 * Returned SUI amount in raw SUI units, present after completion.
 	 */
 	returnedSuiAmount?: Balance;
 	/**
-	 * The timestamp when the unstake request was recorded or completed.
+	 * Event timestamp for the request or completion, when supplied.
 	 */
 	timestamp: Timestamp | undefined;
 	/**
-	 * The transaction digest where the unstake operation occurred.
+	 * Digest of the transaction that emitted the request or completion event.
 	 */
 	txnDigest: TransactionDigest;
 }
 
-/**
- * Enumerates the possible states of an unstake operation.
- */
+/** States represented by an `UnstakePosition`. */
 export type UnstakePositionState = "REQUEST" | "SUI_MINTED";
 
 /**
- * Type guard that checks whether a given `StakingPosition` is a stake position.
+ * Narrows a `StakingPosition` to a `StakePosition`.
+ *
+ * @param position - Position to inspect.
+ * @returns `true` when the position contains a native staked SUI object ID.
  */
 export const isStakePosition = (
 	position: StakingPosition
@@ -465,7 +478,10 @@ export const isStakePosition = (
 };
 
 /**
- * Type guard that checks whether a given `StakingPosition` is an unstake position.
+ * Narrows a `StakingPosition` to an `UnstakePosition`.
+ *
+ * @param position - Position to inspect.
+ * @returns `true` when the position is not a stake position.
  */
 export const isUnstakePosition = (
 	position: StakingPosition
@@ -478,109 +494,125 @@ export const isUnstakePosition = (
 /* -------------------------------------------------------------------------- */
 
 /**
- * Body payload for staking SUI.
+ * Inputs for building a liquid-staking transaction that converts SUI to afSUI.
+ *
+ * `suiStakeAmount` uses raw SUI units. The builder also requires the selected
+ * validator to be active and applies the external-fee bounds before it adds
+ * the transaction commands.
  */
 export interface ApiStakeBody {
 	/**
-	 * The address performing the stake.
+	 * Wallet address that owns the SUI coin and receives the afSUI result.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The amount of SUI to be staked.
+	 * SUI amount to stake, in raw SUI units. `1_000_000_000n` is 1 SUI.
 	 */
 	suiStakeAmount: Balance;
 	/**
-	 * The validator address to stake with.
+	 * Active validator that receives the native stake.
 	 */
 	validatorAddress: SuiAddress;
 	/**
-	 * Optional address indicating a referrer.
+	 * Optional address recorded in the referral vault before staking.
 	 */
 	referrer?: SuiAddress;
 	/**
-	 * Optional external fee object. Must not exceed `maxExternalFeePercentage`.
+	 * Optional third-party fee recipient and decimal fee ratio. The builder
+	 * requires a ratio greater than 0 and strictly less than `0.5`.
 	 */
 	externalFee?: ExternalFee;
 	/**
-	 * Indicates whether the transaction should be sponsored.
+	 * Whether the SUI coin-selection helper should build for a sponsored flow.
 	 */
 	isSponsoredTx?: boolean;
 }
 
 /**
- * Body payload for unstaking SUI (afSUI -> SUI).
+ * Inputs for building an afSUI-to-SUI unstaking transaction.
+ *
+ * `afSuiUnstakeAmount` uses raw afSUI units. Atomic mode depends on the vault's
+ * SUI reserves; queued mode creates a request for epoch processing.
  */
 export interface ApiUnstakeBody {
 	/**
-	 * The address performing the unstake.
+	 * Wallet address that owns the afSUI coin and receives returned SUI in atomic mode.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The amount of afSUI to be unstaked.
+	 * afSUI amount to unstake, in raw afSUI units. `1_000_000_000n` is 1 afSUI.
 	 */
 	afSuiUnstakeAmount: Balance;
 	/**
-	 * If true, the unstake is done atomically if possible, using liquidity reserves.
+	 * Selects the atomic entry point when `true` and the queued request entry
+	 * point when `false`. Atomic execution can fail with `Insufficient Sui Reserves`.
 	 */
 	isAtomic: boolean;
 	/**
-	 * Optional address indicating a referrer.
+	 * Optional address recorded in the referral vault before unstaking.
 	 */
 	referrer?: SuiAddress;
 	/**
-	 * Optional external fee object. Must not exceed `maxExternalFeePercentage`.
+	 * Optional third-party fee recipient and decimal fee ratio. The builder
+	 * requires a ratio greater than 0 and strictly less than `0.5`.
 	 */
 	externalFee?: ExternalFee;
 	/**
-	 * Indicates whether the transaction should be sponsored.
+	 * Sponsorship flag accepted by the shared input shape. The current unstake
+	 * builder does not forward it to afSUI coin selection.
 	 */
 	isSponsoredTx?: boolean;
 }
 
 /**
- * Body payload for staking stakedSUI objects (re-staking).
+ * Inputs for building a transaction that restakes native `StakedSui` objects
+ * for afSUI.
  */
 export interface ApiStakeStakedSuiBody {
 	/**
-	 * The address performing the re-stake.
+	 * Wallet address that owns the native staked SUI objects and receives afSUI.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * An array of stakedSui object IDs to re-stake.
+	 * Object IDs of the native `StakedSui` objects to combine into the Move vector.
 	 */
 	stakedSuiIds: ObjectId[];
 	/**
-	 * The validator address to stake with.
+	 * Active validator that receives the restaked objects.
 	 */
 	validatorAddress: SuiAddress;
 	/**
-	 * Optional address indicating a referrer.
+	 * Optional address recorded in the referral vault before restaking.
 	 */
 	referrer?: SuiAddress;
 	/**
-	 * Indicates whether the transaction should be sponsored.
+	 * Sponsorship flag accepted by the shared input shape. The current restake
+	 * builder does not use it because it does not select a coin.
 	 */
 	isSponsoredTx?: boolean;
 }
 
 /**
- * Body payload for updating a validator's fee settings.
+ * Inputs for building a validator-fee update transaction.
  */
 export interface ApiUpdateValidatorFeeBody {
 	/**
-	 * The address submitting the update transaction.
+	 * Wallet address that signs and sends the update.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The operation cap object ID that authorizes changes to this validator.
+	 * Object ID of the operation cap that authorizes this validator update.
 	 */
 	validatorOperationCapId: ObjectId;
 	/**
-	 * The new fee percentage to be set (0.01 = 1%).
+	 * New validator fee as a decimal ratio. `0.01` represents 1%.
+	 * The builder encodes it as an 18-decimal fixed-point integer, and the Move
+	 * contract rejects a value above its configured maximum.
 	 */
 	newFeePercentage: Percentage;
 	/**
-	 * Indicates whether the transaction should be sponsored.
+	 * Sponsorship flag accepted by the shared input shape. The fee-update builder
+	 * does not use it because it creates a local transaction without coin selection.
 	 */
 	isSponsoredTx?: boolean;
 }
@@ -589,40 +621,38 @@ export interface ApiUpdateValidatorFeeBody {
 /*                             OBJECTS API BODIES                             */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Body payload for retrieving staking positions, including pagination.
- */
+/** Inputs for the paginated staking-position endpoint. */
 export interface ApiStakingPositionsBody {
 	/**
-	 * The address whose staking positions are being queried.
+	 * Wallet address whose positions are queried.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * Optional cursor for pagination.
+	 * Numeric endpoint cursor for the page to fetch.
 	 */
 	cursor?: number;
 	/**
-	 * Optional limit on the number of positions returned.
+	 * Maximum number of positions requested for the page.
 	 */
 	limit?: number;
 }
 
 /**
- * Body payload for retrieving delegated stakes, given a wallet address.
+ * Inputs for retrieving native Sui delegated stakes.
  */
 export interface ApiDelegatedStakesBody {
 	/**
-	 * The address whose delegated stakes are being queried.
+	 * Wallet address whose native delegated stakes are queried.
 	 */
 	walletAddress: SuiAddress;
 }
 
 /**
- * Body payload for retrieving validator operation caps, given a wallet address.
+ * Inputs for retrieving validator operation caps owned by a wallet.
  */
 export interface ApiValidatorOperationCapsBody {
 	/**
-	 * The address whose validator operation caps are being queried.
+	 * Wallet address whose validator operation caps are queried.
 	 */
 	walletAddress: SuiAddress;
 }
@@ -632,11 +662,15 @@ export interface ApiValidatorOperationCapsBody {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Body payload for retrieving staking-related events, including pagination.
+ * Inputs for a direct staking-event query.
+ *
+ * The intersection inherits `cursor?: EventId` and `limit?: number` from
+ * `ApiEventsBody` and adds the wallet filter. The high-level `Staking` class
+ * exposes normalized positions rather than a method that accepts this body.
  */
 export type ApiStakingEventsBody = ApiEventsBody & {
 	/**
-	 * The address whose events are being queried.
+	 * Wallet address whose staking events are queried.
 	 */
 	walletAddress: SuiAddress;
 };
@@ -646,21 +680,24 @@ export type ApiStakingEventsBody = ApiEventsBody & {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Extends the `StakedSuiVaultStateObject` with additional fields relevant
- * to the router pool. This includes the coin type for afSUI, the configured
- * validator address, and the current exchange rate.
+ * Router-pool view of the afSUI vault.
+ *
+ * Inherits vault reserves, fee configuration, balances, and active epoch from
+ * `StakedSuiVaultStateObject`. The exchange rate is a decimal SUI-per-afSUI
+ * ratio, while inherited balances remain raw token units.
  */
 export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
 	/**
-	 * The coin type string for afSUI (e.g., "0x<package>::afSUI::AFSUI").
+	 * Fully qualified Move coin type for afSUI, such as
+	 * `0x<package>::afsui::AFSUI`.
 	 */
 	afSuiCoinType: CoinType;
 	/**
-	 * The official Aftermath validator address.
+	 * Configured Aftermath validator address.
 	 */
 	aftermathValidatorAddress: SuiAddress;
 	/**
-	 * The current exchange rate from afSUI to SUI.
+	 * Current exchange rate expressed as SUI represented by 1 afSUI.
 	 */
 	afSuiToSuiExchangeRate: number;
 };

@@ -22,11 +22,24 @@ import type {
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 
+/** Converts raw pool objects and events into the SDK's public pool shapes. */
 export class PoolsApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Converts a Sui object view for `Pool<L>` into a `PoolObject`.
+	 *
+	 * The caster derives the LP coin type from the object's generic type, decodes
+	 * optional coin-decimal bytes, converts on-chain numeric strings to `bigint`,
+	 * and pairs every parallel vector by coin type. Balances remain in smallest
+	 * units while `normalizedBalance` retains the AMM math scale.
+	 *
+	 * @param suiObject - The object view returned by a Sui object API.
+	 * @returns The normalized pool object used by `Pool` and `CmmmCalculations`.
+	 * @throws When required object fields or parallel vector entries are invalid.
+	 */
 	public static poolObjectFromSuiObject = (
 		suiObject: SuiObjectView
 	): PoolObject => {
@@ -93,6 +106,12 @@ export class PoolsApiCasting {
 		};
 	};
 
+	/**
+	 * Converts a DAO fee owner-cap object view into its public SDK shape.
+	 *
+	 * @param data - The object response returned by the Sui object API.
+	 * @returns The capability ID and its associated DAO fee pool ID.
+	 */
 	public static daoFeePoolOwnerCapObjectFromSuiObjectResponse = (
 		data: SuiObjectView
 	): DaoFeePoolOwnerCapObject => {
@@ -113,6 +132,12 @@ export class PoolsApiCasting {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Extracts the created pool object ID from a raw pool-create event.
+	 *
+	 * @param eventOnChain - The raw pool-create event.
+	 * @returns The newly created pool object ID.
+	 */
 	public static poolObjectIdfromPoolCreateEventOnChain = (
 		eventOnChain: PoolCreateEventOnChain
 	): ObjectId => {
@@ -120,6 +145,15 @@ export class PoolsApiCasting {
 		return fields.pool_id;
 	};
 
+	/**
+	 * Converts a raw pool swap event into a public `PoolTradeEvent`.
+	 *
+	 * Coin amounts are converted to `bigint` in smallest units, and shortened
+	 * on-chain type strings receive their leading zeroes.
+	 *
+	 * @param eventOnChain - The raw swap event from the indexer.
+	 * @returns The normalized swap event.
+	 */
 	public static poolTradeEventFromOnChain = (
 		eventOnChain: PoolTradeEventOnChain
 	): PoolTradeEvent => {
@@ -141,6 +175,12 @@ export class PoolsApiCasting {
 		};
 	};
 
+	/**
+	 * Converts a raw pool deposit event into a public `PoolDepositEvent`.
+	 *
+	 * @param eventOnChain - The raw deposit event from the indexer.
+	 * @returns The normalized deposit event with smallest-unit `bigint` amounts.
+	 */
 	public static poolDepositEventFromOnChain = (
 		eventOnChain: PoolDepositEventOnChain
 	): PoolDepositEvent => {
@@ -159,6 +199,12 @@ export class PoolsApiCasting {
 		};
 	};
 
+	/**
+	 * Converts a raw pool withdrawal event into a public `PoolWithdrawEvent`.
+	 *
+	 * @param eventOnChain - The raw withdrawal event from the indexer.
+	 * @returns The normalized withdrawal event with smallest-unit `bigint` amounts.
+	 */
 	public static poolWithdrawEventFromOnChain = (
 		eventOnChain: PoolWithdrawEventOnChain
 	): PoolWithdrawEvent => {

@@ -10,21 +10,43 @@ import type {
 import { Caller } from "../utils/caller";
 
 /**
- * The `Wallet` class allows querying a user's balances and transactions.
- * It handles fetching coin balances, transactions, and more by leveraging
- * an `AftermathApi.Wallet` provider.
+ * Provides balance and transaction-history queries for one Sui address.
+ *
+ * The methods send POST requests through the configured Aftermath HTTP API under
+ * `/api/wallet` by default. The `apiEndpoint` setting can change that prefix.
+ * Balance values are `bigint`s in each coin's smallest unit. These methods do
+ * not accept an `AbortSignal`, so callers cannot cancel their requests through
+ * this class. Coin types are passed to the endpoint without local validation.
+ * If neither `network` nor `baseUrl` is configured, a request rejects with an
+ * `AftermathTransportError` whose `kind` is `"network"`.
  */
 export class Wallet extends Caller {
 	/**
-	 * Creates a new `Wallet` instance for a specific address.
+	 * Creates a wallet service for a specific Sui address.
 	 *
-	 * @param address - The Sui address for this wallet (e.g., "0x<address>").
-	 * @param config - An optional caller configuration including network and authentication.
-	 * @param api - An optional `AftermathApi` instance for wallet-specific methods.
+	 * @param address - The Sui address string whose balances and transaction history
+	 * to query. The address is passed to the API as `walletAddress` and is not
+	 * validated or normalized by this constructor.
+	 * @param config - Optional HTTP caller configuration. Set `network` or `baseUrl`
+	 * to select the API host. Set `accessToken` to send a bearer token.
+	 * @param api - Optional low-level `AftermathApi` instance associated with the
+	 * wallet. The current methods use the HTTP API configured by `config`.
+	 *
+	 * @example
+	 * ```typescript
+	 * import { Aftermath } from "aftermath-ts-sdk";
+	 *
+	 * const sdk = await Aftermath.create({ network: "MAINNET" });
+	 * const wallet = sdk.Wallet(
+	 * 	"0x00000000000000000000000000000000000000000000000000000000000000aa"
+	 * );
+	 * ```
 	 */
 	constructor(
+		/** The Sui address whose balances and history this instance queries. */
 		public readonly address: SuiAddress,
 		config?: CallerConfig,
+		/** The optional low-level API provider associated with this wallet. */
 		public readonly api?: AftermathApi
 	) {
 		super(config, "wallet");
@@ -35,20 +57,33 @@ export class Wallet extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the balance for a single coin type in this wallet.
+	 * Fetches one coin balance for this wallet.
 	 *
-	 * @param inputs - An object containing the `coin` type to look up (e.g., "0x2::sui::SUI").
-	 * @returns A promise that resolves to the coin balance as a bigint.
+	 * This method sends the request `{ coins: [inputs.coin], walletAddress: address }`
+	 * to the wallet balance endpoint and returns the first balance in the response.
+	 * The balance is a `bigint` in the coin's smallest unit, such as MIST for SUI.
+	 *
+	 * This method does not accept an `AbortSignal`.
+	 *
+	 * @param inputs - The balance request.
+	 * @param inputs.coin - The Sui coin type to query, such as
+	 * `"0x2::sui::SUI"`.
+	 * @returns The requested coin balance in its smallest unit.
+	 * @throws `AftermathTransportError` when the HTTP request fails or its response
+	 * cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
+	 * import { Aftermath } from "aftermath-ts-sdk";
 	 *
 	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 *
-	 * const wallet = afSdk.Wallet("0x<address>");
+	 * const wallet = afSdk.Wallet(
+	 * 	"0x00000000000000000000000000000000000000000000000000000000000000aa"
+	 * );
 	 *
 	 * const suiBalance = await wallet.getBalance({ coin: "0x2::sui::SUI" });
-	 * console.log("SUI Balance:", suiBalance.toString());
+	 * console.log("SUI balance in MIST:", suiBalance.toString());
 	 * ```
 	 */
 	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
@@ -56,18 +91,34 @@ export class Wallet extends Caller {
 	}
 
 	/**
-	 * Fetches the balances for multiple specified coin types in this wallet.
-	 * This method currently returns an array of balances in the same order
-	 * as the requested coins.
+	 * Fetches balances for the requested coin types.
 	 *
-	 * @param inputs - An object containing an array of `coins` (coin types).
-	 * @returns A promise resolving to an array of `Balance`s, each matching the corresponding coin in `inputs.coins`.
+	 * This method sends `{ coins, walletAddress: address }` as a JSON POST body to
+	 * the wallet balance endpoint. The API returns one `bigint` balance per coin in
+	 * the same order as `inputs.coins`, with each value in the coin's smallest unit.
+	 *
+	 * This method does not accept an `AbortSignal`.
+	 *
+	 * @param inputs - The balance request.
+	 * @param inputs.coins - The Sui coin types to query, such as
+	 * `["0x2::sui::SUI"]`.
+	 * @returns The balances in the request order. Each balance is a `bigint` in
+	 * the corresponding coin's smallest unit.
+	 * @throws `AftermathTransportError` when the HTTP request fails or its response
+	 * cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
-	 * const wallet = new Wallet("0x<address>");
-	 * const balances = await wallet.getBalances({ coins: ["0x2::sui::SUI", "0x<...>"] });
-	 * console.log(balances); // e.g. [1000000000n, 50000000000n]
+	 * import { Aftermath } from "aftermath-ts-sdk";
+	 *
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
+	 * const wallet = afSdk.Wallet(
+	 * 	"0x00000000000000000000000000000000000000000000000000000000000000aa"
+	 * );
+	 * const balances = await wallet.getBalances({
+	 * 	coins: ["0x2::sui::SUI"],
+	 * });
+	 * console.log(balances); // e.g. [1000000000n]
 	 * ```
 	 */
 	public async getBalances(inputs: { coins: CoinType[] }): Promise<Balance[]> {
@@ -78,16 +129,28 @@ export class Wallet extends Caller {
 	}
 
 	/**
-	 * Fetches all coin balances held by this wallet address, returning a record
-	 * keyed by coin type.
+	 * Fetches every coin balance held by this wallet address.
 	 *
-	 * @returns A promise resolving to an object mapping coin types to balances (bigints).
+	 * This method sends `{ walletAddress: address }` as a JSON POST body to the
+	 * wallet balance endpoint. The response is a record keyed by the coin types
+	 * returned by the API. Each value is a `bigint` in that coin's smallest unit.
+	 *
+	 * This method does not accept an `AbortSignal`.
+	 *
+	 * @returns A record mapping returned coin types to balances in smallest units.
+	 * @throws `AftermathTransportError` when the HTTP request fails or its response
+	 * cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
-	 * const wallet = new Wallet("0x<address>");
+	 * import { Aftermath } from "aftermath-ts-sdk";
+	 *
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
+	 * const wallet = afSdk.Wallet(
+	 * 	"0x00000000000000000000000000000000000000000000000000000000000000aa"
+	 * );
 	 * const allBalances = await wallet.getAllBalances();
-	 * console.log(allBalances); // { "0x2::sui::SUI": 1000000000n, "0x<other_coin>": 5000000000n, ... }
+	 * console.log(allBalances);
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
@@ -101,15 +164,30 @@ export class Wallet extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches a paginated list of past transactions for this wallet address.
+	 * Fetches a page of transactions sent from this wallet address.
 	 *
-	 * @param inputs - An object implementing `ApiTransactionsBody`, which includes pagination parameters (`cursor`, `limit`) and an optional `order` or other fields.
-	 * @returns A promise that resolves to transaction details, including a cursor if more results exist.
+	 * This method sends `{ ...inputs, walletAddress: address }` as a JSON POST body
+	 * to the wallet transaction-history endpoint. The `cursor` and `limit` values
+	 * control pagination. The returned `nextCursor` is `null` when the response has
+	 * no more transactions.
+	 *
+	 * This method does not accept an `AbortSignal`.
+	 *
+	 * @param inputs - Pagination options.
+	 * @returns The transaction page and its next transaction digest, if another
+	 * page exists.
+	 * @throws `AftermathTransportError` when the HTTP request fails or its response
+	 * cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
-	 * const wallet = new Wallet("0x<address>");
-	 * const txHistory = await wallet.getPastTransactions({ cursor: "abc123", limit: 10 });
+	 * import { Aftermath } from "aftermath-ts-sdk";
+	 *
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
+	 * const wallet = afSdk.Wallet(
+	 * 	"0x00000000000000000000000000000000000000000000000000000000000000aa"
+	 * );
+	 * const txHistory = await wallet.getPastTransactions({ limit: 10 });
 	 * console.log(txHistory.transactions, txHistory.nextCursor);
 	 * ```
 	 */

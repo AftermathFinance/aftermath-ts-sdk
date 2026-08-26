@@ -2,33 +2,40 @@ import type { Byte, IFixed } from "../types";
 import { Casting } from "./casting";
 
 /**
- * The `IFixedUtils` class provides support for signed 18-decimal fixed math,
- * referred to as "IFixed" in the Aftermath codebase. An `IFixed` value
- * is a bigint that includes sign bit manipulation.
+ * Provides conversions for signed 18-decimal IFixed values.
+ *
+ * IFixed stores the magnitude in a bigint and uses bit `255` as its negative
+ * sign bit. The class does not validate that inputs fit a particular serialized
+ * width; it applies this sign-bit convention to the supplied bigint.
  */
 export class IFixedUtils {
 	/**
-	 * The representation of 1.0 in the IFixed format, i.e. 1e18.
+	 * The exact IFixed representation of `1.0`, `1000000000000000000n`.
 	 */
 	public static readonly ONE: IFixed = BigInt(1_000_000_000_000_000_000);
 
 	/**
-	 * The greatest bit in a 256-bit representation. This is used to indicate negative values in some approaches.
+	 * Bit `255`, used as the negative sign bit in the 256-bit IFixed encoding.
 	 */
 	public static readonly GREATEST_BIT: IFixed = BigInt(1) << BigInt(255);
 
 	/**
-	 * A mask that can be used to flip or remove the greatest bit in a 256-bit number.
+	 * A mask containing every bit below bit `255`.
+	 *
+	 * `neg` uses this value while flipping the IFixed sign bit.
 	 */
 	public static readonly NOT_GREATEST_BIT: IFixed =
 		(BigInt(1) << BigInt(255)) - BigInt(1);
 
 	/**
-	 * Converts an IFixed bigint into a floating-point number, extracting both the integer
-	 * and decimal portions. For negative values, the sign bit is checked and value is negated.
+	 * Converts an IFixed bigint to a JavaScript number.
 	 *
-	 * @param value - The IFixed value (signed 18-decimal) as a bigint.
-	 * @returns A standard JavaScript number with fractional parts intact.
+	 * The method reads bit `255` as the sign, divides the magnitude by `ONE`, and
+	 * adds the integer and fractional parts. The final number can lose precision
+	 * when the magnitude is larger than JavaScript can represent exactly.
+	 *
+	 * @param value - The signed 18-decimal IFixed value.
+	 * @returns The decoded local number.
 	 */
 	public static numberFromIFixed = (value: IFixed): number => {
 		const absVal = this.abs(value);
@@ -38,11 +45,15 @@ export class IFixedUtils {
 	};
 
 	/**
-	 * Converts a floating-point number into an IFixed bigint with 18 decimals of precision.
-	 * Negative numbers have the sign bit set.
+	 * Converts a JavaScript number to an 18-decimal IFixed bigint.
 	 *
-	 * @param value - The JavaScript number to convert.
-	 * @returns The resulting IFixed bigint in on-chain-compatible format.
+	 * The absolute value is multiplied by `ONE` and floored. Negative inputs then
+	 * receive the IFixed sign-bit encoding through `neg`. JavaScript number
+	 * precision applies before the floor.
+	 *
+	 * @param value - The local number to encode.
+	 * @returns The signed IFixed representation.
+	 * @throws `RangeError` when the scaled value is not finite.
 	 */
 	public static iFixedFromNumber = (value: number): IFixed => {
 		const newValue = BigInt(Math.floor(Math.abs(value) * Number(this.ONE)));
@@ -53,11 +64,13 @@ export class IFixedUtils {
 	};
 
 	/**
-	 * Returns the absolute value of an IFixed number. If the value is negative,
-	 * it's converted to its positive counterpart by flipping bits.
+	 * Removes the IFixed sign bit from a value's mathematical magnitude.
 	 *
-	 * @param value - The signed IFixed number as a bigint.
-	 * @returns The absolute value in IFixed.
+	 * Values greater than or equal to `GREATEST_BIT` are treated as negative and
+	 * passed through `neg`; all other values are returned unchanged.
+	 *
+	 * @param value - The IFixed value to inspect.
+	 * @returns The non-negative magnitude under the IFixed convention.
 	 */
 	public static abs = (value: IFixed): IFixed => {
 		if (value >= this.GREATEST_BIT) {
@@ -67,13 +80,13 @@ export class IFixedUtils {
 	};
 
 	/**
-	 * Determines the sign of an IFixed number.
-	 * - If >= GREATEST_BIT, it's negative (-1).
-	 * - If exactly 0, sign is 0.
-	 * - Otherwise, sign is +1.
+	 * Returns the mathematical sign under the IFixed sign-bit convention.
 	 *
-	 * @param value - The IFixed number to check.
-	 * @returns `-1`, `0`, or `1` based on the sign.
+	 * Values greater than or equal to `GREATEST_BIT` return `-1`. Zero returns
+	 * `0`. All other values return `1`.
+	 *
+	 * @param value - The IFixed value to inspect.
+	 * @returns `-1`, `0`, or `1`.
 	 */
 	public static sign = (value: IFixed): number => {
 		if (value >= this.GREATEST_BIT) {
@@ -86,32 +99,45 @@ export class IFixedUtils {
 	};
 
 	/**
-	 * Negates an IFixed number by flipping bits. This effectively does `-value` for the signed 18-dec representation.
+	 * Negates an IFixed value in the sign-bit encoding.
 	 *
-	 * @param value - The IFixed number to negate.
-	 * @returns The negated IFixed number as a bigint.
+	 * The operation flips the lower 255 bits, adds one, and flips bit `255`. It
+	 * returns `0n` for `0n` and is an involution for values represented by this
+	 * encoding.
+	 *
+	 * @param value - The IFixed value to negate.
+	 * @returns The negated IFixed value.
 	 */
 	public static neg = (value: IFixed): IFixed => {
 		return ((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^ this.GREATEST_BIT;
 	};
 
 	/**
-	 * Constructs an IFixed number from an array of bytes in little-endian format.
-	 * The sign bit might be set if the top bit is `1`.
+	 * Converts little-endian bytes to an IFixed bigint.
 	 *
-	 * @param bytes - The byte array representing the IFixed number.
-	 * @returns The IFixed bigint.
+	 * The method delegates to `Casting.bigIntFromBytes`, so the byte order is
+	 * little-endian and the input array is reversed in place. The resulting bigint
+	 * is not sign-decoded; bit `255` is interpreted only when another IFixed
+	 * method reads it.
+	 *
+	 * @param bytes - The little-endian IFixed bytes.
+	 * @returns The encoded IFixed bigint.
+	 * @throws When the byte array is empty or cannot be converted to a bigint.
 	 */
 	public static iFixedFromBytes = (bytes: Byte[]): IFixed => {
 		return Casting.bigIntFromBytes(bytes);
 	};
 
 	/**
-	 * Constructs an IFixed number from an array of stringified bytes,
-	 * each representing a decimal numeric value (e.g., `"255"`, `"0"`).
+	 * Converts decimal byte strings to an IFixed bigint.
 	 *
-	 * @param bytes - An array of string bytes.
-	 * @returns The IFixed bigint.
+	 * Each string is first converted with `Casting.bytesFromStringBytes`, then the
+	 * resulting byte array follows the little-endian and mutation behavior of
+	 * `iFixedFromBytes`.
+	 *
+	 * @param bytes - Decimal strings such as `"255"` and `"0"`.
+	 * @returns The encoded IFixed bigint.
+	 * @throws When conversion or bigint construction fails.
 	 */
 	public static iFixedFromStringBytes = (bytes: string[]): IFixed => {
 		return this.iFixedFromBytes(Casting.bytesFromStringBytes(bytes));

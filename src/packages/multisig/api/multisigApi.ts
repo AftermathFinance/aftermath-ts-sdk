@@ -4,17 +4,30 @@ import type { AftermathApi } from "../../../general/providers/aftermathApi";
 import type { SharedCustodyAddresses } from "../../../types";
 import type { ApiMultisigUserBody, MultisigData } from "../multisigTypes";
 
+/**
+ * Derives the Aftermath shared-custody multisig key for a user's Ed25519 key.
+ *
+ * The derivation is local. This class does not make network requests or sign
+ * transactions.
+ */
 export class MultisigApi {
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
 
+	/** Shared-custody address and base64-encoded Ed25519 public key from the provider. */
 	readonly sharedCustodyAddresses: SharedCustodyAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates a multisig derivation helper from a configured `AftermathApi`.
+	 *
+	 * @param api - Provider containing the shared-custody public key.
+	 * @throws `Error` when shared-custody addresses are not configured.
+	 */
 	constructor(private readonly api: AftermathApi) {
 		const sharedCustodyAddresses = this.api.addresses.sharedCustody;
 		if (!sharedCustodyAddresses) {
@@ -28,6 +41,20 @@ export class MultisigApi {
 	//  Fetch
 	// =========================================================================
 
+	/**
+	 * Derives a deterministic 1-of-2 Sui multisig from the shared-custody key
+	 * and the user's Ed25519 public key.
+	 *
+	 * Each key has weight `1`, and either key can authorize the multisig because
+	 * the threshold is `1`. The user key may be 32 raw Ed25519 bytes or 33 bytes
+	 * with the leading Sui Ed25519 scheme flag. The configured shared-custody
+	 * key is base64 encoded and includes its scheme flag, which this method strips
+	 * before constructing the key.
+	 *
+	 * @param inputs - User public key bytes in raw or Sui scheme-flagged format.
+	 * @returns The derived `MultiSigPublicKey` and its corresponding Sui address.
+	 * @throws `Error` when either public key is missing or has an invalid length.
+	 */
 	getMultisigForUser(inputs: ApiMultisigUserBody): MultisigData {
 		const afPublicKeyBuffer = Buffer.from(
 			this.sharedCustodyAddresses.publicKey || "",

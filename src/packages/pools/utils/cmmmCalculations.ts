@@ -51,17 +51,42 @@ import type {
 
 // To see these functions/equations in action check out https://www.desmos.com/calculator/eu5mfckuk9
 
+/**
+ * Implements the pool invariant and local swap, liquidity, and validity math.
+ *
+ * The formulas mirror the pool Move package. This implementation uses
+ * JavaScript `number` values internally, so it is useful for estimates and
+ * input validation but can differ from on-chain results at large values or
+ * near rounding boundaries. Coin amounts in the public methods use smallest
+ * units. Pool weights, fees, balances, and fixed ratios use the pool's fixed
+ * scalars unless a parameter is documented as a decimal `number`.
+ *
+ * @example
+ * ```typescript
+ * const amountOut = CmmmCalculations.calcOutGivenIn(
+ * 	pool,
+ * 	"0x2::sui::SUI",
+ * 	"0x<package>::coin::USDC",
+ * 	1_000_000_000n,
+ * );
+ * ```
+ */
 export class CmmmCalculations {
 	private static maxNewtonAttempts: LocalNumber = 255;
 	private static convergenceBound: LocalNumber = 0.000_000_001;
 	private static tolerance: LocalNumber = 0.000_000_000_000_1;
 	private static validityTolerance: LocalNumber = 0.000_001;
 
-	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
-	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
-	// Invariant and pool lp are almost in 1:1 correspondence -- e.g. burning lp in a withdraw proportionally lowers the pool invariant.
-	// The difference is as swap fees are absorbed they increase the invariant without incrasing total lp, increasing lp worth.
-	// Every pool operation either explicitly or implicity calls this function.
+	/**
+	 * Calculates the pool invariant from normalized balances, weights, and flatness.
+	 *
+	 * Swaps preserve this value before fees. Liquidity changes alter it and are
+	 * therefore related to LP value. The result is a local floating-point value,
+	 * not an on-chain fixed-point integer.
+	 *
+	 * @param pool - The pool state containing normalized balances and fixed-point parameters.
+	 * @returns The invariant in normalized decimal units.
+	 */
 	public static calcInvariant = (pool: PoolObject): number => {
 		const flatness = FixedUtils.directCast(pool.flatness);
 
@@ -83,8 +108,17 @@ export class CmmmCalculations {
 		return this.calcInvariantQuadratic(prod, sum, flatness);
 	};
 
-	// The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
-	// h = [sqrt[p * (p * (A*A + 4*(1-A)) + 8*A*s)] - A*p] / 2.
+	/**
+	 * Solves the invariant's quadratic equation for a weighted product and sum.
+	 *
+	 * Pass decimal values produced by `FixedUtils.directCast`, not raw on-chain
+	 * fixed-point integers.
+	 *
+	 * @param prod - The weighted product of normalized balances.
+	 * @param sum - The weighted sum of normalized balances.
+	 * @param flatness - The decimal flatness value in the inclusive range `0` to `1`.
+	 * @returns The invariant solution `h`.
+	 */
 	public static calcInvariantQuadratic = (
 		prod: number,
 		sum: number,
@@ -97,14 +131,16 @@ export class CmmmCalculations {
 			flatness * prod) /
 		2;
 
-	// This function is used for 1d optimization. It computes the full invariant components and their
-	// portions which omit contribution from the balance in the `index` coordinate.
-	// It returns (prod, sum, p0, s0, h) where:
-	// prod = b1^w1 * ... * bn^wn
-	// sum = w1*b1 + ... + wn*bn
-	// p0 = b1^w1 * ... * [bi^w1] * ... * bn^wn (remove bi from prod)
-	// s0 = w1*b1 + ... + [wi*bi] + ... + wn*bn (remove bi from sum)
-	// h is the invariant
+	/**
+	 * Returns invariant components with one coin removed for one-dimensional math.
+	 *
+	 * The tuple is `[prod, sum, p0, s0, h]`. `prod` and `sum` include every
+	 * coin. `p0` and `s0` omit `index`. `h` is the full pool invariant.
+	 *
+	 * @param pool - The pool state used for the calculation.
+	 * @param index - The coin type whose contribution `p0` and `s0` omit.
+	 * @returns The weighted product, weighted sum, reduced product, reduced sum, and invariant.
+	 */
 	public static calcInvariantComponents = (
 		pool: PoolObject,
 		index: CoinType
@@ -146,7 +182,18 @@ export class CmmmCalculations {
 		];
 	};
 
-	// spot price is given in units of Bin / Bout
+	/**
+	 * Calculates the fee-free spot price from one pool coin to another.
+	 *
+	 * The result is the normalized `coinIn` amount per normalized `coinOut`
+	 * amount. `Pool.getSpotPrice` applies decimal scalars when it exposes this
+	 * value to callers.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param coinTypeIn - The input coin type.
+	 * @param coinTypeOut - The output coin type.
+	 * @returns The fee-free normalized spot-price ratio.
+	 */
 	public static calcSpotPrice = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -154,7 +201,18 @@ export class CmmmCalculations {
 	): number =>
 		CmmmCalculations.calcSpotPriceWithFees(pool, coinTypeIn, coinTypeOut, true);
 
-	// spot price is given in units of Bin / Bout
+	/**
+	 * Calculates a spot price with optional pool fee terms.
+	 *
+	 * The result is the normalized `coinIn` amount per normalized `coinOut`
+	 * amount. Set `ignoreFees` to `true` to omit swap and DAO fee terms.
+	 *
+	 * @param pool - The pool state used for the invariant and fee metadata.
+	 * @param coinTypeIn - The input coin type.
+	 * @param coinTypeOut - The output coin type.
+	 * @param ignoreFees - Whether to omit the fee terms. The default is `false`.
+	 * @returns The normalized spot-price ratio.
+	 */
 	public static calcSpotPriceWithFees = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -221,7 +279,20 @@ export class CmmmCalculations {
 		return (invarnt * invarnt) / prod + ac * prod;
 	};
 
-	// 1d optimized swap function for finding out given in. Returns the amount out.
+	/**
+	 * Calculates the exact output for a one-dimensional exact-input swap.
+	 *
+	 * `amountIn` and the return value use the respective coin's smallest unit.
+	 * The calculation applies the pool's input and output swap fees. Protocol and
+	 * DAO fees are applied by the higher-level `Pool` wrapper, not here.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param coinTypeIn - The coin type entering the pool.
+	 * @param coinTypeOut - The coin type leaving the pool.
+	 * @param amountIn - The input amount in `coinTypeIn` smallest units.
+	 * @returns The output amount in `coinTypeOut` smallest units. Returns `0n` when either swap fee disables the pair.
+	 * @throws `Error` when the coin types match or the calculated swap is invalid.
+	 */
 	public static calcOutGivenIn = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -290,7 +361,20 @@ export class CmmmCalculations {
 		return amountOut;
 	};
 
-	// 1d optimized swap function for finding in given out. Returns the amount in.
+	/**
+	 * Calculates the exact input for a one-dimensional exact-output swap.
+	 *
+	 * `amountOut` and the return value use the respective coin's smallest unit.
+	 * The calculation applies the pool's input and output swap fees. Protocol and
+	 * DAO fees are applied by the higher-level `Pool` wrapper.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param coinTypeIn - The coin type entering the pool.
+	 * @param coinTypeOut - The coin type leaving the pool.
+	 * @param amountOut - The required output in `coinTypeOut` smallest units.
+	 * @returns The input amount in `coinTypeIn` smallest units.
+	 * @throws `Error` when the coin types match, the swap is disabled for a non-zero output, or the calculated swap is invalid.
+	 */
 	public static calcInGivenOut = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -362,10 +446,20 @@ export class CmmmCalculations {
 		return amountIn;
 	};
 
-	// For computing swap amounts. Given the current balances (and any other parameters) and an amounts in vector,
-	// and a expected amounts out vector, determine the value of t > 0 such that t*expected_amounts_out
-	// is a valid swap from balances corresponding to adding amounts_in to the pool. The correct value of t is the one for which
-	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) === calc_invariant_full(balances, ...parameters).
+	/**
+	 * Solves a vector swap with fixed inputs and a proportional output direction.
+	 *
+	 * The return value is an on-chain fixed-point scalar `t`. Multiply each value
+	 * in `amountsOutDirection` by `t` to get the output vector. Amount maps use
+	 * each coin's smallest unit, and `1_000_000_000_000_000_000n` represents
+	 * `t = 1`.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsIn - Input amounts keyed by coin type, in smallest units.
+	 * @param amountsOutDirection - Non-zero output direction amounts, in smallest units.
+	 * @returns The fixed-point scalar for the output direction.
+	 * @throws `Error` when a requested coin is disabled, the vector is invalid, or Newton iteration diverges.
+	 */
 	public static calcSwapFixedIn = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -502,8 +596,20 @@ export class CmmmCalculations {
 		throw new Error("Newton diverged");
 	};
 
-	// Swaps but fixed amounts out. Given the pool's current state and a guaranteed out vector, and a expected in vector,
-	// scale expected_amounts_in by t > 0 so that this swap is valid and return the correct value for t
+	/**
+	 * Solves a vector swap with fixed outputs and a proportional input direction.
+	 *
+	 * The return value is an on-chain fixed-point scalar `t`. Multiply each value
+	 * in `amountsInDirection` by `t` to get the input vector. Amount maps use
+	 * each coin's smallest unit, and `1_000_000_000_000_000_000n` represents
+	 * `t = 1`.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsInDirection - Non-zero input direction amounts, in smallest units.
+	 * @param amountsOut - Fixed output amounts keyed by coin type, in smallest units.
+	 * @returns The fixed-point scalar for the input direction.
+	 * @throws `Error` when an output coin is disabled, the vector is invalid, or Newton iteration diverges.
+	 */
 	public static calcSwapFixedOut = (
 		pool: PoolObject,
 		amountsInDirection: CoinsToBalance,
@@ -603,7 +709,19 @@ export class CmmmCalculations {
 		throw new Error("Newton diverged");
 	};
 
-	// Return the expected lp ratio for this deposit
+	/**
+	 * Calculates the LP ratio produced by a fixed-amount liquidity deposit.
+	 *
+	 * The result is an on-chain fixed-point ratio. `1_000_000_000_000_000_000n`
+	 * represents a ratio of `1`. `Pool.getDepositLpAmountOut` converts this ratio
+	 * to a decimal and derives the minted LP amount from the current supply.
+	 * Amounts use each coin's smallest unit.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsIn - Deposit amounts keyed by coin type, in smallest units.
+	 * @returns The fixed-point LP ratio.
+	 * @throws `Error` when the calculated deposit fails invariant validation or Newton iteration diverges.
+	 */
 	public static calcDepositFixedAmounts = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
@@ -795,7 +913,20 @@ export class CmmmCalculations {
 		return r;
 	};
 
-	// Return the expected amounts out for this withdrawal
+	/**
+	 * Calculates output amounts for a fixed LP withdrawal direction.
+	 *
+	 * `lpRatio` is the fraction of the original pool balance retained after the
+	 * withdrawal. For example, `0.9` means that 10% of the LP position is burned.
+	 * Non-zero entries in `amountsOutDirection` define the output direction. The
+	 * returned map contains scaled smallest-unit amounts for every pool coin.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsOutDirection - Desired output direction keyed by coin type, in smallest units.
+	 * @param lpRatio - Decimal fraction of the pool retained after the withdrawal.
+	 * @returns Output amounts keyed by pool coin type, in smallest units.
+	 * @throws `Error` when the requested direction drains a coin, fails validation, or Newton iteration diverges.
+	 */
 	public static calcWithdrawFlpAmountsOut = (
 		pool: PoolObject,
 		amountsOutDirection: CoinsToBalance,
@@ -1060,10 +1191,18 @@ export class CmmmCalculations {
 		return [t, tDrain];
 	};
 
-	// Dusty direct all-coin deposit, returns the number s >= 0 so that amounts_in = s*B0 + dust.
-	// When performing an all-coin deposit, call this function to get t then split amounts_in into s*B0 + dust.
-	// At least one coordinate of dust will be 0. Send the s*B0 balances into the pool and mint s*total_lp.
-	// The caller keeps the dust.
+	/**
+	 * Scales a requested all-coin deposit by its smallest normalized proportion.
+	 *
+	 * The result keeps the input map's keys and multiplies every requested amount
+	 * by the smallest `amount / pool balance` ratio. This produces the
+	 * proportional, dust-free portion used by the direct all-coin deposit path.
+	 * Amounts use smallest units. The helper does not build a transaction.
+	 *
+	 * @param pool - The pool state supplying balances and decimal scalars.
+	 * @param amountsIn - Requested deposit amounts keyed by coin type.
+	 * @returns The proportional deposit amounts keyed by the same coin types.
+	 */
 	public static calcAllCoinDeposit = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
@@ -1099,11 +1238,18 @@ export class CmmmCalculations {
 		return returner;
 	};
 
-	// Dusty direct all-coin withdraw, returns the number s >= 0 so that amounts_out + dust = s*B0.
-	// The normal all-coin withdraw (take this exact amount of lp and give however much balances out)
-	// should be done directly without this function -- just burn the lp and give the user
-	// lp/total_lp * balance_i in each coordinate. This function is for finding how much lp it takes to
-	// ensure that at least amounts_out comes out.
+	/**
+	 * Scales a requested all-coin withdrawal by its largest normalized proportion.
+	 *
+	 * The result keeps the input map's keys and multiplies every requested amount
+	 * by the largest `amount / pool balance` ratio. This produces a proportional
+	 * vector that covers the requested direction. It does not build a transaction
+	 * or apply protocol and DAO fees.
+	 *
+	 * @param pool - The pool state supplying balances and decimal scalars.
+	 * @param amountsOut - Requested output amounts keyed by coin type.
+	 * @returns The proportionally scaled output amounts keyed by the same coin types.
+	 */
 	public static calcAllCoinWithdraw = (
 		pool: PoolObject,
 		amountsOut: CoinsToBalance
@@ -1246,10 +1392,21 @@ export class CmmmCalculations {
 		throw new Error("Newton diverged");
 	};
 
-	// Compute the invariant before swap and pseudoinvariant (invariant considering fees)
-	// after the swap and see if they are the same up to a tolerance.
-	// It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
-	// The scalars are here to avoid unnecessary vector creation. In most calls one scalar will be 10^18 (1).
+	/**
+	 * Checks a vector swap against pool balance, fee, and invariant constraints.
+	 *
+	 * The two scalar parameters allow callers to reuse direction vectors. A scalar
+	 * of `1` applies the vector as supplied. The method rejects a coin that is both
+	 * input and output, rejects a drained balance, and checks the fee-adjusted
+	 * invariant within the implementation tolerances.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsIn - Input direction amounts in smallest units.
+	 * @param amountsInScalar - Decimal scalar applied to `amountsIn`.
+	 * @param amountsOut - Output direction amounts in smallest units.
+	 * @param amountsOutScalar - Decimal scalar applied to `amountsOut`.
+	 * @returns `true` when the scaled swap is valid. Returns `false` for an invalid vector or balance.
+	 */
 	public static checkValidSwap = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -1354,9 +1511,19 @@ export class CmmmCalculations {
 		);
 	};
 
-	// Compute the invariant before swap and pseudoinvariant (invariant considering fees)
-	// after the swap and see if they are the same up to a tolerance.
-	// It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
+	/**
+	 * Checks a one-input, one-output swap against pool constraints.
+	 *
+	 * Amounts use the input and output coins' smallest units. This helper returns
+	 * `false` for equal coin types, drained balances, or an invariant mismatch.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param coinTypeIn - The input coin type.
+	 * @param coinTypeOut - The output coin type.
+	 * @param amountInB - The input amount in smallest units.
+	 * @param amountOutB - The output amount in smallest units.
+	 * @returns `true` when the swap is valid within the math tolerances.
+	 */
 	public static checkValid1dSwap = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -1474,8 +1641,18 @@ export class CmmmCalculations {
 		);
 	};
 
-	// A fixed amount investment is a swap followed by an all coin investment. This function checks that the
-	// intermediate swap is allowed and corresponds to the claimed lp ratio.
+	/**
+	 * Checks a fixed-amount deposit and its claimed LP ratio.
+	 *
+	 * `lpRatioRaw` is an on-chain fixed-point ratio. `1_000_000_000_000_000_000n`
+	 * represents `1`. The check models the intermediate swap and all-coin
+	 * investment used by the pool contract.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsIn - Deposit amounts keyed by coin type, in smallest units.
+	 * @param lpRatioRaw - Claimed LP ratio in on-chain fixed-point units.
+	 * @returns `true` when the deposit and ratio satisfy pool constraints.
+	 */
 	public static checkValidDeposit = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -1580,8 +1757,18 @@ export class CmmmCalculations {
 		);
 	};
 
-	// A fixed lp withdraw is an all coin withdraw followed by a swap.
-	// This function checks that the swap is valid.
+	/**
+	 * Checks a fixed LP withdrawal and its output direction.
+	 *
+	 * `lpRatio` is the decimal fraction of the pool balance retained before the
+	 * final swap. Amounts use smallest units. The check rejects ratios above `1`,
+	 * overdrawn balances, and fee-adjusted invariant mismatches.
+	 *
+	 * @param pool - The pool state used for the invariant.
+	 * @param amountsOutSrc - Requested output direction keyed by coin type.
+	 * @param lpRatio - Decimal fraction of the pool retained after the proportional withdrawal.
+	 * @returns `true` when the withdrawal is valid within the math tolerances.
+	 */
 	public static checkValidWithdraw = (
 		pool: PoolObject,
 		amountsOutSrc: CoinsToBalance,
@@ -1692,7 +1879,18 @@ export class CmmmCalculations {
 		);
 	};
 
-	// get an estimate for outGivenIn based on the spot price
+	/**
+	 * Estimates exact-input output by multiplying the amount by the fee-aware spot price.
+	 *
+	 * This is a fast linear estimate. It does not solve the invariant and becomes
+	 * less accurate as the trade consumes more pool balance.
+	 *
+	 * @param pool - The pool state used for the spot price.
+	 * @param coinTypeIn - The input coin type.
+	 * @param coinTypeOut - The output coin type.
+	 * @param amountIn - The input amount in smallest units.
+	 * @returns The estimated output in smallest units.
+	 */
 	public static getEstimateOutGivenIn = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -1704,7 +1902,18 @@ export class CmmmCalculations {
 			amountIn
 		);
 
-	// get an estimate for inGivenOut based on the spot price
+	/**
+	 * Estimates exact-output cost by dividing the desired output by the fee-aware spot price.
+	 *
+	 * This is a fast linear estimate. It does not solve the invariant and becomes
+	 * less accurate as the requested output consumes more pool balance.
+	 *
+	 * @param pool - The pool state used for the spot price.
+	 * @param coinTypeIn - The input coin type.
+	 * @param coinTypeOut - The output coin type.
+	 * @param amountOut - The desired output amount in smallest units.
+	 * @returns The estimated input in smallest units.
+	 */
 	public static getEstimateInGivenOut = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -1716,8 +1925,18 @@ export class CmmmCalculations {
 			amountOut
 		);
 
-	// get an estimate for swapFixedIn using the spot prices
-	// returns t > 0 such that t*amountsOutDirection agrees with amountsIn wrt spot prices
+	/**
+	 * Estimates the fixed-input vector-swap scalar from the current spot prices.
+	 *
+	 * The return value is a decimal `number`, not an on-chain fixed-point scalar.
+	 * Multiply `amountsOutDirection` by it to get the linear output estimate.
+	 * Use `calcSwapFixedIn` when an invariant solve is required.
+	 *
+	 * @param pool - The pool state used for spot prices and fee metadata.
+	 * @param amountsIn - Input direction amounts in smallest units.
+	 * @param amountsOutDirection - Output direction amounts in smallest units.
+	 * @returns The decimal output-direction scalar estimate.
+	 */
 	public static getEstimateSwapFixedIn = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -1766,8 +1985,18 @@ export class CmmmCalculations {
 		return inDotGrad / outDotGrad;
 	};
 
-	// get an estimate for swapFixedOut using the spot prices
-	// returns t > 0 such that t*amountsInDirection agrees with amountsOut wrt spot prices
+	/**
+	 * Estimates the fixed-output vector-swap scalar from the current spot prices.
+	 *
+	 * The return value is a decimal `number`, not an on-chain fixed-point scalar.
+	 * Multiply `amountsInDirection` by it to get the linear input estimate.
+	 * Use `calcSwapFixedOut` when an invariant solve is required.
+	 *
+	 * @param pool - The pool state used for spot prices and fee metadata.
+	 * @param amountsInDirection - Input direction amounts in smallest units.
+	 * @param amountsOut - Fixed output amounts in smallest units.
+	 * @returns The decimal input-direction scalar estimate.
+	 */
 	public static getEstimateSwapFixedOut = (
 		pool: PoolObject,
 		amountsInDirection: CoinsToBalance,
@@ -1816,8 +2045,17 @@ export class CmmmCalculations {
 		return outDotGrad / inDotGrad;
 	};
 
-	// Calculate an estimate for lpRatio using the spot price (linear estiamtion)
-	// This estimation will be very good for small values in amountsIn
+	/**
+	 * Estimates the LP ratio for a fixed-amount deposit using a tangent-plane approximation.
+	 *
+	 * The return value is a decimal retained ratio. The approximation is most
+	 * accurate for small deposits. Use `calcDepositFixedAmounts` for the invariant
+	 * solve used by transaction preparation.
+	 *
+	 * @param pool - The pool state used for spot prices and fee metadata.
+	 * @param amountsIn - Deposit amounts keyed by coin type, in smallest units.
+	 * @returns The decimal LP ratio estimate.
+	 */
 	public static getEstimateDepositFixedAmounts = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
@@ -1881,9 +2119,19 @@ export class CmmmCalculations {
 		return d1 / d2;
 	};
 
-	// Calculate an estimate for amountsOut using the spot price (linear estiamtion)
-	// This estimation will be very good for lpRatios close to 1
-	// Since we still need the out vector for its direction we return t s.t. t*amountsOutDirection is the estimate.
+	/**
+	 * Estimates the output-direction scalar for a fixed LP withdrawal.
+	 *
+	 * The return value is a decimal `number`. Multiply `amountsOutDirection` by
+	 * it to get the estimated output vector. `lpRatio` is the decimal retained
+	 * pool ratio. The approximation is most accurate when `lpRatio` is close to
+	 * `1`. Use `calcWithdrawFlpAmountsOut` for the invariant solve.
+	 *
+	 * @param pool - The pool state used for spot prices and fee metadata.
+	 * @param amountsOutDirection - Output direction amounts in smallest units.
+	 * @param lpRatio - Decimal fraction of the pool retained after withdrawal.
+	 * @returns The decimal output-direction scalar estimate.
+	 */
 	public static getEstimateWithdrawFlpAmountsOut = (
 		pool: PoolObject,
 		amountsOutDirection: CoinsToBalance,

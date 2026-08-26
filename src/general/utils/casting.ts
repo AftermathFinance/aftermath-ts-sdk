@@ -15,9 +15,12 @@ import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 
 /**
- * A central utility class for casting and conversion routines across
- * different Aftermath modules. Provides both direct numeric transformations
- * (e.g., fixed-point arithmetic) and advanced BCS-based object deserialization.
+ * Provides local casting and conversion routines shared by the Aftermath
+ * modules.
+ *
+ * The class does not perform network I/O. Its methods convert numbers, bytes,
+ * addresses, and BCS object responses, while its module properties expose the
+ * package-specific caster namespaces.
  */
 export class Casting {
 	// =========================================================================
@@ -25,40 +28,40 @@ export class Casting {
 	// =========================================================================
 
 	/**
-	 * Casting utilities for pools-related data (AMM pools, liquidity, etc.).
+	 * The pools package's casting namespace for pool, coin, and pool-event shapes.
 	 */
 	public static pools = PoolsApiCasting;
 	/**
-	 * Casting utilities for SuiFrens-related data or objects.
+	 * The SuiFrens package's casting namespace for SuiFren objects and events.
 	 */
 	public static suiFrens = SuiFrensApiCasting;
 	/**
-	 * Casting utilities for faucet-related data, typically for devnet or testnet tokens.
+	 * The faucet package's casting namespace for faucet objects and events.
 	 */
 	public static faucet = FaucetApiCasting;
 	/**
-	 * Casting utilities for staking-related data (positions, pools, etc.).
+	 * The staking package's casting namespace for staking objects and events.
 	 */
 	public static staking = StakingApiCasting;
 
 	/**
-	 * Casting utilities for NFT AMM objects and events.
+	 * The NFT AMM package's casting namespace for NFT pool objects and events.
 	 */
 	public static nftAmm = NftAmmApiCasting;
 	/**
-	 * Casting utilities for router-based data, such as trade routes and DEX interactions.
+	 * The router package's casting namespace for routes and trade data.
 	 */
 	public static router = RouterApiCasting;
 	/**
-	 * Casting utilities for perpetuals/futures data.
+	 * The perpetuals package's casting namespace for market and position data.
 	 */
 	public static perpetuals = PerpetualsApiCasting;
 	/**
-	 * Casting utilities for farming data (yield farms, locked positions, etc.).
+	 * The farms package's casting namespace for farm objects and events.
 	 */
 	public static farms = FarmsApiCasting;
 	/**
-	 * Casting utilities for NFT structures and data retrieval logic.
+	 * The NFT package's casting namespace for NFT object and display data.
 	 */
 	public static nfts = NftsApiCasting;
 
@@ -67,21 +70,21 @@ export class Casting {
 	// =========================================================================
 
 	/**
-	 * Reference to the standard fixed-point arithmetic utilities (18 decimals).
+	 * The standard 18-decimal fixed-point utility class.
 	 */
 	public static Fixed = FixedUtils;
 	/**
-	 * Reference to the intermediate fixed type (signed 18 decimals).
+	 * The signed 18-decimal IFixed utility class.
 	 */
 	public static IFixed = IFixedUtils;
 
 	/**
-	 * The maximum unsigned 64-bit integer value as a bigint (0xFFFFFFFFFFFFFFFF).
+	 * The maximum value of an unsigned 64-bit integer, `18446744073709551615n`.
 	 */
 	public static u64MaxBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
 
 	/**
-	 * The maximum signed 64-bit integer value as a bigint.
+	 * The maximum value of a signed 64-bit integer, `9223372036854775807n`.
 	 */
 	public static i64MaxBigInt: bigint = BigInt("9223372036854775807");
 
@@ -94,32 +97,46 @@ export class Casting {
 	// =========================================================================
 
 	/**
-	 * Converts a floating-point number to a fixed bigint with 18 decimals.
-	 * For example, `1.23` => `1230000000000000000n` if we consider 18 decimals.
+	 * Converts a JavaScript number to an 18-decimal fixed-point bigint.
 	 *
-	 * @param a - The number to convert.
-	 * @returns A bigint representing the number in 18-decimal fixed format.
+	 * The method multiplies by `1e18`, applies `Math.floor`, and converts the
+	 * result to `bigint`. Flooring also applies to negative values, so negative
+	 * fractional scaled values round toward negative infinity. The conversion
+	 * inherits JavaScript number precision.
+	 *
+	 * @param a - The number to encode. Its scaled value must be finite; the result
+	 * is floored before conversion to `bigint`.
+	 * @returns The 18-decimal fixed-point representation as a `bigint`.
+	 * @throws `RangeError` when `a` is `NaN`, infinite, or produces an invalid
+	 * bigint conversion.
 	 */
 	public static numberToFixedBigInt = (a: number): bigint =>
 		BigInt(Math.floor(a * this.Fixed.fixedOneN));
 
 	/**
-	 * Converts an 18-decimal fixed bigint to a floating-point number.
-	 * For example, `1230000000000000000n` => `1.23`.
+	 * Converts an 18-decimal fixed-point bigint to a JavaScript number.
 	 *
-	 * @param a - The fixed bigint to convert.
-	 * @returns A floating-point representation of the 18-decimal fixed value.
+	 * The method divides by `1e18`. Large values can lose integer or fractional
+	 * precision when they pass through `Number`.
+	 *
+	 * @param a - The 18-decimal fixed-point value.
+	 * @returns The unscaled value as a JavaScript `number`.
 	 */
 	public static bigIntToFixedNumber = (a: bigint): number =>
 		Number(a) / this.Fixed.fixedOneN;
 
 	/**
-	 * Scales a bigint by a floating-point scalar. For instance, a scalar of 0.5
-	 * and a bigint of 100 => 50n.
+	 * Multiplies a bigint by a JavaScript number and returns a bigint.
 	 *
-	 * @param scalar - The floating-point multiplier (e.g., 0.5).
-	 * @param int - The bigint to be scaled.
-	 * @returns A bigint result after scaling.
+	 * The method first converts the bigint to `number`, multiplies by `scalar`,
+	 * applies `Math.floor`, and converts the result to `bigint`. Large bigint
+	 * inputs can lose precision during the `Number` conversion.
+	 *
+	 * @param scalar - The numeric multiplier.
+	 * @param int - The bigint to multiply.
+	 * @returns The floored product as a `bigint`.
+	 * @throws `RangeError` when the scaled number is not finite or cannot convert
+	 * to a `bigint`.
 	 */
 	public static scaleNumberByBigInt = (scalar: number, int: bigint): bigint =>
 		BigInt(Math.floor(scalar * Number(int)));
@@ -129,11 +146,13 @@ export class Casting {
 	// =========================================================================
 
 	/**
-	 * Converts a decimal percentage into basis points (bps), returned as a bigint.
-	 * For example, 0.05 => 500 bps.
+	 * Converts a decimal fraction to basis points.
 	 *
-	 * @param percentage - The decimal percentage to convert (e.g., 0.05 for 5%).
-	 * @returns A bigint representing basis points.
+	 * One basis point is `0.0001`, so `0.05` becomes `500n` and `1` becomes
+	 * `10000n`. The method rounds the product to the nearest integer basis point.
+	 *
+	 * @param percentage - The unscaled percentage fraction, where `0.05` means 5%.
+	 * @returns The rounded basis-point count as a `bigint`.
 	 */
 	public static percentageToBps(percentage: Percentage): bigint {
 		// Convert decimal percentage to basis points
@@ -143,11 +162,13 @@ export class Casting {
 	}
 
 	/**
-	 * Converts a bigint basis points value back to a decimal percentage.
-	 * For example, 500n => 0.05 (5%).
+	 * Converts basis points to an unscaled percentage fraction.
 	 *
-	 * @param bps - The bigint basis points to convert (e.g., 500n).
-	 * @returns The decimal percentage (0.05).
+	 * The method divides by `10000` after converting the bigint to `number`, so
+	 * very large basis-point values can lose precision.
+	 *
+	 * @param bps - The basis-point count, where `500n` means 5%.
+	 * @returns The unscaled percentage fraction.
 	 */
 	public static bpsToPercentage(bps: bigint): Percentage {
 		// Convert bigint basis points to number
@@ -162,20 +183,28 @@ export class Casting {
 	// =========================================================================
 
 	/**
-	 * Converts an array of bytes into a string by interpreting each byte as a character code.
+	 * Converts each byte to a JavaScript character code and joins the characters.
 	 *
-	 * @param bytes - An array of bytes to convert.
-	 * @returns The resulting ASCII string.
+	 * This is a character-code conversion, not UTF-8 decoding. The input array is
+	 * not mutated.
+	 *
+	 * @param bytes - The byte values to convert.
+	 * @returns The resulting string.
 	 */
 	public static stringFromBytes = (bytes: Byte[]) =>
 		String.fromCharCode.apply(null, bytes as any);
 
 	/**
-	 * Interprets an array of bytes as a little-endian hex string, converting
-	 * that string into a bigint. For example, `[0x01, 0x02]` => `0x0201` => `513n`.
+	 * Converts little-endian byte values to a bigint.
 	 *
-	 * @param bytes - An array of bytes.
-	 * @returns The resulting bigint from the hex.
+	 * For example, `[0x01, 0x02]` becomes `0x0201`, or `513n`. The method calls
+	 * `reverse()` on `bytes`, so it reverses the caller's array in place. It does
+	 * not interpret a sign bit.
+	 *
+	 * @param bytes - The little-endian byte values.
+	 * @returns The resulting unsigned bigint.
+	 * @throws `SyntaxError` or `RangeError` when the byte array cannot form a
+	 * valid bigint, including an empty array.
 	 */
 	public static bigIntFromBytes = (bytes: Byte[]) =>
 		BigInt(
@@ -187,21 +216,26 @@ export class Casting {
 		);
 
 	/**
-	 * Converts BCS-encoded address bytes into a SuiAddress (0x...) string,
-	 * preserving any needed leading zeroes.
+	 * Decodes a 32-byte BCS address into a zero-padded Sui address string.
 	 *
-	 * @param bytes - The address bytes in BCS-encoded form.
-	 * @returns A normalized Sui address string (e.g., "0x000123...").
+	 * @param bytes - The BCS address bytes in their on-chain order.
+	 * @returns A `0x`-prefixed address with 64 hexadecimal digits.
+	 * @throws When the BCS address bytes are malformed or are not 32 bytes long.
 	 */
 	public static addressFromBcsBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(bcs.Address.parse(new Uint8Array(bytes)));
 
 	/**
-	 * Converts an array of bytes directly to a Sui address string in "0x..." format,
-	 * adding any leading zeros if needed.
+	 * Converts byte values directly to a zero-padded Sui address string.
 	 *
-	 * @param bytes - The raw bytes for the address.
-	 * @returns A normalized Sui address.
+	 * Each byte is rendered as two hexadecimal digits, concatenated after `0x`,
+	 * and then left-padded to 64 hexadecimal digits. This method does not validate
+	 * that the input contains exactly 32 values.
+	 *
+	 * @param bytes - The raw address byte values.
+	 * @returns A `0x`-prefixed address with 64 hexadecimal digits when the input
+	 * fits within 32 bytes.
+	 * @throws When the rendered address is longer than 64 hexadecimal digits.
 	 */
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(
@@ -215,31 +249,42 @@ export class Casting {
 		);
 
 	/**
-	 * Converts an array of hex string bytes into a Sui address. Each element of
-	 * the array is a string representing a byte (e.g., `["255", "0", ...]`).
+	 * Converts decimal byte strings to a zero-padded Sui address.
 	 *
-	 * @param bytes - An array of stringified bytes to convert.
-	 * @returns A normalized Sui address.
+	 * Each string is passed to `Number` without a separate range check, then the
+	 * resulting values are handled by `addressFromBytes`.
+	 *
+	 * @param bytes - Decimal strings such as `"255"` and `"0"`.
+	 * @returns The string rendered by `addressFromBytes`; the helper does not
+	 * validate that the result is hexadecimal or contains exactly 32 bytes.
+	 * @throws When the rendered address is longer than 64 hexadecimal digits.
 	 */
 	public static addressFromStringBytes = (bytes: string[]): SuiAddress =>
 		this.addressFromBytes(this.bytesFromStringBytes(bytes));
 
 	/**
-	 * Converts an array of decimal-encoded string bytes (e.g., `["255", "0"]`)
-	 * into a numeric `Byte[]` array.
+	 * Converts decimal byte strings to JavaScript numbers.
 	 *
-	 * @param bytes - The string array representing decimal values.
-	 * @returns A numeric array of bytes.
+	 * The method calls `Number` for each string and does not validate the 0-255
+	 * byte range, so a non-numeric string produces `NaN`.
+	 *
+	 * @param bytes - The decimal strings to convert.
+	 * @returns A new numeric array with one value for each input string.
 	 */
 	public static bytesFromStringBytes = (bytes: string[]): Byte[] =>
 		bytes.map((byte) => Number(byte));
 
 	/**
-	 * Unwraps a deserialized "Option" type from the BCS, returning its contents
-	 * if present, or `undefined` if not.
+	 * Returns the value of a deserialized BCS `Option`'s `Some` property.
 	 *
-	 * @param deserializedData - The BCS-deserialized structure that might contain `{ Some: value }` or `{ None: true }`.
-	 * @returns The unwrapped data if present, or `undefined`.
+	 * Any object without a `Some` property, including a `{ None: ... }` value,
+	 * returns `undefined`. Falsy `Some` values, including `0`, `false`, `""`, and
+	 * `null`, are returned unchanged.
+	 *
+	 * @param deserializedData - The object produced by BCS deserialization.
+	 * @returns The `Some` value, or `undefined` when the property is absent.
+	 * @throws `TypeError` when `deserializedData` is `null`, `undefined`, or a
+	 * primitive value that cannot be used with the `in` operator.
 	 */
 	public static unwrapDeserializedOption = (
 		deserializedData: any
@@ -248,11 +293,10 @@ export class Casting {
 	};
 
 	/**
-	 * Encodes a JavaScript string into a UTF-8 `Uint8Array`, suitable for
-	 * on-chain usage or hashing.
+	 * Encodes a JavaScript string as UTF-8 byte values.
 	 *
 	 * @param str - The string to encode.
-	 * @returns An array of numeric bytes representing the UTF-8 encoded string.
+	 * @returns A new `number[]` containing the UTF-8 bytes.
 	 */
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();
@@ -266,27 +310,36 @@ export class Casting {
 	};
 
 	/**
-	 * Normalizes a user-provided slippage tolerance from an integer percentage
-	 * into a decimal fraction. E.g., `1 => 0.01`.
+	 * Converts an unscaled integer-percent slippage value to a fraction.
 	 *
-	 * @param slippageTolerance - The slippage in integer percent form (e.g., 1 for 1%).
-	 * @returns A decimal fraction (e.g., 0.01).
+	 * The method divides by `100` without validation, so `1` becomes `0.01` and
+	 * `0.5` becomes `0.005`.
+	 *
+	 * @param slippageTolerance - The percent value to divide by `100`.
+	 * @returns The unscaled slippage fraction.
 	 */
 	public static normalizeSlippageTolerance = (slippageTolerance: number) => {
 		return slippageTolerance / 100;
 	};
 
 	/**
-	 * Deserializes a `SuiObjectResponse`'s BCS bytes into an object of type `T` using
-	 * a specified `bcsType`. Typically used for on-chain object decoding.
+	 * Deserializes a `SuiObjectResponse`'s base64 BCS bytes and maps the result.
 	 *
-	 * @param inputs - The inputs including `suiObjectResponse`, `bcsType`, and a `fromDeserialized` transform function.
-	 * @returns The transformed object of type `T` after BCS deserialization.
-	 * @throws If no BCS bytes are found in the object.
+	 * The method extracts `data.bcs.bcsBytes`, calls `bcsType.fromBase64`, and
+	 * passes the decoded value to `fromDeserialized`. It performs no network I/O
+	 * and does not mutate the response.
+	 *
+	 * @param inputs - The response, BCS schema, and decoded-value mapper.
+	 * @returns The mapped value.
+	 * @throws `Error` when the response has no BCS bytes. BCS decoding and mapper
+	 * errors are propagated unchanged.
 	 */
 	public static castObjectBcs = <T, U>(inputs: {
+		/** The object response containing `data.bcs.bcsBytes`. */
 		suiObjectResponse: SuiObjectResponse;
+		/** The BCS schema for the serialized object. */
 		bcsType: BcsType<U>;
+		/** Converts the decoded BCS value to the requested result. */
 		fromDeserialized: (deserialized: U) => T;
 	}): T => {
 		const { suiObjectResponse, bcsType, fromDeserialized } = inputs;
@@ -299,11 +352,11 @@ export class Casting {
 	};
 
 	/**
-	 * Extracts base64 BCS bytes from a `SuiObjectResponse` if present. Throws an error otherwise.
+	 * Extracts base64 BCS bytes from a Sui object response.
 	 *
-	 * @param suiObjectResponse - The Sui object response containing `bcsBytes`.
-	 * @returns A base64 string representing the object's BCS data.
-	 * @throws If the object response does not contain `bcsBytes`.
+	 * @param suiObjectResponse - The response whose `data.bcs` field to inspect.
+	 * @returns The `data.bcs.bcsBytes` base64 string.
+	 * @throws `Error` when `data.bcs` is absent or does not contain `bcsBytes`.
 	 */
 	public static bcsBytesFromSuiObjectResponse(
 		suiObjectResponse: SuiObjectResponse

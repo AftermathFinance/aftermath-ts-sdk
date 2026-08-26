@@ -27,10 +27,14 @@ import { Pools } from ".";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 
 /**
- * The `Pool` class encapsulates all the functionality needed to interact
- * with a specific AMM pool on the Aftermath platform. It allows you to
- * calculate trade amounts, deposit/withdraw amounts, fetch transactions,
- * and retrieve on-chain statistics and event data.
+ * Represents one Aftermath AMM pool and its local math, API reads, and
+ * transaction builders.
+ *
+ * Coin and LP amounts accepted by this class are `bigint` values in the
+ * corresponding coin's smallest unit. Spot prices are decimal `number` ratios.
+ * Local calculations use JavaScript floating-point intermediates and can differ
+ * from Move by a rounding unit. Transaction builders use the pool estimate as
+ * the expected value and pass the caller's slippage to Move for the final check.
  *
  * @example
  * ```typescript
@@ -51,25 +55,29 @@ import { CmmmCalculations } from "./utils/cmmmCalculations";
  */
 export class Pool extends Caller {
 	/**
-	 * Internal margin of error used in trade calculations to prevent
-	 * exceeding maximum allowed percentages of pool balances.
+	 * Internal margin used when checking the protocol's maximum trade percentage.
+	 * The value is a decimal fraction of a pool balance.
 	 */
 	private static readonly constants = {
 		percentageBoundsMarginOfError: 0.001, // 0.1%
 	};
 
 	/**
-	 * An optional cached object containing statistical data about the pool
-	 * (volume, fees, APR, etc.).
+	 * The last statistics object loaded by `getStats`, or `undefined` until a
+	 * stats read completes. The cache is not refreshed automatically.
 	 */
 	public stats: PoolStats | undefined;
 
 	/**
-	 * Creates a new instance of the `Pool` class for on-chain interaction.
+	 * Creates a local view of a fetched pool object.
 	 *
-	 * @param pool - The fetched `PoolObject` from Aftermath API or on-chain query.
-	 * @param config - Optional caller configuration (e.g., network, access token).
-	 * @param api - An optional `AftermathApi` instance for advanced transaction usage.
+	 * The constructor does not make a network request. Supply `api` when you
+	 * need transaction builders. Without it, API-backed transaction methods throw
+	 * `Error("missing AftermathApi instance")`.
+	 *
+	 * @param pool - The fetched `PoolObject`, including normalized coin balances.
+	 * @param config - Optional API host, network, and access-token configuration.
+	 * @param api - Optional provider used by transaction builders and referral setup.
 	 */
 	constructor(
 		public readonly pool: PoolObject,
@@ -85,11 +93,15 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds or fetches a deposit transaction to add liquidity to this pool.
-	 * The resulting `Transaction` can be signed and submitted by the user.
+	 * Builds a transaction that deposits liquidity into this pool.
 	 *
-	 * @param inputs - The deposit parameters including coin amounts, slippage, etc.
-	 * @returns A `Transaction` to deposit funds into the pool.
+	 * The method selects the wallet's input coin objects through `AftermathApi`,
+	 * computes an expected LP ratio locally, and adds the Move deposit command.
+	 * The returned `Transaction` is not signed or serialized.
+	 *
+	 * @param inputs - Wallet address, smallest-unit amounts keyed by coin type, and slippage.
+	 * @returns An unsigned `Transaction` containing the deposit commands.
+	 * @throws `Error` when no provider is attached or local pool math rejects the deposit.
 	 *
 	 * @example
 	 * ```typescript
@@ -110,10 +122,16 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Builds or fetches a withdrawal transaction to remove liquidity from this pool.
+	 * Builds a transaction that withdraws a fixed LP amount in a selected output direction.
 	 *
-	 * @param inputs - The parameters specifying how much LP is burned, desired coins out, slippage, etc.
-	 * @returns A `Transaction` to withdraw funds from the pool.
+	 * `amountsOutDirection` describes the relative output direction. The method
+	 * computes expected smallest-unit outputs from `lpCoinAmount`, then encodes
+	 * those expectations and `slippage` in the Move command. The returned
+	 * `Transaction` is unsigned and not serialized.
+	 *
+	 * @param inputs - Wallet address, direction amounts, LP amount in smallest units, and slippage.
+	 * @returns An unsigned `Transaction` containing the withdrawal commands.
+	 * @throws `Error` when no provider is attached or local pool math rejects the withdrawal.
 	 *
 	 * @example
 	 * ```typescript
@@ -137,11 +155,16 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Builds or fetches a transaction to withdraw all coin types from this pool,
-	 * effectively "burning" an LP position in exchange for multiple coin outputs.
+	 * Builds a transaction that burns an LP amount and returns every pool coin
+	 * in proportion to the pool balances.
 	 *
-	 * @param inputs - The parameters specifying how much LP to burn.
-	 * @returns A `Transaction` to withdraw all coins from the pool in proportion.
+	 * `lpCoinAmount` is in LP smallest units. The returned `Transaction` is
+	 * unsigned and not serialized. A configured referrer is registered before the
+	 * withdrawal command, but this path does not take a slippage parameter.
+	 *
+	 * @param inputs - Wallet address, LP amount in smallest units, and optional referrer.
+	 * @returns An unsigned `Transaction` containing the all-coin withdrawal.
+	 * @throws `Error` when no provider is attached or coin selection fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -161,10 +184,16 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Builds or fetches a trade transaction to swap between two coin types in this pool.
+	 * Builds an unsigned exact-input swap transaction for two pool coin types.
 	 *
-	 * @param inputs - The trade parameters including coin in/out, amounts, slippage, etc.
-	 * @returns A `Transaction` that can be signed and executed for the swap.
+	 * The method computes an expected output in smallest units, selects the input
+	 * coin through `AftermathApi`, registers an optional referrer, and encodes the
+	 * expected output with the caller's decimal slippage tolerance. It does not
+	 * sign or serialize the returned `Transaction`.
+	 *
+	 * @param inputs - Wallet address, coin types, input amount in smallest units, and slippage.
+	 * @returns An unsigned `Transaction` containing the swap command.
+	 * @throws `Error` when no provider is attached, coin selection fails, or local math rejects the trade.
 	 *
 	 * @example
 	 * ```typescript
@@ -187,13 +216,14 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to update the DAO fee percentage for this pool,
-	 * if it has a DAO fee configured. The user must own the appropriate
-	 * `daoFeePoolOwnerCap`.
+	 * Builds an unsigned transaction that updates this pool's DAO fee.
 	 *
-	 * @param inputs - Includes user wallet, `daoFeePoolOwnerCapId`, and the new fee percentage.
-	 * @returns A `Transaction` that can be signed to update the DAO fee on chain.
-	 * @throws If this pool has no DAO fee configuration.
+	 * The provider converts `newFeePercentage` to basis points before encoding the
+	 * Move call. The caller must own the `daoFeePoolOwnerCapId` capability.
+	 *
+	 * @param inputs - Wallet address, owner-cap object ID, and new decimal fee fraction.
+	 * @returns An unsigned `Transaction` that updates the DAO fee in basis points.
+	 * @throws `Error` when this pool has no DAO fee configuration or no provider is attached.
 	 *
 	 * @example
 	 * ```typescript
@@ -223,13 +253,14 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Builds a transaction to update the DAO fee recipient for this pool,
-	 * if it has a DAO fee configured. The user must own the appropriate
-	 * `daoFeePoolOwnerCap`.
+	 * Builds an unsigned transaction that updates this pool's DAO fee recipient.
 	 *
-	 * @param inputs - Includes user wallet, `daoFeePoolOwnerCapId`, and the new fee recipient.
-	 * @returns A `Transaction` that can be signed to update the DAO fee recipient on chain.
-	 * @throws If this pool has no DAO fee configuration.
+	 * The caller must own the `daoFeePoolOwnerCapId` capability. The recipient is
+	 * normalized to a full Sui address before it is encoded in Move.
+	 *
+	 * @param inputs - Wallet address, owner-cap object ID, and new recipient address.
+	 * @returns An unsigned `Transaction` that updates the DAO fee recipient.
+	 * @throws `Error` when this pool has no DAO fee configuration or no provider is attached.
 	 *
 	 * @example
 	 * ```typescript
@@ -263,10 +294,14 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches comprehensive pool statistics (volume, TVL, fees, APR, etc.) from the Aftermath API.
-	 * Also caches the result in `this.stats`.
+	 * Fetches the pool's analytics from the Aftermath API and caches the result.
 	 *
-	 * @returns A promise resolving to `PoolStats` object.
+	 * The API returns numeric metrics without a unit conversion in this class.
+	 * Inspect the configured API's `PoolStats` contract for the meaning of each
+	 * metric.
+	 *
+	 * @returns A promise for the current `PoolStats` object. The same object is stored in `stats`.
+	 * @throws `AftermathTransportError` when the API request fails or its response cannot be decoded.
 	 *
 	 * @example
 	 * ```typescript
@@ -281,20 +316,20 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Caches the provided stats object into `this.stats`.
+	 * Replaces the local statistics cache without making an API request.
 	 *
-	 * @param stats - The `PoolStats` object to store.
+	 * @param stats - The analytics object to store in `stats`.
 	 */
 	public setStats(stats: PoolStats): void {
 		this.stats = stats;
 	}
 
 	/**
-	 * Fetches an array of volume data points for a specified timeframe.
-	 * This is often used for charting or historical references.
+	 * Fetches volume data points for a supported analytics timeframe.
 	 *
-	 * @param inputs - Contains a `timeframe` key, such as `"1D"` or `"1W"`.
-	 * @returns A promise resolving to an array of `PoolDataPoint`.
+	 * @param inputs - A supported timeframe such as `"1D"` or `"1W"`.
+	 * @returns A promise for API timestamps and numeric volume values.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -309,10 +344,11 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Fetches an array of fee data points for a specified timeframe.
+	 * Fetches fee data points for a supported analytics timeframe.
 	 *
-	 * @param inputs - Contains a `timeframe` key, e.g., `"1D"` or `"1W"`.
-	 * @returns A promise resolving to an array of `PoolDataPoint`.
+	 * @param inputs - A supported timeframe such as `"1D"` or `"1W"`.
+	 * @returns A promise for API timestamps and numeric fee values.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -327,9 +363,10 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Retrieves the 24-hour volume for this specific pool.
+	 * Fetches this pool's 24-hour volume from the API.
 	 *
-	 * @returns A promise resolving to a number (volume in 24h).
+	 * @returns A promise for the numeric API volume value. This class does not convert its unit.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -346,10 +383,14 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches user interaction events (deposit/withdraw) with this pool, optionally paginated.
+	 * Fetches deposit and withdrawal events for one wallet in this pool.
 	 *
-	 * @param inputs - Includes user `walletAddress` and optional pagination fields.
-	 * @returns A promise that resolves to `PoolDepositEvent | PoolWithdrawEvent` objects with a cursor if more exist.
+	 * `cursor` and `limit` are forwarded to the indexer endpoint. When a full
+	 * page is returned, the result includes the next numeric cursor.
+	 *
+	 * @param inputs - Wallet address and optional indexer pagination fields.
+	 * @returns A promise for paginated `PoolDepositEvent` and `PoolWithdrawEvent` values.
+	 * @throws `AftermathTransportError` when the indexer request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -373,11 +414,16 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Calculates the instantaneous spot price for swapping from `coinInType`
-	 * to `coinOutType` within this pool. Optionally includes fees in the price.
+	 * Calculates the instantaneous spot price from one pool coin to another.
 	 *
-	 * @param inputs - Object specifying input coin, output coin, and a boolean for `withFees`.
-	 * @returns The numerical spot price (float).
+	 * The result is a decimal `coinIn`-per-`coinOut` ratio adjusted for each
+	 * coin's decimal scalar. By default the result excludes swap and DAO fees.
+	 * Set `withFees` to `true` to include the fee terms used by the local CMMM
+	 * calculation.
+	 *
+	 * @param inputs - Input and output coin types, plus the optional fee flag.
+	 * @returns The decimal spot-price ratio in coin units, not a smallest-unit `bigint`.
+	 * @throws When either coin type is not present in this pool.
 	 *
 	 * @example
 	 * ```typescript
@@ -409,16 +455,21 @@ export class Pool extends Caller {
 		);
 	};
 
-	// TODO: account for referral discount for all calculations
+	// Referral discounts are registered by transaction builders, but are not part
+	// of these local estimates until the calculation path supports them.
 
 	/**
-	 * Calculates how much output coin you would receive when trading
-	 * a given input coin and amount in this pool, factoring in protocol
-	 * and optional DAO fees.
+	 * Calculates the output for an exact-input swap in this pool.
 	 *
-	 * @param inputs - Includes `coinInType`, `coinInAmount`, and `coinOutType`.
-	 * @returns A bigint representing how many output coins you'd get.
-	 * @throws Error if the trade amount is too large relative to the pool balance.
+	 * The input and return value are smallest-unit `bigint` amounts. The local
+	 * calculation applies the pool swap fees, the protocol fee, and the configured
+	 * DAO fee. The `referral` flag is accepted for API compatibility but does not
+	 * currently change this local estimate. A transaction referrer is registered
+	 * separately by `getTradeTransaction`.
+	 *
+	 * @param inputs - Input type, smallest-unit amount, output type, and optional referral flag.
+	 * @returns The expected output in `coinOutType` smallest units.
+	 * @throws `Error` when the input or output exceeds the configured pool-balance limit or the result is zero.
 	 *
 	 * @example
 	 * ```typescript
@@ -480,12 +531,16 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates how much input coin is required to obtain a certain output coin amount
-	 * from this pool, factoring in fees.
+	 * Calculates the input for an exact-output swap in this pool.
 	 *
-	 * @param inputs - Includes `coinInType`, desired `coinOutAmount`, and `coinOutType`.
-	 * @returns A bigint representing the needed input amount.
-	 * @throws Error if the desired output is too large relative to pool balances.
+	 * The input and output are smallest-unit `bigint` amounts. The local
+	 * calculation applies pool, protocol, and DAO fees when reversing the quote.
+	 * The `referral` flag is accepted for API compatibility but does not currently
+	 * change this local estimate.
+	 *
+	 * @param inputs - Input type, desired output in smallest units, output type, and optional referral flag.
+	 * @returns The required input in `coinInType` smallest units.
+	 * @throws `Error` when the requested output or calculated input exceeds the configured pool-balance limit or the result is zero.
 	 *
 	 * @example
 	 * ```typescript
@@ -547,11 +602,17 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates how many LP tokens you receive for providing liquidity
-	 * in specific coin amounts. Also returns a ratio for reference.
+	 * Calculates the LP result for a fixed-amount liquidity deposit.
 	 *
-	 * @param inputs - Contains the amounts in for each coin in the pool.
-	 * @returns An object with `lpAmountOut` and `lpRatio`.
+	 * `lpAmountOut` is a smallest-unit LP amount. `lpRatio` is the decimal
+	 * retained-balance scalar used by the CMMM solver. The implementation derives
+	 * `lpAmountOut` as `floor(lpCoinSupply * (1 / lpRatio - 1))`, so `lpRatio` is
+	 * not itself the minted-LP fraction. The optional referral flag does not alter
+	 * this local estimate.
+	 *
+	 * @param inputs - Deposit amounts keyed by coin type in each coin's smallest unit.
+	 * @returns The estimated LP smallest-unit amount and the decimal solver ratio.
+	 * @throws `Error` when the solver returns a ratio of at least `1`.
 	 *
 	 * @example
 	 * ```typescript
@@ -595,11 +656,18 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates how many coins a user will receive when withdrawing a specific ratio or LP amount.
-	 * This method is used in multi-coin withdrawals where you specify how much of each coin you want.
+	 * Calculates a multi-coin withdrawal for a retained LP ratio and output direction.
 	 *
-	 * @param inputs - The LP ratio and an object specifying direction amounts for each coin.
-	 * @returns A `CoinsToBalance` object with final amounts out, factoring in DAO fees.
+	 * `lpRatio` is the fraction of the original pool balance retained after the
+	 * LP burn. For example, `0.9` means that 10% of the LP position is burned.
+	 * Positive entries in `amountsOutDirection` select the direction and relative
+	 * amounts. The returned record contains every pool coin in smallest units.
+	 * DAO fees are deducted from selected positive outputs. The `referral` flag is
+	 * currently accepted but does not change the local estimate.
+	 *
+	 * @param inputs - Retained LP ratio, output direction, and optional referral flag.
+	 * @returns Output amounts keyed by pool coin type, in smallest units.
+	 * @throws `Error` when a selected output is zero, too large for the pool, or fails the local invariant solve.
 	 *
 	 * @example
 	 * ```typescript
@@ -650,11 +718,15 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * A simplified multi-coin withdraw approach: calculates all outputs by proportion of the
-	 * user's LP share among selected coin types. Useful for approximate or "blind" all-coin out logic.
+	 * Estimates a multi-coin withdrawal from an LP amount and selected output types.
 	 *
-	 * @param inputs - Contains the `lpCoinAmountIn` to burn, and which coin types to receive.
-	 * @returns A record mapping coin type => final amounts out.
+	 * The method first estimates each selected coin from the LP share, uses those
+	 * amounts as the direction vector, and returns the full pool-coin map produced
+	 * by `getWithdrawAmountsOut`. Amounts are smallest-unit `bigint` values.
+	 *
+	 * @param inputs - LP amount to burn in smallest units, selected output types, and optional referral flag.
+	 * @returns Estimated output amounts keyed by pool coin type, in smallest units.
+	 * @throws `Error` when the LP amount or a selected output fails pool-balance checks.
 	 */
 	public getWithdrawAmountsOutSimple = (inputs: {
 		lpCoinAmountIn: Balance;
@@ -719,11 +791,16 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates how many coins you get when withdrawing **all** coin types from the pool,
-	 * given a ratio. This is typically used for proportionate withdrawal.
+	 * Calculates a proportionate all-coin withdrawal.
 	 *
-	 * @param inputs - Includes `lpRatio`, the portion of your LP to burn (0 < ratio < 1).
-	 * @returns A record of coin type => amounts out, after factoring in any fees.
+	 * Here `lpRatio` is the fraction of LP supply burned, unlike the retained ratio
+	 * accepted by `getWithdrawAmountsOut`. For example, `0.1` burns 10% and
+	 * returns 10% of each pool balance after the configured DAO fee. The referral
+	 * flag is accepted for API compatibility but does not alter this local estimate.
+	 *
+	 * @param inputs - Decimal LP fraction to burn. It must be less than `1`.
+	 * @returns All pool coin amounts in smallest units, after DAO fee adjustment.
+	 * @throws `Error` when `lpRatio` is at least `1`.
 	 *
 	 * @example
 	 * ```typescript
@@ -755,11 +832,12 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * For multi-coin withdraw, calculates the ratio of how much LP you are burning
-	 * relative to the total supply. e.g. if user burns 100 of 1000 supply => ratio 0.1.
+	 * Converts a multi-coin LP burn amount into the retained pool ratio.
 	 *
-	 * @param inputs - Contains the `lpCoinAmountIn` to burn.
-	 * @returns A float ratio (0 < ratio < 1).
+	 * For a supply of `1_000` and a burn of `100`, this method returns `0.9`.
+	 *
+	 * @param inputs - LP amount to burn in the LP coin's smallest unit.
+	 * @returns The decimal fraction of the pool retained after the burn.
 	 */
 	public getMultiCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountIn: bigint;
@@ -768,11 +846,12 @@ export class Pool extends Caller {
 		Number(this.pool.lpCoinSupply);
 
 	/**
-	 * For an all-coin withdraw, calculates the ratio of how much LP is burned
-	 * relative to total supply. e.g. if user burns 50 of 200 supply => ratio 0.25.
+	 * Converts an all-coin LP burn amount into the burned pool ratio.
 	 *
-	 * @param inputs - Contains the `lpCoinAmountIn`.
-	 * @returns A float ratio, typically 0 < ratio < 1.
+	 * For a supply of `200` and a burn of `50`, this method returns `0.25`.
+	 *
+	 * @param inputs - LP amount to burn in the LP coin's smallest unit.
+	 * @returns The decimal fraction of the pool burned.
 	 */
 	public getAllCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountIn: bigint;
@@ -783,8 +862,7 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Returns an array of coin types in ascending lexicographic order
-	 * for the coins contained in this pool.
+	 * Returns the pool coin types in ascending lexicographic order.
 	 *
 	 * @returns An array of coin type strings.
 	 */
@@ -793,8 +871,7 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Returns an array of `PoolCoin` objects, one for each coin in this pool,
-	 * sorted lexicographically by coin type.
+	 * Returns the pool coin metadata in coin-type order.
 	 *
 	 * @returns An array of `PoolCoin`.
 	 */
@@ -805,7 +882,7 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Returns an array of `[CoinType, PoolCoin]` pairs, sorted by coin type.
+	 * Returns `[CoinType, PoolCoin]` entries sorted by coin type.
 	 *
 	 * @returns An array of coin-type => `PoolCoin` pairs.
 	 */
@@ -816,9 +893,9 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Returns the current DAO fee percentage, if configured (0 < fee <= 100%).
+	 * Returns the current DAO fee as a decimal fraction, if configured.
 	 *
-	 * @returns A decimal fraction representing the fee (e.g., 0.01 = 1%) or `undefined`.
+	 * @returns The fee fraction, where `0.01` is 1%, or `undefined` without a DAO fee pool.
 	 */
 	public daoFeePercentage = (): Percentage | undefined => {
 		return this.pool.daoFeePoolObject
@@ -827,10 +904,9 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Returns the Sui address that currently receives the DAO fee portion of
-	 * pool trades, or `undefined` if no DAO fee is configured.
+	 * Returns the Sui address that receives the configured DAO fee.
 	 *
-	 * @returns The DAO fee recipient address.
+	 * @returns The normalized recipient address, or `undefined` without a DAO fee pool.
 	 */
 	public daoFeeRecipient = (): SuiAddress | undefined => {
 		return this.pool.daoFeePoolObject?.feeRecipient;

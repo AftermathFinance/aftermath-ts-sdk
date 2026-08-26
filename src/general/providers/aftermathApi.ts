@@ -30,16 +30,20 @@ import { WalletApi } from "../wallet/walletApi";
 
 /**
  * The `AftermathApi` class is a low-level factory and reference point for
- * interacting directly with underlying API modules (e.g., PoolsApi, StakingApi).
- * It encapsulates a configured `SuiClient` and the known `addresses` for the
- * Aftermath protocol, allowing flexible or advanced usage scenarios.
+ * interacting directly with underlying API modules such as `PoolsApi` and
+ * `StakingApi`. It binds a configured `SuiGrpcClient` to the network-specific
+ * package and object addresses supplied by the caller.
+ *
+ * Constructing this class performs no network I/O. The accessor methods create
+ * helper instances, and those helpers perform requests when their methods run.
+ * A helper that needs an omitted address section throws during construction.
  *
  * @example
  * ```typescript
- * import { AftermathApi } from "aftermath-ts-sdk";
+ * import { AftermathApi, type ConfigAddresses } from "aftermath-ts-sdk";
  * import { SuiGrpcClient } from "@mysten/sui/grpc";
  *
- * const addresses = { ... }; // from aftermath.getAddresses()
+ * const addresses: ConfigAddresses = {}; // populate for the selected network
  * const fullnodeUrl = "https://fullnode.mainnet.sui.io";
  *
  * const client = new SuiGrpcClient({
@@ -48,8 +52,7 @@ import { WalletApi } from "../wallet/walletApi";
  * });
  *
  * const afApi = new AftermathApi(client, addresses);
- * // access protocol APIs
- * const poolsApi = afApi.Pools();
+ * const suiApi = afApi.Sui();
  * ```
  *
  * Only if you call one of the three legacy helpers listed on
@@ -57,8 +60,16 @@ import { WalletApi } from "../wallet/walletApi";
  *
  * @example
  * ```typescript
+ * import { AftermathApi, type ConfigAddresses } from "aftermath-ts-sdk";
+ * import { SuiGrpcClient } from "@mysten/sui/grpc";
  * import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
  *
+ * const addresses: ConfigAddresses = {};
+ * const fullnodeUrl = "https://fullnode.mainnet.sui.io";
+ * const client = new SuiGrpcClient({
+ *   network: "mainnet",
+ *   baseUrl: fullnodeUrl,
+ * });
  * const jsonRpcClient = new SuiJsonRpcClient({
  *   url: fullnodeUrl,
  *   network: "mainnet",
@@ -126,7 +137,9 @@ export class AftermathApi {
 	 * {@link AftermathApi.requireJsonRpcClient}.
 	 */
 	public constructor(
+		/** Sui gRPC client used for low-level on-chain reads and transaction calls. */
 		public readonly client: SuiGrpcClient,
+		/** Package and object addresses for the same Sui network as `client`. */
 		public readonly addresses: ConfigAddresses,
 		/**
 		 * The **remaining JSON-RPC surface** of this SDK, and an **optional**
@@ -181,6 +194,7 @@ export class AftermathApi {
 	 *
 	 * @param methodName - The public helper the caller invoked, e.g.
 	 * `"Events().fetchCastEventsWithCursor"`. Named in the error message.
+	 * @returns The configured JSON-RPC client.
 	 * @throws If no `jsonRpcClient` was passed to the constructor.
 	 */
 	public requireJsonRpcClient = (methodName: string): SuiJsonRpcClient => {
@@ -210,26 +224,31 @@ export class AftermathApi {
 
 	/**
 	 * Creates a new `DynamicFieldsApiHelpers` instance for complex object field queries.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public DynamicFields = () => new DynamicFieldsApiHelpers(this);
 
 	/**
 	 * Creates a new `EventsApiHelpers` instance for querying Sui events.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Events = () => new EventsApiHelpers(this);
 
 	/**
 	 * Creates a new `InspectionsApiHelpers` instance for reading Summaries or inspection data.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Inspections = () => new InspectionsApiHelpers(this);
 
 	/**
 	 * Creates a new `ObjectsApiHelpers` instance for object retrieval/manipulation.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Objects = () => new ObjectsApiHelpers(this);
 
 	/**
 	 * Creates a new `TransactionsApiHelpers` instance for querying or parsing transaction data.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Transactions = () => new TransactionsApiHelpers(this);
 
@@ -239,11 +258,13 @@ export class AftermathApi {
 
 	/**
 	 * Creates a new `WalletApi` instance for direct wallet-based operations (fetching balances, etc.).
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Wallet = () => new WalletApi(this);
 
 	/**
 	 * Creates a new `NftsApi` instance for retrieving and interacting with NFT data.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Nfts = () => new NftsApi(this);
 
@@ -253,11 +274,13 @@ export class AftermathApi {
 
 	/**
 	 * Creates a new `CoinApi` instance for detailed coin operations.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Coin = () => new CoinApi(this);
 
 	/**
 	 * Creates a new `SuiApi` instance for lower-level Sui chain interactions.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Sui = () => new SuiApi(this);
 
@@ -267,61 +290,73 @@ export class AftermathApi {
 
 	/**
 	 * Creates a new `PoolsApi` instance for pool-related interactions (AMM pools, liquidity, etc.).
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Pools = () => new PoolsApi(this);
 
 	/**
 	 * Creates a new `FaucetApi` instance for dispensing tokens on supported dev/test networks.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Faucet = () => new FaucetApi(this);
 
 	/**
 	 * Creates a new `SuiFrensApi` instance for special social or token gating utilities on Sui.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public SuiFrens = () => new SuiFrensApi(this);
 
 	/**
 	 * Creates a new `StakingApi` instance for advanced or direct staking operations on Sui.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Staking = () => new StakingApi(this);
 
 	/**
 	 * Creates a new `NftAmmApi` instance for NFT AMM logic (buy, sell, liquidity).
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public NftAmm = () => new NftAmmApi(this);
 
 	/**
 	 * Creates a new `ReferralVaultApi` instance for referral-based logic in Aftermath.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public ReferralVault = () => new ReferralVaultApi(this);
 
 	/**
 	 * Creates a new `PerpetualsApi` instance for futures or perpetual derivatives on Sui.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Perpetuals = () => new PerpetualsApi(this);
 
 	/**
 	 * Creates a new `FarmsApi` instance for yield farming or liquidity mining interactions.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Farms = () => new FarmsApi(this);
 
 	/**
 	 * Creates a new `DcaApi` instance for dollar-cost averaging logic.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Dca = () => new DcaApi(this);
 
 	/**
 	 * Creates a new `MultisigApi` instance for multi-signature address creation and management.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Multisig = () => new MultisigApi(this);
 
 	/**
 	 * Creates a new `LimitOrdersApi` instance for placing limit orders on supported DEX protocols.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public LimitOrders = () => new LimitOrdersApi(this);
 
 	/**
 	 * Creates a new `RouterApi` instance for best-price trade routing across multiple DEX liquidity sources.
+	 * @returns A helper bound to this `AftermathApi` instance.
 	 */
 	public Router = () => new RouterApi(this);
 

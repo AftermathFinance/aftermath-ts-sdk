@@ -17,7 +17,7 @@ import type {
 import type { CoinType, ServiceCoinData } from "../coin/coinTypes";
 
 /**
- * A unique identifier, typically used to track items or route segments.
+ * A string identifier used by route and market records.
  */
 export type UniqueId = string;
 
@@ -29,7 +29,7 @@ export type UniqueId = string;
 export type RouterExternalFee = ExternalFee;
 
 /**
- * All possible DEX protocols that the `Router` can use to swap coins.
+ * DEX protocol names accepted by the router's allowlist and blocklist fields.
  */
 export type RouterProtocolName =
 	| "Aftermath"
@@ -66,24 +66,27 @@ export type RouterProtocolName =
  */
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	/**
-	 * An array of sub-routes, each representing a path or series of swaps.
+	 * The sub-routes that make up the trade. Multiple entries represent a split
+	 * trade, and each route can contain several sequential paths.
 	 */
 	routes: RouterTradeRoute[];
 	/**
-	 * The total trade fee percentage across all routes.
-	 * @remarks 0.01 = 1%
+	 * The aggregate DEX trade fee as a decimal fraction. `0.01` represents 1%.
 	 */
 	netTradeFeePercentage: Percentage;
 	/**
-	 * Optional referrer address, if using a referral mechanism.
+	 * The optional referrer recorded for the route. The transaction builder uses
+	 * this address when the route was requested with referral support.
 	 */
 	referrer?: SuiAddress;
 	/**
-	 * Optional external fee information, if a third party is collecting fees.
+	 * An optional third-party fee. `feePercentage` is a decimal fraction of the
+	 * trade, and the recipient receives that fee when the route executes.
 	 */
 	externalFee?: ExternalFee;
 	/**
-	 * Slippage tolerance for the trade, expressed as a decimal (0.01 = 1%).
+	 * The slippage tolerance attached to the route, as a decimal fraction. `0.01`
+	 * represents 1%. It is optional for amount-in route responses.
 	 */
 	slippage?: Slippage;
 };
@@ -101,11 +104,13 @@ export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute;
  */
 export type RouterTradeRoute = RouterTradeInfo & {
 	/**
-	 * An array of paths that this route will take to execute the trade.
+	 * The sequential swap paths used by this sub-route. A path's output feeds the
+	 * next path's input.
 	 */
 	paths: RouterTradePath[];
 	/**
-	 * The portion of the total trade allocated to this route, expressed as an IFixed value.
+	 * The fraction of the complete trade allocated to this sub-route, encoded as
+	 * an `IFixed` value. `1_000_000_000_000_000_000n` represents the whole trade.
 	 */
 	portion: IFixed;
 };
@@ -116,33 +121,34 @@ export type RouterTradeRoute = RouterTradeInfo & {
  */
 export type RouterTradePath = RouterTradeInfo & {
 	/**
-	 * The name of the DEX protocol used for this path (e.g., "Cetus").
+	 * The DEX protocol used for this path, such as `"Cetus"`.
 	 */
 	protocolName: RouterProtocolName;
 	/**
-	 * The pool ID (object on-chain) where the swap is performed.
+	 * The on-chain pool or market object ID used by the path.
 	 */
 	poolId: ObjectId;
 	/**
-	 * Additional pool metadata, which can vary by DEX protocol.
+	 * Protocol-specific pool metadata returned by the router. Treat this value
+	 * as opaque unless the selected protocol documents its shape.
 	 */
 	poolMetadata: any;
 };
 
 /**
- * Base interface shared by routes and paths, describing the coin in/out details and spot price.
+ * Base data shared by routes and paths, describing coin amounts and spot price.
  */
 export interface RouterTradeInfo {
 	/**
-	 * Input coin details, including type, amount, and any trade fee.
+	 * Input coin type, amount, and fee for this route, sub-route, or path.
 	 */
 	coinIn: RouterTradeCoin;
 	/**
-	 * Output coin details, including type, amount, and any trade fee.
+	 * Output coin type, amount, and fee for this route, sub-route, or path.
 	 */
 	coinOut: RouterTradeCoin;
 	/**
-	 * The spot price used in this route/path for calculating output from input.
+	 * The price quoted for `coinIn` in terms of `coinOut`, before execution movement.
 	 */
 	spotPrice: number;
 }
@@ -152,15 +158,16 @@ export interface RouterTradeInfo {
  */
 export interface RouterTradeCoin {
 	/**
-	 * The coin type used in a route or path.
+	 * The fully qualified Sui coin type.
 	 */
 	type: CoinType;
 	/**
-	 * The amount of the coin, typically expressed as the smallest unit (bigint).
+	 * The amount in the coin's smallest unit. The JSON API encodes this `bigint`
+	 * as a string ending in `n`, and the SDK restores it to `bigint`.
 	 */
 	amount: Balance;
 	/**
-	 * The trade fee paid in this coin, expressed as a bigint.
+	 * The trade fee charged in this coin's smallest unit.
 	 */
 	tradeFee: Balance;
 }
@@ -170,23 +177,23 @@ export interface RouterTradeCoin {
  */
 export interface RouterTradeEvent extends Event {
 	/**
-	 * The Sui address of the trader.
+	 * The Sui address that executed the routed trade.
 	 */
 	trader: SuiAddress;
 	/**
-	 * The coin type input by the trader.
+	 * The input coin type.
 	 */
 	coinInType: AnyObjectType;
 	/**
-	 * The amount of coin input by the trader.
+	 * The input amount in the coin's smallest unit.
 	 */
 	coinInAmount: Balance;
 	/**
-	 * The coin type output to the trader.
+	 * The output coin type.
 	 */
 	coinOutType: AnyObjectType;
 	/**
-	 * The amount of coin output to the trader.
+	 * The output amount in the coin's smallest unit.
 	 */
 	coinOutAmount: Balance;
 }
@@ -197,31 +204,33 @@ export interface RouterTradeEvent extends Event {
  */
 export type ApiRouterPartialCompleteTradeRouteBody = {
 	/**
-	 * The coin type that the user wants to swap out.
+	 * The fully qualified Sui type of the coin supplied to the route.
 	 */
 	coinInType: CoinType;
 	/**
-	 * The coin type that the user wants to receive.
+	 * The fully qualified Sui type of the coin received from the route.
 	 */
 	coinOutType: CoinType;
 	/**
-	 * An optional referrer address for the route creator.
+	 * An optional referrer address to include in the route and later referral
+	 * transaction setup.
 	 */
 	referrer?: SuiAddress;
 	/**
-	 * Optional third-party fee details.
+	 * Optional third-party fee details. The router rejects values above
+	 * `Router.constants.maxExternalFeePercentage`.
 	 */
 	externalFee?: ExternalFee;
 } & (
 	| {
 			/**
-			 * Optionally exclude certain protocols from routing.
+			 * Protocols that the router must not use.
 			 */
 			protocolBlacklist?: RouterProtocolName[];
 	  }
 	| {
 			/**
-			 * Optionally include only certain protocols in routing.
+			 * Protocols that the router may use. Other protocols are excluded.
 			 */
 			protocolWhitelist?: RouterProtocolName[];
 	  }
@@ -229,14 +238,14 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	(
 		| {
 				/**
-				 * Optionally exclude certain pools from routing.
-				 */
+			 * Pool IDs that the router must not use.
+			 */
 				poolBlacklist?: ObjectId[];
 		  }
 		| {
 				/**
-				 * Optionally include only certain pools in routing.
-				 */
+			 * Pool IDs that the router may use. Other pools are excluded.
+			 */
 				poolWhitelist?: ObjectId[];
 		  }
 	);
@@ -250,17 +259,20 @@ export type ApiRouterCompleteTradeRouteBody =
 		(
 			| {
 					/**
-					 * The amount of coin that the user wants to swap out.
+					 * The input amount in the input coin's smallest unit. This selects
+					 * exact-input route construction.
 					 */
 					coinInAmount: Balance;
 			  }
 			| {
 					/**
-					 * The target output amount that the user wants to receive.
+					 * The target output amount in the output coin's smallest unit. This
+					 * selects exact-output route construction.
 					 */
 					coinOutAmount: Balance;
 					/**
-					 * The user’s slippage tolerance (e.g., 0.01 = 1%).
+					 * The maximum decimal fraction of output or input movement accepted
+					 * by the exact-output route. `0.01` represents 1%.
 					 */
 					slippage: Slippage;
 			  }
@@ -271,23 +283,26 @@ export type ApiRouterCompleteTradeRouteBody =
  */
 export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	/**
-	 * The Sui address initiating the trade.
+	 * The Sui address that owns the input coin and signs the trade transaction.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The complete route object, typically returned by the route construction API.
+	 * The route returned by `getCompleteTradeRouteGivenAmountIn` or
+	 * `getCompleteTradeRouteGivenAmountOut`.
 	 */
 	completeRoute: RouterCompleteTradeRoute;
 	/**
-	 * The allowable slippage tolerance for the entire route.
+	 * The allowable slippage for the complete route, as a decimal fraction.
+	 * `0.01` represents 1%.
 	 */
 	slippage: Slippage;
 	/**
-	 * If `true`, indicates that the transaction fees may be sponsored by a third party.
+	 * When `true`, asks the API to build a transaction compatible with sponsored
+	 * gas handling.
 	 */
 	isSponsoredTx?: boolean;
 	/**
-	 * If specified, the traded output coins will be sent to this address.
+	 * An optional recipient for the output coin instead of the wallet sender.
 	 */
 	customRecipient?: SuiAddress;
 }
@@ -299,11 +314,13 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
 	ApiRouterTransactionForCompleteTradeRouteBody & {
 		/**
-		 * The already-serialized transaction to which the router instructions will be added.
+		 * The serialized transaction bytes to which the router commands are added.
+		 * The SDK serializes a `Transaction` before sending this field over JSON.
 		 */
 		serializedTx: SerializedTransaction;
 		/**
-		 * Optional coin input ID if you are managing coin objects yourself.
+		 * An optional transaction object argument for the input coin. Omit it when
+		 * the API should select the coin input.
 		 */
 		coinInId?: TransactionObjectArgument;
 	};
@@ -313,11 +330,13 @@ export type ApiRouterAddTransactionForCompleteTradeRouteBody =
  */
 export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
 	/**
-	 * The updated serialized transaction.
+	 * The updated serialized transaction bytes. The SDK parses these bytes into a
+	 * new `Transaction` before returning from `Router.addTransactionForCompleteTradeRoute`.
 	 */
 	tx: SerializedTransaction;
 	/**
-	 * A reference to the output coin after the swap. May be undefined if not applicable.
+	 * A transaction object argument for the output coin, or `undefined` when the
+	 * response does not expose one.
 	 */
 	coinOutId: TransactionObjectArgument | undefined;
 }
@@ -328,7 +347,7 @@ export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
  */
 export type ApiRouterTradeEventsBody = ApiIndexerEventsBody & {
 	/**
-	 * The wallet address whose trade events you want to retrieve.
+	 * The wallet address whose router trade events should be returned.
 	 */
 	walletAddress: SuiAddress;
 };
@@ -340,31 +359,32 @@ export type ApiRouterTradeEventsBody = ApiIndexerEventsBody & {
  */
 export interface ApiRouterDynamicGasBody {
 	/**
-	 * The transaction bytes for the intended trade.
+	 * The transaction-kind bytes for the intended trade.
 	 */
 	txKindBytes: TxBytes;
 	/**
-	 * The coin type to be used for gas (e.g., "0x2::sui::SUI").
+	 * The coin type used to pay gas, such as `"0x2::sui::SUI"`.
 	 */
 	gasCoinType: CoinType;
 	/**
-	 * The coin data specifying the gas coin or a partial reference to it.
+	 * The service coin record used to select the gas coin.
 	 */
 	gasCoinData: ServiceCoinData;
 	/**
-	 * The amount of coin that the user expects to receive out of the trade, in string form for BigInt.
+	 * The expected output amount in the output coin's smallest unit, encoded as
+	 * a decimal bigint string.
 	 */
 	coinOutAmount: BigIntAsString;
 	/**
-	 * The address of the sender who is initiating the transaction.
+	 * The address that signs the transaction.
 	 */
 	senderAddress: SuiAddress;
 	/**
-	 * The address of a sponsor for the transaction, if applicable.
+	 * The address sponsoring gas for the transaction.
 	 */
 	sponsorAddress: SuiAddress;
 	/**
-	 * Optional referrer address, if a referral mechanism is in place.
+	 * An optional referrer address used by the referral-aware gas estimate.
 	 */
 	referrer?: SuiAddress;
 }

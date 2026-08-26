@@ -8,10 +8,11 @@ import type {
 } from "./dynamicGasTypes";
 
 /**
- * The `DynamicGas` class provides functionality for dynamically determining
- * or attaching a suitable gas payment object to a transaction. This allows
- * for more flexible transaction building when exact gas objects are not
- * predetermined.
+ * Prepares a transaction through the Aftermath dynamic-gas HTTP service.
+ *
+ * The service receives the serialized transaction, wallet address, and
+ * preferred coin type at the configured `dynamic-gas` endpoint. This class does
+ * not use the Sui gRPC or JSON-RPC clients.
  */
 export class DynamicGas extends Caller {
 	// =========================================================================
@@ -19,9 +20,11 @@ export class DynamicGas extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates a new `DynamicGas` instance for interacting with dynamic gas endpoints.
+	 * Creates a dynamic-gas service client.
 	 *
-	 * @param config - Optional caller config, including the Sui network and an access token.
+	 * @param config - Optional caller configuration. Set `network` to use the
+	 * canonical Aftermath host, or set `baseUrl` for a custom or local service.
+	 * Include `accessToken` when the service requires authentication.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "dynamic-gas");
@@ -32,25 +35,34 @@ export class DynamicGas extends Caller {
 	// =========================================================================
 
 	/**
-	 * Requests the dynamic gas service to set up a transaction with an appropriate gas coin,
-	 * or sponsor signature if needed, based on the user's wallet and coin type preference.
+	 * Sends a transaction to the dynamic-gas service for gas preparation.
 	 *
-	 * @param inputs - An object containing the `Transaction` to be adjusted, the `walletAddress`, and `gasCoinType`.
-	 * @returns A promise that resolves to an `ApiDynamicGasResponse`, which includes the new transaction bytes
-	 *  (`txBytes`) and possibly a `sponsoredSignature`.
+	 * This method performs one HTTP `POST` request to `/api/dynamic-gas` under
+	 * the configured base URL. It serializes `tx` with `Transaction.toJSON()` and
+	 * sends the wallet address and preferred Move coin type in the JSON body. It
+	 * does not sign or execute the transaction locally.
+	 *
+	 * @param inputs - The transaction to serialize, the Sui wallet address, and a
+	 * fully qualified coin type such as `0x2::sui::SUI`.
+	 * @returns The service's serialized transaction bytes and sponsor signature.
+	 * @throws `AftermathTransportError` for HTTP, network, abort, timeout, or
+	 * response-decode failures. A missing API base URL also rejects the request.
 	 *
 	 * @example
 	 * ```typescript
-	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
+	 * import { Aftermath } from "aftermath-ts-sdk";
+	 * import { Transaction } from "@mysten/sui/transactions";
 	 *
+	 * const afSdk = await Aftermath.create({ network: "MAINNET" });
 	 * const dynamicGas = afSdk.DynamicGas();
+	 * const transactionBlock = new Transaction();
 	 *
 	 * const updatedTx = await dynamicGas.getUseDynamicGasForTx({
 	 *   tx: transactionBlock,
-	 *   walletAddress: "0x<user_address>",
+	 *   walletAddress: "0x00000000000000000000000000000000000000000000000000000000000000aa",
 	 *   gasCoinType: "0x2::sui::SUI"
 	 * });
-	 * // updatedTx.txBytes and updatedTx.sponsoredSignature can now be used for signing/execution
+	 * // Use updatedTx.txBytes and updatedTx.sponsoredSignature in the signing flow.
 	 * ```
 	 */
 	public async getUseDynamicGasForTx(inputs: {

@@ -459,7 +459,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.accountIds - List of account IDs to query.
 	 * @param inputs.marketIds - Optional list of market IDs to filter positions by.
 	 *
-	 * @returns {@link ApiPerpetualsAccountPositionsResponse} containing `accounts`.
+	 * @returns `ApiPerpetualsAccountPositionsResponse` containing `accounts`.
 	 *
 	 * @remarks
 	 * If `accountIds` is empty, this returns `{ accounts: [] }` without making an API call.
@@ -496,7 +496,7 @@ export class Perpetuals extends Caller {
 	 *
 	 * @param inputs.walletAddress - Owner wallet address.
 	 * @param inputs.collateralCoinTypes - Optional list of collateral coin types to filter by.
-	 * @returns {@link ApiPerpetualsOwnedAccountCapsResponse} containing `accounts`.
+	 * @returns `ApiPerpetualsOwnedAccountCapsResponse` containing `accounts`.
 	 *
 	 * @example
 	 * ```ts
@@ -523,7 +523,7 @@ export class Perpetuals extends Caller {
 	 * Vault caps represent ownership/administrative authority over a vault.
 	 *
 	 * @param inputs.walletAddress - Owner wallet address.
-	 * @returns {@link ApiPerpetualsOwnedVaultCapsResponse} containing vault caps.
+	 * @returns `ApiPerpetualsOwnedVaultCapsResponse` containing vault caps.
 	 */
 	public async getOwnedVaultCaps(inputs: ApiPerpetualsOwnedVaultCapsBody) {
 		return this.fetchApi<
@@ -542,7 +542,7 @@ export class Perpetuals extends Caller {
 	 * the assistant's wallet.
 	 *
 	 * @param inputs.walletAddress - Assistant wallet address.
-	 * @returns {@link ApiPerpetualsOwnedVaultAssistantCapsResponse} containing
+	 * @returns `ApiPerpetualsOwnedVaultAssistantCapsResponse` containing
 	 *   assistant caps.
 	 */
 	public async getOwnedVaultAssistantCaps(
@@ -561,7 +561,7 @@ export class Perpetuals extends Caller {
 	 * and may be subject to lock periods / delays depending on vault configuration.
 	 *
 	 * @param inputs.walletAddress - Wallet address that created the withdraw requests.
-	 * @returns {@link ApiPerpetualsVaultOwnedWithdrawRequestsResponse} containing requests.
+	 * @returns `ApiPerpetualsVaultOwnedWithdrawRequestsResponse` containing requests.
 	 */
 	public async getOwnedVaultWithdrawRequests(
 		inputs: ApiPerpetualsVaultOwnedWithdrawRequestsBody
@@ -582,7 +582,7 @@ export class Perpetuals extends Caller {
 	 * Use {@link getLpCoinPrices} to value them in collateral units.
 	 *
 	 * @param inputs - {@link ApiPerpetualsVaultOwnedLpCoinsBody}.
-	 * @returns {@link ApiPerpetualsVaultOwnedLpCoinsResponse}.
+	 * @returns `ApiPerpetualsVaultOwnedLpCoinsResponse`.
 	 */
 	public async getOwnedVaultLpCoins(
 		inputs: ApiPerpetualsVaultOwnedLpCoinsBody
@@ -596,8 +596,8 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch account caps by their account IDs.
 	 *
-	 * @param inputs.accountCapIds - List of account IDs.
-	 * @returns {@link ApiPerpetualsAccountCapsResponse} containing caps.
+	 * The input contains the list of account IDs to fetch.
+	 * @returns `ApiPerpetualsAccountCapsResponse` containing caps.
 	 */
 	public async getAdminAccountCaps(inputs: ApiPerpetualsAdminAccountCapsBody) {
 		return this.fetchApi<
@@ -616,9 +616,9 @@ export class Perpetuals extends Caller {
 	 * @param inputs.marketId - Market ID to query.
 	 * @param inputs.fromTimestamp - Start timestamp (inclusive).
 	 * @param inputs.toTimestamp - End timestamp (exclusive).
-	 * @param inputs.intervalMs - Candle interval in milliseconds.
+	 * The input contains the candle interval in milliseconds.
 	 *
-	 * @returns {@link ApiPerpetualsMarketCandleHistoryResponse} containing candle points.
+	 * @returns `ApiPerpetualsMarketCandleHistoryResponse` containing candle points.
 	 *
 	 * @remarks
 	 * This is currently implemented on the Perpetuals root client, but it may be
@@ -646,7 +646,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.toTimestamp - End timestamp (exclusive).
 	 * @param inputs.limit - Optional cap on the number of points returned.
 	 *
-	 * @returns {@link ApiPerpetualsMarketFundingHistoryResponse} containing
+	 * @returns `ApiPerpetualsMarketFundingHistoryResponse` containing
 	 * funding history points.
 	 */
 	public getMarketFundingHistory(
@@ -665,7 +665,7 @@ export class Perpetuals extends Caller {
 	 * mid, and mark prices for each requested market.
 	 *
 	 * @param inputs.marketIds - Market IDs to query.
-	 * @returns {@link ApiPerpetualsMarkets24hrStatsResponse}.
+	 * @returns `ApiPerpetualsMarkets24hrStatsResponse`.
 	 */
 	public getMarkets24hrStats(inputs: {
 		marketIds: PerpetualsMarketId[];
@@ -689,7 +689,7 @@ export class Perpetuals extends Caller {
 	 * requested market.
 	 *
 	 * @param inputs.marketIds - List of market IDs to query.
-	 * @returns {@link ApiPerpetualsMarketsPricesResponse} containing `marketsPrices`.
+	 * @returns `ApiPerpetualsMarketsPricesResponse` containing `marketsPrices`.
 	 *
 	 * @remarks
 	 * If `marketIds` is empty, returns `{ marketsPrices: [] }` without making an API call.
@@ -712,7 +712,7 @@ export class Perpetuals extends Caller {
 	 * Fetch LP coin prices (in collateral units) for a set of vaults.
 	 *
 	 * @param inputs.vaultIds - List of vault IDs to query.
-	 * @returns {@link ApiPerpetualsVaultLpCoinPricesResponse} containing `lpCoinPrices`.
+	 * @returns `ApiPerpetualsVaultLpCoinPricesResponse` containing `lpCoinPrices`.
 	 *
 	 * @remarks
 	 * If `vaultIds` is empty, returns `{ lpCoinPrices: [] }` without making an API call.
@@ -950,7 +950,7 @@ export class Perpetuals extends Caller {
 	 * flows. This method returns a transaction kind that mints/creates that cap.
 	 *
 	 * @param inputs - {@link ApiPerpetualsCreateVaultCapBody}.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getCreateVaultCapTx(inputs: ApiPerpetualsCreateVaultCapBody) {
 		return this.fetchApiTxObject<
@@ -977,7 +977,6 @@ export class Perpetuals extends Caller {
 	 *
 	 * @param inputs.walletAddress - Address of vault owner/curator.
 	 * @param inputs.metadata - Vault display metadata (name, description, curator info).
-	 * @param inputs.metadata - Vault display metadata (name, description, curator info).
 	 * @param inputs.coinMetadataId - Coin metadata object id obtained from create vault cap tx
 	 * @param inputs.treasuryCapId - Treasury cap object id obtained from create vault cap tx
 	 * @param inputs.collateralCoinType - Collateral coin type for deposits.
@@ -989,7 +988,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.initialDepositCoinArg - Transaction object argument referencing the deposit coin.
 	 * @param inputs.tx - Optional {@link Transaction} to extend.
 	 *
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 */
 	public async getCreateVaultTx(
 		inputs: {
@@ -1062,7 +1061,7 @@ export class Perpetuals extends Caller {
 	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
 	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
 	 * @param inputs.accountIds - Optional list of account IDs.
-	 * @returns {@link ApiPerpetualsCurrentRebateRewardsResponse} with per-account reward and rebate data.
+	 * @returns `ApiPerpetualsCurrentRebateRewardsResponse` with per-account reward and rebate data.
 	 *
 	 * @example
 	 * ```ts
@@ -1091,7 +1090,7 @@ export class Perpetuals extends Caller {
 	 * **Note:** All data returned is for the current epoch only.
 	 *
 	 * @param inputs - {@link ApiPerpetualsCreateCsvRebatesBody}.
-	 * @returns {@link ApiPerpetualsCreateCsvRebatesResponse} containing the CSV string.
+	 * @returns `ApiPerpetualsCreateCsvRebatesResponse` containing the CSV string.
 	 */
 	public async getCsvRebates(
 		inputs: ApiPerpetualsCreateCsvRebatesBody
@@ -1109,7 +1108,7 @@ export class Perpetuals extends Caller {
 	 * fees within the specified epoch, returning the result as a CSV string.
 	 *
 	 * @param inputs - {@link ApiPerpetualsCreateReferralCsvRebatesBody}.
-	 * @returns {@link ApiPerpetualsCreateReferralCsvRebatesResponse} containing the CSV string.
+	 * @returns `ApiPerpetualsCreateReferralCsvRebatesResponse` containing the CSV string.
 	 */
 	public async getReferralCsvRebates(
 		inputs: ApiPerpetualsCreateReferralCsvRebatesBody
@@ -1135,7 +1134,7 @@ export class Perpetuals extends Caller {
 	 * The resulting transaction must be signed by the account owner and executed on-chain.
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesCreateIntegratorConfigTxBody}.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 *
 	 * @example
 	 * ```ts
@@ -1176,12 +1175,12 @@ export class Perpetuals extends Caller {
 	 * collect fees on orders placed on behalf of the user. Once revoked, the integrator
 	 * will no longer be able to submit orders with integrator fees for this account.
 	 * The user can re-approve the integrator at any time by calling
-	 * {@link getCreateIntegratorConfigTx} again.
+	 * `getCreateIntegratorConfigTx` again.
 	 *
 	 * The resulting transaction must be signed by the account owner and executed on-chain.
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody}.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 *
 	 * @example
 	 * ```ts
@@ -1225,7 +1224,7 @@ export class Perpetuals extends Caller {
 	 * The resulting transaction must be signed by the integrator and executed on-chain.
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesCreateIntegratorVaultTxBody}.
-	 * @returns {@link SdkTransactionResponse} with `tx`.
+	 * @returns `SdkTransactionResponse` with `tx`.
 	 *
 	 * @example
 	 * ```ts
@@ -1271,7 +1270,7 @@ export class Perpetuals extends Caller {
 	 * The resulting transaction must be signed by the integrator and executed on-chain.
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxBody}.
-	 * @returns {@link ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse} containing
+	 * @returns `ApiPerpetualsBuilderCodesClaimIntegratorVaultFeesTxResponse` containing
 	 *   `txKind` and optionally `coinOutArgs`.
 	 *
 	 * @example
@@ -1327,7 +1326,7 @@ export class Perpetuals extends Caller {
 	 * - Validating that an integrator's requested fee doesn't exceed the approved maximum
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorConfigBody}.
-	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorConfigResponse} containing
+	 * @returns `ApiPerpetualsBuilderCodesIntegratorConfigResponse` containing
 	 *   `maxIntegratorFee` and `exists` flag.
 	 *
 	 * @example
@@ -1368,7 +1367,7 @@ export class Perpetuals extends Caller {
 	 * - Determining whether fees are ready to be claimed
 	 *
 	 * @param inputs - {@link ApiPerpetualsBuilderCodesIntegratorVaultsBody}.
-	 * @returns {@link ApiPerpetualsBuilderCodesIntegratorVaultsResponse} containing
+	 * @returns `ApiPerpetualsBuilderCodesIntegratorVaultsResponse` containing
 	 *   a vector of per-collateral vault data with accumulated fees.
 	 *
 	 * @example
@@ -1402,7 +1401,7 @@ export class Perpetuals extends Caller {
 	 * Determine the logical order side (Bid/Ask) from a signed base asset amount.
 	 *
 	 * @param inputs.baseAssetAmount - Position base size. Positive/zero => Bid (long), negative => Ask (short).
-	 * @returns {@link PerpetualsOrderSide}.
+	 * @returns `PerpetualsOrderSide`.
 	 */
 	public static positionSide(inputs: {
 		baseAssetAmount: number;
@@ -1497,7 +1496,7 @@ export class Perpetuals extends Caller {
 	 * Infer the order side from an encoded order ID.
 	 *
 	 * @param orderId - Encoded order ID.
-	 * @returns {@link PerpetualsOrderSide}.
+	 * @returns `PerpetualsOrderSide`.
 	 */
 	public static orderIdToSide = (
 		orderId: PerpetualsOrderId
@@ -1824,7 +1823,7 @@ export class Perpetuals extends Caller {
 	 * typically containing the latest candle for the specified interval.
 	 *
 	 * @param args.marketId - Market ID to subscribe to.
-	 * @param args.intervalMs - Candle interval in milliseconds.
+	 * The input contains the candle interval in milliseconds.
 	 * @param args.onMessage - Handler for incoming candle updates.
 	 * @param args.onOpen - Optional hook called when the websocket opens.
 	 * @param args.onError - Optional hook called on websocket error.

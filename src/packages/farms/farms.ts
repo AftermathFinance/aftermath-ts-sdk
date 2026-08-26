@@ -24,28 +24,37 @@ import type {
 } from "./farmsTypes";
 
 /**
- * The `Farms` class provides high-level methods for interacting with
- * staking pools (farms) on the Sui network. It allows fetching pool
- * details, user staked positions, and building transactions for creating
- * new pools. This class also enables retrieving user interactions (events)
- * with the farming system.
+ * High-level reads and transaction builders for Sui staking pools.
+ *
+ * The class reads pools, positions, capabilities, TVL, summaries, and user
+ * events through the farm API. Its transaction methods delegate to
+ * `AftermathApi.Farms()` and return unsigned transaction data. They do not
+ * sign or submit transactions. Pass an `AftermathApi` instance to the
+ * constructor when you use those builders.
+ *
+ * @example
+ * ```typescript
+ * const farms = new Farms({ network: "MAINNET" });
+ * const pools = await farms.getAllStakingPools();
+ * ```
  */
 export class Farms extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
-	/**
-	 * Contains constants relevant to farming, including minimum rewards to claim
-	 * and maximum lock multipliers.
-	 */
+	/** Thresholds used by the high-level reward and multiplier helpers. */
 	public static readonly constants = {
 		/**
-		 * The minimum number of rewards (in smallest units) that can be claimed.
+		 * Minimum claimable reward amount, in the reward coin's base units.
+		 * Rewards below this threshold are reported as zero by
+		 * `FarmsStakedPosition.rewardsEarned`.
 		 */
 		minRewardsToClaim: BigInt(10),
 		/**
-		 * The maximum lock multiplier that can be applied when locking a staked position.
+		 * Maximum human-readable lock multiplier exposed by the legacy helper,
+		 * represented as `2` for a 2x multiplier. Pool objects store the precise
+		 * value as an 18-decimal fixed-point `bigint`.
 		 */
 		maxLockMultiplier: 2,
 	};
@@ -55,11 +64,10 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates a new `Farms` instance for fetching staking pool data and building
-	 * farm-related transactions.
-	 *
-	 * @param config - Optional configuration, including network and access token.
-	 * @param api - An optional `AftermathApi` instance for advanced transaction building.
+	 * Creates a `Farms` instance for farm API reads and transaction builders.
+ *
+	 * @param config - Optional network, API-host, and access-token configuration.
+	 * @param api - Optional provider used by transaction builders. Reads do not require it.
 	 */
 	constructor(
 		config?: CallerConfig,
@@ -80,6 +88,7 @@ export class Farms extends Caller {
 	 * Fetches a single staking pool by its `objectId` from the farm API/indexer.
 	 *
 	 * @param inputs - An object containing the `objectId` of the staking pool.
+	 * @param abortSignal - Optional signal that cancels the API request.
 	 * @returns A `FarmsStakingPool` object representing the staking pool.
 	 *
 	 * @example
@@ -104,6 +113,7 @@ export class Farms extends Caller {
 	 * Fetches multiple staking pools by their `objectIds`.
 	 *
 	 * @param inputs - An object containing an array of `objectIds`.
+	 * @param abortSignal - Optional signal that cancels the API request.
 	 * @returns An array of `FarmsStakingPool` instances corresponding to each `objectId`.
 	 *
 	 * @example
@@ -138,6 +148,7 @@ export class Farms extends Caller {
 	/**
 	 * Fetches all existing staking pools registered within the indexer or farm API.
 	 *
+	 * @param abortSignal - Optional signal that cancels the API request.
 	 * @returns An array of `FarmsStakingPool` objects.
 	 *
 	 * @example
@@ -233,7 +244,8 @@ export class Farms extends Caller {
 	 * Retrieves the total value locked (TVL) in the specified farm IDs or in all farms if none are specified.
 	 *
 	 * @param inputs - An optional object containing an array of `farmIds` to filter TVL by. If not provided, returns global TVL.
-	 * @returns A promise that resolves to a `number` representing the TVL in USD (or another relevant currency).
+	 * @param abortSignal - Optional signal that cancels the API request.
+	 * @returns A promise that resolves to the TVL as a `number` in the API's reporting currency.
 	 *
 	 * @example
 	 * ```typescript
@@ -255,7 +267,8 @@ export class Farms extends Caller {
 	 * Retrieves the total value locked (TVL) of reward coins across specified farm IDs or all farms if none are specified.
 	 *
 	 * @param inputs - An optional object containing an array of `farmIds`. If not provided, returns global reward TVL.
-	 * @returns A promise that resolves to a `number` representing the total rewards TVL in USD (or another relevant currency).
+	 * @param abortSignal - Optional signal that cancels the API request.
+	 * @returns A promise that resolves to the reward TVL as a `number` in the API's reporting currency.
 	 *
 	 * @example
 	 * ```typescript
@@ -297,7 +310,7 @@ export class Farms extends Caller {
 	 *
 	 * Builds a transaction to create a new staking pool (farming vault) on version 1 of the farm system.
 	 *
-	 * @param inputs - Contains pool creation parameters such as `minLockDurationMs`, `maxLockDurationMs`, etc.
+	 * @param inputs - Pool durations in milliseconds, fixed-point multiplier, minimum stake, coin type, and creator address.
 	 * @returns A transaction object (or bytes) that can be signed and submitted.
 	 *
 	 * @deprecated Please use `getCreateStakingPoolTransactionV2`.
@@ -311,15 +324,16 @@ export class Farms extends Caller {
 	/**
 	 * Builds a transaction to create a new staking pool (farming vault) on version 2 of the farm system.
 	 *
-	 * @param inputs - Contains pool creation parameters such as `minLockDurationMs`, `maxLockDurationMs`, etc.
+	 * @param inputs - Pool durations in milliseconds, fixed-point multiplier, minimum stake, coin type, and creator address.
 	 * @returns A transaction object (or bytes) that can be signed and submitted.
+	 * @throws An error if no `AftermathApi` instance was provided.
 	 *
 	 * @example
 	 * ```typescript
 	 * const tx = await farms.getCreateStakingPoolTransactionV2({
 	 *   minLockDurationMs: 604800000, // 1 week
 	 *   maxLockDurationMs: 31536000000, // 1 year
-	 *   maxLockMultiplier: BigInt("2000000000"), // e.g. 2.0x
+	 *   maxLockMultiplier: BigInt("2000000000000000000"), // 2.0x in 18-decimal fixed point
 	 *   minStakeAmount: BigInt("1000000"),
 	 *   stakeCoinType: "0x<coin_type>",
 	 *   walletAddress: "0x<admin_address>"

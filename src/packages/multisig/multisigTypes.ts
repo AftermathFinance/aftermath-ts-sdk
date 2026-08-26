@@ -17,11 +17,12 @@ export interface ApiMultisigUserBody {
  */
 export interface MultisigData {
 	/**
-	 * The structured multisig public key object.
+	 * The structured 1-of-2 multisig public key with the shared-custody and user
+	 * Ed25519 keys, each with weight `1`.
 	 */
 	publicKey: MultiSigPublicKey;
 	/**
-	 * The resulting multisig address string.
+	 * The Sui address derived from `publicKey`.
 	 */
 	address: string;
 }

@@ -6,9 +6,8 @@ import type {
 } from "./userDataTypes";
 
 /**
- * The `UserData` class provides functionality for managing user-specific
- * information in the Aftermath system. It enables creating and retrieving
- * user public keys, as well as generating messages for signing.
+ * The `UserData` class provides HTTP access to user public-key data and local
+ * helpers for the messages used by authenticated Aftermath requests.
  */
 export class UserData extends Caller {
 	// =========================================================================
@@ -18,7 +17,7 @@ export class UserData extends Caller {
 	/**
 	 * Creates a new instance of the `UserData` class for interacting with user data endpoints.
 	 *
-	 * @param config - Optional configuration for the `Caller`, including network and access token.
+	 * @param config - Optional network, API host, access token, and API path.
 	 */
 	constructor(config?: CallerConfig) {
 		super(config, "user-data");
@@ -33,6 +32,7 @@ export class UserData extends Caller {
 	 *
 	 * @param inputs - An object implementing `ApiUserDataPublicKeyBody`, containing the user's wallet address.
 	 * @returns A promise that resolves to a string representation of the user's public key, or `undefined` if none is found.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -56,11 +56,19 @@ export class UserData extends Caller {
 	}
 
 	/**
-	 * Creates (or updates) the stored public key for a user on the backend, linking
-	 * it to their wallet address.
+	 * Creates or updates the stored public key for a wallet through the backend.
+	 * This method sends the supplied signed bytes and signature; it does not sign
+	 * the message or make a transaction.
 	 *
-	 * @param inputs - Details required to create or update the user's public key, including signature data.
-	 * @returns A promise that resolves to `true` if the public key was successfully created/updated, otherwise `false` or an error.
+	 * For the current authentication flow, sign the exact value returned by
+	 * `createTermsAndConditionsMessage()` as a personal message over its UTF-8
+	 * bytes, then pass those bytes and the resulting signature in `inputs`.
+	 *
+	 * @param inputs - Wallet address, serialized signed-message bytes, and the
+	 * corresponding signature.
+	 * @returns `true` when the backend stores the key. `false` is also a valid
+	 * backend response.
+	 * @throws `AftermathTransportError` when the API request or response fails.
 	 *
 	 * @example
 	 * ```typescript
@@ -82,10 +90,12 @@ export class UserData extends Caller {
 	}
 
 	/**
-	 * Generates a simple message object that the user should sign to prove their
-	 * intention to create or link an account in the Aftermath system.
+	 * Builds the legacy account-creation message object locally.
 	 *
-	 * @returns An object with an `action` property, used as the data to sign.
+	 * This method does not make a network request. Current authenticated
+	 * requests use `createTermsAndConditionsMessage()` instead.
+	 *
+	 * @returns An object with `action: "CREATE_USER_ACCOUNT"`.
 	 *
 	 * @example
 	 * ```typescript
@@ -118,6 +128,7 @@ export class UserData extends Caller {
 	 * subscription, and gas-pool sponsorship.
 	 *
 	 * @returns The exact string to sign.
+	 * This method does not make a network request.
 	 *
 	 * @example
 	 * ```typescript
@@ -138,6 +149,7 @@ export class UserData extends Caller {
 	 * @deprecated af-fe no longer accepts the `{action:...}` wrapper and rejects
 	 * it with error 2034. Sign {@link createTermsAndConditionsMessage} instead.
 	 * @returns An object with an `action` property set to "SIGN_TERMS_AND_CONDITIONS".
+	 * This method does not make a network request.
 	 */
 	public createSignTermsAndConditionsMessageToSign(): {
 		action: string;
