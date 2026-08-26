@@ -19,6 +19,7 @@
     "prepack": "bun run build",
     "prepare": "bun run build",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test:release": "node scripts/release.test.mjs",
     "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --runInBand",
     "test:focused": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
     "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --runInBand",
@@ -34,7 +35,7 @@
     "fix": "ultracite fix",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "bun run build && changeset publish"
+    "release": "node scripts/release.mjs"
   },
   "packageManager": "bun@1.3.8",
   "repository": {

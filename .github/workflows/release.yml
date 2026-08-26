@@ -33,12 +33,16 @@ jobs:
                   node-version: 22
                   registry-url: https://registry.npmjs.org
 
-            # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node ships npm 10.
-            - name: Upgrade npm for OIDC trusted publishing
-              run: npm install -g npm@latest
+            # Trusted publishing needs npm >= 11.5.1. Pin a known npm 11 release
+            # so Changesets does not inherit breaking npm CLI behavior from latest.
+            - name: Install pinned npm for OIDC trusted publishing
+              run: npm install -g npm@11.6.2
 
             - name: Install
               run: bun install --frozen-lockfile
+
+            - name: Test idempotent release guard
+              run: bun run test:release
 
             - name: Create release PR or publish
               uses: changesets/action@v1
@@ -70,9 +74,10 @@ jobs:
                   node-version: 22
                   registry-url: https://registry.npmjs.org
 
-            # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node ships npm 10.
-            - name: Upgrade npm for OIDC trusted publishing
-              run: npm install -g npm@latest
+            # Trusted publishing needs npm >= 11.5.1. Keep the dev publisher on
+            # the same known npm version as the stable release publisher.
+            - name: Install pinned npm for OIDC trusted publishing
+              run: npm install -g npm@11.6.2
 
             - name: Install
               run: bun install --frozen-lockfile
