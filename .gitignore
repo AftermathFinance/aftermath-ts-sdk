@@ -5,3 +5,5 @@ lib/
 .vscode/
 .idea/
 .env
+coverage/
+.oracle/

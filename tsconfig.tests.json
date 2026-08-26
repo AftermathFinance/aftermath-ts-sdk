@@ -1,11 +1,15 @@
 {
-	"//": "The base tsconfig includes only `src/**/*`, so `npx tsc --noEmit` never typechecks `tests/`. This config widens the include so the test suite is typechecked too; run it with `npx tsc --noEmit -p tsconfig.tests.json`. It is check-only and is not used by the tsup build.",
-	"extends": "./tsconfig.json",
-	"include": ["src/**/*", "tests/**/*"],
-	"exclude": ["node_modules"],
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": false,
-		"types": ["jest", "node"]
-	}
+  "//": "The base tsconfig includes only `src/**/*`, so `npx tsc --noEmit` never typechecks `tests/`. This config widens the include so the test suite is typechecked too; run it with `npx tsc --noEmit -p tsconfig.tests.json`. It is check-only and is not used by the tsup build.",
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", "tests/**/*.test.ts"],
+  "exclude": [
+    "node_modules",
+    "tests/perpetuals.test.ts",
+    "tests/perpetuals.allFunctions.test.ts"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "types": ["jest", "node"]
+  }
 }

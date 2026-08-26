@@ -1901,9 +1901,8 @@ export class PerpetualsAccount extends Caller {
 	 * A stop order is considered SL/TP if it appears in the combined set of
 	 * SL/TP orders across **all** markets (see {@link slTpStopOrderDatas}).
 	 *
-	 * Note:
-	 * - This implementation uses JSON string equality to compare objects.
-	 *   This is pragmatic but assumes stable field ordering and identical shapes.
+	 * Matching uses the stop-order object ID, so bigint fields and field ordering
+	 * do not affect classification.
 	 *
 	 * @param inputs.stopOrderDatas - Full array of stop-order ticket data.
 	 * @returns An array of non-SL/TP stop orders, or `undefined` if none exist.
@@ -1915,11 +1914,11 @@ export class PerpetualsAccount extends Caller {
 
 		const slTpOrders = this.slTpStopOrderDatas(inputs);
 
+		const slTpOrderIds = new Set(
+			(slTpOrders ?? []).map((slTpOrder) => slTpOrder.objectId)
+		);
 		const stopOrders = stopOrderDatas.filter(
-			(stopOrder) =>
-				!(slTpOrders ?? [])
-					.map((slTpOrder) => JSON.stringify(slTpOrder))
-					.includes(JSON.stringify(stopOrder))
+			(stopOrder) => !slTpOrderIds.has(stopOrder.objectId)
 		);
 		return stopOrders.length <= 0 ? undefined : stopOrders;
 	}
@@ -2004,18 +2003,16 @@ export class PerpetualsAccount extends Caller {
 
 		const { fullSlTpOrder, partialSlTpOrders } =
 			this.slTpStopOrderDatasForPosition(inputs);
+		const slTpOrderIds = new Set(
+			[
+				...(fullSlTpOrder ? [fullSlTpOrder] : []),
+				...(partialSlTpOrders ?? []),
+			].map((slTpOrder) => slTpOrder.objectId)
+		);
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
-				!(
-					stopOrder.limitOrder ||
-					[
-						...(fullSlTpOrder ? [fullSlTpOrder] : []),
-						...(partialSlTpOrders ?? []),
-					]
-						.map((slTpOrder) => JSON.stringify(slTpOrder))
-						.includes(JSON.stringify(stopOrder))
-				)
+				!(stopOrder.limitOrder || slTpOrderIds.has(stopOrder.objectId))
 		);
 		return stopOrders.length <= 0 ? undefined : stopOrders;
 	}

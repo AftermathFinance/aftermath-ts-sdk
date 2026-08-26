@@ -1,9 +1,9 @@
 import { jest } from "@jest/globals";
 
-jest.mock("@mysten/sui/transactions", () => ({
+jest.unstable_mockModule("@mysten/sui/transactions", () => ({
 	Transaction: class {},
 }));
-jest.mock("../src/general/utils/helpers", () => ({
+jest.unstable_mockModule("../src/general/utils/helpers", () => ({
 	Helpers: {
 		parseJsonWithBigint: (text: string) =>
 			JSON.parse(text, (_key, value) =>
@@ -13,21 +13,25 @@ jest.mock("../src/general/utils/helpers", () => ({
 			),
 	},
 }));
-jest.mock("../src/packages/perpetuals/perpetualsAccount", () => ({
-	PerpetualsAccount: class {},
-}));
-jest.mock("../src/packages/perpetuals/perpetualsMarket", () => ({
+jest.unstable_mockModule(
+	"../src/packages/perpetuals/perpetualsAccount",
+	() => ({
+		PerpetualsAccount: class {},
+	})
+);
+jest.unstable_mockModule("../src/packages/perpetuals/perpetualsMarket", () => ({
 	PerpetualsMarket: class {},
 }));
-jest.mock("../src/packages/perpetuals/perpetualsVault", () => ({
+jest.unstable_mockModule("../src/packages/perpetuals/perpetualsVault", () => ({
 	PerpetualsVault: class {},
 }));
-jest.mock("../src/packages/perpetuals/utils", () => ({
+jest.unstable_mockModule("../src/packages/perpetuals/utils", () => ({
 	PerpetualsOrderUtils: {},
 }));
 
-import { Perpetuals } from "../src/packages/perpetuals/perpetuals";
 import type { PerpetualsVaultsConfig } from "../src/packages/perpetuals/perpetualsTypes";
+
+const { Perpetuals } = await import("../src/packages/perpetuals/perpetuals");
 
 interface FetchCall {
 	input: RequestInfo | URL;

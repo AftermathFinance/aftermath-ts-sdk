@@ -17,7 +17,7 @@ class TestCaller extends Caller {
 		signal?: AbortSignal,
 		options?: { disableBigIntJsonParsing?: boolean }
 	): Promise<Output> {
-		return this.fetchApi<Output>("test", body, signal, options);
+		return this.fetchApi<Output, unknown>("test", body, signal, options);
 	}
 }
 
@@ -109,23 +109,22 @@ describe("Aftermath transport errors", () => {
 
 	it("preserves the legacy HTTP message while adding structured fields", async () => {
 		const secret = "transport-secret-marker";
-		installFetch(() =>
-			new Response(secret, {
-				status: 503,
-				statusText: "Service Unavailable",
-				headers: {
-					"Retry-After": "2",
-					"X-Secret-Header": secret,
-				},
-			})
+		installFetch(
+			() =>
+				new Response(secret, {
+					status: 503,
+					statusText: "Service Unavailable",
+					headers: {
+						"Retry-After": "2",
+						"X-Secret-Header": secret,
+					},
+				})
 		);
 
 		const error = await expectTransportError(makeCaller().call());
 		expect(error).toBeInstanceOf(Error);
 		expect(error.name).toBe("Error");
-		expect(error.message).toBe(
-			`HTTP 503 Service Unavailable: ${secret}`
-		);
+		expect(error.message).toBe(`HTTP 503 Service Unavailable: ${secret}`);
 		expect(error.kind).toBe("http");
 		expect(error.status).toBe(503);
 		expect(error.retryAfterMs).toBe(2000);
