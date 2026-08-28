@@ -29,3 +29,10 @@ Breaking:
   accepts the provider as an optional second constructor argument.
 - **`ApiRouterAddTransactionForCompleteTradeRouteBody.serializedTx` is now
   `txKind`**, and the add-trade response field `tx` is now `txKind`.
+
+Each affected builder has a `…Deprecated` counterpart keeping the previous
+behaviour against the unversioned routes, for callers that need the old shape
+while they migrate: `getTransactionForCompleteTradeRouteDeprecated`,
+`addTransactionForCompleteTradeRouteDeprecated`,
+`getCreateDcaOrderTxDeprecated` and `getCreateLimitOrderTxDeprecated`. They
+carry the same address-balance limitation as the endpoints behind them.

@@ -159,6 +159,28 @@ export class Dca extends Caller {
 	}
 
 	/**
+	 * Builds a transaction creating a new DCA order using the unversioned endpoint.
+	 *
+	 * Returns a gas-resolved transaction, as this method did before the v1
+	 * endpoints. Kept for callers that depend on that shape.
+	 *
+	 * @deprecated Use {@link getCreateDcaOrderTx}. The unversioned endpoint fails for wallets
+	 * whose allocate coin is sourced from an address balance: the API cannot
+	 * serialize the resulting `FundsWithdrawal` input to its legacy JSON format.
+	 *
+	 * @param inputs - Order parameters, identical to the versioned endpoint.
+	 * @returns The unsigned transaction, with gas resolved by the API.
+	 */
+	public async getCreateDcaOrderTxDeprecated(
+		inputs: ApiDcaTransactionForCreateOrderBody
+	): Promise<Transaction> {
+		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
+			"transactions/create-order",
+			inputs
+		);
+	}
+
+	/**
 	 * Sends a signed request to cancel one or more DCA orders.
 	 *
 	 * Sign the exact string returned by

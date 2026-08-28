@@ -1,9 +1,11 @@
-import type { Transaction } from "@mysten/sui/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import type {
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
+	ApiRouterAddTransactionForCompleteTradeRouteBodyDeprecated,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
+	ApiRouterAddTransactionForCompleteTradeRouteResponseDeprecated,
 	ApiRouterCompleteTradeRouteBody,
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterTradeEventsBody,
@@ -331,6 +333,66 @@ export class Router extends Caller {
 
 		newTx.setSenderIfNotSet(inputs.walletAddress);
 		return { tx: newTx, coinOutId };
+	}
+
+	/**
+	 * Builds a trade transaction using the unversioned endpoint.
+	 *
+	 * Returns a gas-resolved transaction, as this method did before the v1
+	 * endpoints. Kept for callers that depend on that shape.
+	 *
+	 * @deprecated Use {@link Router.getTransactionForCompleteTradeRoute}. The
+	 * unversioned endpoint fails for wallets whose input coin is sourced from an
+	 * address balance: the API cannot serialize the resulting `FundsWithdrawal`
+	 * input to its legacy JSON format.
+	 *
+	 * @param inputs - Wallet address, complete route, slippage, and optional sponsorship settings.
+	 * @returns The unsigned transaction, with gas resolved by the API.
+	 */
+	public async getTransactionForCompleteTradeRouteDeprecated(
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
+	) {
+		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade",
+			inputs
+		);
+	}
+
+	/**
+	 * Appends a complete route to an existing transaction using the unversioned
+	 * endpoint.
+	 *
+	 * Sends the transaction as v1 JSON and needs no `AftermathApi`, as this
+	 * method did before the v1 endpoints.
+	 *
+	 * @deprecated Use {@link Router.addTransactionForCompleteTradeRoute}. The
+	 * unversioned endpoint fails for wallets whose input coin is sourced from an
+	 * address balance, and `Transaction.serialize()` throws on any transaction
+	 * already carrying a `FundsWithdrawal` input.
+	 *
+	 * @param inputs - Existing transaction, sender, complete route, slippage, and optional input coin argument.
+	 * @returns A new transaction and the optional output coin argument.
+	 */
+	public async addTransactionForCompleteTradeRouteDeprecated(
+		inputs: Omit<
+			ApiRouterAddTransactionForCompleteTradeRouteBodyDeprecated,
+			"serializedTx"
+		> & {
+			tx: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		const { tx: newTx, coinOutId } = await this.fetchApi<
+			ApiRouterAddTransactionForCompleteTradeRouteResponseDeprecated,
+			ApiRouterAddTransactionForCompleteTradeRouteBodyDeprecated
+		>("transactions/add-trade", {
+			...otherInputs,
+			serializedTx: tx.serialize(),
+		});
+		return {
+			tx: Transaction.from(newTx),
+			coinOutId,
+		};
 	}
 
 	// =========================================================================

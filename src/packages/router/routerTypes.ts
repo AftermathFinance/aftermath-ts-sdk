@@ -388,3 +388,33 @@ export interface ApiRouterDynamicGasBody {
 	 */
 	referrer?: SuiAddress;
 }
+
+/**
+ * Body for the unversioned add-trade endpoint.
+ *
+ * @deprecated Use {@link ApiRouterAddTransactionForCompleteTradeRouteBody}. The
+ * unversioned endpoint cannot build transactions whose input coin is sourced
+ * from an address balance.
+ */
+export type ApiRouterAddTransactionForCompleteTradeRouteBodyDeprecated =
+	ApiRouterTransactionForCompleteTradeRouteBody & {
+		/** The v1-JSON serialized transaction the router commands are added to. */
+		serializedTx: SerializedTransaction;
+		/**
+		 * An optional transaction object argument for the input coin. Omit it when
+		 * the API should select the coin input.
+		 */
+		coinInId?: TransactionObjectArgument;
+	};
+
+/**
+ * Response from the unversioned add-trade endpoint.
+ *
+ * @deprecated Use {@link ApiRouterAddTransactionForCompleteTradeRouteResponse}.
+ */
+export interface ApiRouterAddTransactionForCompleteTradeRouteResponseDeprecated {
+	/** The updated v1-JSON serialized transaction. */
+	tx: SerializedTransaction;
+	/** A transaction object argument for the output coin, when exposed. */
+	coinOutId: TransactionObjectArgument | undefined;
+}
