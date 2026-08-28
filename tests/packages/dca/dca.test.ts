@@ -14,7 +14,7 @@ import {
 	REFERRER,
 	requestBody,
 	SECOND_ORDER_ID,
-	serializedTransaction,
+	transactionKind,
 	Transaction,
 	WALLET,
 } from "@test/packages/dca/fixtures.js";
@@ -66,7 +66,7 @@ describe("DCA HTTP facade and transaction inputs", () => {
 	});
 
 	it("posts bigint-safe create-order options and restores a Transaction", async () => {
-		const calls = installJsonFetch(serializedTransaction());
+		const calls = installJsonFetch({ txKind: await transactionKind() });
 		const input = {
 			walletAddress: WALLET,
 			allocateCoinType: COIN_A,

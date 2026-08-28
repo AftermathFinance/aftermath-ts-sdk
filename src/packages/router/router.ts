@@ -1,4 +1,5 @@
-import { Transaction } from "@mysten/sui/transactions";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import type {
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
@@ -12,6 +13,7 @@ import type {
 	CoinType,
 	RouterCompleteTradeRoute,
 	RouterTradeEvent,
+	SerializedTransaction,
 	Slippage,
 } from "../../types";
 
@@ -68,7 +70,10 @@ export class Router extends Caller {
 	 * const router = afSdk.Router();
 	 * ```
 	 */
-	constructor(config?: CallerConfig) {
+	constructor(
+		config?: CallerConfig,
+		public readonly api?: AftermathApi
+	) {
 		super(config, "router");
 	}
 
@@ -253,10 +258,13 @@ export class Router extends Caller {
 	public async getTransactionForCompleteTradeRoute(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {
-		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
-			"transactions/trade",
-			inputs
-		);
+		const { tx } = await this.fetchApiTxObject<
+			ApiRouterTransactionForCompleteTradeRouteBody,
+			{ txKind: SerializedTransaction }
+		>("v1/transactions/trade", inputs, undefined, { txKind: true });
+
+		tx.setSenderIfNotSet(inputs.walletAddress);
+		return tx;
 	}
 
 	/**
@@ -295,23 +303,34 @@ export class Router extends Caller {
 	public async addTransactionForCompleteTradeRoute(
 		inputs: Omit<
 			ApiRouterAddTransactionForCompleteTradeRouteBody,
-			"serializedTx"
+			"txKind"
 		> & {
 			tx: Transaction;
 		}
 	) {
 		const { tx, ...otherInputs } = inputs;
-		const { tx: newTx, coinOutId } = await this.fetchApi<
-			ApiRouterAddTransactionForCompleteTradeRouteResponse,
-			ApiRouterAddTransactionForCompleteTradeRouteBody
-		>("transactions/add-trade", {
-			...otherInputs,
-			serializedTx: tx.serialize(),
-		});
-		return {
-			tx: Transaction.from(newTx),
-			coinOutId,
-		};
+
+		const txKind = await this.api
+			?.Transactions()
+			.fetchBase64TxKindFromTx({ tx });
+		if (txKind === undefined) {
+			throw new Error(
+				"`Router` requires an `AftermathApi` provider to serialize the supplied transaction. Construct it via `Aftermath.create()`."
+			);
+		}
+
+		const { tx: newTx, coinOutId } = await this.fetchApiTxObject<
+			ApiRouterAddTransactionForCompleteTradeRouteBody,
+			ApiRouterAddTransactionForCompleteTradeRouteResponse
+		>(
+			"v1/transactions/add-trade",
+			{ ...otherInputs, txKind },
+			undefined,
+			{ txKind: true }
+		);
+
+		newTx.setSenderIfNotSet(inputs.walletAddress);
+		return { tx: newTx, coinOutId };
 	}
 
 	// =========================================================================

@@ -1,6 +1,11 @@
 import type { Transaction } from "@mysten/sui/transactions";
 import { Caller } from "../../general/utils/caller";
-import type { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type {
+	CallerConfig,
+	ObjectId,
+	SerializedTransaction,
+	SuiAddress,
+} from "../../types";
 import type {
 	ApiDCAsOwnedBody,
 	ApiDcaCreateUserBody,
@@ -144,10 +149,13 @@ export class Dca extends Caller {
 	public async getCreateDcaOrderTx(
 		inputs: ApiDcaTransactionForCreateOrderBody
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
-			"transactions/create-order",
-			inputs
-		);
+		const { tx } = await this.fetchApiTxObject<
+			ApiDcaTransactionForCreateOrderBody,
+			{ txKind: SerializedTransaction }
+		>("v1/transactions/create-order", inputs, undefined, { txKind: true });
+
+		tx.setSenderIfNotSet(inputs.walletAddress);
+		return tx;
 	}
 
 	/**

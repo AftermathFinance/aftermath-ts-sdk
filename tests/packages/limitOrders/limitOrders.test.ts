@@ -15,7 +15,7 @@ import {
 	REFERRER,
 	requestBody,
 	SECOND_ORDER_ID,
-	serializedTransaction,
+	transactionKind,
 	Transaction,
 	WALLET,
 } from "@test/packages/limitOrders/fixtures.js";
@@ -74,7 +74,7 @@ describe("LimitOrders HTTP facade and signing", () => {
 	});
 
 	it("posts create-order boundaries with bigint amounts and restores the sender", async () => {
-		const calls = installJsonFetch(serializedTransaction());
+		const calls = installJsonFetch({ txKind: await transactionKind() });
 		const input = {
 			walletAddress: WALLET,
 			allocateCoinType: COIN_A,

@@ -314,10 +314,10 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
 	ApiRouterTransactionForCompleteTradeRouteBody & {
 		/**
-		 * The serialized transaction bytes to which the router commands are added.
-		 * The SDK serializes a `Transaction` before sending this field over JSON.
+		 * The base64 `TransactionKind` to which the router commands are added.
+		 * The SDK builds this from a `Transaction` before sending it over JSON.
 		 */
-		serializedTx: SerializedTransaction;
+		txKind: SerializedTransaction;
 		/**
 		 * An optional transaction object argument for the input coin. Omit it when
 		 * the API should select the coin input.
@@ -330,10 +330,10 @@ export type ApiRouterAddTransactionForCompleteTradeRouteBody =
  */
 export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
 	/**
-	 * The updated serialized transaction bytes. The SDK parses these bytes into a
-	 * new `Transaction` before returning from `Router.addTransactionForCompleteTradeRoute`.
+	 * The updated base64 `TransactionKind`. The SDK parses this into a new
+	 * `Transaction` before returning from `Router.addTransactionForCompleteTradeRoute`.
 	 */
-	tx: SerializedTransaction;
+	txKind: SerializedTransaction;
 	/**
 	 * A transaction object argument for the output coin, or `undefined` when the
 	 * response does not expose one.

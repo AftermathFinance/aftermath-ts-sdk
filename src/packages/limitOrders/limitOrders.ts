@@ -1,6 +1,11 @@
 import type { Transaction } from "@mysten/sui/transactions";
 import { Caller } from "../../general/utils/caller";
-import type { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type {
+	CallerConfig,
+	ObjectId,
+	SerializedTransaction,
+	SuiAddress,
+} from "../../types";
 import type {
 	ApiLimitOrdersActiveOrdersOwnedBody,
 	ApiLimitOrdersCancelOrderTransactionBody,
@@ -139,10 +144,13 @@ export class LimitOrders extends Caller {
 	public async getCreateLimitOrderTx(
 		inputs: ApiLimitOrdersCreateOrderTransactionBody
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiLimitOrdersCreateOrderTransactionBody>(
-			"transactions/create-order",
-			inputs
-		);
+		const { tx } = await this.fetchApiTxObject<
+			ApiLimitOrdersCreateOrderTransactionBody,
+			{ txKind: SerializedTransaction }
+		>("v1/transactions/create-order", inputs, undefined, { txKind: true });
+
+		tx.setSenderIfNotSet(inputs.walletAddress);
+		return tx;
 	}
 
 	/**
