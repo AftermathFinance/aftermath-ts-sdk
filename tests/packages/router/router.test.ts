@@ -29,6 +29,20 @@ const TRADE_EVENT_TYPE = "0xrouter-utils::events::SwapCompletedEvent";
 
 const EMPTY_SERIALIZED_TRANSACTION =
 	'{"version":1,"expiration":null,"gasConfig":{},"inputs":[],"transactions":[]}';
+/** Base64 `TransactionKind` for an empty transaction — what the API now returns. */
+const EMPTY_TX_KIND = "AAAA";
+/** Base64 kind the stubbed provider hands back for the caller's transaction. */
+const INPUT_TX_KIND = "AQID";
+/**
+ * Stub of the provider `Router` uses to turn the caller's transaction into a
+ * kind. Building one for real needs a client to resolve object refs, which is
+ * @mysten's concern, not this seam's.
+ */
+const txKindApi = {
+	Transactions: () => ({
+		fetchBase64TxKindFromTx: async () => INPUT_TX_KIND,
+	}),
+} as unknown as ConstructorParameters<typeof Router>[1];
 const PADDED_WALLET =
 	"0x0000000000000000000000000000000000000000000000000000000000000123";
 
@@ -365,7 +379,7 @@ describe("Router public HTTP seam", () => {
 
 	it("builds a transaction request with bigint route fields and binds the wallet sender", async () => {
 		const router = new Router({ baseUrl: BASE_URL });
-		const calls = installJsonResponse(EMPTY_SERIALIZED_TRANSACTION);
+		const calls = installJsonResponse({ txKind: EMPTY_TX_KIND });
 
 		const tx = await router.getTransactionForCompleteTradeRoute({
 			walletAddress: WALLET,
@@ -376,7 +390,7 @@ describe("Router public HTTP seam", () => {
 		});
 
 		expect(calls[0]?.input).toBe(
-			"https://sdk.test/api/router/transactions/trade"
+			"https://sdk.test/api/router/v1/transactions/trade"
 		);
 		expect(requestBody(calls)).toMatchObject({
 			walletAddress: WALLET,
@@ -414,12 +428,12 @@ describe("Router public HTTP seam", () => {
 	});
 
 	it("serializes an existing transaction and preserves the returned coin argument", async () => {
-		const router = new Router({ baseUrl: BASE_URL });
+		const router = new Router({ baseUrl: BASE_URL }, txKindApi);
 		const inputTx = new Transaction();
 		const coinInId = inputTx.object("0x2");
 		const serializedInputTx = inputTx.serialize();
 		const calls = installJsonResponse({
-			tx: EMPTY_SERIALIZED_TRANSACTION,
+			txKind: EMPTY_TX_KIND,
 			coinOutId: { NestedResult: [2, 1] },
 		});
 
@@ -432,25 +446,25 @@ describe("Router public HTTP seam", () => {
 		});
 
 		expect(calls[0]?.input).toBe(
-			"https://sdk.test/api/router/transactions/add-trade"
+			"https://sdk.test/api/router/v1/transactions/add-trade"
 		);
 		expect(requestBody(calls)).toMatchObject({
 			walletAddress: WALLET,
 			slippage: 0.01,
-			serializedTx: serializedInputTx,
+			txKind: INPUT_TX_KIND,
 			coinInId: { $kind: "Input", Input: 0, type: "object" },
 		});
 		expect(requestBody(calls)).not.toHaveProperty("tx");
 		expect(inputTx.serialize()).toBe(serializedInputTx);
 
 		expect(result.tx).toBeInstanceOf(Transaction);
-		expect(result.tx.serialize()).toBe(EMPTY_SERIALIZED_TRANSACTION);
+		expect(result.tx.getData().commands).toEqual([]);
 		expect(result.coinOutId).toEqual({ NestedResult: [2, 1] });
 	});
 
 	it("returns an undefined coinOutId when the add-trade response omits it", async () => {
-		const router = new Router({ baseUrl: BASE_URL });
-		const calls = installJsonResponse({ tx: EMPTY_SERIALIZED_TRANSACTION });
+		const router = new Router({ baseUrl: BASE_URL }, txKindApi);
+		const calls = installJsonResponse({ txKind: EMPTY_TX_KIND });
 
 		const result = await router.addTransactionForCompleteTradeRoute({
 			tx: new Transaction(),
@@ -461,6 +475,52 @@ describe("Router public HTTP seam", () => {
 
 		expect(calls[0]?.init?.method).toBe("POST");
 		expect(result.coinOutId).toBeUndefined();
+	});
+
+	it("keeps the deprecated builders on the unversioned endpoints", async () => {
+		const router = new Router({ baseUrl: BASE_URL });
+		const tradeCalls = installJsonResponse(EMPTY_SERIALIZED_TRANSACTION);
+
+		const tx = await router.getTransactionForCompleteTradeRouteDeprecated({
+			walletAddress: WALLET,
+			completeRoute,
+			slippage: 0.01,
+		});
+
+		expect(tradeCalls[0]?.input).toBe(
+			"https://sdk.test/api/router/transactions/trade"
+		);
+		expect(tx.getData().sender).toBe(PADDED_WALLET);
+		expect(tx.getData().gasData).toEqual({
+			budget: null,
+			price: null,
+			owner: null,
+			payment: null,
+		});
+
+		const inputTx = new Transaction();
+		const serializedInputTx = inputTx.serialize();
+		const addCalls = installJsonResponse({
+			tx: EMPTY_SERIALIZED_TRANSACTION,
+			coinOutId: { NestedResult: [2, 1] },
+		});
+
+		// No `AftermathApi` supplied: the deprecated path must not need one.
+		const result = await router.addTransactionForCompleteTradeRouteDeprecated({
+			tx: inputTx,
+			walletAddress: WALLET,
+			completeRoute,
+			slippage: 0.01,
+		});
+
+		expect(addCalls[0]?.input).toBe(
+			"https://sdk.test/api/router/transactions/add-trade"
+		);
+		expect(requestBody(addCalls)).toMatchObject({
+			serializedTx: serializedInputTx,
+		});
+		expect(requestBody(addCalls)).not.toHaveProperty("txKind");
+		expect(result.coinOutId).toEqual({ NestedResult: [2, 1] });
 	});
 
 	it("maps indexer events and advances a full page cursor", async () => {

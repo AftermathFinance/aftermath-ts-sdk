@@ -8,6 +8,7 @@ import {
 } from "@jest/globals";
 
 import { Transaction } from "@mysten/sui/transactions";
+import { toBase64 } from "@mysten/sui/utils";
 
 import type { AftermathApi } from "@sdk/general/providers";
 
@@ -112,7 +113,7 @@ function fakeApi(
 	} as unknown as AftermathApi;
 }
 
-function serializedTransaction(): string {
+async function transactionKind(): Promise<string> {
 	const tx = new Transaction();
 	tx.setSender(WALLET);
 	tx.moveCall({
@@ -120,7 +121,7 @@ function serializedTransaction(): string {
 		typeArguments: [],
 		arguments: [],
 	});
-	return tx.serialize();
+	return toBase64(await tx.build({ onlyTransactionKind: true }));
 }
 
 function authBody() {
@@ -168,7 +169,7 @@ export {
 	REFERRER,
 	requestBody,
 	SECOND_ORDER_ID,
-	serializedTransaction,
+	transactionKind,
 	Transaction,
 	WALLET,
 };

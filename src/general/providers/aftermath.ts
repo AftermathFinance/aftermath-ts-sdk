@@ -271,7 +271,7 @@ export class Aftermath extends Caller {
 	 * Creates the smart order router provider.
 	 * @returns A new `Router` provider configured with this instance's caller settings.
 	 */
-	Router = () => new Router(this.config);
+	Router = () => new Router(this.config, this.api);
 
 	/**
 	 * Creates the NFT AMM provider.

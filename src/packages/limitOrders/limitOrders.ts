@@ -1,6 +1,11 @@
 import type { Transaction } from "@mysten/sui/transactions";
 import { Caller } from "../../general/utils/caller";
-import type { CallerConfig, ObjectId, SuiAddress } from "../../types";
+import type {
+	CallerConfig,
+	ObjectId,
+	SerializedTransaction,
+	SuiAddress,
+} from "../../types";
 import type {
 	ApiLimitOrdersActiveOrdersOwnedBody,
 	ApiLimitOrdersCancelOrderTransactionBody,
@@ -137,6 +142,31 @@ export class LimitOrders extends Caller {
 	 * ```
 	 */
 	public async getCreateLimitOrderTx(
+		inputs: ApiLimitOrdersCreateOrderTransactionBody
+	): Promise<Transaction> {
+		const { tx } = await this.fetchApiTxObject<
+			ApiLimitOrdersCreateOrderTransactionBody,
+			{ txKind: SerializedTransaction }
+		>("v1/transactions/create-order", inputs, undefined, { txKind: true });
+
+		tx.setSenderIfNotSet(inputs.walletAddress);
+		return tx;
+	}
+
+	/**
+	 * Builds a transaction creating a new limit order using the unversioned endpoint.
+	 *
+	 * Returns a gas-resolved transaction, as this method did before the v1
+	 * endpoints. Kept for callers that depend on that shape.
+	 *
+	 * @deprecated Use {@link getCreateLimitOrderTx}. The unversioned endpoint fails for wallets
+	 * whose allocate coin is sourced from an address balance: the API cannot
+	 * serialize the resulting `FundsWithdrawal` input to its legacy JSON format.
+	 *
+	 * @param inputs - Order parameters, identical to the versioned endpoint.
+	 * @returns The unsigned transaction, with gas resolved by the API.
+	 */
+	public async getCreateLimitOrderTxDeprecated(
 		inputs: ApiLimitOrdersCreateOrderTransactionBody
 	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiLimitOrdersCreateOrderTransactionBody>(
