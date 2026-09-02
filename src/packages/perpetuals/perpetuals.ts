@@ -23,14 +23,8 @@ import {
 	type ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	type ApiPerpetualsCreateAccountBody,
 	type ApiPerpetualsCreateAccountResponse,
-	type ApiPerpetualsCreateCsvRebatesBody,
-	type ApiPerpetualsCreateCsvRebatesResponse,
-	type ApiPerpetualsCreateReferralCsvRebatesBody,
-	type ApiPerpetualsCreateReferralCsvRebatesResponse,
 	type ApiPerpetualsCreateVaultBody,
 	type ApiPerpetualsCreateVaultCapBody,
-	type ApiPerpetualsCurrentRebateRewardsBody,
-	type ApiPerpetualsCurrentRebateRewardsResponse,
 	type ApiPerpetualsGrantAgentWalletTxBody,
 	type ApiPerpetualsMarketCandleHistoryBody,
 	type ApiPerpetualsMarketCandleHistoryResponse,
@@ -81,7 +75,6 @@ import {
 	type PerpetualsWsCandleResponseMessage,
 	type PerpetualsWsUpdatesResponseMessage,
 	type PerpetualsWsUpdatesSubscriptionMessage,
-	SdkTransactionResponse,
 	type SuiAddress,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -1048,76 +1041,6 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 	//  Rebates
 	// =========================================================================
-
-	/**
-	 * Calculate rewards and rebates for one or more perpetuals accounts.
-	 *
-	 * Computes per-account maker and taker reward allocations, fee-tier rebates,
-	 * and volume-based metrics. When `accountIds` is omitted or empty, all eligible
-	 * accounts are included.
-	 *
-	 * **Note:** All data returned is for the current epoch only.
-	 *
-	 * @param inputs.totalMakerRewards - Total maker reward pool to distribute.
-	 * @param inputs.totalTakerRewards - Total taker reward pool to distribute.
-	 * @param inputs.accountIds - Optional list of account IDs.
-	 * @returns `ApiPerpetualsCurrentRebateRewardsResponse` with per-account reward and rebate data.
-	 *
-	 * @example
-	 * ```ts
-	 * const { totalQScoreFinal, rewards } = await perps.getCurrentRebateRewards({
-	 *   totalMakerRewards: 10000,
-	 *   totalTakerRewards: 5000,
-	 * });
-	 * ```
-	 */
-	public async getCurrentRebateRewards(
-		inputs: ApiPerpetualsCurrentRebateRewardsBody
-	): Promise<ApiPerpetualsCurrentRebateRewardsResponse> {
-		return this.fetchApi<
-			ApiPerpetualsCurrentRebateRewardsResponse,
-			ApiPerpetualsCurrentRebateRewardsBody
-		>("rebates/rewards", inputs);
-	}
-
-	/**
-	 * Generate a CSV-formatted rebate report for perpetuals market makers.
-	 *
-	 * Computes per-account reward allocations and fee-tier rebate adjustments,
-	 * returning the result as a CSV string. When `aggregated` is true, the CSV
-	 * groups rewards by owner address instead of per-account.
-	 *
-	 * **Note:** All data returned is for the current epoch only.
-	 *
-	 * @param inputs - {@link ApiPerpetualsCreateCsvRebatesBody}.
-	 * @returns `ApiPerpetualsCreateCsvRebatesResponse` containing the CSV string.
-	 */
-	public async getCsvRebates(
-		inputs: ApiPerpetualsCreateCsvRebatesBody
-	): Promise<ApiPerpetualsCreateCsvRebatesResponse> {
-		return this.fetchApi<
-			ApiPerpetualsCreateCsvRebatesResponse,
-			ApiPerpetualsCreateCsvRebatesBody
-		>("rebates/create-csv-rebates", inputs);
-	}
-
-	/**
-	 * Generate a CSV-formatted referral rebate report.
-	 *
-	 * Calculates referrer commissions and referee discounts based on trading
-	 * fees within the specified epoch, returning the result as a CSV string.
-	 *
-	 * @param inputs - {@link ApiPerpetualsCreateReferralCsvRebatesBody}.
-	 * @returns `ApiPerpetualsCreateReferralCsvRebatesResponse` containing the CSV string.
-	 */
-	public async getReferralCsvRebates(
-		inputs: ApiPerpetualsCreateReferralCsvRebatesBody
-	): Promise<ApiPerpetualsCreateReferralCsvRebatesResponse> {
-		return this.fetchApi<
-			ApiPerpetualsCreateReferralCsvRebatesResponse,
-			ApiPerpetualsCreateReferralCsvRebatesBody
-		>("rebates/create-referral-csv-rebates", inputs);
-	}
 
 	// =========================================================================
 	//  Builder Codes Transactions

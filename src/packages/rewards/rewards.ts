@@ -5,6 +5,8 @@ import type { CallerConfig, CoinType, SuiAddress } from "../../types";
 import type {
 	ApiRewardsClaimRequestTxBody,
 	ApiRewardsClaimRequestTxResponse,
+	ApiRewardsDistributionBody,
+	ApiRewardsDistributionResponse,
 	ApiRewardsExpectedRewardsBody,
 	ApiRewardsExpectedRewardsResponse,
 	ApiRewardsGetClaimableBody,
@@ -57,6 +59,38 @@ export class Rewards extends Caller {
 	 * @returns The total points across all reward epochs and domains.
 	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
+	/**
+	 * Computes the distribution of the maker and taker reward pools across
+	 * perpetuals accounts.
+	 *
+	 * Returns per-account maker and taker reward allocations, fee-tier rebates
+	 * and volume metrics. When `accountIds` is omitted or empty the API includes
+	 * every eligible account, so pass an explicit list to scope the result.
+	 *
+	 * **Note:** All data returned is for the current epoch only.
+	 *
+	 * @param inputs - {@link ApiRewardsDistributionBody}.
+	 * @returns Per-account reward and rebate breakdown for the current epoch.
+	 * @throws `AftermathTransportError` when the API request or response fails.
+	 *
+	 * @example
+	 * ```ts
+	 * const { totalQScoreFinal, rewards } = await rewards.getDistribution({
+	 *   totalMakerRewards: 10000,
+	 *   totalTakerRewards: 5000,
+	 *   calculationVariables: { ... },
+	 * });
+	 * ```
+	 */
+	public async getDistribution(
+		inputs: ApiRewardsDistributionBody
+	): Promise<ApiRewardsDistributionResponse> {
+		return this.fetchApi<
+			ApiRewardsDistributionResponse,
+			ApiRewardsDistributionBody
+		>("distribution", inputs);
+	}
+
 	public async getPoints(
 		inputs: ApiRewardsGetPointsBody
 	): Promise<ApiRewardsGetPointsResponse> {

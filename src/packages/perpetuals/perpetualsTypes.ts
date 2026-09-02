@@ -206,9 +206,9 @@ export type PerpetualsStopOrderTriggerPriceType = ValueOf<
  */
 export type PerpetualsExecutionInfo =
 	| {
-		/** Indicates that no stop-order execution category applies. */
-		notSpecified: EmptyObject;
-	}
+			/** Indicates that no stop-order execution category applies. */
+			notSpecified: EmptyObject;
+	  }
 	| {
 			/** Details for an executed standalone stop order. */
 			standaloneExecuted: {
@@ -236,9 +236,9 @@ export type PerpetualsExecutionInfo =
  */
 export type PerpetualsOrderState =
 	| {
-		/** Indicates that the order state is unknown to the client. */
-		unknown: EmptyObject;
-	}
+			/** Indicates that the order state is unknown to the client. */
+			unknown: EmptyObject;
+	  }
 	| {
 			/** Indicates that the order is invalid; inspect `error` for the reason. */
 			invalid: {
@@ -247,29 +247,29 @@ export type PerpetualsOrderState =
 			};
 	  }
 	| {
-		/** Indicates that the order is pending activation. */
-		pending: EmptyObject;
-	}
+			/** Indicates that the order is pending activation. */
+			pending: EmptyObject;
+	  }
 	| {
-		/** Indicates that the order is active and eligible for execution. */
-		active: EmptyObject;
-	}
+			/** Indicates that the order is active and eligible for execution. */
+			active: EmptyObject;
+	  }
 	| {
-		/** Indicates that the order has executed. */
-		executed: PerpetualsExecutionInfo;
-	}
+			/** Indicates that the order has executed. */
+			executed: PerpetualsExecutionInfo;
+	  }
 	| {
-		/** Indicates that the order has been cancelled. */
-		cancelled: EmptyObject;
-	}
+			/** Indicates that the order has been cancelled. */
+			cancelled: EmptyObject;
+	  }
 	| {
-		/** Indicates that the order is currently being executed. */
-		inExecution: EmptyObject;
-	}
+			/** Indicates that the order is currently being executed. */
+			inExecution: EmptyObject;
+	  }
 	| {
-		/** Indicates that the order is marked for cancellation. */
-		toCancel: EmptyObject;
-	};
+			/** Indicates that the order is marked for cancellation. */
+			toCancel: EmptyObject;
+	  };
 
 // =========================================================================
 //  Market
@@ -813,7 +813,7 @@ export interface PerpetualsVaultMetatada {
  * Network-specific protocol limits shared by all Perpetuals vaults.
  *
  * These values come from the current on-chain vaults configuration rather
-	 * than SDK constants. Fetch them with `Perpetuals.getVaultsConfig`.
+ * than SDK constants. Fetch them with `Perpetuals.getVaultsConfig`.
  */
 export interface PerpetualsVaultsConfig {
 	/** ID of the on-chain vaults configuration object. */
@@ -4928,164 +4928,6 @@ export type ApiPerpetualsVaultPreviewOwnerWithdrawPerformanceFeesResponse =
 	  };
 
 // =========================================================================
-//  Rebates
-// =========================================================================
-
-/**
- * Request body for calculating rewards and rebates for perpetuals accounts.
- *
- * This corresponds to `POST /api/perpetuals/rebates/rewards`.
- *
- * Given maker and taker reward pools and a list of accounts, computes
- * per-account reward allocations and fee-tier rebates.
- * When `accountIds` is omitted or empty, all eligible accounts are included.
- *
- * **Note:** All data returned is for the current epoch only.
- */
-export interface ApiPerpetualsCurrentRebateRewardsBody {
-	/** Optional account filter. Omit or pass an empty array for all eligible accounts. */
-	accountIds?: PerpetualsAccountId[];
-	/** Total maker reward pool to distribute among eligible market makers. */
-	totalMakerRewards: number;
-	/** Total taker reward pool to distribute among eligible takers. */
-	totalTakerRewards: number;
-	/** Coefficients used to compute Q-scores and taker shares. */
-	calculationVariables: PerpetualsCalculationVariables;
-}
-
-/**
- * Coefficients used when computing Q-scores and taker shares for the rebate
- * rewards calculation. Each is a weighting exponent applied to a corresponding
- * per-account metric.
- */
-export interface PerpetualsCalculationVariables {
-	/** Exponent applied to the raw Q-score component. */
-	qScoreCoefficient: number;
-	/** Exponent applied to the uptime component. */
-	uptimeCoefficient: number;
-	/** Exponent applied to the maker volume component. */
-	mmVolumeCoefficient: number;
-	/** Exponent applied to the taker volume component. */
-	takerVolumeCoefficient: number;
-	/** Exponent applied to the taker open-interest component. */
-	takerOiCoefficient: number;
-}
-
-/**
- * Maker reward and rebate breakdown for a single account.
- */
-export interface PerpetualsMakerData {
-	/** Normalized Q-score: raw cross-market sum averaged over snapshot count. */
-	qScore: number;
-	/** Final score: `qScore^coeff * uptime^coeff * volume^coeff`. */
-	qScoreFinal: number;
-	/** Share of total `qScoreFinal` across all eligible accounts (between 0 and 1). */
-	qScoreFinalShare: number;
-	/** Cross-market uptime count (number of snapshots with qualifying orders). */
-	uptime: number;
-	/** Q-score-based rewards from the maker reward pool. */
-	rewards: number;
-	/** Cross-market maker volume in USD. */
-	volume: number;
-	/** Share of total maker volume across all eligible accounts (between 0 and 1). */
-	volumeShare: number;
-	/** Volume-share tier rebate: `tierRate * volume`. */
-	volumeRebate: number;
-	/** Total maker fees paid across all markets. */
-	feesPaid: number;
-	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
-	feeRebate: number;
-}
-
-/**
- * Taker reward and rebate breakdown for a single account.
- */
-export interface PerpetualsTakerData {
-	/** Volume-share-based rewards from the taker reward pool. */
-	rewards: number;
-	/** Cross-market taker volume in USD. */
-	volume: number;
-	/** Share of total taker volume across all eligible accounts (between 0 and 1). */
-	volumeShare: number;
-	/** Total taker fees paid across all markets. */
-	feesPaid: number;
-	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
-	feeRebate: number;
-}
-
-/**
- * Combined reward and rebate data for a single account.
- */
-export interface PerpetualsRewardData {
-	/** Account receiving this reward and rebate breakdown. */
-	accountId: PerpetualsAccountId;
-	/** Maker-side reward and rebate metrics. */
-	maker: PerpetualsMakerData;
-	/** Taker-side reward and rebate metrics. */
-	taker: PerpetualsTakerData;
-}
-
-/**
- * Response body for the rewards and rebates calculation.
- */
-export interface ApiPerpetualsCurrentRebateRewardsResponse {
-	/** Sum of all final quality scores across eligible makers. */
-	totalQScoreFinal: number;
-	/** Total estimated gas cost for order management across all accounts (decimal SUI). */
-	totalEstimatedGasCost: number;
-	/** Per-account reward and rebate breakdown. */
-	rewards: PerpetualsRewardData[];
-}
-
-/**
- * Request body for generating a CSV-formatted rebate report.
- *
- * This corresponds to `POST /api/perpetuals/rebates/create-csv-rebates`.
- *
- * Produces a CSV string containing per-account rebate and reward data.
- * When `accountIds` is omitted or empty, all eligible accounts are included.
- */
-export interface ApiPerpetualsCreateCsvRebatesBody
-	extends ApiPerpetualsCurrentRebateRewardsBody {
-	/**
-	 * When true, aggregate rewards by owner address instead of per-account.
-	 * Defaults to false when omitted.
-	 */
-	aggregated?: boolean;
-}
-
-/**
- * Response body for the CSV rebate report.
- */
-export interface ApiPerpetualsCreateCsvRebatesResponse {
-	/** The CSV-formatted rebate data as a string. */
-	csv: string;
-}
-
-/**
- * Request body for generating a referral rebate CSV report.
- *
- * This corresponds to `POST /api/perpetuals/rebates/create-referral-csv-rebates`.
- *
- * Calculates referrer commissions and referee discounts based on trading
- * fees within the specified epoch.
- */
-export interface ApiPerpetualsCreateReferralCsvRebatesBody {
-	/** Epoch start timestamp in milliseconds. */
-	epochStartTimestampMs: Timestamp;
-	/** Epoch end timestamp in milliseconds. */
-	epochEndTimestampMs: Timestamp;
-}
-
-/**
- * Response body for the referral rebate CSV report.
- */
-export interface ApiPerpetualsCreateReferralCsvRebatesResponse {
-	/** The CSV-formatted referral rebate data as a string. */
-	csv: string;
-}
-
-// =========================================================================
 //  SDK
 // =========================================================================
 
@@ -5509,41 +5351,41 @@ export interface PerpetualsWsUpdatesSubscriptionMessage {
  */
 export type PerpetualsWsUpdatesResponseMessage =
 	| {
-		/** Latest market update, when present. */
-		market: PerpetualsMarketData;
-	}
+			/** Latest market update, when present. */
+			market: PerpetualsMarketData;
+	  }
 	| {
-		/** Latest user or account update, when present. */
-		user: PerpetualsWsUpdatesUserPayload;
-	}
+			/** Latest user or account update, when present. */
+			user: PerpetualsWsUpdatesUserPayload;
+	  }
 	| {
-		/** Latest oracle update, when present. */
-		oracle: PerpetualsWsUpdatesOraclePayload;
-	}
+			/** Latest oracle update, when present. */
+			oracle: PerpetualsWsUpdatesOraclePayload;
+	  }
 	| {
-		/** Latest orderbook update, when present. */
-		orderbook: PerpetualsWsUpdatesOrderbookPayload;
-	}
+			/** Latest orderbook update, when present. */
+			orderbook: PerpetualsWsUpdatesOrderbookPayload;
+	  }
 	| {
-		/** Market-order updates, when present. */
-		marketOrders: PerpetualsWsUpdatesMarketOrdersPayload;
-	}
+			/** Market-order updates, when present. */
+			marketOrders: PerpetualsWsUpdatesMarketOrdersPayload;
+	  }
 	| {
-		/** User-order updates, when present. */
-		userOrders: PerpetualsWsUpdatesUserOrdersPayload;
-	}
+			/** User-order updates, when present. */
+			userOrders: PerpetualsWsUpdatesUserOrdersPayload;
+	  }
 	| {
 			/** User collateral-change updates, when present. */
 			userCollateralChanges: PerpetualsWsUpdatesUserCollateralChangesPayload;
 	  }
 	| {
-		/** Top-of-book update, when present. */
-		topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload;
-	}
+			/** Top-of-book update, when present. */
+			topOfOrderbook: PerpetualsWsUpdatesTopOfOrderbookPayload;
+	  }
 	| {
-		/** Market candle updates, when present. */
-		marketCandles: PerpetualsWsUpdatesMarketCandlesPayload;
-	};
+			/** Market candle updates, when present. */
+			marketCandles: PerpetualsWsUpdatesMarketCandlesPayload;
+	  };
 
 // /perpetuals/ws/market-candles/{market_id}/{interval_ms}
 

@@ -3,11 +3,13 @@ import type {
 	BigIntAsString,
 	CoinType,
 	ObjectId,
+	Percentage,
 	SerializedTransaction,
 	SuiAddress,
 	Timestamp,
 	TransactionDigest,
 } from "../../types";
+import type { PerpetualsAccountId } from "../perpetuals/perpetualsTypes";
 
 // =========================================================================
 //  API - Points
@@ -325,9 +327,115 @@ export interface ApiRewardsClaimRequestTxBody {
 	txKind?: SerializedTransaction;
 }
 
-
 /** Raw response from the reward-claim transaction endpoint. */
 export interface ApiRewardsClaimRequestTxResponse {
 	/** Base64-serialized full transaction bytes or `TransactionKind` bytes. */
 	txKind: SerializedTransaction;
+}
+
+// =========================================================================
+//  Distribution
+// =========================================================================
+
+/**
+ * Request body for computing the rewards distribution across perpetuals
+ * accounts.
+ *
+ * This corresponds to `POST /api/rewards/distribution`, which replaces the
+ * removed `POST /api/perpetuals/rebates/rewards`.
+ *
+ * Given maker and taker reward pools and a list of accounts, computes
+ * per-account reward allocations and fee-tier rebates. When `accountIds` is
+ * omitted or empty, all eligible accounts are included.
+ *
+ * **Note:** All data returned is for the current epoch only.
+ */
+export interface ApiRewardsDistributionBody {
+	/**
+	 * Optional account filter. Omit or pass an empty array for all eligible
+	 * accounts. `Caller` serializes each id to the API's `"123n"` wire format
+	 * and parses the response back, so pass real bigints here.
+	 */
+	accountIds?: PerpetualsAccountId[];
+	/** Total maker reward pool to distribute among eligible market makers. */
+	totalMakerRewards: number;
+	/** Total taker reward pool to distribute among eligible takers. */
+	totalTakerRewards: number;
+	/** Coefficients used to compute Q-scores and taker shares. */
+	calculationVariables: RewardsDistributionCalculationVariables;
+}
+
+/**
+ * Coefficients used when computing Q-scores and taker shares. Each is a
+ * weighting exponent applied to a corresponding per-account metric.
+ */
+export interface RewardsDistributionCalculationVariables {
+	/** Exponent applied to the raw Q-score component. */
+	qScoreCoefficient: number;
+	/** Exponent applied to the uptime component. */
+	uptimeCoefficient: number;
+	/** Exponent applied to the maker volume component. */
+	mmVolumeCoefficient: number;
+	/** Exponent applied to the taker volume component. */
+	takerVolumeCoefficient: number;
+	/** Exponent applied to the taker open-interest component. */
+	takerOiCoefficient: number;
+}
+
+/** Maker reward and rebate breakdown for a single account. */
+export interface RewardsDistributionMakerData {
+	/** Normalized Q-score: raw cross-market sum averaged over snapshot count. */
+	qScore: number;
+	/** Final score: `qScore^coeff * uptime^coeff * volume^coeff`. */
+	qScoreFinal: number;
+	/** Share of total `qScoreFinal` across all eligible accounts. */
+	qScoreFinalShare: Percentage;
+	/** Cross-market uptime count (number of snapshots with qualifying orders). */
+	uptime: number;
+	/** Q-score-based rewards from the maker reward pool. */
+	rewards: number;
+	/** Cross-market maker volume in USD. */
+	volume: number;
+	/** Share of total maker volume across all eligible accounts. */
+	volumeShare: Percentage;
+	/** Volume-share tier rebate: `tierRate * volume`. */
+	volumeRebate: number;
+	/** Total maker fees paid across all markets. */
+	feesPaid: number;
+	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
+	feeRebate: number;
+}
+
+/** Taker reward and rebate breakdown for a single account. */
+export interface RewardsDistributionTakerData {
+	/** Volume-share-based rewards from the taker reward pool. */
+	rewards: number;
+	/** Cross-market taker volume in USD. */
+	volume: number;
+	/** Share of total taker volume across all eligible accounts. */
+	volumeShare: Percentage;
+	/** Total taker fees paid across all markets. */
+	feesPaid: number;
+	/** Fee tier rebate: `max(0, feesPaid - discountedFees)`. */
+	feeRebate: number;
+}
+
+/** Combined reward and rebate data for a single account. */
+export interface RewardsDistributionAccountData {
+	/** Account receiving this reward and rebate breakdown. */
+	accountId: PerpetualsAccountId;
+	/** Maker-side reward and rebate metrics. */
+	maker: RewardsDistributionMakerData;
+	/** Taker-side reward and rebate metrics. */
+	taker: RewardsDistributionTakerData;
+}
+
+/** Response body for the rewards distribution calculation. */
+export interface ApiRewardsDistributionResponse {
+	/** Sum of all final quality scores across eligible makers. */
+	totalQScoreFinal: number;
+	/** Total estimated gas cost for order management across all accounts (decimal SUI). */
+	totalEstimatedGasCost: number;
+	/** Per-account reward and rebate breakdown. */
+	rewards: RewardsDistributionAccountData[];
 }
