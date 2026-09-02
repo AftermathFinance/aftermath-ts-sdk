@@ -5232,6 +5232,17 @@ export interface PerpetualsWsUpdatesOraclePayload {
 	basePrice: number;
 	/** Current collateral price, in USD. */
 	collateralPrice: number;
+	/**
+	 * Current mark price — what positions are marked against for PnL and
+	 * liquidation, as opposed to the raw index price.
+	 */
+	markPrice: number;
+	/**
+	 * Raw orderbook mid price, or `null` when either side of the book is empty.
+	 * Nullable where `markPrice` is not: mark falls back to the index price
+	 * upstream, whereas a raw mid has none.
+	 */
+	bookPrice: number | null;
 }
 
 /**
