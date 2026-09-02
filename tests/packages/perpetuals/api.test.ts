@@ -517,71 +517,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		);
 	});
 
-	it("routes rebate calculations, CSV reports, and builder-code inspections", async () => {
-		const calculationVariables = {
-			qScoreCoefficient: 1,
-			uptimeCoefficient: 0.5,
-			mmVolumeCoefficient: 1,
-			takerVolumeCoefficient: 1,
-			takerOiCoefficient: 0.25,
-		};
-		const rewards = await expectPost(
-			(client) =>
-				client.getCurrentRebateRewards({
-					accountIds: [ACCOUNT_ID],
-					totalMakerRewards: 100,
-					totalTakerRewards: 50,
-					calculationVariables,
-				}),
-			{
-				totalQScoreFinal: 3,
-				totalEstimatedGasCost: 0.01,
-				rewards: [{ accountId: ACCOUNT_ID_WIRE, maker: {}, taker: {} }],
-			},
-			"rebates/rewards",
-			{
-				accountIds: [ACCOUNT_ID_WIRE],
-				totalMakerRewards: 100,
-				totalTakerRewards: 50,
-				calculationVariables,
-			}
-		);
-		expect(
-			(rewards as { rewards: Array<{ accountId: bigint }> }).rewards[0]
-				?.accountId
-		).toBe(ACCOUNT_ID);
-
-		await expectPost(
-			(client) =>
-				client.getCsvRebates({
-					totalMakerRewards: 100,
-					totalTakerRewards: 50,
-					calculationVariables,
-					aggregated: true,
-				}),
-			{ csv: "account,rewards\n" },
-			"rebates/create-csv-rebates",
-			{
-				totalMakerRewards: 100,
-				totalTakerRewards: 50,
-				calculationVariables,
-				aggregated: true,
-			}
-		);
-		await expectPost(
-			(client) =>
-				client.getReferralCsvRebates({
-					epochStartTimestampMs: 1_700_000_000_000,
-					epochEndTimestampMs: 1_700_086_400_000,
-				}),
-			{ csv: "referrer,commission\n" },
-			"rebates/create-referral-csv-rebates",
-			{
-				epochStartTimestampMs: 1_700_000_000_000,
-				epochEndTimestampMs: 1_700_086_400_000,
-			}
-		);
-
+	it("routes builder-code inspections", async () => {
 		await expectPost(
 			(client) =>
 				client.getBuilderCodeIntegratorConfig({

@@ -161,6 +161,40 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 		});
 	});
 
+	it("routes the rewards distribution and maps account ids to bigint", async () => {
+		const calculationVariables = {
+			qScoreCoefficient: 1,
+			uptimeCoefficient: 0.5,
+			mmVolumeCoefficient: 1,
+			takerVolumeCoefficient: 1,
+			takerOiCoefficient: 0.25,
+		};
+		const calls = installJsonFetch({
+			totalQScoreFinal: 3,
+			totalEstimatedGasCost: 0.01,
+			rewards: [{ accountId: "18446744073709551615n", maker: {}, taker: {} }],
+		});
+
+		const result = await new Rewards({ baseUrl: BASE_URL }).getDistribution({
+			accountIds: [18_446_744_073_709_551_615n],
+			totalMakerRewards: 100,
+			totalTakerRewards: 50,
+			calculationVariables,
+		});
+
+		expect(calls.map(({ input }) => String(input))).toEqual([
+			`${BASE_URL}/api/rewards/distribution`,
+		]);
+		// Account ids go out in the API's `"123n"` wire format and come back as bigint.
+		expect(requestBody(calls, 0)).toEqual({
+			accountIds: ["18446744073709551615n"],
+			totalMakerRewards: 100,
+			totalTakerRewards: 50,
+			calculationVariables,
+		});
+		expect(result.rewards[0]?.accountId).toBe(18_446_744_073_709_551_615n);
+	});
+
 	it("turns a server tx kind into a Transaction and forwards optional coin filters", async () => {
 		const txKind = await serializedTransactionKind();
 		const fetchBase64TxKindFromTx = jest.fn((_input: { tx: Transaction }) =>
