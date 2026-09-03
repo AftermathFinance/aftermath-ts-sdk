@@ -295,6 +295,15 @@ export interface PerpetualsMarketData {
 	collateralPrice: number;
 	/** Oracle/index price of the base asset for this market. */
 	indexPrice: number;
+	/**
+	 * Price positions are marked against for PnL and liquidation, as opposed to
+	 * the raw index.
+	 *
+	 * Only the websocket market stream carries this. REST responses are built
+	 * from an indexer payload that has no mark price, so the field is absent
+	 * there rather than reported as null.
+	 */
+	markPrice?: number;
 	/** Estimated funding rate for the next funding interval. */
 	estimatedFundingRate: Percentage;
 	/** Timestamp (ms) for the next funding event, as a bigint. */
@@ -5239,11 +5248,14 @@ export interface PerpetualsWsUpdatesOraclePayload {
 	 */
 	markPrice: number;
 	/**
-	 * Raw orderbook mid price, or `null` when either side of the book is empty.
-	 * Nullable where `markPrice` is not: mark falls back to the index price
+	 * Raw orderbook mid price, absent when either side of the book is empty.
+	 * Optional where `markPrice` is not: mark falls back to the index price
 	 * upstream, whereas a raw mid has none.
+	 *
+	 * The API sends JSON `null` here, but the websocket parser maps `null` to
+	 * `undefined`, so a `=== null` check would never match.
 	 */
-	bookPrice: number | null;
+	bookPrice?: number;
 }
 
 /**
