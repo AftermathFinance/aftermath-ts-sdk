@@ -1,5 +1,68 @@
 # aftermath-ts-sdk
 
+## 4.1.0
+
+### Minor Changes
+
+- [#175](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/175) [`f3b60ec`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/f3b60ec76b1a8c338e34b190a1a603bec034e8f8) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Restore `Perpetuals.getCsvRebates()` and `Perpetuals.getReferralCsvRebates()`.
+
+  These were removed alongside `getCurrentRebateRewards()` when the backend
+  dropped the rebates endpoints. Unlike that one, the CSV reports have no
+  replacement yet, so removing them left callers with nothing to migrate to.
+  They are back so existing code compiles, and they will start working again
+  once the backend ships replacement endpoints.
+
+  **They currently fail at runtime** — `/api/perpetuals/rebates/create-csv-rebates`
+  and `/api/perpetuals/rebates/create-referral-csv-rebates` no longer exist.
+
+  `ApiPerpetualsCreateCsvRebatesBody` now extends `ApiRewardsDistributionBody`
+  rather than the deleted `ApiPerpetualsCurrentRebateRewardsBody`. The shape is
+  unchanged — same reward pools, account filter and calculation variables, plus
+  `aggregated`.
+
+  `getCurrentRebateRewards()` stays removed: it has a working replacement in
+  `Rewards.getDistribution()`.
+
+- [`0d478c0`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/0d478c07103a7c9045141f7f200b902dba0a34cd) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Replace the perpetuals rebates endpoints with `Rewards.getDistribution()`.
+
+  The backend removed `POST /api/perpetuals/rebates/rewards` and restored the
+  handler as `POST /api/rewards/distribution`, so the call moves from the
+  `Perpetuals` module to `Rewards`. The request and response shapes are
+  unchanged; only the path and the module differ.
+
+  **Removed** (their endpoints no longer exist, so they returned 404):
+
+  - `Perpetuals.getCurrentRebateRewards()` — use `Rewards.getDistribution()`
+  - `Perpetuals.getCsvRebates()`
+  - `Perpetuals.getReferralCsvRebates()`
+
+  Along with their types: `ApiPerpetualsCurrentRebateRewardsBody` / `Response`,
+  `ApiPerpetualsCreateCsvRebatesBody` / `Response`,
+  `ApiPerpetualsCreateReferralCsvRebatesBody` / `Response`,
+  `PerpetualsCalculationVariables`, `PerpetualsMakerData`,
+  `PerpetualsTakerData` and `PerpetualsRewardData`.
+
+  **Migration:**
+
+  ```ts
+  // before
+  const data = await af.Perpetuals().getCurrentRebateRewards({ accountIds, ... });
+
+  // after
+  const data = await af.Rewards().getDistribution({ accountIds, ... });
+  ```
+
+  The replacements are `ApiRewardsDistributionBody` / `ApiRewardsDistributionResponse`,
+  `RewardsDistributionCalculationVariables`, `RewardsDistributionMakerData`,
+  `RewardsDistributionTakerData` and `RewardsDistributionAccountData`.
+
+- [#174](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/174) [`f4d4bd4`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/f4d4bd4dd5643a72885dd8b4555e41a904dde28a) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Add `markPrice` and `bookPrice` to the perpetuals oracle websocket payload.
+
+  `markPrice` is the price positions are marked against for PnL and liquidation,
+  as opposed to the raw index. `bookPrice` is the raw orderbook mid and is `null`
+  when either side of the book is empty — mark falls back to the index price
+  upstream, whereas a raw mid has no meaningful fallback.
+
 ## 4.0.0
 
 ### Major Changes
