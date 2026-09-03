@@ -5224,6 +5224,16 @@ export interface PerpetualsWsUpdatesMarketCandlesSubscriptionType {
 }
 
 /**
+ * Websocket payload for market state updates.
+ */
+export interface PerpetualsWsUpdatesMarketPayload extends PerpetualsMarketData {
+	/**
+	 * Current mark price used for position PnL and liquidation calculations.
+	 */
+	markPrice: number;
+}
+
+/**
  * Websocket payload for oracle price updates.
  */
 export interface PerpetualsWsUpdatesOraclePayload {
@@ -5239,11 +5249,11 @@ export interface PerpetualsWsUpdatesOraclePayload {
 	 */
 	markPrice: number;
 	/**
-	 * Raw orderbook mid price, or `null` when either side of the book is empty.
-	 * Nullable where `markPrice` is not: mark falls back to the index price
-	 * upstream, whereas a raw mid has none.
+	 * Raw orderbook mid price. The wire sends JSON `null` when either side of
+	 * the book is empty; the SDK JSON reviver converts that value to `undefined`.
+	 * Unlike the raw mid, `markPrice` falls back to the index price upstream.
 	 */
-	bookPrice: number | null;
+	bookPrice: number | undefined;
 }
 
 /**
@@ -5364,7 +5374,7 @@ export interface PerpetualsWsUpdatesSubscriptionMessage {
 export type PerpetualsWsUpdatesResponseMessage =
 	| {
 			/** Latest market update, when present. */
-			market: PerpetualsMarketData;
+			market: PerpetualsWsUpdatesMarketPayload;
 	  }
 	| {
 			/** Latest user or account update, when present. */
