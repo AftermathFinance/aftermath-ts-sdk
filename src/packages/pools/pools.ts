@@ -2,10 +2,21 @@ import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Helpers } from "../../general/utils/helpers";
+import {
+	effectivePageRequest,
+	fetchAllOffsetPages,
+	fetchExplicitChunks,
+	isOffsetPageRequest,
+	POOL_CATALOGUE_PAGE_SIZE,
+	pageFromItems,
+	SMALL_API_PAGE_SIZE,
+} from "../../general/utils/offsetPagination";
 import { Coin } from "../../packages/coin/coin";
 import type {
 	ApiCreatePoolBody,
 	ApiIndexerEventsBody,
+	ApiOffsetPageBody,
+	ApiPage,
 	ApiPoolObjectIdForLpCoinTypeBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	ApiPoolsStatsBody,
@@ -213,19 +224,55 @@ export class Pools extends Caller {
 		inputs: { objectIds: ObjectId[] },
 		abortSignal?: AbortSignal
 	) {
-		const pools = await this.fetchApi<
-			PoolObject[],
-			{
-				poolIds: ObjectId[];
-			}
-		>(
+		const pools = await fetchExplicitChunks({
+			inputs: inputs.objectIds,
+			fetchChunk: (poolIds) =>
+				this.fetchApi<PoolObject[], { poolIds: ObjectId[]; limit: number }>(
+					"",
+					{ poolIds, limit: SMALL_API_PAGE_SIZE },
+					abortSignal
+				),
+		});
+		return pools.map((pool) => new Pool(pool, this.config, this.api));
+	}
+
+	/** Fetches one bounded page of pool objects. */
+	public async getPoolsPage(
+		inputs: { objectIds?: ObjectId[] } & ApiOffsetPageBody = {},
+		abortSignal?: AbortSignal
+	): Promise<ApiPage<Pool>> {
+		const maxLimit = inputs.objectIds
+			? SMALL_API_PAGE_SIZE
+			: POOL_CATALOGUE_PAGE_SIZE;
+		const request = effectivePageRequest(inputs, maxLimit);
+		if (inputs.objectIds) {
+			const poolIds = inputs.objectIds.slice(
+				request.cursor,
+				request.cursor + request.limit
+			);
+			const rows = await this.fetchApi<
+				PoolObject[],
+				{ poolIds: ObjectId[]; limit: number }
+			>("", { poolIds, limit: SMALL_API_PAGE_SIZE }, abortSignal);
+			return {
+				items: rows.map((row) => new Pool(row, this.config, this.api)),
+				nextCursor:
+					request.limit > 0 &&
+					request.cursor + request.limit < inputs.objectIds.length
+						? request.cursor + request.limit
+						: undefined,
+			};
+		}
+		const rows = await this.fetchApi<PoolObject[], Required<ApiOffsetPageBody>>(
 			"",
-			{
-				poolIds: inputs.objectIds,
-			},
+			request,
 			abortSignal
 		);
-		return pools.map((pool) => new Pool(pool, this.config, this.api));
+		const page = pageFromItems(rows, request);
+		return {
+			items: page.items.map((row) => new Pool(row, this.config, this.api)),
+			nextCursor: page.nextCursor,
+		};
 	}
 
 	/**
@@ -242,7 +289,16 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getAllPools(abortSignal?: AbortSignal) {
-		const pools: PoolObject[] = await this.fetchApi("", {}, abortSignal);
+		const pools = await fetchAllOffsetPages({
+			pageSize: POOL_CATALOGUE_PAGE_SIZE,
+			identity: (pool: PoolObject) => pool.objectId,
+			fetchPage: (page) =>
+				this.fetchApi<PoolObject[], Required<ApiOffsetPageBody>>(
+					"",
+					page,
+					abortSignal
+				),
+		});
 		return pools.map((pool) => new Pool(pool, this.config, this.api));
 	}
 
@@ -259,10 +315,23 @@ export class Pools extends Caller {
 	 * console.log(lpCoins);
 	 * ```
 	 */
-	public async getOwnedLpCoins(inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<PoolLpInfo[]> {
-		return this.fetchApi("owned-lp-coins", inputs);
+	public getOwnedLpCoins(
+		inputs: { walletAddress: SuiAddress } & ApiOffsetPageBody,
+		abortSignal?: AbortSignal
+	): Promise<PoolLpInfo[]> {
+		if (isOffsetPageRequest(inputs)) {
+			return this.fetchApi(
+				"owned-lp-coins",
+				{ ...inputs, ...effectivePageRequest(inputs, SMALL_API_PAGE_SIZE) },
+				abortSignal
+			);
+		}
+		return fetchAllOffsetPages({
+			pageSize: SMALL_API_PAGE_SIZE,
+			identity: (coin: PoolLpInfo) => coin.poolId,
+			fetchPage: (page) =>
+				this.fetchApi("owned-lp-coins", { ...inputs, ...page }, abortSignal),
+		});
 	}
 
 	// =========================================================================
@@ -386,14 +455,34 @@ export class Pools extends Caller {
 	 * console.log(poolIds);
 	 * ```
 	 */
-	public async getPoolObjectIdsForLpCoinTypes(
+	public getPoolObjectIdsForLpCoinTypes(
 		inputs: ApiPoolObjectIdForLpCoinTypeBody,
 		abortSignal?: AbortSignal
 	): Promise<(ObjectId | undefined)[]> {
-		return this.fetchApi<
-			(ObjectId | undefined)[],
-			ApiPoolObjectIdForLpCoinTypeBody
-		>("pool-object-ids", inputs, abortSignal);
+		if (isOffsetPageRequest(inputs)) {
+			const page = effectivePageRequest(inputs, SMALL_API_PAGE_SIZE);
+			const lpCoinTypes = inputs.lpCoinTypes.slice(
+				page.cursor,
+				page.cursor + page.limit
+			);
+			return this.fetchApi(
+				"pool-object-ids",
+				{ lpCoinTypes, limit: SMALL_API_PAGE_SIZE },
+				abortSignal
+			);
+		}
+		return fetchExplicitChunks({
+			inputs: inputs.lpCoinTypes,
+			fetchChunk: (lpCoinTypes) =>
+				this.fetchApi<
+					(ObjectId | undefined)[],
+					{ lpCoinTypes: CoinType[]; limit: number }
+				>(
+					"pool-object-ids",
+					{ lpCoinTypes, limit: SMALL_API_PAGE_SIZE },
+					abortSignal
+				),
+		});
 	}
 
 	/**
@@ -445,7 +534,19 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getTVL(inputs?: { poolIds?: ObjectId[] }): Promise<number> {
-		return this.fetchApi("tvl", inputs ?? {});
+		const poolIds = inputs?.poolIds ? [...new Set(inputs.poolIds)] : undefined;
+		if (poolIds && poolIds.length > SMALL_API_PAGE_SIZE) {
+			const values = await fetchExplicitChunks({
+				inputs: poolIds,
+				fetchChunk: async (poolIds) => [
+					await this.fetchApi<number, { poolIds: ObjectId[] }>("tvl", {
+						poolIds,
+					}),
+				],
+			});
+			return values.reduce((sum, value) => sum + value, 0);
+		}
+		return this.fetchApi("tvl", poolIds ? { poolIds } : {});
 	}
 
 	/**
@@ -462,11 +563,31 @@ export class Pools extends Caller {
 	 * console.log(stats[0].volume, stats[1].tvl);
 	 * ```
 	 */
-	public async getPoolsStats(
+	public getPoolsStats(
 		inputs: ApiPoolsStatsBody,
 		abortSignal?: AbortSignal
 	): Promise<PoolStats[]> {
-		return this.fetchApi("stats", inputs, abortSignal);
+		if (isOffsetPageRequest(inputs)) {
+			const page = effectivePageRequest(inputs, SMALL_API_PAGE_SIZE);
+			const poolIds = inputs.poolIds.slice(
+				page.cursor,
+				page.cursor + page.limit
+			);
+			return this.fetchApi(
+				"stats",
+				{ poolIds, limit: SMALL_API_PAGE_SIZE },
+				abortSignal
+			);
+		}
+		return fetchExplicitChunks({
+			inputs: inputs.poolIds,
+			fetchChunk: (poolIds) =>
+				this.fetchApi(
+					"stats",
+					{ poolIds, limit: SMALL_API_PAGE_SIZE },
+					abortSignal
+				),
+		});
 	}
 
 	/**
@@ -479,11 +600,44 @@ export class Pools extends Caller {
 	 * @returns A promise for pool objects paired with current `PoolStats`.
 	 * @throws `AftermathTransportError` when the API request or response fails.
 	 */
-	public async getPoolSummaries(
+	public getPoolSummaries(
 		inputs?: ApiPoolsSummaryBody,
 		abortSignal?: AbortSignal
 	): Promise<PoolSummary[]> {
-		return this.fetchApi("summary", inputs ?? {}, abortSignal);
+		if (isOffsetPageRequest(inputs)) {
+			const maxLimit = inputs?.poolIds
+				? SMALL_API_PAGE_SIZE
+				: POOL_CATALOGUE_PAGE_SIZE;
+			const page = effectivePageRequest(inputs, maxLimit);
+			if (inputs?.poolIds) {
+				const poolIds = inputs.poolIds.slice(
+					page.cursor,
+					page.cursor + page.limit
+				);
+				return this.fetchApi(
+					"summary",
+					{ poolIds, limit: SMALL_API_PAGE_SIZE },
+					abortSignal
+				);
+			}
+			return this.fetchApi("summary", page, abortSignal);
+		}
+		if (inputs?.poolIds) {
+			return fetchExplicitChunks({
+				inputs: inputs.poolIds,
+				fetchChunk: (poolIds) =>
+					this.fetchApi(
+						"summary",
+						{ poolIds, limit: SMALL_API_PAGE_SIZE },
+						abortSignal
+					),
+			});
+		}
+		return fetchAllOffsetPages({
+			pageSize: POOL_CATALOGUE_PAGE_SIZE,
+			identity: (summary: PoolSummary) => summary.pool.objectId,
+			fetchPage: (page) => this.fetchApi("summary", page, abortSignal),
+		});
 	}
 
 	/**
@@ -530,17 +684,21 @@ export class Pools extends Caller {
 	 * console.log(userEvents.events, userEvents.nextCursor);
 	 * ```
 	 */
-	public async getInteractionEvents(
+	public getInteractionEvents(
 		inputs: ApiIndexerEventsBody & {
 			walletAddress: SuiAddress;
 		}
 	) {
+		const limit = Math.min(
+			inputs.limit ?? SMALL_API_PAGE_SIZE,
+			SMALL_API_PAGE_SIZE
+		);
 		return this.fetchApiIndexerEvents<
 			PoolDepositEvent | PoolWithdrawEvent,
 			ApiIndexerEventsBody & {
 				walletAddress: SuiAddress;
 			}
-		>("interaction-events-by-user", inputs);
+		>("interaction-events-by-user", { ...inputs, limit });
 	}
 
 	// =========================================================================
