@@ -22,6 +22,7 @@ import type {
 	ValueOf,
 } from "../../general/types/generalTypes";
 import type { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
+import type { ApiRewardsDistributionBody } from "../rewards/rewardsTypes";
 
 // =========================================================================
 //  Sponsor Config
@@ -5422,4 +5423,52 @@ export interface PerpetualsWsUpdatesMarketCandlesPayload {
 	interval: PerpetualsCandleResolution;
 	/** Latest candle for the market and interval. */
 	lastCandle: PerpetualsMarketCandleDataPoint;
+}
+
+// =========================================================================
+//  Rebates (CSV)
+// =========================================================================
+
+/**
+ * Request body for generating a CSV-formatted rebate report.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/create-csv-rebates`.
+ *
+ * The same inputs as {@link ApiRewardsDistributionBody}, plus `aggregated`.
+ * When `accountIds` is omitted or empty, all eligible accounts are included.
+ */
+export interface ApiPerpetualsCreateCsvRebatesBody
+	extends ApiRewardsDistributionBody {
+	/**
+	 * When true, aggregate rewards by owner address instead of per-account.
+	 * Defaults to false when omitted.
+	 */
+	aggregated?: boolean;
+}
+
+/** Response body for the CSV rebate report. */
+export interface ApiPerpetualsCreateCsvRebatesResponse {
+	/** The CSV-formatted rebate data as a string. */
+	csv: string;
+}
+
+/**
+ * Request body for generating a referral rebate CSV report.
+ *
+ * This corresponds to `POST /api/perpetuals/rebates/create-referral-csv-rebates`.
+ *
+ * Calculates referrer commissions and referee discounts based on trading
+ * fees within the specified epoch.
+ */
+export interface ApiPerpetualsCreateReferralCsvRebatesBody {
+	/** Epoch start timestamp in milliseconds. */
+	epochStartTimestampMs: Timestamp;
+	/** Epoch end timestamp in milliseconds. */
+	epochEndTimestampMs: Timestamp;
+}
+
+/** Response body for the referral rebate CSV report. */
+export interface ApiPerpetualsCreateReferralCsvRebatesResponse {
+	/** The CSV-formatted referral rebate data as a string. */
+	csv: string;
 }

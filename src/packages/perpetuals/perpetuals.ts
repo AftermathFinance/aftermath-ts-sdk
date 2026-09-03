@@ -23,6 +23,10 @@ import {
 	type ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
 	type ApiPerpetualsCreateAccountBody,
 	type ApiPerpetualsCreateAccountResponse,
+	type ApiPerpetualsCreateCsvRebatesBody,
+	type ApiPerpetualsCreateCsvRebatesResponse,
+	type ApiPerpetualsCreateReferralCsvRebatesBody,
+	type ApiPerpetualsCreateReferralCsvRebatesResponse,
 	type ApiPerpetualsCreateVaultBody,
 	type ApiPerpetualsCreateVaultCapBody,
 	type ApiPerpetualsGrantAgentWalletTxBody,
@@ -1041,6 +1045,49 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 	//  Rebates
 	// =========================================================================
+
+	// =========================================================================
+	//  Rebates (CSV)
+	// =========================================================================
+
+	/**
+	 * Generate a CSV-formatted rebate report for perpetuals market makers.
+	 *
+	 * **Currently unavailable:** the backend removed
+	 * `/api/perpetuals/rebates/create-csv-rebates`, so this request fails until
+	 * a replacement endpoint ships. Kept so existing callers still compile.
+	 *
+	 * @param inputs - {@link ApiPerpetualsCreateCsvRebatesBody}.
+	 * @returns `ApiPerpetualsCreateCsvRebatesResponse` containing the CSV string.
+	 */
+	public async getCsvRebates(
+		inputs: ApiPerpetualsCreateCsvRebatesBody
+	): Promise<ApiPerpetualsCreateCsvRebatesResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCreateCsvRebatesResponse,
+			ApiPerpetualsCreateCsvRebatesBody
+		>("rebates/create-csv-rebates", inputs);
+	}
+
+	/**
+	 * Generate a CSV-formatted referral rebate report.
+	 *
+	 * **Currently unavailable:** the backend removed
+	 * `/api/perpetuals/rebates/create-referral-csv-rebates`, so this request
+	 * fails until a replacement endpoint ships. Kept so existing callers still
+	 * compile.
+	 *
+	 * @param inputs - {@link ApiPerpetualsCreateReferralCsvRebatesBody}.
+	 * @returns `ApiPerpetualsCreateReferralCsvRebatesResponse` containing the CSV string.
+	 */
+	public async getReferralCsvRebates(
+		inputs: ApiPerpetualsCreateReferralCsvRebatesBody
+	): Promise<ApiPerpetualsCreateReferralCsvRebatesResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCreateReferralCsvRebatesResponse,
+			ApiPerpetualsCreateReferralCsvRebatesBody
+		>("rebates/create-referral-csv-rebates", inputs);
+	}
 
 	// =========================================================================
 	//  Builder Codes Transactions
