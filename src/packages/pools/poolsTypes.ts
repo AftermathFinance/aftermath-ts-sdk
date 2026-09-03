@@ -670,6 +670,10 @@ export interface ApiPoolSpotPriceBody {
 export interface ApiPoolObjectIdForLpCoinTypeBody {
 	/** LP coin types to resolve. The response preserves this order. */
 	lpCoinTypes: CoinType[];
+	/** Zero-based input offset. */
+	cursor?: number;
+	/** Maximum number of mappings to return, capped at 32. */
+	limit?: number;
 }
 
 /**
@@ -678,6 +682,10 @@ export interface ApiPoolObjectIdForLpCoinTypeBody {
 export interface ApiPoolsStatsBody {
 	/** Pool object IDs whose analytics should be returned, in response order. */
 	poolIds: ObjectId[];
+	/** Zero-based input offset. */
+	cursor?: number;
+	/** Maximum number of statistics to return, capped at 32. */
+	limit?: number;
 }
 
 /**
@@ -686,6 +694,10 @@ export interface ApiPoolsStatsBody {
 export interface ApiPoolsSummaryBody {
 	/** Optional pool IDs to include. Omit the field to request all summaries. */
 	poolIds?: ObjectId[];
+	/** Zero-based result offset. */
+	cursor?: number;
+	/** Maximum summaries to return: 32 for explicit IDs or 256 for the catalogue. */
+	limit?: number;
 }
 
 /**
