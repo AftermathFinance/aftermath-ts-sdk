@@ -1,5 +1,20 @@
 # aftermath-ts-sdk
 
+## 5.0.0
+
+### Major Changes
+
+- [#180](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/180) [`cd9cbf7`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/cd9cbf74cef5fae78bd2f32fb7e2e42d77a8f6cb) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Remove `Rewards.getExpectedRewards` and its types.
+
+  The backing `rewards/expected-rewards` endpoint has been removed from the API,
+  so the method could only fail. Callers previewing an epoch's rewards should use
+  `getDistribution` instead.
+
+  Removed alongside it: `ApiRewardsExpectedRewardsBody`,
+  `ApiRewardsExpectedRewardsResponse`, `RewardsExpectedCalculationVariables`,
+  `RewardsExpectedEpochInfo`, `RewardsExpectedTotals` and
+  `RewardsExpectedDomainTokens`.
+
 ## 4.1.1
 
 ### Patch Changes
