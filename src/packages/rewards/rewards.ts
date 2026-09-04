@@ -7,8 +7,6 @@ import type {
 	ApiRewardsClaimRequestTxResponse,
 	ApiRewardsDistributionBody,
 	ApiRewardsDistributionResponse,
-	ApiRewardsExpectedRewardsBody,
-	ApiRewardsExpectedRewardsResponse,
 	ApiRewardsGetClaimableBody,
 	ApiRewardsGetClaimableResponse,
 	ApiRewardsGetHistoryBody,
@@ -19,7 +17,7 @@ import type {
 
 /**
  * Provides HTTP access to reward points, reward history, claimable balances,
- * expected rewards, and claim transaction builders.
+ * and claim transaction builders.
  *
  * Read methods request data from the configured Aftermath API. The claim
  * method also converts the API's serialized transaction response into a Sui
@@ -137,28 +135,6 @@ export class Rewards extends Caller {
 			ApiRewardsGetClaimableResponse,
 			ApiRewardsGetClaimableBody
 		>("claimable", inputs);
-	}
-
-	/**
-	 * Preview a single account's expected rewards for an epoch, broken down by
-	 * domain (trading, referral, AFLP, integrator) plus totals. Backed by the
-	 * newer `rewards/expected-rewards` endpoint. Provide exactly one of `address`
-	 * or `accountId`; omit `epoch` for the current epoch.
-	 *
-	 * This method performs an HTTP request. Account IDs are decimal strings so
-	 * that values larger than JavaScript's safe integer range remain exact.
-	 *
-	 * @param inputs - Account selector, epoch, and optional calculation overrides.
-	 * @returns The selected epoch, total reward values, and domain breakdown.
-	 * @throws `AftermathTransportError` when the API request or response fails.
-	 */
-	public async getExpectedRewards(
-		inputs: ApiRewardsExpectedRewardsBody
-	): Promise<ApiRewardsExpectedRewardsResponse> {
-		return this.fetchApi<
-			ApiRewardsExpectedRewardsResponse,
-			ApiRewardsExpectedRewardsBody
-		>("expected-rewards", inputs);
 	}
 
 	// =========================================================================

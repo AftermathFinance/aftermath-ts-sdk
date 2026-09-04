@@ -44,30 +44,8 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 					pagination: { hasMore: true, nextCursor: 100 },
 				});
 			}
-			if (url.endsWith("/claimable")) {
-				return Response.json({
-					rewards: [{ coinType: COIN_B, amount: "9007199254740993n" }],
-				});
-			}
 			return Response.json({
-				epoch: {
-					number: 0,
-					startTimestampMs: 1,
-					endTimestampMs: 2,
-					status: "pending",
-				},
-				total: {
-					tokensUsd: 0,
-					tokensRaw: "0",
-					points: 0,
-				},
-				domains: [
-					{
-						domain: "trading",
-						tokensUsd: 12.5,
-						tokensRaw: "12345678901234567890",
-					},
-				],
+				rewards: [{ coinType: COIN_B, amount: "9007199254740993n" }],
 			});
 		});
 		const client = new Rewards({
@@ -99,37 +77,11 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 		).resolves.toEqual({
 			rewards: [{ coinType: COIN_B, amount: 9_007_199_254_740_993n }],
 		});
-		await expect(
-			client.getExpectedRewards({
-				accountId: "18446744073709551616",
-				epoch: 0,
-				totalMakerRewards: 0,
-				totalTakerRewards: 1,
-				calculationVariables: {
-					qScoreCoefficient: 0,
-					uptimeCoefficient: 1,
-					mmVolumeCoefficient: 2,
-					takerVolumeCoefficient: 3,
-					takerOiCoefficient: 4,
-				},
-				tradingPointsBudget: 5,
-				aflpPointsBudget: 6,
-				refereeRateLow: 0,
-				refereeRateHigh: 1,
-				referrerRateLow: 2,
-				referrerRateHigh: 3,
-				referralVolumeThreshold: 4,
-			})
-		).resolves.toMatchObject({
-			total: { tokensRaw: "0", points: 0 },
-			domains: [{ tokensRaw: "12345678901234567890" }],
-		});
 
 		expect(calls.map(({ input }) => input)).toEqual([
 			`${BASE_URL}/api/rewards/points`,
 			`${BASE_URL}/api/rewards/history`,
 			`${BASE_URL}/api/rewards/claimable`,
-			`${BASE_URL}/api/rewards/expected-rewards`,
 		]);
 		expect(requestBody(calls, 0)).toEqual(signed);
 		expect(requestBody(calls, 1)).toEqual({
@@ -139,26 +91,6 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 			cursor: 99,
 		});
 		expect(requestBody(calls, 2)).toEqual({ walletAddress: WALLET });
-		expect(requestBody(calls, 3)).toEqual({
-			accountId: "18446744073709551616",
-			epoch: 0,
-			totalMakerRewards: 0,
-			totalTakerRewards: 1,
-			calculationVariables: {
-				qScoreCoefficient: 0,
-				uptimeCoefficient: 1,
-				mmVolumeCoefficient: 2,
-				takerVolumeCoefficient: 3,
-				takerOiCoefficient: 4,
-			},
-			tradingPointsBudget: 5,
-			aflpPointsBudget: 6,
-			refereeRateLow: 0,
-			refereeRateHigh: 1,
-			referrerRateLow: 2,
-			referrerRateHigh: 3,
-			referralVolumeThreshold: 4,
-		});
 	});
 
 	it("routes the rewards distribution and maps account ids to bigint", async () => {
