@@ -4111,6 +4111,8 @@ export interface PerpetualsMarketMetadata {
 	symbol: string;
 	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
 	displayName?: string;
+	/** Long-form blurb describing the market. Absent when unset. */
+	description?: string;
 	/** Grouping label, e.g. `"Crypto"`, `"Commodities"`, `"Equities"`. */
 	category: string;
 	/** Icon location for the market, e.g. `"/markets/btc.png"`. */
