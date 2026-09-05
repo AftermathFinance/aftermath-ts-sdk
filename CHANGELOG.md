@@ -1,5 +1,15 @@
 # aftermath-ts-sdk
 
+## 5.0.1
+
+### Patch Changes
+
+- [#182](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/182) [`3e01a82`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/3e01a82f989c231748e008c55ae78a340d98554a) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Add optional `description` to `PerpetualsMarketMetadata`.
+
+  The static enricher can now carry a long-form blurb per market alongside the
+  existing display name and artwork. Optional because it is omitted for markets
+  that have not been given one.
+
 ## 5.0.0
 
 ### Major Changes
