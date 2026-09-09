@@ -978,8 +978,13 @@ export interface PerpetualsVaultObject {
 		/** Minimum position margin (USD) to trigger full close during force withdraw. */
 		minForceWithdrawValueUsd: number;
 	};
-	/** Owner address of the vault. */
-	ownerAddress: SuiAddress;
+	/**
+	 * Owner address of the vault.
+	 *
+	 * `null` when the vault's owner cap, or its owner address, cannot be
+	 * resolved. The field is always present; only its value may be null.
+	 */
+	ownerAddress: SuiAddress | null;
 	/** Creation timestamp of the vault. */
 	creationTimestamp: Timestamp | undefined;
 	/** Underlying perpetuals account ID that the vault uses. */

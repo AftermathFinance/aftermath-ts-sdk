@@ -53,6 +53,14 @@ describe("PerpetualsVault", () => {
 		expect(paused.isPaused()).toBe(true);
 	});
 
+	it("falls back to the empty-address sentinel when the owner is unresolved", () => {
+		const ownerless = makeVault({ baseUrl: BASE_URL }, undefined, {
+			ownerAddress: null,
+		});
+		expect(ownerless.vaultObject.ownerAddress).toBeNull();
+		expect(ownerless.partialVaultCap().ownerAddress).toBe("");
+	});
+
 	it("builds force-withdraw, owner, and user vault transactions with vault identity", async () => {
 		const { api } = makeApi();
 		const vault = makeVault({ baseUrl: BASE_URL }, api);
