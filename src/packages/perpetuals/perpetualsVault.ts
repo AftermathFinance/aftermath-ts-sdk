@@ -874,7 +874,7 @@ export class PerpetualsVault extends Caller {
 	public partialVaultCap(): PerpetualsPartialVaultCap {
 		return {
 			vaultId: this.vaultObject.objectId,
-			ownerAddress: this.vaultObject.ownerAddress,
+			ownerAddress: this.vaultObject.ownerAddress ?? "",
 			accountId: this.vaultObject.accountId,
 			accountObjectId: this.vaultObject.accountObjectId,
 			collateralCoinType: this.vaultObject.collateralCoinType,
