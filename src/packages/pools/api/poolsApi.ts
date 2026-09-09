@@ -648,7 +648,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.poolFactory,
-				`create_pool_${poolSize}_coins`
+				`create_pool_${poolSize}_coins_v2`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
