@@ -1,5 +1,13 @@
 # aftermath-ts-sdk
 
+## 5.0.2
+
+### Patch Changes
+
+- [#184](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/184) [`3cb18d6`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/3cb18d6c70f5a1cf0199995c64ec769d94e87e1e) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - fix(perpetuals): type vault `ownerAddress` as nullable
+
+  The `/perpetuals/vaults` endpoint now returns `ownerAddress: null` when a vault's owner cap (or its owner address) cannot be resolved. `PerpetualsVaultObject.ownerAddress` is now `SuiAddress | null` to match, and `PerpetualsVault.partialVaultCap()` falls back to the empty-address sentinel so ownership checks treat an unresolved owner as "not owner".
+
 ## 5.0.1
 
 ### Patch Changes
