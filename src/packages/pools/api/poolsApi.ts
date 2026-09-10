@@ -3,7 +3,6 @@ import {
 	Transaction,
 	type TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { fromBase64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import type { AftermathApi } from "../../../general/providers/aftermathApi";
 import type {
@@ -15,12 +14,10 @@ import { Casting } from "../../../general/utils/casting";
 import type {
 	AnyObjectType,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
-	ApiPublishLpCoinBody,
 	Balance,
 	DaoFeePoolOwnerCapObject,
 	DaoFeePoolsAddresses,
 	ObjectId,
-	PoolCreationLpCoinMetadata,
 	PoolDepositFee,
 	PoolFlatness,
 	PoolName,
@@ -31,7 +28,6 @@ import type {
 	ReferralVaultAddresses,
 	Slippage,
 	SuiAddress,
-	Url,
 } from "../../../types";
 import { Coin } from "../../coin";
 import type {
@@ -566,36 +562,6 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	/**
-	 * Publishes a transaction block for creating a liquidity pool coin.
-	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
-	 * @returns A promise that resolves to the result of the transaction publishing.
-	 */
-	publishLpCoinTx = (inputs: {
-		tx: Transaction;
-		lpCoinDecimals: CoinDecimal;
-	}) => {
-		const compilations =
-			this.addresses.pools.other?.createLpCoinPackageCompilations;
-		if (!compilations) {
-			throw new Error(
-				"not all required addresses have been set in provider for lp coin publishing (requires package compilations)"
-			);
-		}
-
-		const { tx, lpCoinDecimals } = inputs;
-		const compiledModulesAndDeps = JSON.parse(compilations[lpCoinDecimals]);
-
-		return tx.publish({
-			modules: compiledModulesAndDeps.modules.map((m: string) =>
-				Array.from(fromBase64(m))
-			),
-			dependencies: compiledModulesAndDeps.dependencies.map((addr: string) =>
-				normalizeSuiObjectId(addr)
-			),
-		});
-	};
-
 	// TODO: handle bounds checks here instead of just on-chain ?
 	/**
 	 * Creates a transaction to create a new pool.
@@ -615,26 +581,13 @@ export class PoolsApi implements MoveErrorsInterface {
 			depositFee: PoolDepositFee;
 			withdrawFee: PoolWithdrawFee;
 		}[];
-		lpCoinMetadata: PoolCreationLpCoinMetadata;
-		lpCoinIconUrl: Url;
 		createPoolCapId: ObjectId | TransactionObjectArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
-		lpCoinDescription: string;
 		respectDecimals: boolean;
-		forceLpDecimals?: CoinDecimal;
 		withTransfer?: boolean;
-	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
-		const {
-			tx,
-			lpCoinType,
-			createPoolCapId,
-			coinsInfo,
-			lpCoinMetadata,
-			lpCoinDescription,
-			lpCoinIconUrl,
-			withTransfer,
-		} = inputs;
+	}): TransactionObjectArgument[] => {
+		const { tx, lpCoinType, createPoolCapId, coinsInfo, withTransfer } = inputs;
 
 		const poolSize = coinsInfo.length;
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
@@ -648,7 +601,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.poolFactory,
-				`create_pool_${poolSize}_coins`
+				`create_pool_${poolSize}_coins_v2`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
@@ -661,32 +614,6 @@ export class PoolsApi implements MoveErrorsInterface {
 						.vector(bcs.u8())
 						.serialize(Casting.u8VectorFromString(inputs.poolName))
 				),
-				tx.pure(
-					bcs
-						.vector(bcs.u8())
-						.serialize(
-							Casting.u8VectorFromString(lpCoinMetadata.name.toString())
-						)
-				),
-				tx.pure(
-					bcs
-						.vector(bcs.u8())
-						.serialize(
-							Casting.u8VectorFromString(
-								lpCoinMetadata.symbol.toString().toUpperCase()
-							)
-						)
-				),
-				tx.pure(
-					bcs
-						.vector(bcs.u8())
-						.serialize(Casting.u8VectorFromString(lpCoinDescription))
-				),
-				tx.pure(
-					bcs
-						.vector(bcs.u8())
-						.serialize(Casting.u8VectorFromString(lpCoinIconUrl))
-				), // lp_icon_url
 				tx.pure(
 					bcs.vector(bcs.u64()).serialize(coinsInfo.map((coin) => coin.weight))
 				),
@@ -720,9 +647,8 @@ export class PoolsApi implements MoveErrorsInterface {
 						.serialize(
 							decimals.includes(undefined) ? undefined : (decimals as number[])
 						)
-				), // decimals
-				tx.pure.bool(inputs.respectDecimals), // respect_decimals
-				tx.pure(bcs.option(bcs.u8()).serialize(inputs.forceLpDecimals)), // force_lp_decimals
+				),
+				tx.pure.bool(inputs.respectDecimals),
 			],
 		});
 	};
@@ -1371,23 +1297,6 @@ export class PoolsApi implements MoveErrorsInterface {
 				withTransfer: true,
 			});
 		}
-
-		return tx;
-	};
-
-	/**
-	 * Builds a transaction block for publishing an LP coin.
-	 * @param inputs - The input parameters for the transaction.
-	 * @returns The built transaction block.
-	 */
-	buildPublishLpCoinTx = (inputs: ApiPublishLpCoinBody): Transaction => {
-		const { lpCoinDecimals } = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
-
-		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
-		tx.transferObjects([upgradeCap], inputs.walletAddress);
 
 		return tx;
 	};

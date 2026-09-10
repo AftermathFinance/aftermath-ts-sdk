@@ -474,6 +474,8 @@ export interface PoolCreationLpCoinMetadata {
 	symbol: string;
 	/** An optional URL for the LP coin icon. */
 	iconUrl?: Url;
+	/** An optional description templated into the LP coin package. */
+	description?: string;
 }
 
 // =========================================================================
@@ -599,10 +601,23 @@ export interface ApiPoolAllCoinWithdrawBody {
  * typically specifying the coin's decimals.
  */
 export interface ApiPublishLpCoinBody {
-	/** The wallet that publishes and receives the LP coin package upgrade cap. */
+	/** The wallet that publishes the LP coin package and receives the pool-creation cap. */
 	walletAddress: SuiAddress;
-	/** The decimal precision compiled into the LP coin package. */
-	lpCoinDecimals: number;
+	/** Name, symbol, optional icon, and optional description templated into the LP coin. */
+	lpCoinMetadata: PoolCreationLpCoinMetadata;
+	/** Per-coin type, weight, and decimals templated into the LP coin package. */
+	coinsInfo: {
+		/** The fully qualified coin type deposited into the pool. */
+		coinType: CoinType;
+		/** The decimal weight for this coin. Weights must sum to `1`. */
+		weight: Percentage;
+		/** Optional display precision stored for this coin. */
+		decimals?: number;
+	}[];
+	/** The pool curve mode passed to Move as a flatness value. */
+	poolFlatness: 0 | 1;
+	/** Whether the supplied coin decimals are preserved for the LP coin. */
+	respectDecimals: boolean;
 }
 
 /**
@@ -614,8 +629,6 @@ export interface ApiCreatePoolBody {
 	walletAddress: SuiAddress;
 	/** The fully qualified LP coin type used by the new pool. */
 	lpCoinType: CoinType;
-	/** Metadata for the LP coin published for the pool. */
-	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	/** Per-coin weights, fees, decimal metadata, and initial deposits. */
 	coinsInfo: {
 		/** The fully qualified coin type deposited into the pool. */
@@ -637,8 +650,6 @@ export interface ApiCreatePoolBody {
 	createPoolCapId: ObjectId;
 	/** Whether the transaction should preserve the supplied coin decimals. */
 	respectDecimals: boolean;
-	/** Optional decimal precision forced for the LP coin. */
-	forceLpDecimals?: CoinDecimal;
 	/** Whether coin selection is prepared for a sponsored transaction. */
 	isSponsoredTx?: boolean;
 	/** Whether the LP coin is burned as part of the creation flow. */

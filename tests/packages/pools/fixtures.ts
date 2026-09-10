@@ -327,11 +327,6 @@ function makeAddresses(withDaoFee = true): ConfigAddresses {
 				insuranceFund: "0x13",
 				lpCoinsTable: "0x14",
 			},
-			other: {
-				createLpCoinPackageCompilations: {
-					9: JSON.stringify({ modules: ["AA=="], dependencies: ["0x2"] }),
-				},
-			},
 		},
 		referralVault: {
 			packages: { referralVault: REFERRAL_PACKAGE },

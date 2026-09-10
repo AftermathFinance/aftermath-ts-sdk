@@ -232,30 +232,9 @@ describe("PoolsApi transaction commands and provider boundary", () => {
 		expect(tx.moveCalls[2]?.arguments).toHaveLength(9);
 	});
 
-	it("constructs publishing, pool creation, registry, and DAO-fee commands", () => {
+	it("constructs pool creation, registry, and DAO-fee commands", () => {
 		const addresses = makeAddresses();
 		const api = new PoolsApi(makeProvider(addresses));
-		const publishTx = fakeTransaction();
-		const upgradeCap = api.publishLpCoinTx({
-			tx: asTransaction(publishTx),
-			lpCoinDecimals: 9,
-		});
-		expect(upgradeCap).toEqual({ kind: "upgrade-cap" });
-		expect(publishTx.publishes).toEqual([
-			{ modules: [[0]], dependencies: [`0x${"0".repeat(63)}2`] },
-		]);
-		const addressesWithoutCompilations = makeAddresses();
-		delete addressesWithoutCompilations.pools?.other;
-		const apiWithoutCompilations = new PoolsApi(
-			makeProvider(addressesWithoutCompilations)
-		);
-		expect(() =>
-			apiWithoutCompilations.publishLpCoinTx({
-				tx: asTransaction(fakeTransaction()),
-				lpCoinDecimals: 8,
-			})
-		).toThrow("requires package compilations");
-
 		const createTx = fakeTransaction();
 		api.createPoolTx({
 			tx: asTransaction(createTx),
@@ -272,20 +251,16 @@ describe("PoolsApi transaction commands and provider boundary", () => {
 					withdrawFee: 4n,
 				},
 			],
-			lpCoinMetadata: { name: "Pool LP", symbol: "plp" },
-			lpCoinIconUrl: "https://sdk.test/icon.svg",
 			createPoolCapId: "0x31",
 			poolName: "My Pool",
 			poolFlatness: 0n,
-			lpCoinDescription: "description",
 			respectDecimals: true,
-			forceLpDecimals: 9,
 		});
 		expect(createTx.moveCalls[0]).toMatchObject({
-			target: `${AMM}::pool_factory::create_pool_1_coins`,
+			target: `${AMM}::pool_factory::create_pool_1_coins_v2`,
 			typeArguments: [LP, A],
 		});
-		expect(createTx.moveCalls[0]?.arguments).toHaveLength(17);
+		expect(createTx.moveCalls[0]?.arguments).toHaveLength(12);
 
 		const registryTx = fakeTransaction();
 		api.poolObjectIdForLpCoinTypeTx({
@@ -619,14 +594,6 @@ describe("PoolsApi transaction commands and provider boundary", () => {
 		expect(builtAllWithdraw.moveCalls[0]?.target).toBe(
 			`${AMM_INTERFACE}::amm_interface::all_coin_withdraw_2_coins`
 		);
-
-		const published = api.buildPublishLpCoinTx({
-			walletAddress: WALLET,
-			lpCoinDecimals: 9,
-		}) as unknown as FakeTx;
-		expect(published.sender).toBe(WALLET);
-		expect(published.publishes).toHaveLength(1);
-		expect(published.transfers).toHaveLength(1);
 
 		const feeBps = api.buildDaoFeePoolUpdateFeeBpsTx({
 			walletAddress: WALLET,

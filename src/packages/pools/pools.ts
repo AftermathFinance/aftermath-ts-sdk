@@ -270,25 +270,34 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	/**
-	 * Builds an unsigned transaction that publishes the compiled LP coin package.
+	 * Builds an unsigned transaction that publishes an LP coin package templated
+	 * for this pool and mints its `CreatePoolCapV2`.
 	 *
-	 * The transaction transfers the resulting upgrade capability to
-	 * `walletAddress`. It is not signed, submitted, or serialized by this method.
+	 * The API templates the LP coin package with the pool's metadata, weights,
+	 * decimals, and flatness, publishes it, and transfers the resulting cap and
+	 * upgrade capability to `walletAddress`. This method does not sign, submit, or
+	 * serialize the returned `Transaction`.
 	 *
-	 * @param inputs - Publisher address and compiled LP coin decimal precision.
+	 * @param inputs - Publisher address, LP coin metadata, and pool configuration.
 	 * @returns A promise for the unsigned publish `Transaction`.
-	 * @throws `Error` when the provider lacks the compiled package for the requested decimals.
+	 * @throws `AftermathTransportError` when the API cannot build or decode the transaction.
 	 *
 	 * @example
 	 * ```typescript
 	 * const publishTx = await pools.getPublishLpCoinTransaction({
 	 *   walletAddress: "0x<address>",
-	 *   lpCoinDecimals: 9
+	 *   lpCoinMetadata: { name: "MyPool LP", symbol: "MYPLP" },
+	 *   coinsInfo: [
+	 *     { weight: 0.5, decimals: 9 },
+	 *     { weight: 0.5, decimals: 6 },
+	 *   ],
+	 *   poolFlatness: 0,
+	 *   respectDecimals: true,
 	 * });
 	 * ```
 	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.poolsApi().buildPublishLpCoinTx(inputs);
+		return this.fetchApiTransaction("transactions/publish-lp-coin", inputs);
 	}
 
 	/**
