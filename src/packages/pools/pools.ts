@@ -11,6 +11,7 @@ import type {
 	ApiPoolsStatsBody,
 	ApiPoolsSummaryBody,
 	ApiPublishLpCoinBody,
+	ApiTransactionResponse,
 	Balance,
 	CallerConfig,
 	CoinType,
@@ -297,7 +298,11 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.fetchApiTransaction("transactions/publish-lp-coin", inputs);
+		const { tx } = await this.fetchApiTxObject<
+			ApiPublishLpCoinBody,
+			ApiTransactionResponse
+		>("transactions/publish-lp-coin", inputs);
+		return tx;
 	}
 
 	/**
@@ -337,7 +342,11 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
-		return this.fetchApiTransaction("transactions/create-pool", inputs);
+		const { tx } = await this.fetchApiTxObject<
+			ApiCreatePoolBody,
+			ApiTransactionResponse
+		>("transactions/create-pool", inputs);
+		return tx;
 	}
 
 	// =========================================================================
