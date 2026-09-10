@@ -1,5 +1,17 @@
 # aftermath-ts-sdk
 
+## 5.1.0
+
+### Minor Changes
+
+- [#186](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/186) [`b3ec308`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/b3ec3085e1579a23f71cfad8039720d1deda0511) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Migrate pool creation to the v3 AMM package. `createPoolTx` now targets `create_pool_N_coins_v2` with the v3 argument shape (no LP metadata or forced LP decimals), and `getPublishLpCoinTransaction` is server-backed so the LP coin package is templated with the pool's metadata, weights, decimals, and flatness and mints a `CreatePoolCapV2`.
+
+  Breaking: `ApiPublishLpCoinBody` now carries the LP metadata and pool config; `ApiCreatePoolBody` drops `lpCoinMetadata` and `forceLpDecimals`. The client-side `publishLpCoinTx` / `buildPublishLpCoinTx` builders and the `PoolsAddresses.other.createLpCoinPackageCompilations` config field are removed.
+
+### Patch Changes
+
+- [#188](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/188) [`199e2ab`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/199e2ab3d6f803a08951fb7c73920a91d27b81ab) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Fix pool creation transaction parsing. `getPublishLpCoinTransaction` and `getCreatePoolTransaction` now consume the server's `{ txKind }` response via `fetchApiTxObject` (`Transaction.fromKind`, or `Transaction.from` when sponsored), fixing "First argument to DataView constructor must be an ArrayBuffer".
+
 ## 5.0.2
 
 ### Patch Changes
