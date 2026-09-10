@@ -140,8 +140,8 @@ export interface PoolsAddresses {
 	};
 	/** Optional data required to publish LP-coin packages. */
 	other?: {
-		/** JSON-serialized Move modules and dependencies keyed by LP-coin decimals. */
-		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+		/** Serialized Move package compilation templated per pool for LP-coin publishing. */
+		createLpCoinPackageCompilation: string;
 	};
 }
 
