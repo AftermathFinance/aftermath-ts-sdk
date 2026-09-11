@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 5.1.1
+
+### Patch Changes
+
+- [#189](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/189) [`ec5b030`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/ec5b030c707bcbab42cf96eb91820d65bf98439e) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Point pool creation at the versioned `pools/v1/transactions/*` endpoints. `getPublishLpCoinTransaction` and `getCreatePoolTransaction` now call the v1 paths, which build against the v3 AMM contract, while the unversioned endpoints stay on the current live functions so existing integrations keep working.
+
 ## 5.1.0
 
 ### Minor Changes
