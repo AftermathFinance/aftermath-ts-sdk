@@ -301,7 +301,7 @@ export class Pools extends Caller {
 		const { tx } = await this.fetchApiTxObject<
 			ApiPublishLpCoinBody,
 			ApiTransactionResponse
-		>("transactions/publish-lp-coin", inputs);
+		>("v1/transactions/publish-lp-coin", inputs);
 		return tx;
 	}
 
@@ -345,7 +345,7 @@ export class Pools extends Caller {
 		const { tx } = await this.fetchApiTxObject<
 			ApiCreatePoolBody,
 			ApiTransactionResponse
-		>("transactions/create-pool", inputs);
+		>("v1/transactions/create-pool", inputs);
 		return tx;
 	}
 
