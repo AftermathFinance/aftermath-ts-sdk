@@ -9,6 +9,7 @@ import type {
 	Byte,
 	EmptyObject,
 	Event,
+	MoveErrorCode,
 	ObjectDigest,
 	ObjectId,
 	ObjectVersion,
@@ -2643,6 +2644,113 @@ export interface ApiPerpetualsStopOrderDatasResponse {
 // =========================================================================
 
 /**
+ * Inclusive mark-price comparison direction for TWAP price conditions.
+ *
+ * Wire values are snake_case enum labels from the perpetuals HTTP API:
+ *
+ * - `"above"` — activate or stop when mark price is greater than or equal to
+ *   the level
+ * - `"below"` — activate or stop when mark price is less than or equal to
+ *   the level
+ */
+export type PerpetualsTwapPriceConditionDirection = "above" | "below";
+
+/**
+ * Create-only price conditions for a new TWAP order.
+ *
+ * Directions are not sent — the perpetuals HTTP API derives them from the
+ * mark price at creation. Omit unused keys; omit the object entirely when
+ * both fields are empty (unconditional TWAP).
+ *
+ * Mark prices are `bigint`. The SDK request path serializes them like other
+ * perpetuals bigint body fields (`JSON.stringify` + bigint replacer →
+ * decimal strings with an `n` suffix), and the response path reconstitutes
+ * them via `Helpers.parseJsonWithBigint`.
+ */
+export interface PerpetualsTwapCreatePriceConditions {
+	/**
+	 * Mark price that delays first execution until the derived trigger
+	 * condition is met (scaled integer units, as `bigint`). Never round-trip
+	 * through float.
+	 */
+	triggerMarkPrice?: bigint;
+	/**
+	 * Mark price that requests cancellation of the unexecuted remainder after
+	 * activation (scaled integer units, as `bigint`). Never round-trip through
+	 * float.
+	 */
+	stopMarkPrice?: bigint;
+}
+
+/**
+ * A single normalized inclusive mark-price condition on a TWAP order response.
+ */
+export interface PerpetualsTwapPriceCondition {
+	/** Comparison direction returned by the perpetuals HTTP API. */
+	direction: PerpetualsTwapPriceConditionDirection;
+	/**
+	 * Mark price level from the TWAP order response (scaled integer units, as
+	 * `bigint`). Never reconstruct via floating-point conversion.
+	 */
+	markPrice: bigint;
+}
+
+/**
+ * Normalized executor-managed price conditions on a TWAP order response.
+ *
+ * Omitted for legacy / unconditional TWAPs. Conditions are evaluated
+ * off-chain against market data, not by the Move contract.
+ */
+export interface PerpetualsTwapOrderPriceConditions {
+	/** Trigger condition that delayed activation, when configured. */
+	triggerCondition?: PerpetualsTwapPriceCondition;
+	/** Stop condition that may cancel the unexecuted remainder, when configured. */
+	stopCondition?: PerpetualsTwapPriceCondition;
+	/**
+	 * Milliseconds since the Unix epoch when the trigger first activated.
+	 * Absent while still waiting for the trigger.
+	 */
+	triggerActivatedAtMs?: Timestamp;
+}
+
+/**
+ * Failed TWAP action reported on a TWAP order response from the perpetuals
+ * HTTP API (`snake_case` wire labels).
+ *
+ * - `"execute"` — chunk execution attempt failed
+ * - `"finalize"` — finalization attempt failed
+ * - `"cancel"` — cancellation attempt failed
+ */
+export type PerpetualsTwapOrderAction = "execute" | "finalize" | "cancel";
+
+/**
+ * Latest unresolved TWAP action error on a TWAP order response.
+ *
+ * Surfaced by the perpetuals HTTP API. JSON `null` is converted to
+ * `undefined` by the SDK decode path (`Caller` / `Helpers.parseJsonWithBigint`),
+ * so clients only see omit/undefined when no error is present.
+ */
+export interface PerpetualsTwapOrderLastError {
+	/** Stable product-facing error code for localization. */
+	code: string;
+	/** Controlled user-facing fallback message from the perpetuals HTTP API. */
+	message: string;
+	/** Failed action that produced this error. */
+	action: PerpetualsTwapOrderAction;
+	/**
+	 * Whether the failure is considered retryable. Does not imply a retry is
+	 * currently running or change `orderState`.
+	 */
+	retryable: boolean;
+	/** Milliseconds since the Unix epoch when the error occurred. */
+	occurredAtMs: Timestamp;
+	/** Move module that emitted the abort, when this is a protocol error. */
+	protocolModule?: string;
+	/** Move abort code, when this is a protocol error. */
+	protocolCode?: MoveErrorCode;
+}
+
+/**
  * Per-order TWAP (time-weighted-average-price) request payload.
  */
 export interface PerpetualsTwapOrderDetails {
@@ -2679,6 +2787,13 @@ export interface PerpetualsTwapOrderDetails {
 	maxSlippageBps: Bps;
 	/** Optional integrator fee configuration (friendly fractional fee). */
 	builderCode?: PerpetualsBuilderCodeParamaters;
+	/**
+	 * Create-only price conditions. Directions are not sent — the perpetuals
+	 * HTTP API derives them from mark price at creation. Omit unused keys;
+	 * omit the object for an unconditional TWAP. Cannot be edited after
+	 * creation (cancel and recreate).
+	 */
+	priceConditions?: PerpetualsTwapCreatePriceConditions;
 }
 
 /**
@@ -2700,12 +2815,13 @@ export type PerpetualsTwapOrderState =
 /**
  * Per-order TWAP details as returned by the read endpoint.
  *
- * Same fields as {@link PerpetualsTwapOrderDetails} minus `builderCode`, which
- * the read response does not include.
+ * Same fields as {@link PerpetualsTwapOrderDetails} minus `builderCode` and
+ * `priceConditions`, which the read response does not include. Normalized
+ * price conditions are returned on {@link PerpetualsTwapOrderData} instead.
  */
 export type PerpetualsTwapOrderDetailsData = Omit<
 	PerpetualsTwapOrderDetails,
-	"builderCode"
+	"builderCode" | "priceConditions"
 >;
 
 /**
@@ -2722,6 +2838,12 @@ export interface PerpetualsTwapOrderData {
 	invalidReason?: string;
 	/** Free-form status message about the order, if any. */
 	statusMessage?: string;
+	/**
+	 * Latest unresolved action error from the perpetuals HTTP API. JSON `null`
+	 * on the wire becomes `undefined` after SDK decode, so omit/undefined means
+	 * no current error.
+	 */
+	lastError?: PerpetualsTwapOrderLastError;
 	/** Order details. */
 	details: PerpetualsTwapOrderDetailsData;
 	/** Base-asset amount already executed (scaled base units). */
@@ -2730,14 +2852,27 @@ export interface PerpetualsTwapOrderData {
 	scheduledAmount: bigint;
 	/** Timestamp (ms since epoch) of the most recent chunk execution. */
 	lastExecutionTimestampMs: Timestamp;
+	/**
+	 * Order creation time (ms since epoch). Prefer this over
+	 * `lastExecutionTimestampMs` for newest-first sorting.
+	 */
+	orderCreationTimestampMs?: Timestamp;
+	/**
+	 * Normalized trigger/stop conditions from the TWAP order response.
+	 * Omitted for unconditional / legacy TWAPs.
+	 */
+	priceConditions?: PerpetualsTwapOrderPriceConditions;
 }
 
 /**
  * Edit to apply to an existing TWAP order. Any field left undefined is unchanged.
+ *
+ * `newDetails` omits create-only {@link PerpetualsTwapCreatePriceConditions};
+ * price conditions cannot be changed after creation (cancel and recreate).
  */
 export interface PerpetualsTwapOrderEdit {
-	/** Replacement order details (full set). */
-	newDetails?: PerpetualsTwapOrderDetails;
+	/** Replacement order details (full set except create-only price conditions). */
+	newDetails?: Omit<PerpetualsTwapOrderDetails, "priceConditions">;
 	/** Replacement set of authorized executor addresses. */
 	newExecutors?: string[];
 }

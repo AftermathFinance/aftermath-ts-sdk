@@ -143,3 +143,30 @@ source does not support.
 Use `README.md` for the first successful integration path. Keep package-specific
 details close to the package they describe, and link from the README instead of
 putting every reference table on the landing page.
+
+## Perpetuals HTTP client types
+
+When adding or changing Perpetuals account/vault HTTP client types in
+`src/packages/perpetuals/perpetualsTypes.ts`, follow these conventions:
+
+1. **Naming in docs.** Describe behavior in neutral SDK terms only (for
+   example "perpetuals HTTP API", "TWAP order response"). Do not drop
+   internal service names, ticket IDs, or project-tracker labels into
+   comments, JSDoc, changesets, commits, or PR text.
+2. **Branded scalars.** Use `Timestamp` for millisecond clocks (field names
+   ending in `Ms`). Use existing brands/aliases where they fit (`ObjectId`,
+   `MoveErrorCode`, `Bps`, etc.). Mark prices on TWAP create/read types are
+   `bigint` — follow the standing perpetuals bigint JSON path (request
+   replacer → `"…n"`; response `Helpers.parseJsonWithBigint`), not
+   `NumberAsString` / float conversion.
+3. **Nullability.** Prefer `field?: T` (omit/undefined). Do not add `| null`
+   on TWAP client response fields: SDK JSON decode converts JSON `null` to
+   `undefined` (`Caller` / `Helpers.parseJsonWithBigint`). Only keep `| null`
+   when a hard exception already used nearby requires a distinct cleared
+   state that survives decode.
+4. **Closed enums.** Prefer string unions for known response enums (for
+   example `PerpetualsTwapOrderAction = "execute" | "finalize" | "cancel"`)
+   instead of bare `string`.
+5. **JSDoc.** Document every new or changed public type and every field in
+   neutral SDK terms — no internal service or ticket name-drops.
+
