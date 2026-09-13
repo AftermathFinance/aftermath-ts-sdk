@@ -1,5 +1,16 @@
 # aftermath-ts-sdk
 
+## 5.1.2
+
+### Patch Changes
+
+- [#191](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/191) [`c20d495`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/c20d495edbf44418ec1d3549b39a3ed9dce151af) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - feat(perpetuals): add TWAP price-condition and diagnostic types
+
+  Extend `PerpetualsTwapOrderDetails` with optional create-time `priceConditions`
+  (`triggerMarkPrice` / `stopMarkPrice` as `bigint`), and `PerpetualsTwapOrderData`
+  with optional `orderCreationTimestampMs`, normalized `priceConditions`, and
+  `lastError` for TWAP order responses from the perpetuals HTTP API.
+
 ## 5.1.1
 
 ### Patch Changes
