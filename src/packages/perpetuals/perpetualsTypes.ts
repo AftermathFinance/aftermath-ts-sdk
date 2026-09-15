@@ -2662,24 +2662,20 @@ export type PerpetualsTwapPriceConditionDirection = "above" | "below";
  * mark price at creation. Omit unused keys; omit the object entirely when
  * both fields are empty (unconditional TWAP).
  *
- * Mark prices are `bigint`. The SDK request path serializes them like other
- * perpetuals bigint body fields (`JSON.stringify` + bigint replacer →
- * decimal strings with an `n` suffix), and the response path reconstitutes
- * them via `Helpers.parseJsonWithBigint`.
+ * Mark prices are human-readable numbers, matching stop-order trigger prices
+ * and public perpetuals market prices.
  */
 export interface PerpetualsTwapCreatePriceConditions {
 	/**
 	 * Mark price that delays first execution until the derived trigger
-	 * condition is met (scaled integer units, as `bigint`). Never round-trip
-	 * through float.
+	 * condition is met.
 	 */
-	triggerMarkPrice?: bigint;
+	triggerMarkPrice?: number;
 	/**
 	 * Mark price that requests cancellation of the unexecuted remainder after
-	 * activation (scaled integer units, as `bigint`). Never round-trip through
-	 * float.
+	 * activation.
 	 */
-	stopMarkPrice?: bigint;
+	stopMarkPrice?: number;
 }
 
 /**
@@ -2689,10 +2685,9 @@ export interface PerpetualsTwapPriceCondition {
 	/** Comparison direction returned by the perpetuals HTTP API. */
 	direction: PerpetualsTwapPriceConditionDirection;
 	/**
-	 * Mark price level from the TWAP order response (scaled integer units, as
-	 * `bigint`). Never reconstruct via floating-point conversion.
+	 * Human-readable mark price level from the TWAP order response.
 	 */
-	markPrice: bigint;
+	markPrice: number;
 }
 
 /**

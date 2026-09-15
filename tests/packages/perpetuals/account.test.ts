@@ -520,12 +520,24 @@ describe("PerpetualsAccount state and order/margin branches", () => {
 					maxOneExecutionAmountBps: 2500,
 					smallTailMergeThresholdBps: 50,
 					maxSlippageBps: 100,
+					priceConditions: {
+						triggerMarkPrice: 78_000.25,
+						stopMarkPrice: 80_000.5,
+					},
 				},
 			],
 		});
 		expectTransactionResponse(response);
 		expect(requestBody(calls)).toMatchObject({
-			twapOrders: [expect.objectContaining({ size: "10000n" })],
+			twapOrders: [
+				expect.objectContaining({
+					size: "10000n",
+					priceConditions: {
+						triggerMarkPrice: 78_000.25,
+						stopMarkPrice: 80_000.5,
+					},
+				}),
+			],
 			accountId: "9007199254740993n",
 		});
 

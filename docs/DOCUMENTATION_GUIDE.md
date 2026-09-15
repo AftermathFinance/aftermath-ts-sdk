@@ -156,9 +156,8 @@ When adding or changing Perpetuals account/vault HTTP client types in
 2. **Branded scalars.** Use `Timestamp` for millisecond clocks (field names
    ending in `Ms`). Use existing brands/aliases where they fit (`ObjectId`,
    `MoveErrorCode`, `Bps`, etc.). Mark prices on TWAP create/read types are
-   `bigint` — follow the standing perpetuals bigint JSON path (request
-   replacer → `"…n"`; response `Helpers.parseJsonWithBigint`), not
-   `NumberAsString` / float conversion.
+   human-readable `number` values, matching stop-order trigger prices and
+   public perpetuals market prices.
 3. **Nullability.** Prefer `field?: T` (omit/undefined). Do not add `| null`
    on TWAP client response fields: SDK JSON decode converts JSON `null` to
    `undefined` (`Caller` / `Helpers.parseJsonWithBigint`). Only keep `| null`
@@ -169,4 +168,3 @@ When adding or changing Perpetuals account/vault HTTP client types in
    instead of bare `string`.
 5. **JSDoc.** Document every new or changed public type and every field in
    neutral SDK terms — no internal service or ticket name-drops.
-
