@@ -49,6 +49,7 @@ describe("Perpetuals root client", () => {
 			symbol: "BTC",
 			displayName: "Bitcoin",
 			category: "Crypto",
+			tags: ["Layer 1"],
 			image: "/btc.png",
 			collateralSymbol: "USDC",
 		};
@@ -242,5 +243,33 @@ describe("Perpetuals root client", () => {
 				initialDepositAmount: "1000000n",
 			}
 		);
+	});
+	it("posts an empty body for market categories and preserves display order", async () => {
+		const perps = new Perpetuals({ baseUrl: BASE_URL });
+		const categories = [
+			{ name: "Crypto", tags: ["Layer 1", "DeFi", "Meme"] },
+			{ name: "TradFi", tags: ["Stocks", "Commodities"] },
+		];
+		const calls = installJsonFetch({ categories });
+
+		const response = await perps.getMarketsCategories();
+
+		expect(response.categories).toEqual(categories);
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/markets/categories`
+		);
+		expect(calls[0]?.init?.method).toBe("POST");
+		expect(calls[0]?.init?.body).toBe("{}");
+	});
+
+	it("passes an abort signal through to market categories", async () => {
+		const perps = new Perpetuals({ baseUrl: BASE_URL });
+		const calls = installJsonFetch({ categories: [] });
+		const signal = new AbortController().signal;
+
+		const response = await perps.getMarketsCategories(signal);
+
+		expect(response.categories).toEqual([]);
+		expect(calls[0]?.init?.signal).toBe(signal);
 	});
 });

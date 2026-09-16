@@ -4241,8 +4241,8 @@ export interface ApiPerpetualsMarketsBody {
 }
 
 /**
- * Display metadata for a market: ticker symbols, label, artwork and
- * category.
+ * Display metadata for a market: ticker symbols, label, artwork, category
+ * and tags.
  *
  * Presentation data only — none of it affects pricing, margin or execution.
  */
@@ -4253,12 +4253,59 @@ export interface PerpetualsMarketMetadata {
 	displayName?: string;
 	/** Long-form blurb describing the market. Absent when unset. */
 	description?: string;
-	/** Grouping label, e.g. `"Crypto"`, `"Commodities"`, `"Equities"`. */
+	/**
+	 * The market's single top-level grouping, e.g. `"Crypto"` or `"TradFi"`.
+	 *
+	 * Always names one of the categories returned by
+	 * `Perpetuals.getMarketsCategories`. It is an opaque label resolved against
+	 * that response rather than a fixed set, so new categories appear without an
+	 * SDK release.
+	 */
 	category: string;
+	/**
+	 * Second-tier filter labels within `category`. A market may carry several,
+	 * and each one is declared under its own category by
+	 * `Perpetuals.getMarketsCategories`.
+	 *
+	 * Absent or empty means the market shows only under its category's
+	 * unfiltered view.
+	 */
+	tags?: string[];
 	/** Icon location for the market, e.g. `"/markets/btc.png"`. */
 	image: string;
 	/** Collateral asset ticker, e.g. `"USDC"`. */
 	collateralSymbol: string;
+}
+
+/**
+ * One top-level market grouping and the tags beneath it.
+ *
+ * Categories partition the markets — each market names exactly one — while
+ * tags subdivide a category, and a market may carry any number of them.
+ */
+export interface PerpetualsMarketCategory {
+	/** Category label, compared exactly against `PerpetualsMarketMetadata.category`. */
+	name: string;
+	/**
+	 * Tag labels in display order, compared exactly against
+	 * `PerpetualsMarketMetadata.tags`.
+	 */
+	tags: string[];
+}
+
+/**
+ * Response payload for `Perpetuals.getMarketsCategories`.
+ */
+export interface ApiPerpetualsMarketsCategoriesResponse {
+	/**
+	 * Top-level market categories in display order, each carrying its tags in
+	 * display order.
+	 *
+	 * Empty while the backing static configuration is unavailable, in which case
+	 * callers should fall back to an unfiltered market list rather than render an
+	 * empty picker.
+	 */
+	categories: PerpetualsMarketCategory[];
 }
 
 /**
