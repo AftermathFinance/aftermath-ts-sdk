@@ -36,6 +36,7 @@ import {
 	type ApiPerpetualsMarketFundingHistoryResponse,
 	type ApiPerpetualsMarkets24hrStatsResponse,
 	type ApiPerpetualsMarketsBody,
+	type ApiPerpetualsMarketsCategoriesResponse,
 	type ApiPerpetualsMarketsPricesBody,
 	type ApiPerpetualsMarketsPricesResponse,
 	type ApiPerpetualsMarketsResponse,
@@ -673,6 +674,40 @@ export class Perpetuals extends Caller {
 				marketIds: PerpetualsMarketId[];
 			}
 		>("markets/24hr-stats", inputs);
+	}
+
+	/**
+	 * Fetch the category and tag labels that group markets in a picker UI.
+	 *
+	 * The response is the vocabulary behind `PerpetualsMarketMetadata.category`
+	 * and `PerpetualsMarketMetadata.tags`: every market names exactly one of
+	 * these categories, and each of its tags is declared under that category.
+	 * Both lists come back in display order.
+	 *
+	 * The labels are configuration rather than a fixed enum, so resolve a
+	 * market's metadata against this response instead of hard-coding them.
+	 *
+	 * @param abortSignal - Optional cancellation signal.
+	 * @returns `ApiPerpetualsMarketsCategoriesResponse` containing `categories`.
+	 *
+	 * @remarks
+	 * `categories` is empty when the backing static configuration is unavailable.
+	 * Treat that as "no grouping" and show every market rather than rendering an
+	 * empty picker.
+	 *
+	 * @example
+	 * ```ts
+	 * const { categories } = await perps.getMarketsCategories();
+	 * // [{ name: "Crypto", tags: ["Layer 1", "DeFi", ...] }, ...]
+	 * ```
+	 */
+	public getMarketsCategories(
+		abortSignal?: AbortSignal
+	): Promise<ApiPerpetualsMarketsCategoriesResponse> {
+		return this.fetchApi<
+			ApiPerpetualsMarketsCategoriesResponse,
+			Record<string, never>
+		>("markets/categories", {}, abortSignal);
 	}
 
 	// =========================================================================
