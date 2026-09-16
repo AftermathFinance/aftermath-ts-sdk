@@ -2664,16 +2664,21 @@ export type PerpetualsTwapPriceConditionDirection = "above" | "below";
  *
  * Mark prices are human-readable numbers, matching stop-order trigger prices
  * and public perpetuals market prices.
+ *
+ * Each price must be finite and greater than zero. `NaN` and `Infinity`
+ * serialize to JSON `null`, which the perpetuals HTTP API reads as "no
+ * condition" — an unconditional TWAP rather than an error. Validate before
+ * calling.
  */
 export interface PerpetualsTwapCreatePriceConditions {
 	/**
 	 * Mark price that delays first execution until the derived trigger
-	 * condition is met.
+	 * condition is met. Finite and greater than zero.
 	 */
 	triggerMarkPrice?: number;
 	/**
 	 * Mark price that requests cancellation of the unexecuted remainder after
-	 * activation.
+	 * activation. Finite and greater than zero.
 	 */
 	stopMarkPrice?: number;
 }

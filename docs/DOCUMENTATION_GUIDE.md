@@ -168,3 +168,4 @@ When adding or changing Perpetuals account/vault HTTP client types in
    instead of bare `string`.
 5. **JSDoc.** Document every new or changed public type and every field in
    neutral SDK terms — no internal service or ticket name-drops.
+

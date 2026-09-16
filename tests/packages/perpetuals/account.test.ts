@@ -631,3 +631,108 @@ describe("PerpetualsAccount state and order/margin branches", () => {
 		);
 	});
 });
+
+describe("PerpetualsAccount TWAP price-condition contract", () => {
+	const twapOrder = {
+		marketId: MARKET_ID,
+		side: PerpetualsOrderSide.Bid,
+		size: 10_000n,
+		reduceOnly: false,
+		chunksAmount: 4,
+		executionGapMs: 1000,
+		executionTimeUncertaintyMs: 100,
+		timeForRetryMs: 500,
+		amountUncertaintyBps: 10,
+		maxOneExecutionAmountBps: 2500,
+		smallTailMergeThresholdBps: 50,
+		maxSlippageBps: 100,
+	};
+
+	it("sends each condition combination as plain JSON numbers", async () => {
+		const account = makeAccount();
+
+		let calls = installJsonFetch(transactionResponse());
+		await account.getCreateTwapOrdersTx({
+			twapOrders: [
+				{ ...twapOrder, priceConditions: { triggerMarkPrice: 78_000.25 } },
+			],
+		});
+		let [sent] = (requestBody(calls) as { twapOrders: Record<string, unknown>[] })
+			.twapOrders;
+		expect(sent.priceConditions).toEqual({ triggerMarkPrice: 78_000.25 });
+
+		calls = installJsonFetch(transactionResponse());
+		await account.getCreateTwapOrdersTx({
+			twapOrders: [
+				{ ...twapOrder, priceConditions: { stopMarkPrice: 80_000.5 } },
+			],
+		});
+		[sent] = (requestBody(calls) as { twapOrders: Record<string, unknown>[] }).twapOrders;
+		expect(sent.priceConditions).toEqual({ stopMarkPrice: 80_000.5 });
+
+		calls = installJsonFetch(transactionResponse());
+		await account.getCreateTwapOrdersTx({ twapOrders: [twapOrder] });
+		[sent] = (requestBody(calls) as { twapOrders: Record<string, unknown>[] }).twapOrders;
+		expect("priceConditions" in sent).toBe(false);
+	});
+
+	it("decodes normalized conditions and diagnostics without touching their types", async () => {
+		const account = makeAccount();
+		const calls = installJsonFetch({
+			twapOrderDatas: [
+				{
+					twapOrderObjectId: "0xtwap",
+					collateralType: USDC,
+					orderState: "active",
+					invalidReason: null,
+					statusMessage: null,
+					details: {
+						marketId: MARKET_ID,
+						side: 0,
+						size: "10000n",
+						reduceOnly: false,
+						chunksAmount: 4,
+						executionGapMs: 1000,
+						executionTimeUncertaintyMs: 100,
+						timeForRetryMs: 500,
+						amountUncertaintyBps: 10,
+						maxOneExecutionAmountBps: 2500,
+						smallTailMergeThresholdBps: 50,
+						maxSlippageBps: 100,
+					},
+					processedAmount: "0n",
+					scheduledAmount: "0n",
+					lastExecutionTimestampMs: 0,
+					orderCreationTimestampMs: 1_788_894_933_962,
+					lastError: null,
+					priceConditions: {
+						triggerCondition: { direction: "below", markPrice: 78_000.25 },
+						stopCondition: { direction: "above", markPrice: 80_000.5 },
+						triggerActivatedAtMs: 1_788_894_999_000,
+					},
+				},
+			],
+		});
+
+		const response = await account.getTwapOrderDatas({
+			bytes: "0x00",
+			signature: "0x01",
+		});
+		const [order] = response.twapOrderDatas;
+
+		expect(calls).toHaveLength(1);
+		// Plain JSON numbers must survive the bigint-aware revive untouched.
+		expect(order.priceConditions?.triggerCondition?.markPrice).toBe(78_000.25);
+		expect(typeof order.priceConditions?.stopCondition?.markPrice).toBe(
+			"number"
+		);
+		expect(order.priceConditions?.triggerCondition?.direction).toBe("below");
+		expect(order.priceConditions?.triggerActivatedAtMs).toBe(1_788_894_999_000);
+		expect(order.orderCreationTimestampMs).toBe(1_788_894_933_962);
+		// JSON null decodes to undefined, so a resolved error clears the field.
+		expect(order.lastError).toBeUndefined();
+		expect(order.invalidReason).toBeUndefined();
+		// Scaled integer fields still decode as bigint.
+		expect(order.details.size).toBe(10_000n);
+	});
+});
