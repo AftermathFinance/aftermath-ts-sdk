@@ -38,8 +38,8 @@ import type { ApiRewardsDistributionBody } from "../rewards/rewardsTypes";
 export interface PerpetualsSponsorConfig {
 	/**
 	 * Wallet address to use for gas pool sponsorship. Must be the connected
-	 * wallet: af-fe now verifies the sponsor and refuses a request naming any
-	 * other address with error 2034 before it reaches the pool.
+	 * wallet: the API verifies the sponsor and refuses a request naming any
+	 * other address with error 2034 before it reaches the gas pool.
 	 */
 	walletAddress: SuiAddress;
 	/**

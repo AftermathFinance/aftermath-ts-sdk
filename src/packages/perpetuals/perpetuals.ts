@@ -1175,7 +1175,7 @@ export class Perpetuals extends Caller {
 	 * collect fees on orders placed on behalf of the user. Once revoked, the integrator
 	 * will no longer be able to submit orders with integrator fees for this account.
 	 * The user can re-approve the integrator at any time by calling
-	 * `getCreateIntegratorConfigTx` again.
+	 * `getCreateBuilderCodeIntegratorConfigTx` again.
 	 *
 	 * The resulting transaction must be signed by the account owner and executed on-chain.
 	 *
