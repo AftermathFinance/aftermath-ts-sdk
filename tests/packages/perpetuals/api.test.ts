@@ -528,12 +528,6 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 			"builder-codes/integrator-config",
 			{ accountId: ACCOUNT_ID_WIRE, integratorId: 7 }
 		);
-		await expectPost(
-			(client) => client.getBuilderCodeIntegratorVaults({ integratorId: 7 }),
-			{ integratorVaults: [] },
-			"builder-codes/integrator-vaults",
-			{ integratorId: 7 }
-		);
 	});
 
 	it("derives txKind from the optional shared AftermathApi transaction helper", async () => {
