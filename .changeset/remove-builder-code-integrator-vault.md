@@ -2,7 +2,7 @@
 "aftermath-ts-sdk": major
 ---
 
-Remove removed builder-code integrator-vault methods and types.
+Remove dead builder-code integrator-vault methods and types.
 
 `getCreateBuilderCodeIntegratorVaultTx`, `getClaimBuilderCodeIntegratorVaultFeesTx`,
 and `getBuilderCodeIntegratorVaults` called API routes that no longer exist
