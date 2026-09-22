@@ -115,6 +115,21 @@ describe("Achievements HTTP reads", () => {
 		expect(requestBody(calls)).toEqual(body);
 	});
 
+	it("rejects getMe when the response walletAddress differs from the request", async () => {
+		installJsonFetch({
+			walletAddress: `0x${"2".repeat(64)}`,
+			unlocks: [],
+		});
+
+		await expect(
+			new Achievements({ baseUrl: BASE_URL }).getMe({
+				walletAddress: WALLET,
+				bytes: "dGVybXM=",
+				signature: "sig",
+			})
+		).rejects.toMatchObject({ kind: "decode" });
+	});
+
 	it("normalizes an HTTP failure as an SDK transport error", async () => {
 		installJsonFetch({ error: "unauthorized" }, 401);
 		await expect(

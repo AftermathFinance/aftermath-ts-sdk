@@ -69,10 +69,18 @@ export interface AchievementsDefinitionView {
 	tier: AchievementsTier;
 	/**
 	 * XP granted when the achievement unlocks.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	xpReward: number;
 	/**
 	 * Reward points granted when the achievement unlocks.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	pointsReward: number;
 	/**
@@ -90,10 +98,18 @@ export interface AchievementsDefinitionView {
 	/**
 	 * Optional USD volume threshold. Absent when this definition is not
 	 * volume-based.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	thresholdUsd?: number;
 	/**
 	 * Optional count threshold. Absent when this definition is not count-based.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	thresholdCount?: number;
 	/**
@@ -113,6 +129,10 @@ export interface AchievementsProgressView {
 	level: number;
 	/**
 	 * Cumulative XP.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	xp: number;
 	/**
@@ -153,14 +173,24 @@ export interface AchievementsMeUnlock {
 	mintDigest?: TransactionDigest;
 	/**
 	 * XP recorded for this unlock.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	xpAwarded: number;
 	/**
 	 * Reward points recorded for this unlock.
+	 *
+	 * The service serializes this from a u64 JSON number. Current catalog
+	 * values are below `Number.MAX_SAFE_INTEGER`. Switch to bigint or a
+	 * decimal string only if a threshold can exceed the safe integer range.
 	 */
 	pointsAwarded: number;
 	/**
-	 * Reported rarity as a percentage of holders (`0`–`100`).
+	 * Holder-relative percent from the service
+	 * (`unlock_count / max(1, level_nft_holders) * 100`). The value may be
+	 * fractional and may exceed 100 when unlocks outnumber holders.
 	 */
 	rarityPercent: number;
 }
@@ -182,20 +212,31 @@ export interface ApiAchievementsGetDefinitionsResponse {
 /**
  * Request body for `POST /api/achievements/me`.
  *
- * Uses a pre-signed message (`bytes` + `signature`) for authentication, the
- * same shape as other signed Aftermath reads.
+ * af-fe accepts only a personal-message signature over the fixed string
+ * `Aftermath Terms and Conditions` (see `UserData.termsAndConditionsMessage`).
+ * That is the same session credential used by rewards and user data. `bytes`
+ * must be that message's UTF-8 bytes, base64-encoded, with a matching
+ * `signature` for `walletAddress`.
+ *
+ * This is the existing session credential. The signed text has no expiry,
+ * action, or resource. Redesign of the credential is out of scope for this
+ * stub.
  */
 export interface ApiAchievementsGetMeBody {
 	/**
-	 * Sui wallet address to load achievements for.
+	 * Sui wallet address to load achievements for. The signature must be from
+	 * this wallet.
 	 */
 	walletAddress: SuiAddress;
 	/**
-	 * The message bytes (base64 encoded) that the wallet previously signed.
+	 * Base64-encoded UTF-8 bytes of the fixed personal message
+	 * `Aftermath Terms and Conditions`. af-fe accepts only that message (the
+	 * same session credential as rewards and user data) and requires a
+	 * matching `signature` for `walletAddress`.
 	 */
 	bytes: string;
 	/**
-	 * The signature corresponding to `bytes`.
+	 * The signature over `bytes` from `walletAddress`.
 	 */
 	signature: string;
 }

@@ -1,4 +1,5 @@
 import { Caller } from "../../general/utils/caller";
+import { AftermathTransportError } from "../../general/utils/transportError";
 import type { CallerConfig } from "../../types";
 import type {
 	ApiAchievementsGetDefinitionsResponse,
@@ -45,18 +46,40 @@ export class Achievements extends Caller {
 	/**
 	 * Fetches unlocks and progress for an authenticated wallet.
 	 *
-	 * The request uses the signed authentication fields in `inputs`.
+	 * Authentication is the Terms personal message. af-fe accepts only a
+	 * signature over the fixed string `Aftermath Terms and Conditions` (see
+	 * `UserData.termsAndConditionsMessage`), the same session credential used
+	 * by rewards and user data.
 	 *
-	 * @param inputs - Wallet address, signed message bytes, and signature.
-	 * @returns The wallet's progress, when stored, and its unlocks.
+	 * @param inputs - Wallet address, base64 UTF-8 bytes of
+	 * `Aftermath Terms and Conditions`, and the matching personal-message
+	 * signature for that wallet.
+	 * @returns The wallet's progress, when stored, and its unlocks. The
+	 * decoded response is returned when the wallet addresses match or either
+	 * address is missing.
 	 * @throws `AftermathTransportError` when the API request or response fails.
+	 * A `decode` error is thrown when both wallet addresses are present and
+	 * the response wallet address does not match the request.
 	 */
 	public async getMe(
 		inputs: ApiAchievementsGetMeBody
 	): Promise<ApiAchievementsGetMeResponse> {
-		return this.fetchApi<
+		const response = await this.fetchApi<
 			ApiAchievementsGetMeResponse,
 			ApiAchievementsGetMeBody
 		>("me", inputs);
+
+		if (
+			inputs.walletAddress &&
+			response?.walletAddress &&
+			inputs.walletAddress !== response.walletAddress
+		) {
+			throw new AftermathTransportError("decode", {
+				message:
+					"Response walletAddress does not match the request walletAddress",
+			});
+		}
+
+		return response;
 	}
 }
