@@ -189,4 +189,93 @@ describe("Achievements claim assist", () => {
 		expect(calls[0]?.init?.method).toBe("POST");
 		expect(requestBody(calls)).toEqual(body);
 	});
+
+	const claimBody = {
+		walletAddress: WALLET,
+		bytes: "dGVybXM=",
+		signature: "sig",
+		achievementId: "SPOT_FIRST",
+		progressObjectId: `0x${"d".repeat(64)}`,
+	};
+
+	function claimPayload(
+		intentOverrides: Record<string, unknown> = {},
+		responseOverrides: Record<string, unknown> = {}
+	) {
+		return {
+			walletAddress: WALLET,
+			achievementId: "SPOT_FIRST",
+			intent: {
+				function: "claim_achievement",
+				packageId: `0x${"a".repeat(64)}`,
+				registryId: `0x${"b".repeat(64)}`,
+				claimAllowlistId: `0x${"c".repeat(64)}`,
+				achievementId: "SPOT_FIRST",
+				progressObjectId: claimBody.progressObjectId,
+				transferProgress: true,
+				...intentOverrides,
+			},
+			notes: "User signs and pays gas.",
+			...responseOverrides,
+		};
+	}
+
+	it.each([
+		{
+			label: "wallet",
+			payload: claimPayload({}, { walletAddress: `0x${"2".repeat(64)}` }),
+			message: "Claim response wallet does not match the signed wallet",
+		},
+		{
+			label: "response achievement",
+			payload: claimPayload({}, { achievementId: "OTHER" }),
+			message: "Claim response achievement does not match the request",
+		},
+		{
+			label: "intent achievement",
+			payload: claimPayload({ achievementId: "OTHER" }),
+			message: "Claim intent achievement does not match the request",
+		},
+		{
+			label: "function",
+			payload: claimPayload({ function: "mint_achievement" }),
+			message: "Claim intent function is not claim_achievement",
+		},
+		{
+			label: "package id",
+			payload: claimPayload({ packageId: "not-an-id" }),
+			message: "Claim intent package id is invalid",
+		},
+		{
+			label: "registry id",
+			payload: claimPayload({ registryId: "" }),
+			message: "Claim intent registry id is invalid",
+		},
+		{
+			label: "allowlist id",
+			payload: claimPayload({ claimAllowlistId: "0x" }),
+			message: "Claim intent allowlist id is invalid",
+		},
+		{
+			label: "progress object id",
+			payload: claimPayload({ progressObjectId: "not-an-id" }),
+			message: "Claim intent progress object id is invalid",
+		},
+		{
+			label: "progress object id mismatch",
+			payload: claimPayload({
+				progressObjectId: `0x${"9".repeat(64)}`,
+			}),
+			message: "Claim intent progress object id does not match the request",
+		},
+	])("rejects claimAchievement when the $label does not match", async ({
+		payload,
+		message,
+	}) => {
+		installJsonFetch(payload);
+
+		await expect(
+			new Achievements({ baseUrl: BASE_URL }).claimAchievement(claimBody)
+		).rejects.toMatchObject({ kind: "decode", message });
+	});
 });
