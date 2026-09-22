@@ -1,6 +1,7 @@
 import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Auth, NftAmm, ReferralVault, Router, Sui } from "../../packages";
+import { Achievements } from "../../packages/achievements/achievements";
 import { Coin } from "../../packages/coin/coin";
 import { Dca } from "../../packages/dca/dca";
 import { Farms } from "../../packages/farms/farms";
@@ -310,6 +311,12 @@ export class Aftermath extends Caller {
 	 * @returns A new `Rewards` provider configured with this instance's caller settings.
 	 */
 	Rewards = () => new Rewards(this.config, this.api);
+
+	/**
+	 * Creates the achievements provider.
+	 * @returns A new `Achievements` provider configured with this instance's caller settings.
+	 */
+	Achievements = () => new Achievements(this.config);
 
 	/**
 	 * Creates the farms provider.
