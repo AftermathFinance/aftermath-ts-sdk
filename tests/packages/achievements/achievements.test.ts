@@ -74,6 +74,8 @@ describe("Achievements HTTP reads", () => {
 					pointsStatus: "credited",
 					mintStatus: "mint_failed",
 					mintDigest: null,
+					qualifyStatus: "dry_run",
+					qualifyDigest: null,
 					xpAwarded: 100,
 					pointsAwarded: 10,
 					rarityPercent: 25,
@@ -103,6 +105,8 @@ describe("Achievements HTTP reads", () => {
 					pointsStatus: "credited",
 					mintStatus: "mint_failed",
 					mintDigest: undefined,
+					qualifyStatus: "dry_run",
+					qualifyDigest: undefined,
 					xpAwarded: 100,
 					pointsAwarded: 10,
 					rarityPercent: 25,
@@ -135,5 +139,54 @@ describe("Achievements HTTP reads", () => {
 		await expect(
 			new Achievements({ baseUrl: BASE_URL }).getDefinitions()
 		).rejects.toMatchObject({ kind: "http", status: 401 });
+	});
+});
+
+describe("Achievements claim assist", () => {
+	it("POSTs the claim body and returns the unsigned intent", async () => {
+		const calls = installJsonFetch({
+			walletAddress: WALLET,
+			achievementId: "SPOT_FIRST",
+			intent: {
+				function: "claim_achievement",
+				packageId: `0x${"a".repeat(64)}`,
+				registryId: `0x${"b".repeat(64)}`,
+				claimAllowlistId: `0x${"c".repeat(64)}`,
+				achievementId: "SPOT_FIRST",
+				progressObjectId: null,
+				transferProgress: true,
+			},
+			notes:
+				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+		});
+		const body = {
+			walletAddress: WALLET,
+			bytes: "dGVybXM=",
+			signature: "sig",
+			achievementId: "SPOT_FIRST",
+			progressObjectId: `0x${"d".repeat(64)}`,
+		};
+
+		await expect(
+			new Achievements({ baseUrl: BASE_URL }).claimAchievement(body)
+		).resolves.toEqual({
+			walletAddress: WALLET,
+			achievementId: "SPOT_FIRST",
+			intent: {
+				function: "claim_achievement",
+				packageId: `0x${"a".repeat(64)}`,
+				registryId: `0x${"b".repeat(64)}`,
+				claimAllowlistId: `0x${"c".repeat(64)}`,
+				achievementId: "SPOT_FIRST",
+				progressObjectId: undefined,
+				transferProgress: true,
+			},
+			notes:
+				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+		});
+
+		expect(calls[0]?.input).toBe(`${BASE_URL}/api/achievements/claim`);
+		expect(calls[0]?.init?.method).toBe("POST");
+		expect(requestBody(calls)).toEqual(body);
 	});
 });

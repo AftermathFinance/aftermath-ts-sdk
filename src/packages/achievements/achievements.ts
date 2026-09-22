@@ -2,16 +2,20 @@ import { Caller } from "../../general/utils/caller";
 import { AftermathTransportError } from "../../general/utils/transportError";
 import type { CallerConfig } from "../../types";
 import type {
+	ApiAchievementsClaimBody,
+	ApiAchievementsClaimResponse,
 	ApiAchievementsGetDefinitionsResponse,
 	ApiAchievementsGetMeBody,
 	ApiAchievementsGetMeResponse,
 } from "./achievementsTypes";
 
 /**
- * Provides HTTP access to achievement definitions and a wallet's unlocks.
+ * Provides HTTP access to achievement definitions, a wallet's unlocks, and
+ * unsigned claim-assist intents.
  *
- * Read methods request data from the configured Aftermath API. This client
- * does not mint, sign, or submit transactions.
+ * Methods request data from the configured Aftermath API. This client does
+ * not mint, sign, or submit transactions. `claimAchievement` returns an
+ * unsigned intent that the caller signs and pays for.
  */
 export class Achievements extends Caller {
 	// =========================================================================
@@ -81,5 +85,31 @@ export class Achievements extends Caller {
 		}
 
 		return response;
+	}
+
+	/**
+	 * Requests an unsigned user-pays claim intent for one unlocked achievement.
+	 *
+	 * Authentication is the Terms personal message. af-fe accepts only a
+	 * signature over the fixed string `Aftermath Terms and Conditions` (see
+	 * `UserData.termsAndConditionsMessage`), the same session credential used
+	 * by `getMe`.
+	 *
+	 * The response is an unsigned Move call intent. The caller builds, signs,
+	 * and pays for the transaction. This method does not mint, sign, or submit.
+	 *
+	 * @param inputs - Wallet address, terms-message bytes and signature,
+	 * achievement id, and an optional on-chain progress object id.
+	 * @returns The unsigned claim intent and service notes. The caller signs
+	 * and pays gas.
+	 * @throws `AftermathTransportError` when the API request or response fails.
+	 */
+	public async claimAchievement(
+		inputs: ApiAchievementsClaimBody
+	): Promise<ApiAchievementsClaimResponse> {
+		return await this.fetchApi<
+			ApiAchievementsClaimResponse,
+			ApiAchievementsClaimBody
+		>("claim", inputs);
 	}
 }

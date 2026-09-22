@@ -41,6 +41,19 @@ export type AchievementsMintStatus =
 	| "skipped";
 
 /**
+ * Status of the allowlist qualify step for one unlock.
+ *
+ * Wire values match the service `QualifyStatus` enum (`snake_case`). This is
+ * independent of `AchievementsMintStatus`. Older `/me` payloads may omit it.
+ */
+export type AchievementsQualifyStatus =
+	| "pending"
+	| "skipped"
+	| "dry_run"
+	| "qualified"
+	| "qualify_failed";
+
+/**
  * Public view of one achievement definition.
  *
  * Field names match `DefinitionView` (`camelCase`) from the achievements
@@ -172,6 +185,16 @@ export interface AchievementsMeUnlock {
 	 */
 	mintDigest?: TransactionDigest;
 	/**
+	 * Allowlist qualify outcome for this unlock.
+	 *
+	 * Absent on older `/me` payloads.
+	 */
+	qualifyStatus?: AchievementsQualifyStatus;
+	/**
+	 * Transaction digest of the qualify step, when one exists.
+	 */
+	qualifyDigest?: TransactionDigest;
+	/**
 	 * XP recorded for this unlock.
 	 *
 	 * The service serializes this from a u64 JSON number. Current catalog
@@ -259,4 +282,108 @@ export interface ApiAchievementsGetMeResponse {
 	 * Unlocks for the wallet. Empty when none exist.
 	 */
 	unlocks: AchievementsMeUnlock[];
+}
+
+/**
+ * Request body for `POST /api/achievements/claim`.
+ *
+ * af-fe accepts only a personal-message signature over the fixed string
+ * `Aftermath Terms and Conditions` (see `UserData.termsAndConditionsMessage`).
+ * That is the same session credential used by rewards, user data, and
+ * `getMe`. `bytes` must be that message's UTF-8 bytes, base64-encoded, with
+ * a matching `signature` for `walletAddress`.
+ *
+ * This request asks for an unsigned claim intent. It does not mint, sign, or
+ * submit a transaction.
+ */
+export interface ApiAchievementsClaimBody {
+	/**
+	 * Sui wallet address claiming the achievement. The signature must be from
+	 * this wallet.
+	 */
+	walletAddress: SuiAddress;
+	/**
+	 * Base64-encoded UTF-8 bytes of the fixed personal message
+	 * `Aftermath Terms and Conditions`. af-fe accepts only that message (the
+	 * same session credential as rewards, user data, and `getMe`) and requires
+	 * a matching `signature` for `walletAddress`.
+	 */
+	bytes: string;
+	/**
+	 * The signature over `bytes` from `walletAddress`.
+	 */
+	signature: string;
+	/**
+	 * Catalog id of the unlocked achievement to claim.
+	 */
+	achievementId: string;
+	/**
+	 * On-chain progress object, when the wallet already has one. Omit or pass
+	 * `null` when it does not.
+	 */
+	progressObjectId?: ObjectId | null;
+}
+
+/**
+ * Unsigned user-pays claim payload.
+ *
+ * Field names match `ClaimIntentView` (`camelCase`) from the achievements
+ * service. The caller builds, signs, and pays for the transaction. JSON
+ * `null` on `progressObjectId` is decoded as `undefined`.
+ */
+export interface AchievementsClaimIntentView {
+	/**
+	 * Move function name. Claim assist uses `claim_achievement`.
+	 */
+	function: string;
+	/**
+	 * Achievements package id the caller should invoke.
+	 */
+	packageId: string;
+	/**
+	 * On-chain achievements registry object id.
+	 */
+	registryId: string;
+	/**
+	 * Claim allowlist object id the function reads.
+	 */
+	claimAllowlistId: string;
+	/**
+	 * Catalog id of the achievement to claim.
+	 */
+	achievementId: string;
+	/**
+	 * On-chain progress object id, when the wallet already has one.
+	 */
+	progressObjectId?: ObjectId | null;
+	/**
+	 * Whether the caller must transfer the returned progress object to the
+	 * sender in the same transaction.
+	 */
+	transferProgress: boolean;
+}
+
+/**
+ * Response from `POST /api/achievements/claim`.
+ *
+ * Field names match `ClaimAssistResponse` (`camelCase`) from the achievements
+ * service. `intent` is unsigned. The caller signs and pays gas.
+ */
+export interface ApiAchievementsClaimResponse {
+	/**
+	 * Wallet address the intent is for.
+	 */
+	walletAddress: SuiAddress;
+	/**
+	 * Catalog id of the achievement to claim.
+	 */
+	achievementId: string;
+	/**
+	 * Unsigned Move call the caller signs and pays for.
+	 */
+	intent: AchievementsClaimIntentView;
+	/**
+	 * Service notes for the caller, including how to finish the transaction.
+	 */
+	notes: string;
 }
