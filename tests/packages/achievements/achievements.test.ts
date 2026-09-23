@@ -134,6 +134,23 @@ describe("Achievements HTTP reads", () => {
 		).rejects.toMatchObject({ kind: "decode" });
 	});
 
+	it.each([
+		{ label: "omitted", payload: { unlocks: [] } },
+		{ label: "null", payload: { walletAddress: null, unlocks: [] } },
+	])("rejects getMe when the response walletAddress is $label", async ({
+		payload,
+	}) => {
+		installJsonFetch(payload);
+
+		await expect(
+			new Achievements({ baseUrl: BASE_URL }).getMe({
+				walletAddress: WALLET,
+				bytes: "dGVybXM=",
+				signature: "sig",
+			})
+		).rejects.toMatchObject({ kind: "decode" });
+	});
+
 	it("normalizes an HTTP failure as an SDK transport error", async () => {
 		installJsonFetch({ error: "unauthorized" }, 401);
 		await expect(
@@ -143,7 +160,55 @@ describe("Achievements HTTP reads", () => {
 });
 
 describe("Achievements claim assist", () => {
-	it("POSTs the claim body and returns the unsigned intent", async () => {
+	it("POSTs the claim body and returns the unsigned intent with echoed progress object", async () => {
+		const progressObjectId = `0x${"d".repeat(64)}`;
+		const calls = installJsonFetch({
+			walletAddress: WALLET,
+			achievementId: "SPOT_FIRST",
+			intent: {
+				function: "claim_achievement",
+				packageId: `0x${"a".repeat(64)}`,
+				registryId: `0x${"b".repeat(64)}`,
+				claimAllowlistId: `0x${"c".repeat(64)}`,
+				achievementId: "SPOT_FIRST",
+				progressObjectId,
+				transferProgress: true,
+			},
+			notes:
+				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+		});
+		const body = {
+			walletAddress: WALLET,
+			bytes: "dGVybXM=",
+			signature: "sig",
+			achievementId: "SPOT_FIRST",
+			progressObjectId,
+		};
+
+		await expect(
+			new Achievements({ baseUrl: BASE_URL }).claimAchievement(body)
+		).resolves.toEqual({
+			walletAddress: WALLET,
+			achievementId: "SPOT_FIRST",
+			intent: {
+				function: "claim_achievement",
+				packageId: `0x${"a".repeat(64)}`,
+				registryId: `0x${"b".repeat(64)}`,
+				claimAllowlistId: `0x${"c".repeat(64)}`,
+				achievementId: "SPOT_FIRST",
+				progressObjectId,
+				transferProgress: true,
+			},
+			notes:
+				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+		});
+
+		expect(calls[0]?.input).toBe(`${BASE_URL}/api/achievements/claim`);
+		expect(calls[0]?.init?.method).toBe("POST");
+		expect(requestBody(calls)).toEqual(body);
+	});
+
+	it("POSTs a first claim with no progress object and accepts a null intent id", async () => {
 		const calls = installJsonFetch({
 			walletAddress: WALLET,
 			achievementId: "SPOT_FIRST",
@@ -156,15 +221,13 @@ describe("Achievements claim assist", () => {
 				progressObjectId: null,
 				transferProgress: true,
 			},
-			notes:
-				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+			notes: "User signs and pays gas.",
 		});
 		const body = {
 			walletAddress: WALLET,
 			bytes: "dGVybXM=",
 			signature: "sig",
 			achievementId: "SPOT_FIRST",
-			progressObjectId: `0x${"d".repeat(64)}`,
 		};
 
 		await expect(
@@ -181,12 +244,9 @@ describe("Achievements claim assist", () => {
 				progressObjectId: undefined,
 				transferProgress: true,
 			},
-			notes:
-				"User signs and pays gas. Call claim_achievement then mint::transfer_progress to sender.",
+			notes: "User signs and pays gas.",
 		});
 
-		expect(calls[0]?.input).toBe(`${BASE_URL}/api/achievements/claim`);
-		expect(calls[0]?.init?.method).toBe("POST");
 		expect(requestBody(calls)).toEqual(body);
 	});
 
@@ -267,6 +327,11 @@ describe("Achievements claim assist", () => {
 				progressObjectId: `0x${"9".repeat(64)}`,
 			}),
 			message: "Claim intent progress object id does not match the request",
+		},
+		{
+			label: "dropped progress object id",
+			payload: claimPayload({ progressObjectId: null }),
+			message: "Claim intent omitted the requested progress object id",
 		},
 	])("rejects claimAchievement when the $label does not match", async ({
 		payload,

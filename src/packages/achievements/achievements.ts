@@ -61,20 +61,29 @@ function assertClaimResponse(
 		});
 	}
 	const progressObjectId = response.intent?.progressObjectId;
-	if (progressObjectId != null) {
+	const requestedProgressObjectId = inputs.progressObjectId;
+	if (requestedProgressObjectId != null) {
+		if (progressObjectId == null) {
+			throw new AftermathTransportError("decode", {
+				message: "Claim intent omitted the requested progress object id",
+			});
+		}
 		if (!isObjectId(progressObjectId)) {
 			throw new AftermathTransportError("decode", {
 				message: "Claim intent progress object id is invalid",
 			});
 		}
-		if (
-			inputs.progressObjectId != null &&
-			progressObjectId !== inputs.progressObjectId
-		) {
+		if (progressObjectId !== requestedProgressObjectId) {
 			throw new AftermathTransportError("decode", {
 				message: "Claim intent progress object id does not match the request",
 			});
 		}
+		return;
+	}
+	if (progressObjectId != null && !isObjectId(progressObjectId)) {
+		throw new AftermathTransportError("decode", {
+			message: "Claim intent progress object id is invalid",
+		});
 	}
 }
 
@@ -128,11 +137,11 @@ export class Achievements extends Caller {
 	 * `Aftermath Terms and Conditions`, and the matching personal-message
 	 * signature for that wallet.
 	 * @returns The wallet's progress, when stored, and its unlocks. The
-	 * decoded response is returned when the wallet addresses match or either
-	 * address is missing.
+	 * decoded response is returned only when `response.walletAddress` exactly
+	 * matches `inputs.walletAddress`.
 	 * @throws `AftermathTransportError` when the API request or response fails.
-	 * A `decode` error is thrown when both wallet addresses are present and
-	 * the response wallet address does not match the request.
+	 * A `decode` error is thrown when the response wallet is missing, null, or
+	 * does not match the request.
 	 */
 	public async getMe(
 		inputs: ApiAchievementsGetMeBody
@@ -142,11 +151,7 @@ export class Achievements extends Caller {
 			ApiAchievementsGetMeBody
 		>("me", inputs);
 
-		if (
-			inputs.walletAddress &&
-			response?.walletAddress &&
-			inputs.walletAddress !== response.walletAddress
-		) {
+		if (response?.walletAddress !== inputs.walletAddress) {
 			throw new AftermathTransportError("decode", {
 				message:
 					"Response walletAddress does not match the request walletAddress",

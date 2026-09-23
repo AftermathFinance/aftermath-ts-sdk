@@ -329,7 +329,7 @@ export interface ApiAchievementsClaimBody {
  *
  * Field names match `ClaimIntentView` (`camelCase`) from the achievements
  * service. The caller builds, signs, and pays for the transaction. JSON
- * `null` on `progressObjectId` is decoded as `undefined`.
+ * `null` on `progressObjectId` is decoded as `undefined` (field omitted).
  */
 export interface AchievementsClaimIntentView {
 	/**
@@ -355,7 +355,7 @@ export interface AchievementsClaimIntentView {
 	/**
 	 * On-chain progress object id, when the wallet already has one.
 	 */
-	progressObjectId?: ObjectId | null;
+	progressObjectId?: ObjectId;
 	/**
 	 * Whether the caller must transfer the returned progress object to the
 	 * sender in the same transaction.
