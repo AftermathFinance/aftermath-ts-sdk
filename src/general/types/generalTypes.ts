@@ -366,6 +366,17 @@ export interface ApiDataWithCursorBody<CursorType> {
 	limit?: number;
 }
 
+/** Numeric offset pagination accepted by bounded REST collection endpoints. */
+export type ApiOffsetPageBody = ApiDataWithCursorBody<number>;
+
+/** One bounded page with the offset to request next, when more items may exist. */
+export interface ApiPage<Item> {
+	/** Items returned for the requested offset. */
+	items: Item[];
+	/** Offset for the next request, or `undefined` when this page may be final. */
+	nextCursor: number | undefined;
+}
+
 /**
  * Specifies the shape for API calls involving events.
  */

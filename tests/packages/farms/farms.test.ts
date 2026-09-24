@@ -99,10 +99,16 @@ describe("farms HTTP facade and pagination", () => {
 		);
 		expect(JSON.parse(calls[1]?.init?.body as string)).toEqual({
 			farmIds: [FULL_10],
+			limit: 32,
 		});
-		expect(JSON.parse(calls[2]?.init?.body as string)).toEqual({});
+		expect(JSON.parse(calls[2]?.init?.body as string)).toEqual({
+			cursor: 0,
+			limit: 32,
+		});
 		expect(JSON.parse(calls[3]?.init?.body as string)).toEqual({
 			walletAddress: FULL_1,
+			cursor: 0,
+			limit: 32,
 		});
 		expect(JSON.parse(calls[6]?.init?.body as string)).toEqual({});
 		expect(JSON.parse(calls[7]?.init?.body as string)).toEqual({
@@ -110,6 +116,7 @@ describe("farms HTTP facade and pagination", () => {
 		});
 		expect(JSON.parse(calls[8]?.init?.body as string)).toEqual({
 			farmIds: [FULL_10],
+			limit: 32,
 		});
 		expect(JSON.parse(calls[9]?.init?.body as string)).toEqual({
 			walletAddress: FULL_1,
