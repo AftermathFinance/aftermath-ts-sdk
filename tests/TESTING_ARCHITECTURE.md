@@ -51,10 +51,9 @@ because it depends on removed APIs or a live local environment. Run the suite
 and its structural checks with:
 
 ```sh
-npm test -- --runInBand
-npm run typecheck:tests
-npm run test:surface:strict
-npm run test:coverage
+bun run test:ci
+bun run typecheck:tests
+bun run test:surface:strict
 ```
 
 The surface audit checks source-area ownership rather than filename or import

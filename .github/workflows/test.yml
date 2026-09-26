@@ -44,3 +44,12 @@ jobs:
 
             - name: Build SDK
               run: bun run build
+
+            - name: Verify published SDK contract
+              run: bun run verify:public
+
+            - name: Check npm package contents
+              run: bun run package:check
+
+            - name: Check agent readiness
+              run: bun run agent:doctor

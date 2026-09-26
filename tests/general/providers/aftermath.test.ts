@@ -114,7 +114,7 @@ describe("AftermathApi and Aftermath provider construction", () => {
 		expect(aftermath.network).toBe("DEVNET");
 		expect(aftermath.getApiBaseUrl()).toBe("https://sdk.test/");
 		expect(calls).toHaveLength(1);
-		expect(calls[0]?.input).toBe("https://sdk.test/api//addresses");
+		expect(calls[0]?.input).toBe("https://sdk.test/api/addresses");
 		expect(calls[0]?.init?.signal).toBe(signal);
 	});
 
@@ -132,6 +132,6 @@ describe("AftermathApi and Aftermath provider construction", () => {
 		expect(aftermath.getApiBaseUrl()).toBe("https://sdk.test/");
 		const addressCalls = installFetch({});
 		await expect(aftermath.getAddresses()).resolves.toEqual({});
-		expect(addressCalls[0]?.input).toBe("https://sdk.test/gateway//addresses");
+		expect(addressCalls[0]?.input).toBe("https://sdk.test/gateway/addresses");
 	});
 });

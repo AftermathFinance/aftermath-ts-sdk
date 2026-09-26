@@ -140,7 +140,7 @@ describe("DCA HTTP facade and transaction inputs", () => {
 		).resolves.toBe(true);
 		expect(calls.map(({ input }) => input)).toEqual([
 			`${BASE_URL}/api/dca/user/get`,
-			`${BASE_URL}/api/dca//user/add`,
+			`${BASE_URL}/api/dca/user/add`,
 		]);
 		expect(requestBody(calls, 0)).toEqual({ walletAddress: WALLET });
 		expect(requestBody(calls, 1)).toEqual({

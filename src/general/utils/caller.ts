@@ -168,16 +168,12 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 		}
 
-		const safeUrl =
-			this.apiBaseUrl.slice(-1) === "/"
-				? this.apiBaseUrl.slice(0, -1)
-				: this.apiBaseUrl;
-
-		const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
-
-		return `${safeUrl}/${endpointSegment}${
-			this.apiUrlPrefix + (url === "" ? "" : "/")
-		}${url}`;
+		const baseUrl = this.apiBaseUrl.replace(Caller.TRAILING_SLASHES_REGEX, "");
+		const path = [this.apiEndpoint, this.apiUrlPrefix, url]
+			.map((segment) => segment.replace(/^\/+|\/+$/g, ""))
+			.filter(Boolean)
+			.join("/");
+		return `${baseUrl}/${path}`;
 	};
 
 	// =========================================================================
@@ -458,36 +454,15 @@ export class Caller {
 	}) {
 		const { path, onMessage, onOpen, onError, onClose } = args;
 
-		/**
-		 * Build a WS URL using the same base the HTTP calls use, plus
-		 * `apiEndpoint` and `apiUrlPrefix`. Mirrors `urlForApiCall`, but
-		 * swaps http(s) -> ws(s).
-		 */
+		/** Build the same normalized route as HTTP, then change its protocol. */
 		const buildWsUrl = (path: string): Url => {
 			if (this.apiBaseUrl === undefined) {
 				throw new Error("no apiBaseUrl: unable to open websocket");
 			}
-
-			// Normalize base & path
-			const baseHttp = this.apiBaseUrl.replace(
-				Caller.TRAILING_SLASHES_REGEX,
-				""
+			return this.urlForApiCall(path).replace(
+				Caller.HTTP_PROTOCOL_REGEX,
+				"ws$1://"
 			);
-			const baseWs = baseHttp.replace(Caller.HTTP_PROTOCOL_REGEX, "ws$1://");
-
-			// Prefix with endpoint + service prefix (same pattern as fetch);
-			// an empty `apiEndpoint` must not introduce a double slash.
-			const endpointSegment = this.apiEndpoint ? `${this.apiEndpoint}/` : "";
-			const prefix = `${endpointSegment}${this.apiUrlPrefix}`;
-			const normalizedPrefix = prefix.replace(
-				Caller.TRAILING_SLASHES_REGEX,
-				""
-			);
-			const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-
-			return `${baseWs}/${normalizedPrefix}${
-				normalizedPath ? `/${normalizedPath}` : ""
-			}`;
 		};
 
 		const url = buildWsUrl(path);

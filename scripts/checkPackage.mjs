@@ -88,7 +88,7 @@ const allowed = (file) =>
 	licensePattern.test(file) ||
 	file.startsWith("dist/");
 const unexpected = files.filter((file) => !allowed(file));
-const required = ["dist/index.js", "dist/index.d.ts"];
+const required = ["LICENSE", "dist/index.js", "dist/index.d.ts"];
 const missing = required.filter((file) => !files.includes(file));
 const result = {
 	fileCount: files.length,
