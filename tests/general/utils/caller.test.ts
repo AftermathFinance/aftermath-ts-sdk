@@ -51,14 +51,14 @@ describe("Caller", () => {
 			});
 			const calls = installFetch(() => makeResponse('{"ok":true}'));
 			await c.callUrl("probe");
-			expect(calls[0].input).toBe("https://custom.test/api//probe");
+			expect(calls[0].input).toBe("https://custom.test/api/probe");
 		});
 		it("derives baseUrl from network", async () => {
 			const c = new TestCaller({ network: "TESTNET" });
 			const calls = installFetch(() => makeResponse('{"ok":true}'));
 			await c.callUrl("probe");
 			expect(calls[0].input).toBe(
-				"https://testnet.aftermath.finance/api//probe"
+				"https://testnet.aftermath.finance/api/probe"
 			);
 		});
 		it("fails when no baseUrl nor network", async () => {
@@ -87,7 +87,7 @@ describe("Caller", () => {
 			).toBe("");
 		});
 		it("urlForApiCall joins correctly via fetch observation", async () => {
-			// note: implementation produces // when prefix empty (endpointSegment "api/" + "/" )
+			// Empty prefixes and leading/trailing slashes must not change the route.
 			const cases: Array<{
 				baseUrl: string;
 				apiEndpoint?: string;
@@ -98,30 +98,37 @@ describe("Caller", () => {
 				{
 					baseUrl: "https://sdk.test",
 					url: "test",
-					expected: "https://sdk.test/api//test",
+					expected: "https://sdk.test/api/test",
 				},
 				{
 					baseUrl: "https://sdk.test/",
 					url: "test",
-					expected: "https://sdk.test/api//test",
+					expected: "https://sdk.test/api/test",
 				},
 				{
 					baseUrl: "https://sdk.test",
 					apiEndpoint: "",
 					url: "test",
-					expected: "https://sdk.test//test",
+					expected: "https://sdk.test/test",
 				},
 				{
 					baseUrl: "https://sdk.test",
 					apiEndpoint: "custom",
 					url: "foo",
-					expected: "https://sdk.test/custom//foo",
+					expected: "https://sdk.test/custom/foo",
 				},
 				{
 					baseUrl: "https://sdk.test",
 					url: "",
-					expected: "https://sdk.test/api/",
-				}, // empty url no double slash for empty url case
+					expected: "https://sdk.test/api",
+				},
+				{
+					baseUrl: "https://sdk.test///",
+					apiEndpoint: "api///",
+					prefix: "dca/",
+					url: "/user/add",
+					expected: "https://sdk.test/api/dca/user/add",
+				},
 			];
 			for (const cs of cases) {
 				const caller = new TestCaller(
@@ -482,7 +489,7 @@ describe("Caller", () => {
 			// null cursor is converted to undefined via Helpers.parseJsonWithBigint (null -> undefined)
 			expect(res.events).toEqual([{ type: "0x1::a::E" }]);
 			expect(res.nextCursor).toBeUndefined();
-			expect(calls[0].input).toContain("/api//events");
+			expect(calls[0].input).toContain("/api/events");
 		});
 		it("fetchApiIndexerEvents pages correctly", async () => {
 			const caller = makeCaller();
@@ -710,7 +717,7 @@ describe("Caller", () => {
 					.ws.url
 			).toBe("wss://sdk.test/api/prefix/my/path");
 		});
-		it("trims trailing slashes from baseUrl and prefix (observed behavior keeps some slashes)", () => {
+		it("normalizes route separators for WebSocket URLs", () => {
 			(globalThis as any).WebSocket = MockWS;
 			const caller = new TestCaller(
 				{ baseUrl: "https://sdk.test///", apiEndpoint: "api///" },
@@ -720,11 +727,7 @@ describe("Caller", () => {
 				path: "s",
 				onMessage: () => undefined,
 			});
-			// actual implementation does not fully normalize triple slashes in apiEndpoint/prefix (produces api////pools)
-			// verify it still produces a wss url and includes the prefix
-			expect(ws.url.startsWith("wss://sdk.test/")).toBe(true);
-			expect(ws.url).toContain("pools");
-			expect(ws.url).toContain("/s");
+			expect(ws.url).toBe("wss://sdk.test/api/pools/s");
 		});
 	});
 });

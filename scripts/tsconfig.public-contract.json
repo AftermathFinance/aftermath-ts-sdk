@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["publicContractTypes.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "baseUrl": "..",
+    "rootDir": ".."
+  }
+}

@@ -1677,14 +1677,14 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Open a market-candles websocket stream for a single market/interval:
-	 * `/perpetuals/ws/market-candles/{market_id}/{interval_ms}`.
+	 * Open a market-candles subscription for a single market/interval on
+	 * `/perpetuals/ws/updates`.
 	 *
 	 * The stream emits {@link PerpetualsWsCandleResponseMessage} messages,
 	 * typically containing the latest candle for the specified interval.
 	 *
 	 * @param args.marketId - Market ID to subscribe to.
-	 * The input contains the candle interval in milliseconds.
+	 * @param args.interval - Timeframe label such as `"1m"` or `"1h"`.
 	 * @param args.onMessage - Handler for incoming candle updates.
 	 * @param args.onOpen - Optional hook called when the websocket opens.
 	 * @param args.onError - Optional hook called on websocket error.
@@ -1696,7 +1696,7 @@ export class Perpetuals extends Caller {
 	 * ```ts
 	 * const stream = perps.openMarketCandlesWebsocketStream({
 	 *   marketId: "0x...",
-	 *   intervalMs: 60_000,
+	 *   interval: "1m",
 	 *   onMessage: ({ lastCandle }) => console.log(lastCandle),
 	 * });
 	 * ```

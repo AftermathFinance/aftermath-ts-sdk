@@ -32,6 +32,8 @@
     "package:check": "node scripts/checkPackage.mjs",
     "test:surface": "node scripts/testSurface.mjs",
     "test:surface:strict": "node scripts/testSurface.mjs --strict",
+    "agent:doctor": "node scripts/agentDoctor.mjs",
+    "verify:public": "node scripts/verifyPublicContract.mjs && tsc --noEmit -p scripts/tsconfig.public-contract.json",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "changeset": "changeset",
