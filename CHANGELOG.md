@@ -1,5 +1,39 @@
 # aftermath-ts-sdk
 
+## 6.0.0
+
+### Major Changes
+
+- [#195](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/195) [`d72bc91`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/d72bc910ef55ca4e1c7eca00815589c81a6472e5) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Remove dead builder-code integrator-vault methods and types.
+
+  `getCreateBuilderCodeIntegratorVaultTx`, `getClaimBuilderCodeIntegratorVaultFeesTx`,
+  and `getBuilderCodeIntegratorVaults` called API routes that no longer exist
+  (`create-integrator-vault`, `claim-integrator-vault-fees`, `integrator-vaults`).
+  Delete those methods and their request/response types. Update builder-code JSDoc
+  to the current registration / config / `builderCode` model (fee on filled notional
+  for taker and maker). Keep config create/remove/inspection helpers.
+
+### Patch Changes
+
+- [#194](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/194) [`5176abd`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/5176abda21709325f02e290c7d18ef77ab933729) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - feat(perpetuals): add market categories endpoint and per-market tags
+
+  Add `Perpetuals.getMarketsCategories()`, which posts to
+  `perpetuals/markets/categories` and returns the ordered category/tag vocabulary
+  behind market metadata, plus the `PerpetualsMarketCategory` and
+  `ApiPerpetualsMarketsCategoriesResponse` types. Extend
+  `PerpetualsMarketMetadata` with optional `tags`: a market names exactly one
+  `category` and may carry any number of that category's tags.
+
+- [#198](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/198) [`f287104`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/f287104f64ce53abdc710789fb3d8722a1cb0987) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Normalize HTTP and WebSocket API route separators so address discovery, DCA orders, and perpetuals streams use a single slash between path segments.
+
+- [#191](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/191) [`c20d495`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/c20d495edbf44418ec1d3549b39a3ed9dce151af) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - feat(perpetuals): add TWAP price-condition and diagnostic types
+
+  Extend `PerpetualsTwapOrderDetails` with optional create-time `priceConditions`
+  (`triggerMarkPrice` / `stopMarkPrice` as human-readable numbers), and `PerpetualsTwapOrderData`
+  with optional `orderCreationTimestampMs`, normalized `priceConditions`, and
+  `lastError` for TWAP order responses from the perpetuals HTTP API. Normalized
+  response conditions expose `markPrice` as the same human-readable `number`.
+
 ## 5.1.1
 
 ### Patch Changes
