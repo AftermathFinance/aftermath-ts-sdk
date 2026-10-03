@@ -1917,6 +1917,47 @@ export interface ApiPerpetualsAccountPositionsBody {
 }
 
 /**
+ * Request body for fetching daily realized PnL calendars for a set of accounts.
+ */
+export interface ApiPerpetualsAccountsPnlCalendarBody {
+	/** 1 to 50 perpetuals account IDs. Duplicates are ignored. */
+	accountIds: PerpetualsAccountId[];
+}
+
+/**
+ * Realized results for a single UTC calendar day.
+ */
+export interface PerpetualsAccountPnlCalendarDay {
+	/** Inclusive UTC day start in milliseconds since Unix epoch. */
+	timestampMs: bigint;
+	/** Realized trading PnL for the day in USD, before fees. */
+	realizedPnlUsd: number;
+	/** Realized funding for the day in USD, separate from trading PnL. */
+	realizedFundingsUsd: number;
+}
+
+/**
+ * Daily realized PnL calendar for one account.
+ */
+export interface PerpetualsAccountPnlCalendar {
+	/** Perpetuals account ID. */
+	accountId: PerpetualsAccountId;
+	/**
+	 * Ascending daily results from account creation through today, including
+	 * zero days. Today is partial. Unknown accounts return an empty array.
+	 */
+	pnlCalendar: PerpetualsAccountPnlCalendarDay[];
+}
+
+/**
+ * Response payload for fetching daily realized PnL calendars.
+ */
+export interface ApiPerpetualsAccountsPnlCalendarResponse {
+	/** One calendar per distinct requested account, in request order. */
+	accounts: PerpetualsAccountPnlCalendar[];
+}
+
+/**
  * Response payload for fetching admin account caps by explicit account IDs.
  */
 export interface ApiPerpetualsAdminAccountCapsResponse {

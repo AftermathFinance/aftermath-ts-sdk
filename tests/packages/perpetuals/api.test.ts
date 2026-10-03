@@ -147,6 +147,49 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		});
 	});
 
+	it("posts pnl calendar account IDs and decodes bigint day timestamps", async () => {
+		const result = await expectPost(
+			(client) => client.getAccountsPnlCalendar({ accountIds: [ACCOUNT_ID] }),
+			{
+				accounts: [
+					{
+						accountId: ACCOUNT_ID_WIRE,
+						pnlCalendar: [
+							{
+								timestampMs: "86400000n",
+								realizedPnlUsd: -2,
+								realizedFundingsUsd: 0.5,
+							},
+						],
+					},
+				],
+			},
+			"accounts/pnl-calendar",
+			{ accountIds: [ACCOUNT_ID_WIRE] }
+		);
+
+		expect(result).toEqual({
+			accounts: [
+				{
+					accountId: ACCOUNT_ID,
+					pnlCalendar: [
+						{
+							timestampMs: 86_400_000n,
+							realizedPnlUsd: -2,
+							realizedFundingsUsd: 0.5,
+						},
+					],
+				},
+			],
+		});
+
+		const calls = installFetch({ error: "must not call" });
+		await expect(
+			clientForTest().getAccountsPnlCalendar({ accountIds: [] })
+		).resolves.toEqual({ accounts: [] });
+		expect(calls).toHaveLength(0);
+	});
+
 	it("pairs fetched accounts with their caps and supports the empty fast path", async () => {
 		const cap = {
 			objectId: SHORT_ID,

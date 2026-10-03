@@ -8,6 +8,8 @@ import { FixedUtils } from "../../general/utils/fixedUtils";
 import {
 	type ApiPerpetualsAccountPositionsBody,
 	type ApiPerpetualsAccountPositionsResponse,
+	type ApiPerpetualsAccountsPnlCalendarBody,
+	type ApiPerpetualsAccountsPnlCalendarResponse,
 	type ApiPerpetualsAdminAccountCapsBody,
 	type ApiPerpetualsAdminAccountCapsResponse,
 	type ApiPerpetualsAllMarketsBody,
@@ -473,6 +475,42 @@ export class Perpetuals extends Caller {
 		>("accounts/positions", {
 			accountIds,
 			marketIds,
+		});
+	}
+
+	/**
+	 * Fetch daily realized PnL and funding for one or more accounts, bucketed
+	 * by UTC calendar day from account creation through today.
+	 *
+	 * @param inputs.accountIds - 1 to 50 account IDs to query.
+	 *
+	 * @returns `ApiPerpetualsAccountsPnlCalendarResponse` containing one
+	 * calendar per distinct account.
+	 *
+	 * @remarks
+	 * If `accountIds` is empty, this returns `{ accounts: [] }` without making an API call.
+	 *
+	 * @example
+	 * ```ts
+	 * const { accounts } = await perps.getAccountsPnlCalendar({
+	 *   accountIds: [123n],
+	 * });
+	 * ```
+	 */
+	public async getAccountsPnlCalendar(
+		inputs: ApiPerpetualsAccountsPnlCalendarBody
+	): Promise<ApiPerpetualsAccountsPnlCalendarResponse> {
+		if (inputs.accountIds.length <= 0) {
+			return {
+				accounts: [],
+			};
+		}
+
+		return this.fetchApi<
+			ApiPerpetualsAccountsPnlCalendarResponse,
+			ApiPerpetualsAccountsPnlCalendarBody
+		>("accounts/pnl-calendar", {
+			accountIds: inputs.accountIds,
 		});
 	}
 
