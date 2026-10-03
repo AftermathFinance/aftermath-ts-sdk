@@ -1929,7 +1929,7 @@ export interface ApiPerpetualsAccountsPnlCalendarBody {
  */
 export interface PerpetualsAccountPnlCalendarDay {
 	/** Inclusive UTC day start in milliseconds since Unix epoch. */
-	timestampMs: bigint;
+	timestampMs: Timestamp;
 	/** Realized trading PnL for the day in USD, before fees. */
 	realizedPnlUsd: number;
 	/** Realized funding for the day in USD, separate from trading PnL. */

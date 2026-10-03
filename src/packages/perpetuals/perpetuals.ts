@@ -65,6 +65,8 @@ import {
 	type PerpetualsAccountCap,
 	type PerpetualsAccountId,
 	PerpetualsAccountObject,
+	type PerpetualsAccountPnlCalendar,
+	type PerpetualsAccountPnlCalendarDay,
 	type PerpetualsCandleResolution,
 	type PerpetualsMarketId,
 	type PerpetualsOrderId,
@@ -83,6 +85,14 @@ import { PerpetualsAccount } from "./perpetualsAccount";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsVault } from "./perpetualsVault";
 import { PerpetualsOrderUtils } from "./utils";
+
+type ApiPerpetualsAccountsPnlCalendarWireResponse = {
+	accounts: (Omit<PerpetualsAccountPnlCalendar, "pnlCalendar"> & {
+		pnlCalendar: (Omit<PerpetualsAccountPnlCalendarDay, "timestampMs"> & {
+			timestampMs: bigint;
+		})[];
+	})[];
+};
 
 /**
  * High-level client for interacting with Aftermath Perpetuals.
@@ -506,12 +516,22 @@ export class Perpetuals extends Caller {
 			};
 		}
 
-		return this.fetchApi<
-			ApiPerpetualsAccountsPnlCalendarResponse,
+		const { accounts } = await this.fetchApi<
+			ApiPerpetualsAccountsPnlCalendarWireResponse,
 			ApiPerpetualsAccountsPnlCalendarBody
 		>("accounts/pnl-calendar", {
 			accountIds: inputs.accountIds,
 		});
+
+		return {
+			accounts: accounts.map(({ accountId, pnlCalendar }) => ({
+				accountId,
+				pnlCalendar: pnlCalendar.map(({ timestampMs, ...day }) => ({
+					...day,
+					timestampMs: Number(timestampMs),
+				})),
+			})),
+		};
 	}
 
 	// =========================================================================

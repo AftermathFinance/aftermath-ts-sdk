@@ -147,7 +147,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		});
 	});
 
-	it("posts pnl calendar account IDs and decodes bigint day timestamps", async () => {
+	it("posts pnl calendar account IDs and decodes day timestamps to numbers", async () => {
 		const result = await expectPost(
 			(client) => client.getAccountsPnlCalendar({ accountIds: [ACCOUNT_ID] }),
 			{
@@ -174,7 +174,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 					accountId: ACCOUNT_ID,
 					pnlCalendar: [
 						{
-							timestampMs: 86_400_000n,
+							timestampMs: 86_400_000,
 							realizedPnlUsd: -2,
 							realizedFundingsUsd: 0.5,
 						},
