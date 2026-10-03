@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 6.1.0
+
+### Minor Changes
+
+- [#199](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/199) [`7aecc77`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/7aecc77e4678281cec10be9aa8b66f87b6bec35d) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Add `Perpetuals.getAccountsPnlCalendar` for daily realized PnL and funding per UTC day.
+
 ## 6.0.0
 
 ### Major Changes
