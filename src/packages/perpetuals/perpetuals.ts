@@ -697,10 +697,12 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch daily account deposits and withdrawals in USD per collateral type.
 	 *
-	 * @param inputs - Time range in Unix milliseconds. The start is inclusive and
-	 * rounded down to the UTC day; the end is exclusive and must exceed the start.
-	 * @returns Flat daily flow rows. Days without flows may be absent, and the
-	 * current day is provisional.
+	 * @param inputs - Time range in Unix milliseconds and optional collateral types.
+	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
+	 * and must exceed the start.
+	 * @returns Nested daily statistics grouped by collateral type. Types without
+	 * rows are omitted, and the current day is provisional. Timestamps retain their
+	 * wire format as strings with a trailing `n`.
 	 */
 	public getCollateralFlows(
 		inputs: ApiPerpetualsCollateralFlowsBody
@@ -708,7 +710,9 @@ export class Perpetuals extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsCollateralFlowsResponse,
 			ApiPerpetualsCollateralFlowsBody
-		>("collateral-flows", inputs);
+		>("stats/daily-collateral-flows", inputs, undefined, {
+			disableBigIntJsonParsing: true,
+		});
 	}
 
 	/**
@@ -718,7 +722,9 @@ export class Perpetuals extends Caller {
 	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
 	 * and must exceed the start. Omitted or empty IDs select all markets; explicit
 	 * filters allow at most 50 distinct IDs after server-side canonicalization.
-	 * @returns Flat daily market statistics. The current day is provisional.
+	 * @returns Nested daily statistics grouped by market ID. Markets without rows
+	 * are omitted, and the current day is provisional. Timestamps and taker trade
+	 * counts retain their wire format as strings with a trailing `n`.
 	 */
 	public getMarketsDailyStats(
 		inputs: ApiPerpetualsMarketsDailyStatsBody
@@ -726,7 +732,9 @@ export class Perpetuals extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsMarketsDailyStatsResponse,
 			ApiPerpetualsMarketsDailyStatsBody
-		>("markets/daily-stats", inputs);
+		>("markets/daily-stats", inputs, undefined, {
+			disableBigIntJsonParsing: true,
+		});
 	}
 
 	/**

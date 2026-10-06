@@ -5,6 +5,7 @@ import type {
 import type {
 	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	Bps,
 	Byte,
 	EmptyObject,
@@ -2624,6 +2625,11 @@ export interface ApiPerpetualsMarketFundingHistoryResponse {
  * Request payload for fetching daily account collateral flows.
  */
 export interface ApiPerpetualsCollateralFlowsBody {
+	/**
+	 * Omit or empty for all collateral types. Explicit filters allow at most 50
+	 * distinct types after server-side normalization.
+	 */
+	collateralTypes?: CoinType[];
 	/** Inclusive start in Unix milliseconds, rounded down to the UTC day. */
 	fromTimestamp: Timestamp;
 	/** Exclusive end in Unix milliseconds; must be greater than fromTimestamp. */
@@ -2631,13 +2637,12 @@ export interface ApiPerpetualsCollateralFlowsBody {
 }
 
 /**
- * Daily account deposits and withdrawals for a collateral type.
+ * Daily deposits and withdrawals for one UTC day.
+ * Wire timestamps use as_string_with_n (e.g. "86400000n").
  */
-export interface PerpetualsCollateralFlowRow {
-	/** Fully qualified Move type of the collateral coin. */
-	collateralType: CoinType;
-	/** UTC day start as a numeric Unix timestamp in milliseconds. */
-	timestamp: Timestamp;
+export interface PerpetualsCollateralDailyStatsRow {
+	/** UTC day start in Unix milliseconds as a string with a trailing `n`. */
+	timestamp: BigIntAsString;
 	/** Positive deposit total in USD, valued at each event's collateral oracle price. */
 	depositsUsd: number;
 	/** Positive withdrawal total in USD; allocations to/from positions are excluded. */
@@ -2645,14 +2650,24 @@ export interface PerpetualsCollateralFlowRow {
 }
 
 /**
+ * Daily account deposits and withdrawals grouped for one collateral type.
+ */
+export interface PerpetualsCollateralDailyStats {
+	/** Fully qualified Move type of the collateral coin. */
+	collateralType: CoinType;
+	/** Daily deposits and withdrawals for this collateral type. */
+	stats: PerpetualsCollateralDailyStatsRow[];
+}
+
+/**
  * Response payload for daily account collateral flows.
  */
 export interface ApiPerpetualsCollateralFlowsResponse {
 	/**
-	 * Flat rows sorted by UTC day, then collateral type. Days without flows may
-	 * be absent, and the current day is provisional.
+	 * Groups sorted by collateral type. Types without rows are omitted.
+	 * The current day is provisional.
 	 */
-	flows: PerpetualsCollateralFlowRow[];
+	stats: PerpetualsCollateralDailyStats[];
 }
 
 /**
@@ -2674,14 +2689,12 @@ export interface ApiPerpetualsMarketsDailyStatsBody {
  * Daily trading statistics and closing open interest for a perpetuals market.
  */
 export interface PerpetualsMarketDailyStatsRow {
-	/** Identifier of the perpetuals market. */
-	marketId: PerpetualsMarketId;
-	/** UTC day start as a numeric Unix timestamp in milliseconds. */
-	timestamp: Timestamp;
+	/** UTC day start in Unix milliseconds using as_string_with_n (e.g. "86400000n"). */
+	timestamp: BigIntAsString;
 	/** Taker-side traded volume in USD. */
 	volumeUsd: number;
-	/** Number of taker trades; maker fills are not counted separately. */
-	takerTrades: number;
+	/** Number of taker trades using as_string_with_n; maker fills are not counted separately. */
+	takerTrades: BigIntAsString;
 	/** Liquidated notional in USD, excluding auto-deleveraging and duplicate liquidator records. */
 	liquidatedNotionalUsd: number;
 	/** Last one-sided open interest in base units, carried forward over inactive days. */
@@ -2691,11 +2704,21 @@ export interface PerpetualsMarketDailyStatsRow {
 }
 
 /**
+ * Daily trading statistics and closing open interest grouped for one market.
+ */
+export interface PerpetualsMarketDailyStats {
+	/** Identifier of the perpetuals market. */
+	marketId: PerpetualsMarketId;
+	/** Daily trading statistics and closing open interest for this market. */
+	stats: PerpetualsMarketDailyStatsRow[];
+}
+
+/**
  * Response payload for daily perpetuals market statistics.
  */
 export interface ApiPerpetualsMarketsDailyStatsResponse {
-	/** Flat rows sorted by UTC day, then market ID. The current day is provisional. */
-	stats: PerpetualsMarketDailyStatsRow[];
+	/** Groups sorted by market ID. Markets with no rows are omitted. The current day is provisional. */
+	stats: PerpetualsMarketDailyStats[];
 }
 
 /**

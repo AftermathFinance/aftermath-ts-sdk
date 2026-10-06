@@ -352,31 +352,36 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		);
 	});
 
-	it("posts collateral flows and preserves flat rows with numeric timestamps", async () => {
+	it("posts daily collateral flows with filters and preserves nested stats and wire strings", async () => {
 		const inputs = {
+			collateralTypes: [COLLATERAL],
 			fromTimestamp: 1_699_920_000_000,
 			toTimestamp: 1_700_092_800_000,
 		};
 		const response = {
-			flows: [
+			stats: [
 				{
 					collateralType: COLLATERAL,
-					timestamp: inputs.fromTimestamp,
-					depositsUsd: 1234.5,
-					withdrawalsUsd: 67.89,
+					stats: [
+						{
+							timestamp: "1699920000000n",
+							depositsUsd: 1234.5,
+							withdrawalsUsd: 67.89,
+						},
+					],
 				},
 			],
 		};
 		const result = await expectPost(
 			(client) => client.getCollateralFlows(inputs),
 			response,
-			"collateral-flows",
+			"stats/daily-collateral-flows",
 			inputs
 		);
 		expect(result).toEqual(response);
 	});
 
-	it("posts daily market stats with market IDs and preserves flat rows", async () => {
+	it("posts daily market stats with market IDs and preserves nested stats and wire strings", async () => {
 		const inputs = {
 			marketIds: [SHORT_ID, FULL_ID],
 			fromTimestamp: 1_699_920_000_000,
@@ -386,12 +391,16 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 			stats: [
 				{
 					marketId: FULL_ID,
-					timestamp: inputs.fromTimestamp,
-					volumeUsd: 12_345.67,
-					takerTrades: 42,
-					liquidatedNotionalUsd: 123.45,
-					openInterestBase: 12.5,
-					openInterestUsd: 1250.5,
+					stats: [
+						{
+							timestamp: "1699920000000n",
+							volumeUsd: 12_345.67,
+							takerTrades: "42n",
+							liquidatedNotionalUsd: 123.45,
+							openInterestBase: 12.5,
+							openInterestUsd: 1250.5,
+						},
+					],
 				},
 			],
 		};
