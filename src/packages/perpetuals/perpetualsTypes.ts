@@ -5,7 +5,6 @@ import type {
 import type {
 	AnyObjectType,
 	Balance,
-	BigIntAsString,
 	Bps,
 	Byte,
 	EmptyObject,
@@ -2638,11 +2637,10 @@ export interface ApiPerpetualsCollateralFlowsBody {
 
 /**
  * Daily deposits and withdrawals for one UTC day.
- * Wire timestamps use as_string_with_n (e.g. "86400000n").
  */
 export interface PerpetualsCollateralDailyStatsRow {
-	/** UTC day start in Unix milliseconds as a string with a trailing `n`. */
-	timestamp: BigIntAsString;
+	/** UTC day start in Unix milliseconds as bigint. */
+	timestamp: bigint;
 	/** Positive deposit total in USD, valued at each event's collateral oracle price. */
 	depositsUsd: number;
 	/** Positive withdrawal total in USD; allocations to/from positions are excluded. */
@@ -2689,12 +2687,12 @@ export interface ApiPerpetualsMarketsDailyStatsBody {
  * Daily trading statistics and closing open interest for a perpetuals market.
  */
 export interface PerpetualsMarketDailyStatsRow {
-	/** UTC day start in Unix milliseconds using as_string_with_n (e.g. "86400000n"). */
-	timestamp: BigIntAsString;
+	/** UTC day start in Unix milliseconds as bigint. */
+	timestamp: bigint;
 	/** Taker-side traded volume in USD. */
 	volumeUsd: number;
-	/** Number of taker trades using as_string_with_n; maker fills are not counted separately. */
-	takerTrades: BigIntAsString;
+	/** Number of taker trades as bigint; maker fills are not counted separately. */
+	takerTrades: bigint;
 	/** Liquidated notional in USD, excluding auto-deleveraging and duplicate liquidator records. */
 	liquidatedNotionalUsd: number;
 	/** Last one-sided open interest in base units, carried forward over inactive days. */

@@ -352,7 +352,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		);
 	});
 
-	it("posts daily collateral flows with filters and preserves nested stats and wire strings", async () => {
+	it("posts daily collateral flows with filters and parses nested stats timestamps as bigint", async () => {
 		const inputs = {
 			collateralTypes: [COLLATERAL],
 			fromTimestamp: 1_699_920_000_000,
@@ -378,10 +378,23 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 			"stats/daily-collateral-flows",
 			inputs
 		);
-		expect(result).toEqual(response);
+		expect(result).toEqual({
+			stats: [
+				{
+					collateralType: COLLATERAL,
+					stats: [
+						{
+							timestamp: 1699920000000n,
+							depositsUsd: 1234.5,
+							withdrawalsUsd: 67.89,
+						},
+					],
+				},
+			],
+		});
 	});
 
-	it("posts daily market stats with market IDs and preserves nested stats and wire strings", async () => {
+	it("posts daily market stats with market IDs and parses nested timestamps and taker trade counts as bigint", async () => {
 		const inputs = {
 			marketIds: [SHORT_ID, FULL_ID],
 			fromTimestamp: 1_699_920_000_000,
@@ -410,7 +423,23 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 			"markets/daily-stats",
 			inputs
 		);
-		expect(result).toEqual(response);
+		expect(result).toEqual({
+			stats: [
+				{
+					marketId: FULL_ID,
+					stats: [
+						{
+							timestamp: 1699920000000n,
+							volumeUsd: 12_345.67,
+							takerTrades: 42n,
+							liquidatedNotionalUsd: 123.45,
+							openInterestBase: 12.5,
+							openInterestUsd: 1250.5,
+						},
+					],
+				},
+			],
+		});
 	});
 
 	it("posts daily market stats for all markets with omitted or empty IDs", async () => {

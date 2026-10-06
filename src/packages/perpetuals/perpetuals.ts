@@ -701,8 +701,8 @@ export class Perpetuals extends Caller {
 	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
 	 * and must exceed the start.
 	 * @returns Nested daily statistics grouped by collateral type. Types without
-	 * rows are omitted, and the current day is provisional. Timestamps retain their
-	 * wire format as strings with a trailing `n`.
+	 * rows are omitted, and the current day is provisional. Timestamps are parsed
+	 * as bigint.
 	 */
 	public getCollateralFlows(
 		inputs: ApiPerpetualsCollateralFlowsBody
@@ -710,9 +710,7 @@ export class Perpetuals extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsCollateralFlowsResponse,
 			ApiPerpetualsCollateralFlowsBody
-		>("stats/daily-collateral-flows", inputs, undefined, {
-			disableBigIntJsonParsing: true,
-		});
+		>("stats/daily-collateral-flows", inputs);
 	}
 
 	/**
@@ -724,7 +722,7 @@ export class Perpetuals extends Caller {
 	 * filters allow at most 50 distinct IDs after server-side canonicalization.
 	 * @returns Nested daily statistics grouped by market ID. Markets without rows
 	 * are omitted, and the current day is provisional. Timestamps and taker trade
-	 * counts retain their wire format as strings with a trailing `n`.
+	 * counts are parsed as bigint.
 	 */
 	public getMarketsDailyStats(
 		inputs: ApiPerpetualsMarketsDailyStatsBody
@@ -732,9 +730,7 @@ export class Perpetuals extends Caller {
 		return this.fetchApi<
 			ApiPerpetualsMarketsDailyStatsResponse,
 			ApiPerpetualsMarketsDailyStatsBody
-		>("markets/daily-stats", inputs, undefined, {
-			disableBigIntJsonParsing: true,
-		});
+		>("markets/daily-stats", inputs);
 	}
 
 	/**
