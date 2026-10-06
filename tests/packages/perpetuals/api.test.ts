@@ -352,6 +352,74 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		);
 	});
 
+	it("posts collateral flows and preserves flat rows with numeric timestamps", async () => {
+		const inputs = {
+			fromTimestamp: 1_699_920_000_000,
+			toTimestamp: 1_700_092_800_000,
+		};
+		const response = {
+			flows: [
+				{
+					collateralType: COLLATERAL,
+					timestamp: inputs.fromTimestamp,
+					depositsUsd: 1234.5,
+					withdrawalsUsd: 67.89,
+				},
+			],
+		};
+		const result = await expectPost(
+			(client) => client.getCollateralFlows(inputs),
+			response,
+			"collateral-flows",
+			inputs
+		);
+		expect(result).toEqual(response);
+	});
+
+	it("posts daily market stats with market IDs and preserves flat rows", async () => {
+		const inputs = {
+			marketIds: [SHORT_ID, FULL_ID],
+			fromTimestamp: 1_699_920_000_000,
+			toTimestamp: 1_700_092_800_000,
+		};
+		const response = {
+			stats: [
+				{
+					marketId: FULL_ID,
+					timestamp: inputs.fromTimestamp,
+					volumeUsd: 12_345.67,
+					takerTrades: 42,
+					liquidatedNotionalUsd: 123.45,
+					openInterestBase: 12.5,
+					openInterestUsd: 1250.5,
+				},
+			],
+		};
+		const result = await expectPost(
+			(client) => client.getMarketsDailyStats(inputs),
+			response,
+			"markets/daily-stats",
+			inputs
+		);
+		expect(result).toEqual(response);
+	});
+
+	it("posts daily market stats for all markets with omitted or empty IDs", async () => {
+		const range = {
+			fromTimestamp: 1_699_920_000_000,
+			toTimestamp: 1_700_092_800_000,
+		};
+		for (const inputs of [range, { ...range, marketIds: [] }]) {
+			const result = await expectPost(
+				(client) => client.getMarketsDailyStats(inputs),
+				{ stats: [] },
+				"markets/daily-stats",
+				inputs
+			);
+			expect(result).toEqual({ stats: [] });
+		}
+	});
+
 	it("handles price and LP-price empty fast paths without transport calls", async () => {
 		const calls = installFetch({ error: "must not call" });
 		await expect(clientForTest().getPrices({ marketIds: [] })).resolves.toEqual(

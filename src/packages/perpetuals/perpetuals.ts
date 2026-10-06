@@ -18,6 +18,8 @@ import {
 	type ApiPerpetualsBuilderCodesIntegratorConfigBody,
 	type ApiPerpetualsBuilderCodesIntegratorConfigResponse,
 	type ApiPerpetualsBuilderCodesRemoveIntegratorConfigTxBody,
+	type ApiPerpetualsCollateralFlowsBody,
+	type ApiPerpetualsCollateralFlowsResponse,
 	type ApiPerpetualsCreateAccountBody,
 	type ApiPerpetualsCreateAccountResponse,
 	type ApiPerpetualsCreateCsvRebatesBody,
@@ -34,6 +36,8 @@ import {
 	type ApiPerpetualsMarkets24hrStatsResponse,
 	type ApiPerpetualsMarketsBody,
 	type ApiPerpetualsMarketsCategoriesResponse,
+	type ApiPerpetualsMarketsDailyStatsBody,
+	type ApiPerpetualsMarketsDailyStatsResponse,
 	type ApiPerpetualsMarketsPricesBody,
 	type ApiPerpetualsMarketsPricesResponse,
 	type ApiPerpetualsMarketsResponse,
@@ -94,7 +98,8 @@ import { PerpetualsOrderUtils } from "./utils";
  * - Vault discovery (`getAllVaults`, `getVaults`, `getVault`)
  * - Account & position data (`getAccount`, `getAccounts`, `getAccountObjects`)
  * - Ownership queries (`getOwnedAccountCaps`, `getOwnedVaultCaps`)
- * - Historical data & stats (`getMarketCandleHistory`, `getMarkets24hrStats`)
+ * - Historical data & stats (`getMarketCandleHistory`, `getMarketFundingHistory`,
+ *   `getMarkets24hrStats`, `getCollateralFlows`, `getMarketsDailyStats`)
  * - Pricing helpers (`getPrices`, `getLpCoinPrices`)
  * - Transaction builders (`getCreateAccountTx`, `getCreateVaultCapTx`, `getCreateVaultTx`)
  * - Websocket feeds (`openUpdatesWebsocketStream`, `openMarketCandlesWebsocketStream`)
@@ -687,6 +692,41 @@ export class Perpetuals extends Caller {
 			ApiPerpetualsMarketFundingHistoryResponse,
 			ApiPerpetualsMarketFundingHistoryBody
 		>("market/funding-history", inputs);
+	}
+
+	/**
+	 * Fetch daily account deposits and withdrawals in USD per collateral type.
+	 *
+	 * @param inputs - Time range in Unix milliseconds. The start is inclusive and
+	 * rounded down to the UTC day; the end is exclusive and must exceed the start.
+	 * @returns Flat daily flow rows. Days without flows may be absent, and the
+	 * current day is provisional.
+	 */
+	public getCollateralFlows(
+		inputs: ApiPerpetualsCollateralFlowsBody
+	): Promise<ApiPerpetualsCollateralFlowsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsCollateralFlowsResponse,
+			ApiPerpetualsCollateralFlowsBody
+		>("collateral-flows", inputs);
+	}
+
+	/**
+	 * Fetch daily volume, taker trade counts, liquidations, and open interest per market.
+	 *
+	 * @param inputs - Time range in Unix milliseconds and optional market IDs.
+	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
+	 * and must exceed the start. Omitted or empty IDs select all markets; explicit
+	 * filters allow at most 50 distinct IDs after server-side canonicalization.
+	 * @returns Flat daily market statistics. The current day is provisional.
+	 */
+	public getMarketsDailyStats(
+		inputs: ApiPerpetualsMarketsDailyStatsBody
+	): Promise<ApiPerpetualsMarketsDailyStatsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsMarketsDailyStatsResponse,
+			ApiPerpetualsMarketsDailyStatsBody
+		>("markets/daily-stats", inputs);
 	}
 
 	/**

@@ -2621,6 +2621,84 @@ export interface ApiPerpetualsMarketFundingHistoryResponse {
 }
 
 /**
+ * Request payload for fetching daily account collateral flows.
+ */
+export interface ApiPerpetualsCollateralFlowsBody {
+	/** Inclusive start in Unix milliseconds, rounded down to the UTC day. */
+	fromTimestamp: Timestamp;
+	/** Exclusive end in Unix milliseconds; must be greater than fromTimestamp. */
+	toTimestamp: Timestamp;
+}
+
+/**
+ * Daily account deposits and withdrawals for a collateral type.
+ */
+export interface PerpetualsCollateralFlowRow {
+	/** Fully qualified Move type of the collateral coin. */
+	collateralType: CoinType;
+	/** UTC day start as a numeric Unix timestamp in milliseconds. */
+	timestamp: Timestamp;
+	/** Positive deposit total in USD, valued at each event's collateral oracle price. */
+	depositsUsd: number;
+	/** Positive withdrawal total in USD; allocations to/from positions are excluded. */
+	withdrawalsUsd: number;
+}
+
+/**
+ * Response payload for daily account collateral flows.
+ */
+export interface ApiPerpetualsCollateralFlowsResponse {
+	/**
+	 * Flat rows sorted by UTC day, then collateral type. Days without flows may
+	 * be absent, and the current day is provisional.
+	 */
+	flows: PerpetualsCollateralFlowRow[];
+}
+
+/**
+ * Request payload for fetching daily statistics for perpetuals markets.
+ */
+export interface ApiPerpetualsMarketsDailyStatsBody {
+	/**
+	 * Omit or leave empty for all markets. Explicit filters allow at most 50
+	 * distinct IDs after server-side canonicalization and deduplication.
+	 */
+	marketIds?: PerpetualsMarketId[];
+	/** Inclusive start in Unix milliseconds, rounded down to the UTC day. */
+	fromTimestamp: Timestamp;
+	/** Exclusive end in Unix milliseconds; must be greater than fromTimestamp. */
+	toTimestamp: Timestamp;
+}
+
+/**
+ * Daily trading statistics and closing open interest for a perpetuals market.
+ */
+export interface PerpetualsMarketDailyStatsRow {
+	/** Identifier of the perpetuals market. */
+	marketId: PerpetualsMarketId;
+	/** UTC day start as a numeric Unix timestamp in milliseconds. */
+	timestamp: Timestamp;
+	/** Taker-side traded volume in USD. */
+	volumeUsd: number;
+	/** Number of taker trades; maker fills are not counted separately. */
+	takerTrades: number;
+	/** Liquidated notional in USD, excluding auto-deleveraging and duplicate liquidator records. */
+	liquidatedNotionalUsd: number;
+	/** Last one-sided open interest in base units, carried forward over inactive days. */
+	openInterestBase: number;
+	/** Base open interest times the day's orderbook candle close in USD; zero without a candle. */
+	openInterestUsd: number;
+}
+
+/**
+ * Response payload for daily perpetuals market statistics.
+ */
+export interface ApiPerpetualsMarketsDailyStatsResponse {
+	/** Flat rows sorted by UTC day, then market ID. The current day is provisional. */
+	stats: PerpetualsMarketDailyStatsRow[];
+}
+
+/**
  * Request body for computing the maximum order size for an account in a
  * given market.
  */
