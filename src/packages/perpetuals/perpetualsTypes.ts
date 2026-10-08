@@ -5022,6 +5022,8 @@ export type ApiPerpetualsVaultPreviewOwnerProcessWithdrawRequestsResponse =
 			userPreviews: {
 				userAddress: SuiAddress;
 				collateralAmountOut: Balance;
+				/** Why this request cannot be processed, such as a failed minimum output check. Requests with an error are excluded from collateral allocation. */
+				error?: string;
 			}[];
 			/** Collateral asset price used by the preview. */
 			collateralPrice: number;
