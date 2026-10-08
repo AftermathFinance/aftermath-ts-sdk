@@ -2621,6 +2621,118 @@ export interface ApiPerpetualsMarketFundingHistoryResponse {
 }
 
 /**
+ * Request payload for fetching daily account collateral flows.
+ */
+export interface ApiPerpetualsCollateralFlowsBody {
+	/**
+	 * Omit or empty for all collateral types. Explicit filters allow at most 50
+	 * distinct types after server-side normalization.
+	 */
+	collateralTypes?: CoinType[];
+	/** Inclusive start in Unix milliseconds, rounded down to the UTC day. */
+	fromTimestamp: Timestamp;
+	/** Exclusive end in Unix milliseconds; must be greater than fromTimestamp. */
+	toTimestamp: Timestamp;
+}
+
+/**
+ * Daily deposits and withdrawals for one UTC day.
+ */
+export interface PerpetualsCollateralDailyStatsRow {
+	/** UTC day start in Unix milliseconds as bigint. */
+	timestamp: bigint;
+	/** Positive deposit total in USD, valued at each event's collateral oracle price. */
+	depositsUsd: number;
+	/** Positive withdrawal total in USD; allocations to/from positions are excluded. */
+	withdrawalsUsd: number;
+	/** All-time deposits in USD for this collateral type up to and including this UTC day. */
+	cumulativeDepositsUsd: number;
+	/**
+	 * All-time withdrawals in USD for this collateral type up to and including this UTC day.
+	 * Net deposits = cumulativeDepositsUsd - cumulativeWithdrawalsUsd.
+	 */
+	cumulativeWithdrawalsUsd: number;
+}
+
+/**
+ * Daily account deposits and withdrawals grouped for one collateral type.
+ */
+export interface PerpetualsCollateralDailyStats {
+	/** Fully qualified Move type of the collateral coin. */
+	collateralType: CoinType;
+	/** Daily deposits and withdrawals for this collateral type. */
+	stats: PerpetualsCollateralDailyStatsRow[];
+}
+
+/**
+ * Response payload for daily account collateral flows.
+ */
+export interface ApiPerpetualsCollateralFlowsResponse {
+	/**
+	 * Groups sorted by collateral type. Types without rows are omitted.
+	 * The current day is provisional.
+	 */
+	stats: PerpetualsCollateralDailyStats[];
+}
+
+/**
+ * Request payload for fetching daily statistics for perpetuals markets.
+ */
+export interface ApiPerpetualsMarketsDailyStatsBody {
+	/**
+	 * Omit or leave empty for all markets. Explicit filters allow at most 50
+	 * distinct IDs after server-side canonicalization and deduplication.
+	 */
+	marketIds?: PerpetualsMarketId[];
+	/** Inclusive start in Unix milliseconds, rounded down to the UTC day. */
+	fromTimestamp: Timestamp;
+	/** Exclusive end in Unix milliseconds; must be greater than fromTimestamp. */
+	toTimestamp: Timestamp;
+}
+
+/**
+ * Daily trading statistics and closing open interest for a perpetuals market.
+ */
+export interface PerpetualsMarketDailyStatsRow {
+	/** UTC day start in Unix milliseconds as bigint. */
+	timestamp: bigint;
+	/** Taker-side traded volume in USD. */
+	volumeUsd: number;
+	/** Number of taker trades as bigint; maker fills are not counted separately. */
+	takerTrades: bigint;
+	/** Liquidated notional in USD, excluding auto-deleveraging and duplicate liquidator records. */
+	liquidatedNotionalUsd: number;
+	/** Last one-sided open interest in base units, carried forward over inactive days. */
+	openInterestBase: number;
+	/** Base open interest times the day's orderbook candle close in USD; zero without a candle. */
+	openInterestUsd: number;
+	/** All-time taker volume in USD for this market up to and including this UTC day. */
+	cumulativeVolumeUsd: number;
+	/** All-time taker trade count as bigint for this market up to and including this UTC day. */
+	cumulativeTakerTrades: bigint;
+	/** All-time liquidated notional in USD for this market up to and including this UTC day. */
+	cumulativeLiquidatedNotionalUsd: number;
+}
+
+/**
+ * Daily trading statistics and closing open interest grouped for one market.
+ */
+export interface PerpetualsMarketDailyStats {
+	/** Identifier of the perpetuals market. */
+	marketId: PerpetualsMarketId;
+	/** Daily trading statistics and closing open interest for this market. */
+	stats: PerpetualsMarketDailyStatsRow[];
+}
+
+/**
+ * Response payload for daily perpetuals market statistics.
+ */
+export interface ApiPerpetualsMarketsDailyStatsResponse {
+	/** Groups sorted by market ID. Markets with no rows are omitted. The current day is provisional. */
+	stats: PerpetualsMarketDailyStats[];
+}
+
+/**
  * Request body for computing the maximum order size for an account in a
  * given market.
  */
