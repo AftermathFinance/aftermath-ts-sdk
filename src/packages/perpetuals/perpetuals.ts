@@ -697,6 +697,9 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch daily account deposits and withdrawals in USD per collateral type.
 	 *
+	 * Cumulative fields are all-time totals up to and including each UTC day,
+	 * independent of the requested time range.
+	 *
 	 * @param inputs - Time range in Unix milliseconds and optional collateral types.
 	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
 	 * and must exceed the start.
@@ -716,13 +719,16 @@ export class Perpetuals extends Caller {
 	/**
 	 * Fetch daily volume, taker trade counts, liquidations, and open interest per market.
 	 *
+	 * Cumulative fields are all-time totals up to and including each UTC day,
+	 * independent of the requested time range.
+	 *
 	 * @param inputs - Time range in Unix milliseconds and optional market IDs.
 	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
 	 * and must exceed the start. Omitted or empty IDs select all markets; explicit
 	 * filters allow at most 50 distinct IDs after server-side canonicalization.
 	 * @returns Nested daily statistics grouped by market ID. Markets without rows
 	 * are omitted, and the current day is provisional. Timestamps and taker trade
-	 * counts are parsed as bigint.
+	 * counts, including cumulativeTakerTrades, are parsed as bigint.
 	 */
 	public getMarketsDailyStats(
 		inputs: ApiPerpetualsMarketsDailyStatsBody

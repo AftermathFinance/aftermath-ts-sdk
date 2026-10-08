@@ -2645,6 +2645,13 @@ export interface PerpetualsCollateralDailyStatsRow {
 	depositsUsd: number;
 	/** Positive withdrawal total in USD; allocations to/from positions are excluded. */
 	withdrawalsUsd: number;
+	/** All-time deposits in USD for this collateral type up to and including this UTC day. */
+	cumulativeDepositsUsd: number;
+	/**
+	 * All-time withdrawals in USD for this collateral type up to and including this UTC day.
+	 * Net deposits = cumulativeDepositsUsd - cumulativeWithdrawalsUsd.
+	 */
+	cumulativeWithdrawalsUsd: number;
 }
 
 /**
@@ -2699,6 +2706,12 @@ export interface PerpetualsMarketDailyStatsRow {
 	openInterestBase: number;
 	/** Base open interest times the day's orderbook candle close in USD; zero without a candle. */
 	openInterestUsd: number;
+	/** All-time taker volume in USD for this market up to and including this UTC day. */
+	cumulativeVolumeUsd: number;
+	/** All-time taker trade count as bigint for this market up to and including this UTC day. */
+	cumulativeTakerTrades: bigint;
+	/** All-time liquidated notional in USD for this market up to and including this UTC day. */
+	cumulativeLiquidatedNotionalUsd: number;
 }
 
 /**
