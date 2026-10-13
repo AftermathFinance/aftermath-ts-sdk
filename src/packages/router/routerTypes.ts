@@ -58,7 +58,10 @@ export type RouterProtocolName =
 	| "Bluefin"
 	| "TurbosFun"
 	| "BlastFun"
-	| "Bolt";
+	| "Bolt"
+	| "CetusDlmm"
+	| "Perpsplexity"
+	| "StableKitchen";
 
 /**
  * Represents a complete trade route object. Includes all relevant information
