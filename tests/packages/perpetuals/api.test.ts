@@ -398,7 +398,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		});
 	});
 
-	it("posts daily market stats with market IDs and parses nested timestamps and taker trade counts as bigint", async () => {
+	it("posts daily market stats with market IDs and parses nested timestamps, taker trade counts and funding settlements as bigint", async () => {
 		const inputs = {
 			marketIds: [SHORT_ID, FULL_ID],
 			fromTimestamp: 1_699_920_000_000,
@@ -419,6 +419,25 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 							cumulativeVolumeUsd: 123_456.78,
 							cumulativeTakerTrades: "18446744073709551615n",
 							cumulativeLiquidatedNotionalUsd: 1234.56,
+							fundingRate: 0.000_012_5,
+							fundingRateAnnualized: 0.1095,
+							fundingSettlements: "24n",
+							fundingUsdPerUnit: 25,
+						},
+						{
+							timestamp: "1700006400000n",
+							volumeUsd: 0,
+							takerTrades: "0n",
+							liquidatedNotionalUsd: 0,
+							openInterestBase: 0,
+							openInterestUsd: 0,
+							cumulativeVolumeUsd: 0,
+							cumulativeTakerTrades: "0n",
+							cumulativeLiquidatedNotionalUsd: 0,
+							fundingRate: null,
+							fundingRateAnnualized: null,
+							fundingSettlements: "0n",
+							fundingUsdPerUnit: 0,
 						},
 					],
 				},
@@ -445,6 +464,23 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 							cumulativeVolumeUsd: 123_456.78,
 							cumulativeTakerTrades: 18446744073709551615n,
 							cumulativeLiquidatedNotionalUsd: 1234.56,
+							fundingRate: 0.000_012_5,
+							fundingRateAnnualized: 0.1095,
+							fundingSettlements: 24n,
+							fundingUsdPerUnit: 25,
+						},
+						{
+							timestamp: 1700006400000n,
+							volumeUsd: 0,
+							takerTrades: 0n,
+							liquidatedNotionalUsd: 0,
+							openInterestBase: 0,
+							openInterestUsd: 0,
+							cumulativeVolumeUsd: 0,
+							cumulativeTakerTrades: 0n,
+							cumulativeLiquidatedNotionalUsd: 0,
+							fundingSettlements: 0n,
+							fundingUsdPerUnit: 0,
 						},
 					],
 				},

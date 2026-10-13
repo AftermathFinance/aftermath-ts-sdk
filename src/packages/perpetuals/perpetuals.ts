@@ -717,18 +717,21 @@ export class Perpetuals extends Caller {
 	}
 
 	/**
-	 * Fetch daily volume, taker trade counts, liquidations, and open interest per market.
+	 * Fetch daily volume, taker trade counts, liquidations, open interest, and funding per market.
 	 *
 	 * Cumulative fields are all-time totals up to and including each UTC day,
-	 * independent of the requested time range.
+	 * independent of the requested time range. Funding fields give the day's mean
+	 * hourly rate as a fraction, its annualized value, the settlement count, and the
+	 * raw USD-per-base-unit sum; positive rates mean longs paid shorts.
 	 *
 	 * @param inputs - Time range in Unix milliseconds and optional market IDs.
 	 * The start is inclusive and rounded down to the UTC day; the end is exclusive
 	 * and must exceed the start. Omitted or empty IDs select all markets; explicit
 	 * filters allow at most 50 distinct IDs after server-side canonicalization.
 	 * @returns Nested daily statistics grouped by market ID. Markets without rows
-	 * are omitted, and the current day is provisional. Timestamps and taker trade
-	 * counts, including cumulativeTakerTrades, are parsed as bigint.
+	 * are omitted, and the current day is provisional. Timestamps, taker trade
+	 * counts (including cumulativeTakerTrades), and fundingSettlements are parsed
+	 * as bigint.
 	 */
 	public getMarketsDailyStats(
 		inputs: ApiPerpetualsMarketsDailyStatsBody

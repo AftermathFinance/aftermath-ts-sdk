@@ -2691,7 +2691,7 @@ export interface ApiPerpetualsMarketsDailyStatsBody {
 }
 
 /**
- * Daily trading statistics and closing open interest for a perpetuals market.
+ * Daily trading statistics, closing open interest, and funding for a perpetuals market.
  */
 export interface PerpetualsMarketDailyStatsRow {
 	/** UTC day start in Unix milliseconds as bigint. */
@@ -2704,7 +2704,10 @@ export interface PerpetualsMarketDailyStatsRow {
 	liquidatedNotionalUsd: number;
 	/** Last one-sided open interest in base units, carried forward over inactive days. */
 	openInterestBase: number;
-	/** Base open interest times the day's orderbook candle close in USD; zero without a candle. */
+	/**
+	 * Base open interest times the last daily orderbook close on or before this UTC day, in USD;
+	 * zero before the market's first candle.
+	 */
 	openInterestUsd: number;
 	/** All-time taker volume in USD for this market up to and including this UTC day. */
 	cumulativeVolumeUsd: number;
@@ -2712,6 +2715,30 @@ export interface PerpetualsMarketDailyStatsRow {
 	cumulativeTakerTrades: bigint;
 	/** All-time liquidated notional in USD for this market up to and including this UTC day. */
 	cumulativeLiquidatedNotionalUsd: number;
+	/**
+	 * Mean hourly funding rate for this UTC day as a fraction (`0.0000125` = 0.00125% per hour):
+	 * the day's funding per base unit divided by its settlements and the last daily orderbook
+	 * close on or before the day. Positive means longs paid shorts. The wire sends `null` when
+	 * the day had no settlements or no price is known, which the SDK parses as `undefined`; also
+	 * absent from backends that predate daily funding.
+	 */
+	fundingRate?: number;
+	/**
+	 * `fundingRate × 8760` as a fraction (`0.1095` = 10.95% APR). `undefined` whenever
+	 * `fundingRate` is.
+	 */
+	fundingRateAnnualized?: number;
+	/**
+	 * Hourly funding settlements in this UTC day as bigint: `24n` on a full day, fewer on the
+	 * current or listing day, `0n` before listing. Absent from backends that predate daily funding.
+	 */
+	fundingSettlements?: bigint;
+	/**
+	 * Sum of this UTC day's funding in USD per 1 unit of the base asset, the same unit as
+	 * funding history's `longFundingRate`. Positive means longs paid. Absent from backends that
+	 * predate daily funding.
+	 */
+	fundingUsdPerUnit?: number;
 }
 
 /**
