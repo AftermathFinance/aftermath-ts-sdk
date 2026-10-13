@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 6.1.1
+
+### Patch Changes
+
+- [#202](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/202) [`66b5be4`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/66b5be4585a3c25415de86228080e6a49e5b6d62) Thanks [@admin-aftermath](https://github.com/admin-aftermath)! - Add CetusDlmm, Perpsplexity, and StableKitchen to the router protocol types.
+
 ## 6.1.0
 
 ### Minor Changes
