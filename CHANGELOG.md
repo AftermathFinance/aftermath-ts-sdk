@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 6.2.0
+
+### Minor Changes
+
+- [#204](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/204) [`d0e34bb`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/d0e34bb1fca74725f9e173c73561ea3bf14b707d) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Add `Perpetuals.getOnboardTx`, which builds a new account's first deposit in one call to `perpetuals/transactions/onboard`: account creation, collateral deposit, an optional Gas Credit pool and an optional agent wallet.
+
 ## 6.1.1
 
 ### Patch Changes
