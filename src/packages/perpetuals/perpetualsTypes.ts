@@ -3346,7 +3346,7 @@ export interface ApiPerpetualsOnboardBody {
 	depositAmount: Balance;
 	gasCredit?: ApiPerpetualsOnboardGasCredit;
 	agentWallet?: ApiPerpetualsOnboardAgentWallet;
-	isSponsoredTx: boolean;
+	isSponsoredTx?: boolean;
 	txKind?: SerializedTransaction;
 }
 
