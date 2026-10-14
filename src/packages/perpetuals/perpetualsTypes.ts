@@ -3328,25 +3328,44 @@ export interface ApiPerpetualsCreateAccountResponse {
 	deferred?: DeferredAccountArgs;
 }
 
+/** Gas Credit funding included in an onboarding transaction. */
 export interface ApiPerpetualsOnboardGasCredit {
+	/** When `true`, create the wallet's Gas Credit pool in the same transaction. */
 	createGasPool: boolean;
+	/** Coin used to fund Gas Credit. Non-SUI coins are swapped to SUI. */
 	coinType: CoinType;
+	/** Amount of `coinType` to spend on Gas Credit. */
 	amount: Balance;
+	/** Slippage tolerance for the swap to SUI. */
 	slippage: Slippage;
 }
 
+/** Agent Wallet granted on the new account during onboarding. */
 export interface ApiPerpetualsOnboardAgentWallet {
+	/** Address that receives the account's agent capability. */
 	recipientAddress: SuiAddress;
+	/** When `true`, also whitelist the agent on the wallet's Gas Credit pool. */
 	whitelistOnGasPool: boolean;
 }
 
+/**
+ * Request body for the onboard endpoint, which creates a perpetuals account and
+ * deposits its first collateral in one transaction.
+ */
 export interface ApiPerpetualsOnboardBody {
+	/** Wallet that will own the new account. */
 	walletAddress: SuiAddress;
+	/** Collateral coin type for the new account. */
 	collateralCoinType: CoinType;
+	/** Collateral to deposit, in `collateralCoinType`. */
 	depositAmount: Balance;
+	/** Optional Gas Credit funding. */
 	gasCredit?: ApiPerpetualsOnboardGasCredit;
+	/** Optional Agent Wallet to grant on the new account. */
 	agentWallet?: ApiPerpetualsOnboardAgentWallet;
+	/** Whether the transaction will be sponsored. Defaults to `false`. */
 	isSponsoredTx?: boolean;
+	/** Optional serialized transaction kind to extend. */
 	txKind?: SerializedTransaction;
 }
 

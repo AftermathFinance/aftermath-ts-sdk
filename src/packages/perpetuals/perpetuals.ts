@@ -877,6 +877,15 @@ export class Perpetuals extends Caller {
 		);
 	}
 
+	/**
+	 * Build the onboarding transaction for a new Aftermath Perpetuals account.
+	 *
+	 * Creates the account, deposits its first collateral and shares it, with optional
+	 * Gas Credit funding and an optional Agent Wallet, in one transaction.
+	 *
+	 * @param inputs - {@link ApiPerpetualsOnboardBody} fields, plus an optional `tx` to extend.
+	 * @returns Transaction response containing a `tx`.
+	 */
 	public async getOnboardTx(
 		inputs: Omit<ApiPerpetualsOnboardBody, "txKind"> & {
 			tx?: Transaction;
