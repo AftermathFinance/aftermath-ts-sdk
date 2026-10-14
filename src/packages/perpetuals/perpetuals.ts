@@ -37,6 +37,7 @@ import {
 	type ApiPerpetualsMarketsPricesBody,
 	type ApiPerpetualsMarketsPricesResponse,
 	type ApiPerpetualsMarketsResponse,
+	type ApiPerpetualsOnboardBody,
 	type ApiPerpetualsOwnedAccountCapsBody,
 	type ApiPerpetualsOwnedAccountCapsResponse,
 	type ApiPerpetualsOwnedVaultAssistantCapsBody,
@@ -873,6 +874,35 @@ export class Perpetuals extends Caller {
 			{
 				txKind: true,
 			}
+		);
+	}
+
+	/**
+	 * Build the onboarding transaction for a new Aftermath Perpetuals account.
+	 *
+	 * Creates the account, deposits its first collateral and shares it, with optional
+	 * Gas Credit funding and an optional Agent Wallet, in one transaction.
+	 *
+	 * @param inputs - {@link ApiPerpetualsOnboardBody} fields, plus an optional `tx` to extend.
+	 * @returns Transaction response containing a `tx`.
+	 */
+	public async getOnboardTx(
+		inputs: Omit<ApiPerpetualsOnboardBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsOnboardBody,
+			ApiTransactionResponse
+		>(
+			"transactions/onboard",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+			},
+			undefined,
+			{ txKind: true }
 		);
 	}
 

@@ -131,6 +131,45 @@ describe("Perpetuals root client", () => {
 		expect(noFetch).toHaveLength(0);
 	});
 
+	it("builds the onboarding transaction", async () => {
+		const { api } = makeApi();
+		const perps = new Perpetuals({ baseUrl: BASE_URL }, api);
+		const calls = installJsonFetch(transactionResponse());
+
+		const onboard = await perps.getOnboardTx({
+			walletAddress: WALLET,
+			collateralCoinType: USDC,
+			depositAmount: 5_000_000n,
+			gasCredit: {
+				createGasPool: true,
+				coinType: USDC,
+				amount: 1_000_000n,
+				slippage: 0.01,
+			},
+			agentWallet: { recipientAddress: RECIPIENT, whitelistOnGasPool: true },
+			isSponsoredTx: false,
+		});
+
+		expectTransactionResponse(onboard);
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/transactions/onboard`
+		);
+		expect(requestBody(calls)).toEqual({
+			walletAddress: WALLET,
+			collateralCoinType: USDC,
+			depositAmount: "5000000n",
+			gasCredit: {
+				createGasPool: true,
+				coinType: USDC,
+				amount: "1000000n",
+				slippage: 0.01,
+			},
+			agentWallet: { recipientAddress: RECIPIENT, whitelistOnGasPool: true },
+			isSponsoredTx: false,
+			txKind: EMPTY_TRANSACTION_KIND,
+		});
+	});
+
 	it("builds root account, cap, share, and vault transactions", async () => {
 		const { api } = makeApi();
 		const perps = new Perpetuals({ baseUrl: BASE_URL }, api);
