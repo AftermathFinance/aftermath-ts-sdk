@@ -3328,6 +3328,28 @@ export interface ApiPerpetualsCreateAccountResponse {
 	deferred?: DeferredAccountArgs;
 }
 
+export interface ApiPerpetualsOnboardGasCredit {
+	createGasPool: boolean;
+	coinType: CoinType;
+	amount: Balance;
+	slippage: Slippage;
+}
+
+export interface ApiPerpetualsOnboardAgentWallet {
+	recipientAddress: SuiAddress;
+	whitelistOnGasPool: boolean;
+}
+
+export interface ApiPerpetualsOnboardBody {
+	walletAddress: SuiAddress;
+	collateralCoinType: CoinType;
+	depositAmount: Balance;
+	gasCredit?: ApiPerpetualsOnboardGasCredit;
+	agentWallet?: ApiPerpetualsOnboardAgentWallet;
+	isSponsoredTx: boolean;
+	txKind?: SerializedTransaction;
+}
+
 /**
  * Request body for depositing collateral into a perpetuals account.
  *

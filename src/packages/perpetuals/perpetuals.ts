@@ -37,6 +37,7 @@ import {
 	type ApiPerpetualsMarketsPricesBody,
 	type ApiPerpetualsMarketsPricesResponse,
 	type ApiPerpetualsMarketsResponse,
+	type ApiPerpetualsOnboardBody,
 	type ApiPerpetualsOwnedAccountCapsBody,
 	type ApiPerpetualsOwnedAccountCapsResponse,
 	type ApiPerpetualsOwnedVaultAssistantCapsBody,
@@ -873,6 +874,26 @@ export class Perpetuals extends Caller {
 			{
 				txKind: true,
 			}
+		);
+	}
+
+	public async getOnboardTx(
+		inputs: Omit<ApiPerpetualsOnboardBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTxObject<
+			ApiPerpetualsOnboardBody,
+			ApiTransactionResponse
+		>(
+			"transactions/onboard",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+			},
+			undefined,
+			{ txKind: true }
 		);
 	}
 
