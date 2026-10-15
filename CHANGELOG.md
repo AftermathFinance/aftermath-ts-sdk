@@ -1,5 +1,19 @@
 # aftermath-ts-sdk
 
+## 6.3.0
+
+### Minor Changes
+
+- [#201](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/201) [`e739f3e`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/e739f3e6cee72aedc2b9a72c74bd36dc965b5f47) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add daily funding to `Perpetuals.getMarketsDailyStats` rows: `fundingRate` (mean hourly rate as a fraction), `fundingRateAnnualized` (`fundingRate × 8760`), `fundingSettlements` (parsed as `bigint`) and `fundingUsdPerUnit` (USD per base unit). Positive rates mean longs paid shorts. The API sends a `null` rate on days without settlements or a price, which the SDK returns as `undefined`. All four fields are optional while backends roll out. `openInterestUsd` now uses the last daily close on or before each day.
+
+- [#201](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/201) [`e739f3e`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/e739f3e6cee72aedc2b9a72c74bd36dc965b5f47) Thanks [@collin-aftermath](https://github.com/collin-aftermath)! - Add typed `Perpetuals.getCollateralFlows` and `Perpetuals.getMarketsDailyStats` clients for daily collateral flows and market statistics.
+
+  Use `stats/daily-collateral-flows` for collateral flows and `markets/daily-stats` for market statistics. Responses contain nested `stats` groups by collateral type or market ID, with timestamps and taker trade counts encoded as strings with a trailing `n`. Collateral flows support optional `collateralTypes` filters.
+
+  Include cumulative all-time fields up to and including each UTC day, independent of the requested time range: `cumulativeVolumeUsd`, `cumulativeTakerTrades` (parsed as `bigint`), and `cumulativeLiquidatedNotionalUsd` per market; `cumulativeDepositsUsd` and `cumulativeWithdrawalsUsd` per collateral type. Net deposits equal `cumulativeDepositsUsd - cumulativeWithdrawalsUsd`.
+
+- [#207](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/207) [`860e208`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/860e20846e7a469c0439f501e10c06130643dbe6) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Add an optional per-request `error` to `PerpetualsVault.getPreviewOwnerProcessWithdrawRequests` previews, so one invalid withdraw request no longer fails the whole batch preview.
+
 ## 6.2.0
 
 ### Minor Changes
