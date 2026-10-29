@@ -76,7 +76,7 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		const metadata = {
 			symbol: "XAG",
 			language: "ko",
-			displayName: "은",
+			displayName: "Silver",
 			description: "XAG 설명",
 			category: "Commodities",
 			image: "/xag.svg",

@@ -4361,16 +4361,12 @@ export interface PerpetualsMarketMetadata {
 	/** Base asset ticker, e.g. `"BTC"` (not the `"BTCUSD"` pair symbol). */
 	symbol: string;
 	/**
-	 * Language of `displayName` and `description`, e.g. `"ko"`: the requested
-	 * language when the market is translated into it, otherwise `"en"`. Absent
-	 * from backends that predate translations.
+	 * Language of `description`, e.g. `"ko"`: the requested language when the
+	 * market is translated into it, otherwise `"en"`. Absent from backends that
+	 * predate translations.
 	 */
 	language?: string;
-	/**
-	 * Long-form name, e.g. `"Bitcoin"`. Absent when unset. Translated when a
-	 * `language` is requested, so it is a label, not an identifier: key markets
-	 * by ID or `symbol`.
-	 */
+	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
 	displayName?: string;
 	/** Long-form blurb describing the market. Absent when unset. */
 	description?: string;
