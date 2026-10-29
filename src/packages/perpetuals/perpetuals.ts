@@ -225,10 +225,12 @@ export class Perpetuals extends Caller {
 	 * const { market } = await perps.getMarket({ marketId: "0x..." });
 	 * ```
 	 */
-	public async getMarket(inputs: {
-		marketId: PerpetualsMarketId;
-		language?: string;
-	}): Promise<{ market: PerpetualsMarket }> {
+	public async getMarket(
+		inputs: { marketId: PerpetualsMarketId } & Pick<
+			ApiPerpetualsMarketsBody,
+			"language"
+		>
+	): Promise<{ market: PerpetualsMarket }> {
 		const { markets } = await this.getMarkets({
 			marketIds: [inputs.marketId],
 			language: inputs.language,
@@ -257,10 +259,7 @@ export class Perpetuals extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getMarkets(inputs: {
-		marketIds: PerpetualsMarketId[];
-		language?: string;
-	}): Promise<{
+	public async getMarkets(inputs: ApiPerpetualsMarketsBody): Promise<{
 		markets: PerpetualsMarket[];
 	}> {
 		const res = await this.fetchApi<
