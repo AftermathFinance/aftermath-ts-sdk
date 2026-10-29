@@ -9,6 +9,7 @@ import type {
 	Byte,
 	EmptyObject,
 	Event,
+	Language,
 	MoveErrorCode,
 	ObjectDigest,
 	ObjectId,
@@ -4348,7 +4349,7 @@ export interface ApiPerpetualsMarketsBody {
 	 * translation into it come back in English, as does everything when it is
 	 * omitted. Each market's `metadata.language` says which it got.
 	 */
-	language?: string;
+	language?: Language;
 }
 
 /**
@@ -4365,7 +4366,7 @@ export interface PerpetualsMarketMetadata {
 	 * market is translated into it, otherwise `"en"`. Absent from backends that
 	 * predate translations.
 	 */
-	language?: string;
+	language?: Language;
 	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
 	displayName?: string;
 	/** Long-form blurb describing the market. Absent when unset. */
