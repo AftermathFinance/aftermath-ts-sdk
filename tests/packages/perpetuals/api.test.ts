@@ -72,6 +72,35 @@ describe("Perpetuals HTTP fetch wrappers", () => {
 		expect(result.market.marketData.objectId).toBe(SHORT_ID);
 	});
 
+	it("forwards the requested language for market metadata", async () => {
+		const metadata = {
+			symbol: "XAG",
+			language: "ko",
+			displayName: "은",
+			description: "XAG 설명",
+			category: "Commodities",
+			image: "/xag.svg",
+			collateralSymbol: "USDC",
+		};
+		const result = (await expectPost(
+			(client) => client.getMarkets({ marketIds: [SHORT_ID], language: "ko" }),
+			{ marketDatas: [{ market: { objectId: SHORT_ID }, metadata }] },
+			"markets",
+			{ marketIds: [SHORT_ID], language: "ko" }
+		)) as { markets: Array<{ metadata: unknown }> };
+
+		expect(result.markets[0]?.metadata).toEqual(metadata);
+	});
+
+	it("forwards the requested language from the single-market wrapper", async () => {
+		await expectPost(
+			(client) => client.getMarket({ marketId: SHORT_ID, language: "ru" }),
+			{ marketDatas: [{ market: { objectId: SHORT_ID } }] },
+			"markets",
+			{ marketIds: [SHORT_ID], language: "ru" }
+		);
+	});
+
 	it("fetches vault config with an empty POST body and casts bigint limits", async () => {
 		const result = await expectPost(
 			(client) => client.getVaultsConfig(),

@@ -4343,6 +4343,12 @@ export interface ApiPerpetualsAllMarketsResponse {
 export interface ApiPerpetualsMarketsBody {
 	/** Market object IDs to query. */
 	marketIds: PerpetualsMarketId[];
+	/**
+	 * Language to return market metadata in, e.g. `"ko"`. Markets without a
+	 * translation into it come back in English, as does everything when it is
+	 * omitted. Each market's `metadata.language` says which it got.
+	 */
+	language?: string;
 }
 
 /**
@@ -4354,7 +4360,17 @@ export interface ApiPerpetualsMarketsBody {
 export interface PerpetualsMarketMetadata {
 	/** Base asset ticker, e.g. `"BTC"` (not the `"BTCUSD"` pair symbol). */
 	symbol: string;
-	/** Long-form name, e.g. `"Bitcoin"`. Absent when unset. */
+	/**
+	 * Language of `displayName` and `description`, e.g. `"ko"`: the requested
+	 * language when the market is translated into it, otherwise `"en"`. Absent
+	 * from backends that predate translations.
+	 */
+	language?: string;
+	/**
+	 * Long-form name, e.g. `"Bitcoin"`. Absent when unset. Translated when a
+	 * `language` is requested, so it is a label, not an identifier: key markets
+	 * by ID or `symbol`.
+	 */
 	displayName?: string;
 	/** Long-form blurb describing the market. Absent when unset. */
 	description?: string;

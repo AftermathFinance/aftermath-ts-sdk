@@ -213,6 +213,7 @@ export class Perpetuals extends Caller {
 	 * Internally calls {@link getMarkets} and returns the first entry.
 	 *
 	 * @param inputs.marketId - The market (clearing house) object ID.
+	 * @param inputs.language - Optional language for the market's metadata, e.g. `"ko"`.
 	 * @returns Object containing `market`.
 	 *
 	 * @throws If the backend returns an empty list for the given `marketId`,
@@ -226,9 +227,11 @@ export class Perpetuals extends Caller {
 	 */
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
+		language?: string;
 	}): Promise<{ market: PerpetualsMarket }> {
 		const { markets } = await this.getMarkets({
 			marketIds: [inputs.marketId],
+			language: inputs.language,
 		});
 		return {
 			market: markets[0],
@@ -243,6 +246,8 @@ export class Perpetuals extends Caller {
 	 *  {@link PerpetualsMarket} from the returned `marketDatas[].market`.
 	 *
 	 * @param inputs.marketIds - Array of market object IDs to fetch.
+	 * @param inputs.language - Optional language for each market's metadata,
+	 *  e.g. `"ko"`. Untranslated markets come back in English.
 	 * @returns Object containing `markets` in the same order as `marketIds`.
 	 *
 	 * @example
@@ -254,6 +259,7 @@ export class Perpetuals extends Caller {
 	 */
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
+		language?: string;
 	}): Promise<{
 		markets: PerpetualsMarket[];
 	}> {
