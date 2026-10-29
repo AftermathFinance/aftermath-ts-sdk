@@ -17,6 +17,13 @@ export type EmptyObject = Record<string, never>;
 export type ValueOf<T> = T[keyof T];
 
 /**
+ * A language the Aftermath API can return translated content in, e.g.
+ * perpetuals market descriptions. Content without a translation comes back in
+ * `"en"`. A new language arrives with an SDK release.
+ */
+export type Language = "en" | "ko" | "ru";
+
+/**
  * Represents a token or currency balance in the system, defined as a bigint.
  */
 export type Balance = bigint;
