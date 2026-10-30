@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 6.4.0
+
+### Minor Changes
+
+- [#208](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/208) [`9ccf9c7`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/9ccf9c75e4d7b861ea734aa944b930a497ac0d50) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Perpetuals `getMarkets` and `getMarket` accept an optional `language`, typed as the new exported `Language` union (`"en" | "ko" | "ru"`), for market metadata. `PerpetualsMarketMetadata.language` reports the language its `description` came back in.
+
 ## 6.3.0
 
 ### Minor Changes
