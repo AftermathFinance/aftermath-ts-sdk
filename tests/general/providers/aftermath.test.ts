@@ -1,3 +1,4 @@
+import { Achievements } from "@sdk/packages/achievements/achievements";
 import {
 	Aftermath,
 	type ConfigAddresses,
@@ -71,6 +72,8 @@ describe("AftermathApi and Aftermath provider construction", () => {
 		expect(aftermath.Dca().config).toBe(aftermath.config);
 		expect(aftermath.LimitOrders().config).toBe(aftermath.config);
 		expect(aftermath.UserData().config).toBe(aftermath.config);
+		expect(aftermath.Achievements()).toBeInstanceOf(Achievements);
+		expect(aftermath.Achievements().config).toBe(aftermath.config);
 		expect((aftermath.Auth() as { config: unknown }).config).toBe(
 			aftermath.config
 		);

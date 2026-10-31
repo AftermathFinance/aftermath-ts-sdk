@@ -1,4 +1,5 @@
 export * from "./general/types";
+export * from "./packages/achievements/achievementsTypes";
 export * from "./packages/auth/authTypes";
 export * from "./packages/coin/coinTypes";
 export * from "./packages/farms/farmsTypes";
