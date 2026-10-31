@@ -23,6 +23,7 @@ import type {
 	PoolWithdrawEvent,
 	SuiAddress,
 } from "../../types";
+import { SMALL_API_PAGE_SIZE } from "../../general/utils/offsetPagination";
 import { Pools } from ".";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 
@@ -403,10 +404,11 @@ export class Pool extends Caller {
 			walletAddress: SuiAddress;
 		}
 	) {
+		const limit = Math.min(inputs.limit ?? SMALL_API_PAGE_SIZE, SMALL_API_PAGE_SIZE);
 		return this.fetchApiIndexerEvents<
 			PoolDepositEvent | PoolWithdrawEvent,
 			ApiIndexerEventsBody
-		>("interaction-events-by-user", inputs);
+		>("interaction-events-by-user", { ...inputs, limit });
 	}
 
 	// =========================================================================

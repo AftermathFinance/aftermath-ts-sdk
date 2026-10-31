@@ -483,6 +483,10 @@ export interface FarmSummary {
 export interface ApiFarmsSummaryBody {
 	/** Pool IDs to include. Omit the field to request all pools. */
 	farmIds?: ObjectId[];
+	/** Numeric result offset for a bounded page. */
+	cursor?: number;
+	/** Requested page size. The service caps explicit ID pages at 32. */
+	limit?: number;
 }
 
 // =========================================================================
@@ -493,6 +497,10 @@ export interface ApiFarmsSummaryBody {
 export interface ApiFarmsOwnedStakedPositionsBody {
 	/** Wallet address whose owned positions the indexer should return. */
 	walletAddress: SuiAddress;
+	/** Numeric result offset for a bounded page. */
+	cursor?: number;
+	/** Requested page size, capped at 32 by the service. */
+	limit?: number;
 }
 
 // =========================================================================
@@ -752,12 +760,20 @@ export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
 export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
 	/** Wallet address whose owner capabilities should be returned. */
 	walletAddress: SuiAddress;
+	/** Zero-based result offset. */
+	cursor?: number;
+	/** Maximum number of capabilities to return, capped at 32. */
+	limit?: number;
 }
 
 /** Request body for reading one-time admin capabilities owned by an address. */
 export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
 	/** Wallet address whose one-time admin capabilities should be returned. */
 	walletAddress: SuiAddress;
+	/** Zero-based result offset. */
+	cursor?: number;
+	/** Maximum number of capabilities to return, capped at 32. */
+	limit?: number;
 }
 
 /** Parameters for granting a one-time admin capability for one reward coin. */

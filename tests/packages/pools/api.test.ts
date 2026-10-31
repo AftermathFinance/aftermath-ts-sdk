@@ -56,13 +56,16 @@ describe("Pools HTTP/API boundary", () => {
 		expect(many.map((item) => item.pool.objectId)).toEqual([POOL_ID]);
 		expect(requestUrl(calls[0]!)).toBe("https://sdk.test/api/pools");
 		expect(calls[0]?.init?.method).toBe("POST");
-		expect(requestBody(calls[0]!)).toEqual({ poolIds: [POOL_ID, "0x8"] });
+		expect(requestBody(calls[0]!)).toEqual({
+			poolIds: [POOL_ID, "0x8"],
+			limit: 32,
+		});
 		expect(calls[0]?.init?.signal).toBe(signal);
 
 		calls = installFetch([pool]);
 		const all = await new Pools(config).getAllPools(signal);
 		expect(all).toHaveLength(1);
-		expect(requestBody(calls[0]!)).toEqual({});
+		expect(requestBody(calls[0]!)).toEqual({ cursor: 0, limit: 256 });
 	});
 
 	it("covers pool list, metadata, TVL, stats, and summary endpoints", async () => {
@@ -77,7 +80,11 @@ describe("Pools HTTP/API boundary", () => {
 		expect(requestUrl(calls[0]!)).toBe(
 			"https://sdk.test/api/pools/owned-lp-coins"
 		);
-		expect(requestBody(calls[0]!)).toEqual({ walletAddress: WALLET });
+		expect(requestBody(calls[0]!)).toEqual({
+			walletAddress: WALLET,
+			cursor: 0,
+			limit: 32,
+		});
 
 		calls = installFetch([POOL_ID, undefined]);
 		await expect(
@@ -85,13 +92,17 @@ describe("Pools HTTP/API boundary", () => {
 		).resolves.toEqual([POOL_ID, undefined]);
 		expect(requestBody(calls[0]!)).toEqual({
 			lpCoinTypes: [LP, "0x9::x::X"],
+			limit: 32,
 		});
 
 		calls = installFetch([POOL_ID]);
 		await expect(
 			pools.getPoolObjectIdForLpCoinType({ lpCoinType: LP })
 		).resolves.toEqual([POOL_ID]);
-		expect(requestBody(calls[0]!)).toEqual({ lpCoinTypes: [LP] });
+		expect(requestBody(calls[0]!)).toEqual({
+			lpCoinTypes: [LP],
+			limit: 32,
+		});
 
 		calls = installFetch([undefined]);
 		await expect(pools.isLpCoinType({ lpCoinType: LP })).resolves.toBe(false);
@@ -115,12 +126,13 @@ describe("Pools HTTP/API boundary", () => {
 			pools.getPoolsStats({ poolIds: [POOL_ID] }, new AbortController().signal)
 		).resolves.toEqual([statsFixture]);
 		expect(requestUrl(calls[0]!)).toBe("https://sdk.test/api/pools/stats");
+		expect(requestBody(calls[0]!)).toEqual({ poolIds: [POOL_ID], limit: 32 });
 
 		calls = installFetch([{ pool, stats: statsFixture }]);
 		await expect(pools.getPoolSummaries()).resolves.toEqual([
 			{ pool, stats: statsFixture },
 		]);
-		expect(requestBody(calls[0]!)).toEqual({});
+		expect(requestBody(calls[0]!)).toEqual({ cursor: 0, limit: 256 });
 	});
 
 	it("preserves bigint request serialization and indexer pagination", async () => {
