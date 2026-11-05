@@ -4,6 +4,7 @@ export * from "./farms";
 export * from "./faucet";
 export * from "./gasPools";
 export * from "./nftAmm";
+export * from "./oneClickTrading";
 export * from "./perpetuals";
 export * from "./pools";
 export * from "./referralVault";

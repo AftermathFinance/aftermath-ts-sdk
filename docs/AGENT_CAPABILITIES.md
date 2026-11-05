@@ -17,6 +17,7 @@ All default tests are offline. Use `bun run test:focused -- <path>` for a row be
 | Limit orders | `src/packages/limitOrders/` | `tests/packages/limitOrders/limitOrders.test.ts` |
 | Multisig | `src/packages/multisig/` | `tests/packages/multisig/multisig.test.ts` |
 | NFT AMM markets | `src/packages/nftAmm/` | `tests/packages/nftAmm/nftAmm.test.ts` |
+| Perpetuals one-click trading (delegated wallets) | `src/packages/oneClickTrading/` | `tests/packages/oneClickTrading/oneClickTrading.test.ts` |
 | Perpetuals markets, accounts, vaults | `src/packages/perpetuals/` | `tests/packages/perpetuals/api.test.ts`, `tests/packages/perpetuals/account.test.ts`, `tests/packages/perpetuals/market.test.ts`, `tests/packages/perpetuals/vault.test.ts`, `tests/packages/perpetuals/client.test.ts` |
 | AMM pools and pool math | `src/packages/pools/` | `tests/packages/pools/pools.test.ts`, `tests/packages/pools/calculations.test.ts` |
 | Referral vault compatibility | `src/packages/referralVault/` | `tests/packages/referralVault/referralVault.test.ts` |

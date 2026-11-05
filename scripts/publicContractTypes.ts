@@ -22,6 +22,7 @@ export interface PublishedContract {
 		| "LimitOrders"
 		| "Multisig"
 		| "NftAmm"
+		| "OneClickTrading"
 		| "Perpetuals"
 		| "Pools"
 		| "ReferralVault"

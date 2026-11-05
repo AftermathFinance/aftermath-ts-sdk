@@ -8,6 +8,7 @@ import { Faucet } from "../../packages/faucet/faucet";
 import { GasPools } from "../../packages/gasPools";
 import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { Multisig } from "../../packages/multisig/multisig";
+import { OneClickTrading } from "../../packages/oneClickTrading";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Pools } from "../../packages/pools/pools";
 import { Referrals } from "../../packages/referrals/referrals";
@@ -304,6 +305,12 @@ export class Aftermath extends Caller {
 	 * @returns A new `Perpetuals` provider configured with this instance's network and addresses.
 	 */
 	Perpetuals = () => new Perpetuals(this.config, this.api);
+
+	/**
+	 * Creates the perpetuals one-click-trading provider.
+	 * @returns A new `OneClickTrading` provider configured with this instance's caller settings.
+	 */
+	OneClickTrading = () => new OneClickTrading(this.config);
 
 	/**
 	 * Creates the rewards provider.
