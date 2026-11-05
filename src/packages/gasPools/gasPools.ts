@@ -12,14 +12,53 @@ import type {
 	ApiGasPoolCreateResponse,
 	ApiGasPoolDepositBody,
 	ApiGasPoolGrantBody,
+	ApiGasPoolHistoryBody,
+	ApiGasPoolHistoryResponse,
 	ApiGasPoolResponse,
 	ApiGasPoolRevokeBody,
 	ApiGasPoolShareBody,
 	ApiGasPoolSponsorBody,
 	ApiGasPoolSponsorResponse,
+	ApiGasPoolSwapFundedBody,
 	ApiGasPoolWithdrawBody,
 	ApiGasPoolWithdrawResponse,
+	ApiSponsorableTransactionResponse,
 } from "./gasPoolsTypes";
+
+/**
+ * Caller for the versioned `/api/v1/gas-pool` routes. It shares the owning
+ * `GasPools` configuration object, so access-token changes apply to both.
+ */
+class GasPoolsV1Caller extends Caller {
+	constructor(config: CallerConfig) {
+		super(config, "v1/gas-pool");
+	}
+
+	/**
+	 * Posts `body` to a v1 gas-pool route and decodes the response.
+	 *
+	 * @param url - Path below `/api/v1/gas-pool`.
+	 * @param body - JSON request body.
+	 * @returns The decoded response.
+	 */
+	request<Output, Body>(url: string, body: Body): Promise<Output> {
+		return this.fetchApi<Output, Body>(url, body);
+	}
+
+	/**
+	 * Posts `body` to a v1 gas-pool route that returns a transaction.
+	 *
+	 * @param url - Path below `/api/v1/gas-pool`.
+	 * @param body - JSON request body.
+	 * @returns The parsed transaction plus the remaining response fields.
+	 */
+	requestTx<Body extends object>(url: string, body: Body) {
+		return this.fetchApiTxObject<Body, ApiSponsorableTransactionResponse>(
+			url,
+			body
+		);
+	}
+}
 
 /**
  * The `GasPools` class provides methods for interacting with shared gas pool
@@ -59,7 +98,10 @@ export class GasPools extends Caller {
 		public readonly api?: AftermathApi
 	) {
 		super(config, "gas-pool");
+		this.v1 = new GasPoolsV1Caller(this.config);
 	}
+
+	private readonly v1: GasPoolsV1Caller;
 
 	// =========================================================================
 	//  Pool
@@ -69,10 +111,78 @@ export class GasPools extends Caller {
 	 * Fetches the gas pool details for a given wallet address.
 	 *
 	 * @param inputs - `ApiGasPoolBody` containing the wallet address.
-	 * @returns `ApiGasPoolResponse` containing pool ID, balance, and whitelisted addresses.
+	 * @returns `ApiGasPoolResponse` containing pool ID, balance, reserved
+	 * sponsorships, and whitelisted addresses.
 	 */
-	public async getPool(inputs: ApiGasPoolBody): Promise<ApiGasPoolResponse> {
-		return this.fetchApi<ApiGasPoolResponse, ApiGasPoolBody>("pool", inputs);
+	public getPool(inputs: ApiGasPoolBody): Promise<ApiGasPoolResponse> {
+		return this.v1.request<ApiGasPoolResponse, ApiGasPoolBody>("pool", inputs);
+	}
+
+	/**
+	 * Returns the part of a pool's balance that can still pay for gas: the
+	 * balance minus sponsorships handed out and not yet covered, never below zero.
+	 *
+	 * @param pool - Balance and reserved amounts from {@link getPool}.
+	 * @returns Spendable balance in MIST.
+	 */
+	public static spendableBalance(
+		pool: Pick<ApiGasPoolResponse, "balance" | "reserved">
+	): bigint {
+		return pool.balance > pool.reserved ? pool.balance - pool.reserved : 0n;
+	}
+
+	/**
+	 * Fetches a page of a gas pool's balance movements (deposits, withdrawals,
+	 * sponsored gas, rebates, and reclaims), newest first.
+	 *
+	 * @param inputs.gasPoolId - Gas-pool object ID.
+	 * @param inputs.cursor - Cursor from a previous page. Omit for the newest page.
+	 * @param inputs.limit - Maximum entries to return (service default 50, max 200).
+	 * @returns `ApiGasPoolHistoryResponse` with the entries and the next cursor.
+	 */
+	public getHistory(
+		inputs: ApiGasPoolHistoryBody
+	): Promise<ApiGasPoolHistoryResponse> {
+		return this.v1.request<ApiGasPoolHistoryResponse, ApiGasPoolHistoryBody>(
+			"history",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Swap-funded Transactions
+	// =========================================================================
+
+	/**
+	 * Builds a sponsored transaction that swaps a coin into SUI, creates the
+	 * wallet's gas pool, and funds it. The sponsor is repaid from the same
+	 * deposit, so the wallet needs no SUI. The wallet signs the returned `tx` as
+	 * the sender and submits it with `sponsorSignature`.
+	 *
+	 * @param inputs.walletAddress - Wallet the pool is created for.
+	 * @param inputs.swap - Coin and amount routed into SUI.
+	 * @param inputs.bytes - Base64 of the signed `Aftermath Terms and Conditions` message.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @returns The sponsor-signed `tx` plus `sponsorSignature` and `digest`.
+	 */
+	public getSwapFundedCreateTx(inputs: ApiGasPoolSwapFundedBody) {
+		return this.v1.requestTx("transactions/create", inputs);
+	}
+
+	/**
+	 * Builds a sponsored transaction that swaps a coin into SUI and deposits it
+	 * into the wallet's existing gas pool. The sponsor is repaid from the same
+	 * deposit, so the wallet needs no SUI. The wallet signs the returned `tx` as
+	 * the sender and submits it with `sponsorSignature`.
+	 *
+	 * @param inputs.walletAddress - Wallet whose gas pool receives the deposit.
+	 * @param inputs.swap - Coin and amount routed into SUI.
+	 * @param inputs.bytes - Base64 of the signed `Aftermath Terms and Conditions` message.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @returns The sponsor-signed `tx` plus `sponsorSignature` and `digest`.
+	 */
+	public getSwapFundedDepositTx(inputs: ApiGasPoolSwapFundedBody) {
+		return this.v1.requestTx("transactions/deposit", inputs);
 	}
 
 	// =========================================================================

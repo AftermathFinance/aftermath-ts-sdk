@@ -34,8 +34,119 @@ export interface ApiGasPoolResponse {
 	gasPoolId: ObjectId | undefined;
 	/** Current gas-pool balance as a bigint. */
 	balance: Balance;
+	/**
+	 * Sponsorships handed out and not yet covered, in MIST. The spendable
+	 * balance is `balance - reserved`; see `GasPools.spendableBalance`.
+	 */
+	reserved: Balance;
 	/** Wallets currently allowed to use the gas pool. */
 	whitelistedAddresses: SuiAddress[];
+}
+
+// =========================================================================
+//  History
+// =========================================================================
+
+/**
+ * Inputs for reading a gas pool's balance movements.
+ */
+export interface ApiGasPoolHistoryBody {
+	/** Gas-pool object ID whose movements to read. */
+	gasPoolId: ObjectId;
+	/** Opaque cursor from a previous response. Omit for the newest page. */
+	cursor?: string;
+	/** Maximum number of entries to return. The service defaults to 50 and caps it at 200. */
+	limit?: number;
+}
+
+/**
+ * What caused a gas-pool balance movement. `deposit` and `rebate` raise the
+ * balance; `withdraw`, `sponsor` and `reclaim` lower it.
+ */
+export type GasPoolBalanceEventType =
+	| "deposit"
+	| "withdraw"
+	| "sponsor"
+	| "rebate"
+	| "reclaim";
+
+/**
+ * Direction of a gas-pool balance movement.
+ */
+export type GasPoolBalanceOperation = "deposit" | "withdraw";
+
+/**
+ * One gas-pool balance movement.
+ */
+export interface GasPoolBalanceEvent {
+	/** Size of the movement in MIST. The direction is carried by `operation`. */
+	amount: Balance;
+	/** What caused the movement. */
+	eventType: GasPoolBalanceEventType;
+	/** Which way the balance moved. */
+	operation: GasPoolBalanceOperation;
+	/** When the movement landed on chain, in milliseconds since the Unix epoch. */
+	timestampMs: number;
+}
+
+/**
+ * A page of gas-pool balance movements, newest first.
+ */
+export interface ApiGasPoolHistoryResponse {
+	/** Gas-pool object ID the entries belong to. */
+	gasPoolId: ObjectId;
+	/** Balance movements, newest first. */
+	events: GasPoolBalanceEvent[];
+	/** Cursor for the next, older page. `undefined` on the last page. */
+	cursor?: string;
+}
+
+// =========================================================================
+//  Swap-funded (sponsored)
+// =========================================================================
+
+/**
+ * Coin routed into SUI through the Aftermath router to fund a gas pool.
+ */
+export interface ApiGasPoolSwapFunding {
+	/** Coin type to route into SUI. */
+	coinType: CoinType;
+	/** Amount of `coinType` to swap, in its smallest unit. */
+	amount: Balance;
+	/** Slippage tolerance for the swap (0.0–1.0). Defaults to 0.01. */
+	slippage?: Slippage;
+	/** Optional referrer recorded on the swap. */
+	referrer?: SuiAddress;
+}
+
+/**
+ * Inputs for a gas-pool create or deposit funded by a swap and sponsored by
+ * the service, so the wallet needs no SUI. The service assembles and signs the
+ * whole transaction, so it cannot extend a caller-supplied one.
+ */
+export interface ApiGasPoolSwapFundedBody {
+	/** Wallet the pool belongs to, and the sender of the transaction. */
+	walletAddress: SuiAddress;
+	/** Coin and amount routed into SUI for the pool. */
+	swap: ApiGasPoolSwapFunding;
+	/** Base64 of the personal message `Aftermath Terms and Conditions` signed by `walletAddress`. */
+	bytes: string;
+	/** `walletAddress`'s signature over `bytes`. */
+	signature: string;
+}
+
+/**
+ * Transaction returned by a sponsored gas-pool or one-click-trading endpoint.
+ * When `sponsorSignature` is set, `txKind` holds a whole sponsor-signed
+ * transaction; the wallet signs it as the sender and submits both signatures.
+ */
+export interface ApiSponsorableTransactionResponse {
+	/** Base64 of a `TransactionKind`, or of a whole sponsor-signed `Transaction`. */
+	txKind: SerializedTransaction;
+	/** The sponsor's signature over the transaction, when the service sponsored it. */
+	sponsorSignature?: string;
+	/** Digest of the sponsored transaction, when the service sponsored it. */
+	digest?: string;
 }
 
 // =========================================================================

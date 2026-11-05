@@ -25,11 +25,12 @@ describe("GasPools", () => {
 		return decoded;
 	}
 
-	it("maps pool reads with bigint response values and optional gasPoolId", async () => {
+	it("maps v1 pool reads with bigint balance, reserved, and optional gasPoolId", async () => {
 		const calls = installJsonFetch({
 			walletAddress: WALLET,
 			gasPoolId: null,
 			balance: "12345678901234567890n",
+			reserved: "250n",
 			whitelistedAddresses: [WALLET, OTHER_WALLET],
 		});
 		const gasPools = new GasPools({
@@ -40,10 +41,11 @@ describe("GasPools", () => {
 			walletAddress: WALLET,
 			gasPoolId: undefined,
 			balance: 12345678901234567890n,
+			reserved: 250n,
 			whitelistedAddresses: [WALLET, OTHER_WALLET],
 		});
 		expect(requestUrl(calls[0])).toBe(
-			`${API_BASE_URL.slice(0, -1)}/api/gas-pool/pool`
+			`${API_BASE_URL.slice(0, -1)}/api/v1/gas-pool/pool`
 		);
 		expect(requestBody(calls[0])).toEqual({ walletAddress: WALLET });
 		expect(
@@ -242,6 +244,141 @@ describe("GasPools", () => {
 			txKind: "signed-kind",
 		});
 		expect(transactionHelper.fetchBase64TxKindFromTx).toHaveBeenCalledTimes(1);
+	});
+
+	it("applies access-token changes to v1 routes through the shared config", async () => {
+		const calls = installJsonFetch({
+			walletAddress: WALLET,
+			gasPoolId: "0x9",
+			balance: "1n",
+			reserved: "0n",
+			whitelistedAddresses: [],
+		});
+		const gasPools = new GasPools({ baseUrl: API_BASE_URL });
+		gasPools.config.accessToken = "later-token";
+		await gasPools.getPool({ walletAddress: WALLET });
+		expect(
+			(calls[0].init?.headers as Record<string, string>).Authorization
+		).toBe("Bearer later-token");
+	});
+
+	it("computes the spendable balance as balance minus reserved, never below zero", () => {
+		expect(GasPools.spendableBalance({ balance: 1_000n, reserved: 250n })).toBe(
+			750n
+		);
+		expect(GasPools.spendableBalance({ balance: 100n, reserved: 100n })).toBe(
+			0n
+		);
+		expect(GasPools.spendableBalance({ balance: 100n, reserved: 400n })).toBe(
+			0n
+		);
+	});
+
+	it("maps v1 history pages with bigint amounts and an optional cursor", async () => {
+		const calls = installJsonFetch({
+			gasPoolId: "0x9",
+			events: [
+				{
+					timestampMs: 1_792_965_134_812,
+					operation: "deposit",
+					eventType: "rebate",
+					amount: "144000n",
+				},
+				{
+					timestampMs: 1_792_964_682_267,
+					operation: "withdraw",
+					eventType: "sponsor",
+					amount: "1188217n",
+				},
+			],
+			cursor: null,
+		});
+		const gasPools = new GasPools({ baseUrl: API_BASE_URL });
+		expect(
+			await gasPools.getHistory({ gasPoolId: "0x9", cursor: "c1", limit: 2 })
+		).toEqual({
+			gasPoolId: "0x9",
+			events: [
+				{
+					timestampMs: 1_792_965_134_812,
+					operation: "deposit",
+					eventType: "rebate",
+					amount: 144000n,
+				},
+				{
+					timestampMs: 1_792_964_682_267,
+					operation: "withdraw",
+					eventType: "sponsor",
+					amount: 1188217n,
+				},
+			],
+			cursor: undefined,
+		});
+		expect(requestUrl(calls[0])).toBe(
+			`${API_BASE_URL.slice(0, -1)}/api/v1/gas-pool/history`
+		);
+		expect(requestBody(calls[0])).toEqual({
+			gasPoolId: "0x9",
+			cursor: "c1",
+			limit: 2,
+		});
+	});
+
+	it("builds swap-funded create and deposit as sponsor-signed v1 transactions", async () => {
+		const decoded = { sponsored: true } as unknown as Transaction;
+		const fromSpy = jest.spyOn(Transaction, "from").mockReturnValue(decoded);
+		const fromKindSpy = jest.spyOn(Transaction, "fromKind");
+		const gasPools = new GasPools({ baseUrl: API_BASE_URL });
+		const body = {
+			walletAddress: WALLET,
+			swap: { coinType: "0x3::coin::USDC", amount: 1_000_000n, slippage: 0.01 },
+			bytes: "terms-bytes",
+			signature: "terms-sig",
+		};
+		const calls: FetchCall[] = [];
+		globalThis.fetch = ((input, init) => {
+			calls.push({ input, init });
+			return Promise.resolve(
+				new Response(
+					wireJson({
+						txKind: `signed-${calls.length}`,
+						sponsorSignature: "sponsor-sig",
+						digest: `digest-${calls.length}`,
+					}),
+					{ status: 200 }
+				)
+			);
+		}) as typeof fetch;
+
+		await expect(gasPools.getSwapFundedCreateTx(body)).resolves.toEqual({
+			tx: decoded,
+			sponsorSignature: "sponsor-sig",
+			digest: "digest-1",
+		});
+		await expect(gasPools.getSwapFundedDepositTx(body)).resolves.toEqual({
+			tx: decoded,
+			sponsorSignature: "sponsor-sig",
+			digest: "digest-2",
+		});
+		expect(calls.map((call) => requestUrl(call))).toEqual([
+			`${API_BASE_URL.slice(0, -1)}/api/v1/gas-pool/transactions/create`,
+			`${API_BASE_URL.slice(0, -1)}/api/v1/gas-pool/transactions/deposit`,
+		]);
+		for (const call of calls) {
+			expect(requestBody(call)).toEqual({
+				walletAddress: WALLET,
+				swap: {
+					coinType: "0x3::coin::USDC",
+					amount: "1000000n",
+					slippage: 0.01,
+				},
+				bytes: "terms-bytes",
+				signature: "terms-sig",
+			});
+		}
+		expect(fromSpy).toHaveBeenCalledWith("signed-1");
+		expect(fromSpy).toHaveBeenCalledWith("signed-2");
+		expect(fromKindSpy).not.toHaveBeenCalled();
 	});
 
 	it("classifies gas-pool HTTP errors and no-base-url configuration errors", async () => {
