@@ -3225,6 +3225,365 @@ export interface ApiPerpetualsTwapOrderDatasResponse {
 }
 
 // =========================================================================
+//  LWAP Orders
+// =========================================================================
+
+/**
+ * Per-order LWAP (liquidity-weighted-average-price) request payload.
+ *
+ * An LWAP order runs on the on-chain TWAP order ticket, but its executor
+ * sizes each IOC slice from orderbook depth instead of a fixed schedule. The
+ * user picks the per-slice slippage, a price band around the mark price they
+ * saw, and how long the order may trade; the perpetuals HTTP API derives the
+ * ticket's pacing fields from them.
+ */
+export interface PerpetualsLwapOrderDetails {
+	/** Market (clearing house) ID this LWAP order targets. */
+	marketId: PerpetualsMarketId;
+	/** Position side: `0` for bid (long), `1` for ask (short). */
+	side: PerpetualsOrderSide;
+	/** Total base-asset size to execute across all slices (scaled base units). */
+	size: bigint;
+	/** Whether the order may only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Max slippage of each slice from the live mark price, in basis points. */
+	maxSlippageBps: Bps;
+	/**
+	 * How far the live mark price may move from `arrivalMarkPrice` before
+	 * slices pause, in basis points. Omit to use twice `maxSlippageBps`.
+	 */
+	priceBandBps?: Bps;
+	/**
+	 * Human-readable mark price the client showed when the order was entered.
+	 * The price band is anchored on it.
+	 */
+	arrivalMarkPrice: number;
+	/**
+	 * How long the order may trade before its unfilled remainder is cancelled,
+	 * in milliseconds.
+	 */
+	maxWaitMs: number;
+	/** Optional integrator fee configuration (friendly fractional fee). */
+	builderCode?: PerpetualsBuilderCodeParamaters;
+}
+
+/**
+ * Lifecycle state of an LWAP order. LWAP orders run on TWAP order tickets and
+ * share their lifecycle.
+ */
+export type PerpetualsLwapOrderState = PerpetualsTwapOrderState;
+
+/**
+ * Why an LWAP order is not trading right now (`snake_case` wire labels from
+ * the perpetuals HTTP API):
+ *
+ * - `"liquidity_insufficient"` — the book cannot fill a minimum slice within
+ *   the slice slippage
+ * - `"price_band_breached"` — the live mark price is outside the price band
+ *   around the arrival mark price
+ * - `"price_unavailable"` — no usable mark or oracle price
+ */
+export type PerpetualsLwapWaitReasonCode =
+	| "liquidity_insufficient"
+	| "price_band_breached"
+	| "price_unavailable";
+
+/**
+ * Current wait state of an LWAP order.
+ */
+export interface PerpetualsLwapWaitReason {
+	/** Why the order is waiting. */
+	reason: PerpetualsLwapWaitReasonCode;
+	/** Milliseconds since the Unix epoch when the order started waiting for this reason. */
+	sinceMs: Timestamp;
+	/** Basket leg holding the basket back, when the order is a basket leg. */
+	bindingLeg?: string;
+}
+
+/**
+ * Price band an LWAP order's slices trade inside, as human-readable prices.
+ */
+export interface PerpetualsLwapPriceBand {
+	/** Mark price the band is anchored on. */
+	arrivalMarkPrice: number;
+	/** Lowest live mark price at which slices trade. */
+	lowerPrice: number;
+	/** Highest live mark price at which slices trade. */
+	upperPrice: number;
+}
+
+/**
+ * Per-order LWAP details as returned by the read endpoint: the user's inputs
+ * plus the TWAP ticket pacing fields derived from them.
+ */
+export interface PerpetualsLwapOrderDetailsData {
+	/** Market (clearing house) ID this LWAP order targets. */
+	marketId: PerpetualsMarketId;
+	/** Position side: `0` for bid (long), `1` for ask (short). */
+	side: PerpetualsOrderSide;
+	/** Total base-asset size to execute across all slices (scaled base units). */
+	size: bigint;
+	/** Whether the order may only reduce an existing position. */
+	reduceOnly: boolean;
+	/** Max slippage of each slice from the live mark price, in basis points. */
+	maxSlippageBps: Bps;
+	/**
+	 * How far the live mark price may move from `arrivalMarkPrice` before
+	 * slices pause, in basis points.
+	 */
+	priceBandBps: Bps;
+	/** Human-readable mark price the band is anchored on. */
+	arrivalMarkPrice: number;
+	/** Milliseconds since the Unix epoch when the unfilled remainder is cancelled. */
+	windowEndMs: Timestamp;
+	/** The ticket's on-chain expiry (ms since epoch), a fixed ceiling past the window end. */
+	expireTimestamp?: bigint;
+	/** Deadline for the first execution (ms since epoch). */
+	firstRunExpireTimestamp?: bigint;
+	/** Target spacing between slice executions, in milliseconds. */
+	executionGapMs: number;
+	/** Allowed jitter around each scheduled execution time, in milliseconds. */
+	executionTimeUncertaintyMs: number;
+	/** Number of slices the ticket allows. */
+	chunksAmount: number;
+	/**
+	 * Threshold below which a small trailing remainder is merged into the final
+	 * slice, in basis points.
+	 */
+	smallTailMergeThresholdBps: Bps;
+	/** How long to keep retrying a failed slice execution, in milliseconds. */
+	timeForRetryMs: number;
+	/** Allowed deviation of a slice's size from its target, in basis points. */
+	amountUncertaintyBps: Bps;
+	/** Cap on a single slice's size, as basis points of total size. */
+	maxOneExecutionAmountBps: Bps;
+}
+
+/**
+ * An LWAP order as surfaced to clients by the read endpoint.
+ */
+export interface PerpetualsLwapOrderData {
+	/** ID of the LWAP order's TWAP ticket object on-chain. */
+	lwapOrderObjectId: ObjectId;
+	/** Collateral coin type backing the order. */
+	collateralType: CoinType;
+	/** Current lifecycle state of the LWAP order. */
+	orderState: PerpetualsLwapOrderState;
+	/** Reason the order is invalid, when `orderState === "invalid"`. */
+	invalidReason?: string;
+	/** Free-form status message about the order, if any. */
+	statusMessage?: string;
+	/**
+	 * Latest unresolved action error from the perpetuals HTTP API. JSON `null`
+	 * on the wire becomes `undefined` after SDK decode, so omit/undefined means
+	 * no current error.
+	 */
+	lastError?: PerpetualsTwapOrderLastError;
+	/** Order details. */
+	details: PerpetualsLwapOrderDetailsData;
+	/** Base-asset amount already executed (scaled base units). */
+	processedAmount: bigint;
+	/** Base-asset amount currently reserved for execution (scaled base units). */
+	scheduledAmount: bigint;
+	/** Timestamp (ms since epoch) of the most recent slice execution. */
+	lastExecutionTimestampMs: Timestamp;
+	/** Order creation time (ms since epoch). Use for newest-first sorting. */
+	orderCreationTimestampMs: Timestamp;
+	/** Basket this order is a leg of; every leg of a basket shares it. */
+	basketId?: string;
+	/**
+	 * Band the live mark price must stay inside for slices to trade. Absent
+	 * when the stored arrival mark price cannot be read.
+	 */
+	priceBand?: PerpetualsLwapPriceBand;
+	/** Why the order is not trading right now, when it is waiting. */
+	waitReason?: PerpetualsLwapWaitReason;
+	/**
+	 * Milliseconds since the Unix epoch when the ticket spoils unless a slice
+	 * runs first: the first-run expiry before any attempt, the end of the
+	 * retry window after one.
+	 */
+	retryDeadlineMs?: Timestamp;
+	/** Milliseconds since the Unix epoch when the unfilled remainder is cancelled. */
+	windowEndMs: Timestamp;
+	/**
+	 * SUI (in MIST) deposited on the ticket for execution gas. Absent once the
+	 * ticket is gone from chain.
+	 */
+	gasDeposited?: bigint;
+	/**
+	 * SUI (in MIST) still on the ticket. Absent once the ticket is gone from
+	 * chain; the remainder was refunded on cancel or finalize.
+	 */
+	gasRemaining?: bigint;
+}
+
+/**
+ * Request body for creating LWAP orders via the API, for an account or
+ * vault.
+ */
+export type ApiPerpetualsCreateLwapOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
+	walletAddress: SuiAddress;
+	/** LWAP orders to create. */
+	lwapOrders: PerpetualsLwapOrderDetails[];
+	/** Optional gas coin argument used when extending the transaction. */
+	gasCoinArg?: TransactionObjectArgument;
+	/** Serialized transaction kind sent to the service. */
+	txKind?: SerializedTransaction;
+	/** Whether the transaction is sponsored rather than paid directly by the wallet. */
+	isSponsoredTx?: boolean;
+	/** Optional transaction sponsorship configuration. */
+	sponsor?: PerpetualsSponsorConfig;
+} & (
+	| {
+			/** Account ID associated with the request. */
+			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
+			accountCapId?: ObjectId;
+	  }
+	| {
+			/** Vault object ID used instead of an account. */
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * SDK-level inputs for creating one or more LWAP orders — the request body
+ * without the auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCreateLwapOrdersInputs = Omit<
+	ApiPerpetualsCreateLwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	/** Optional transaction to extend with the operation. */
+	tx?: Transaction;
+};
+
+/**
+ * Request body for canceling LWAP orders identified by object IDs, for an
+ * account or vault.
+ */
+export type ApiPerpetualsCancelLwapOrdersBody = {
+	/** Wallet address used to identify the signer or owner. */
+	walletAddress: SuiAddress;
+	/** LWAP order object IDs to cancel. */
+	lwapOrderIds: ObjectId[];
+	/** Serialized transaction kind sent to the service. */
+	txKind?: SerializedTransaction;
+	/** Optional transaction sponsorship configuration. */
+	sponsor?: PerpetualsSponsorConfig;
+} & (
+	| {
+			/** Account ID associated with the request. */
+			accountId: PerpetualsAccountId;
+			/** Optional account capability object ID used to authorize the account operation. */
+			accountCapId?: ObjectId;
+	  }
+	| {
+			/** Vault object ID used instead of an account. */
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * SDK-level inputs for canceling LWAP orders — the request body without the
+ * auto-filled fields, plus an optional transaction to extend.
+ */
+export type SdkPerpetualsCancelLwapOrdersInputs = Omit<
+	ApiPerpetualsCancelLwapOrdersBody,
+	PerpetualsServerInjectedTxFields
+> & {
+	/** Optional transaction to extend with the operation. */
+	tx?: Transaction;
+};
+
+/**
+ * Request body for fetching the LWAP orders of an account, validated using a
+ * wallet signature.
+ */
+export type ApiPerpetualsLwapOrderDatasBody = {
+	/** Wallet address used to identify the signer or owner. */
+	walletAddress: SuiAddress;
+	/** Serialized message bytes covered by `signature`. */
+	bytes: string;
+	/** Wallet signature over `bytes` from `walletAddress`. */
+	signature: string;
+	/** Optional market IDs used to limit the query. */
+	marketIds?: PerpetualsMarketId[];
+} & (
+	| {
+			/** Account ID associated with the request. */
+			accountId: PerpetualsAccountId;
+	  }
+	| {
+			/** Vault object ID used instead of an account. */
+			vaultId: ObjectId;
+	  }
+);
+
+/**
+ * Response payload for LWAP-order queries.
+ */
+export interface ApiPerpetualsLwapOrderDatasResponse {
+	/** LWAP order records returned for the requested account or vault. */
+	lwapOrderDatas: PerpetualsLwapOrderData[];
+}
+
+/**
+ * Request body for previewing what the book would fill of an LWAP order's
+ * next slice right now, for an account or vault.
+ */
+export type ApiPerpetualsPreviewLwapOrderBody = {
+	/** Market ID associated with the request. */
+	marketId: PerpetualsMarketId;
+	/** Order side: `0` for bid or long, `1` for ask or short. */
+	side: PerpetualsOrderSide;
+	/** Slice size to preview (scaled base units). */
+	size: bigint;
+	/** Max slippage of the slice from the live mark price, in basis points. */
+	maxSlippageBps: Bps;
+} & (
+	| {
+			/** Account whose own resting orders the slice cannot match. */
+			accountId: PerpetualsAccountId | undefined;
+	  }
+	| {
+			/** Vault object ID used instead of an account. */
+			vaultId: ObjectId | undefined;
+	  }
+);
+
+/**
+ * SDK-level inputs for previewing an LWAP order slice.
+ */
+export type SdkPerpetualsLwapOrderPreviewInputs = Omit<
+	ApiPerpetualsPreviewLwapOrderBody,
+	"accountId" | "vaultId"
+>;
+
+/**
+ * Response payload for an LWAP order slice preview.
+ */
+export type ApiPerpetualsPreviewLwapOrderResponse =
+	| {
+			/** Error message returned when the operation cannot be completed. */
+			error: string;
+	  }
+	| {
+			/** Live mark price the preview ran against. */
+			markPrice: number;
+			/** Size an immediate slice of `size` would fill within the slippage (scaled base units). */
+			fillableSize: bigint;
+			/** Size-weighted fill price of `fillableSize`; absent when nothing fills. */
+			averageFillPrice?: number;
+			/** Smallest slice the executor fires (scaled base units). */
+			minSliceSize: bigint;
+			/** SUI (in MIST) the order's ticket would deposit for the executor. */
+			gasDeposit: bigint;
+	  };
+
+// =========================================================================
 //  Transactions
 // =========================================================================
 
@@ -5654,8 +6013,8 @@ export interface PerpetualsWsUpdatesTopOfOrderbookPayload {
 }
 
 /**
- * Websocket payload for user account and special-order (stop and TWAP order)
- * updates.
+ * Websocket payload for user account and special-order (stop, TWAP and LWAP
+ * order) updates.
  */
 export interface PerpetualsWsUpdatesUserPayload {
 	/** Current account snapshot. */
@@ -5664,6 +6023,8 @@ export interface PerpetualsWsUpdatesUserPayload {
 	stopOrders: PerpetualsStopOrderData[] | undefined;
 	/** TWAP-order records when the subscription requested them. */
 	twapOrders: PerpetualsTwapOrderData[] | undefined;
+	/** LWAP-order records when the subscription requested them. */
+	lwapOrders?: PerpetualsLwapOrderData[];
 }
 
 /**

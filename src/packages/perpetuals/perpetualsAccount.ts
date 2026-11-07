@@ -16,9 +16,11 @@ import type {
 	// ApiPerpetualsPreviewReduceOrderResponse,
 	ApiPerpetualsAllocateCollateralBody,
 	ApiPerpetualsCancelAndPlaceOrdersBody,
+	ApiPerpetualsCancelLwapOrdersBody,
 	ApiPerpetualsCancelOrdersBody,
 	ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsCancelTwapOrdersBody,
+	ApiPerpetualsCreateLwapOrdersBody,
 	ApiPerpetualsCreateTwapOrdersBody,
 	ApiPerpetualsDeallocateCollateralBody,
 	ApiPerpetualsDepositCollateralBody,
@@ -26,6 +28,8 @@ import type {
 	ApiPerpetualsEditTwapOrdersBody,
 	ApiPerpetualsGrantAgentWalletTxBody,
 	ApiPerpetualsLimitOrderBody,
+	ApiPerpetualsLwapOrderDatasBody,
+	ApiPerpetualsLwapOrderDatasResponse,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsPlaceSlTpOrdersBody,
 	ApiPerpetualsPlaceStopOrdersBody,
@@ -33,6 +37,8 @@ import type {
 	ApiPerpetualsPreviewCancelOrdersResponse,
 	ApiPerpetualsPreviewEditCollateralBody,
 	ApiPerpetualsPreviewEditCollateralResponse,
+	ApiPerpetualsPreviewLwapOrderBody,
+	ApiPerpetualsPreviewLwapOrderResponse,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	ApiPerpetualsPreviewPlaceOrderResponse,
@@ -66,10 +72,13 @@ import type {
 	PerpetualsSponsorConfig,
 	PerpetualsStopOrderData,
 	SdkPerpetualsCancelAndPlaceOrdersInputs,
+	SdkPerpetualsCancelLwapOrdersInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
 	SdkPerpetualsCancelTwapOrdersInputs,
+	SdkPerpetualsCreateLwapOrdersInputs,
 	SdkPerpetualsCreateTwapOrdersInputs,
 	SdkPerpetualsEditTwapOrdersInputs,
+	SdkPerpetualsLwapOrderPreviewInputs,
 	SdkPerpetualsPlaceLimitOrderInputs,
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
 	SdkPerpetualsPlaceMarketOrderInputs,
@@ -1108,6 +1117,156 @@ export class PerpetualsAccount extends Caller {
 						accountId: this.accountCap.accountId,
 					}),
 		});
+	}
+
+	/**
+	 * Build a `create-lwap-orders` transaction for this account.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsCreateLwapOrdersInputs}.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCreateLwapOrdersTx(
+		inputs: SdkPerpetualsCreateLwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateLwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/create-lwap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Build a `cancel-lwap-orders` transaction for this account.
+	 * This cancels LWAP order objects by their object IDs.
+	 *
+	 * The input can include an existing transaction to extend and the LWAP order
+	 * object IDs to cancel.
+	 *
+	 * @returns Transaction response containing `tx`.
+	 */
+	public async getCancelLwapOrdersTx(
+		inputs: SdkPerpetualsCancelLwapOrdersInputs
+	) {
+		const { tx, ...otherInputs } = inputs;
+
+		return this.fetchApiTxObject<
+			ApiPerpetualsCancelLwapOrdersBody,
+			ApiTransactionResponse
+		>(
+			`${this.vaultId ? "vault" : "account"}/` +
+				"transactions/cancel-lwap-orders",
+			{
+				...otherInputs,
+				txKind: await this.api?.Transactions().fetchBase64TxKindFromTx({ tx }),
+				walletAddress: this.ownerAddress(),
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+							accountId: undefined,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+							accountCapId: this.accountCap.objectId,
+							vaultId: undefined,
+						}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	/**
+	 * Fetch LWAP-order data for this account, using an off-chain signed payload.
+	 *
+	 * @param inputs.bytes - Serialized message that was signed.
+	 * @param inputs.signature - Signature over `bytes`.
+	 * @param inputs.marketIds - Optional subset of markets to filter results by.
+	 *
+	 * @returns `ApiPerpetualsLwapOrderDatasResponse` containing `lwapOrderDatas`.
+	 */
+	public async getLwapOrderDatas(inputs: {
+		bytes: string;
+		signature: string;
+		marketIds?: PerpetualsMarketId[];
+	}) {
+		const { bytes, signature, marketIds } = inputs;
+
+		return await this.fetchApi<
+			ApiPerpetualsLwapOrderDatasResponse,
+			ApiPerpetualsLwapOrderDatasBody
+		>(`${this.vaultId ? "vault" : "account"}/lwap-order-datas`, {
+			bytes,
+			signature,
+			walletAddress: this.ownerAddress(),
+			marketIds: marketIds ?? [],
+			...("vaultId" in this.accountCap
+				? {
+						vaultId: this.accountCap.vaultId,
+					}
+				: {
+						accountId: this.accountCap.accountId,
+					}),
+		});
+	}
+
+	/**
+	 * Preview what the book would fill of an LWAP order's next slice right now
+	 * (without building a tx). The account's own resting orders are excluded
+	 * from the fill.
+	 *
+	 * @param inputs - See {@link SdkPerpetualsLwapOrderPreviewInputs}.
+	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
+	 *
+	 * @returns Either an error message or a preview including `markPrice`,
+	 *   `fillableSize`, `averageFillPrice`, `minSliceSize` and `gasDeposit`.
+	 */
+	public async getLwapOrderPreview(
+		inputs: SdkPerpetualsLwapOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<ApiPerpetualsPreviewLwapOrderResponse> {
+		return await this.fetchApi<
+			ApiPerpetualsPreviewLwapOrderResponse,
+			ApiPerpetualsPreviewLwapOrderBody
+		>(
+			`${this.vaultId ? "vault" : "account"}/previews/lwap-order`,
+			{
+				...inputs,
+				...("vaultId" in this.accountCap
+					? {
+							vaultId: this.accountCap.vaultId,
+						}
+					: {
+							accountId: this.accountCap.accountId,
+						}),
+			},
+			abortSignal
+		);
 	}
 
 	// public async getReduceOrderTx(inputs: {

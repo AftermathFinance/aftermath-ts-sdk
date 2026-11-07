@@ -736,3 +736,193 @@ describe("PerpetualsAccount TWAP price-condition contract", () => {
 		expect(order.details.size).toBe(10_000n);
 	});
 });
+
+describe("PerpetualsAccount LWAP order contract", () => {
+	const lwapOrder = {
+		marketId: MARKET_ID,
+		side: PerpetualsOrderSide.Ask,
+		size: 10_000n,
+		reduceOnly: false,
+		maxSlippageBps: 25,
+		arrivalMarkPrice: 78_000.25,
+		maxWaitMs: 1_800_000,
+	};
+
+	it("builds create and cancel transactions on the account and vault routes", async () => {
+		const { api } = makeApi();
+		const account = makeAccount(makeDirectCap(), api);
+
+		let calls = installJsonFetch(transactionResponse());
+		let response = await account.getCreateLwapOrdersTx({
+			lwapOrders: [{ ...lwapOrder, priceBandBps: 80 }],
+		});
+		expectTransactionResponse(response);
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/account/transactions/create-lwap-orders`
+		);
+		expect(requestBody(calls)).toMatchObject({
+			lwapOrders: [
+				{
+					marketId: MARKET_ID,
+					side: 1,
+					size: "10000n",
+					reduceOnly: false,
+					maxSlippageBps: 25,
+					priceBandBps: 80,
+					arrivalMarkPrice: 78_000.25,
+					maxWaitMs: 1_800_000,
+				},
+			],
+			walletAddress: WALLET,
+			accountId: "9007199254740993n",
+			accountCapId: ACCOUNT_CAP_ID,
+			txKind: EMPTY_TRANSACTION_KIND,
+		});
+
+		calls = installJsonFetch(transactionResponse());
+		await account.getCreateLwapOrdersTx({ lwapOrders: [lwapOrder] });
+		const [sent] = (
+			requestBody(calls) as { lwapOrders: Record<string, unknown>[] }
+		).lwapOrders;
+		expect("priceBandBps" in sent).toBe(false);
+
+		calls = installJsonFetch(transactionResponse());
+		response = await account.getCancelLwapOrdersTx({
+			lwapOrderIds: ["0xlwap"],
+		});
+		expectTransactionResponse(response);
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/account/transactions/cancel-lwap-orders`
+		);
+		expect(requestBody(calls)).toMatchObject({
+			lwapOrderIds: ["0xlwap"],
+			accountId: "9007199254740993n",
+		});
+
+		const vault = makeAccount(makeVaultAccountCap(), api);
+		calls = installJsonFetch(transactionResponse());
+		await vault.getCancelLwapOrdersTx({ lwapOrderIds: ["0xlwap"] });
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/vault/transactions/cancel-lwap-orders`
+		);
+		expect(requestBody(calls)).toMatchObject({ vaultId: VAULT_ID });
+		expect("accountId" in requestBody(calls)).toBe(false);
+	});
+
+	it("decodes LWAP order datas with bigint amounts and plain-number prices", async () => {
+		const account = makeAccount();
+		const calls = installJsonFetch({
+			lwapOrderDatas: [
+				{
+					lwapOrderObjectId: "0xlwap",
+					collateralType: USDC,
+					orderState: "active",
+					invalidReason: null,
+					statusMessage: null,
+					lastError: null,
+					details: {
+						marketId: MARKET_ID,
+						side: 1,
+						size: "10000n",
+						reduceOnly: false,
+						maxSlippageBps: 25,
+						priceBandBps: 50,
+						arrivalMarkPrice: 78_000.25,
+						windowEndMs: 1_788_896_733_962,
+						expireTimestamp: "1788897633962n",
+						firstRunExpireTimestamp: "1788894993962n",
+						executionGapMs: 1000,
+						executionTimeUncertaintyMs: 100,
+						chunksAmount: 10,
+						smallTailMergeThresholdBps: 5000,
+						timeForRetryMs: 1_800_000,
+						amountUncertaintyBps: 2000,
+						maxOneExecutionAmountBps: 6000,
+					},
+					processedAmount: "640n",
+					scheduledAmount: "0n",
+					lastExecutionTimestampMs: 1_788_894_999_000,
+					orderCreationTimestampMs: 1_788_894_933_962,
+					priceBand: {
+						arrivalMarkPrice: 78_000.25,
+						lowerPrice: 77_610.25,
+						upperPrice: 78_390.25,
+					},
+					waitReason: {
+						reason: "price_band_breached",
+						sinceMs: 1_788_895_000_000,
+						bindingLeg: null,
+					},
+					retryDeadlineMs: 1_788_896_800_000,
+					windowEndMs: 1_788_896_733_962,
+					gasDeposited: "120000000n",
+					gasRemaining: "85000000n",
+				},
+			],
+		});
+
+		const response = await account.getLwapOrderDatas({
+			bytes: "0x00",
+			signature: "0x01",
+			marketIds: [MARKET_ID],
+		});
+		const [order] = response.lwapOrderDatas;
+
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/account/lwap-order-datas`
+		);
+		expect(requestBody(calls)).toMatchObject({
+			bytes: "0x00",
+			signature: "0x01",
+			walletAddress: WALLET,
+			marketIds: [MARKET_ID],
+			accountId: "9007199254740993n",
+		});
+		expect(order.details.size).toBe(10_000n);
+		expect(order.details.expireTimestamp).toBe(1_788_897_633_962n);
+		expect(order.details.arrivalMarkPrice).toBe(78_000.25);
+		expect(order.processedAmount).toBe(640n);
+		expect(order.priceBand?.lowerPrice).toBe(77_610.25);
+		expect(order.waitReason?.reason).toBe("price_band_breached");
+		expect(order.waitReason?.bindingLeg).toBeUndefined();
+		expect(order.gasDeposited).toBe(120_000_000n);
+		expect(order.gasRemaining).toBe(85_000_000n);
+		expect(order.lastError).toBeUndefined();
+	});
+
+	it("previews an LWAP slice for the account", async () => {
+		const account = makeAccount();
+		const calls = installJsonFetch({
+			markPrice: 78_000.25,
+			fillableSize: "6000n",
+			averageFillPrice: 78_010.5,
+			minSliceSize: "500n",
+			gasDeposit: "120000000n",
+		});
+
+		const preview = await account.getLwapOrderPreview({
+			marketId: MARKET_ID,
+			side: PerpetualsOrderSide.Bid,
+			size: 10_000n,
+			maxSlippageBps: 25,
+		});
+
+		expect(calls[0]?.input).toBe(
+			`${BASE_URL}/api/perpetuals/account/previews/lwap-order`
+		);
+		expect(requestBody(calls)).toEqual({
+			marketId: MARKET_ID,
+			side: 0,
+			size: "10000n",
+			maxSlippageBps: 25,
+			accountId: "9007199254740993n",
+		});
+		if ("error" in preview) {
+			throw new Error(preview.error);
+		}
+		expect(preview.fillableSize).toBe(6000n);
+		expect(preview.minSliceSize).toBe(500n);
+		expect(preview.gasDeposit).toBe(120_000_000n);
+		expect(preview.averageFillPrice).toBe(78_010.5);
+	});
+});
