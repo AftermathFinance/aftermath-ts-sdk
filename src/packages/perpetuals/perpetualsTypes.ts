@@ -1231,7 +1231,21 @@ export interface PerpetualsAccountOrderHistoryData {
 	pnl?: number;
 	/** Fees charged for this order event, if applicable. */
 	fees?: number;
+	/**
+	 * Order type behind a TWAP order ticket lifecycle event
+	 * (`CreatedTWAPOrderTicket`, `ProcessedTWAPOrderTicket`, ...). TWAP and LWAP
+	 * orders share the same on-chain ticket, so this tells them apart. Absent on
+	 * every other event, and on ticket events the history service could not
+	 * classify.
+	 */
+	orderKind?: PerpetualsTicketOrderKind;
 }
+
+/**
+ * Order type behind a TWAP order ticket: a time-weighted (`twap`) or a
+ * liquidity-weighted (`lwap`) average price order.
+ */
+export type PerpetualsTicketOrderKind = "twap" | "lwap";
 
 /**
  * Event emitted when collateral is deposited into an account.
