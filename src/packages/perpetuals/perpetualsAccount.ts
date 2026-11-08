@@ -1236,15 +1236,18 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	/**
-	 * Preview what the book would fill of an LWAP order's next slice right now
-	 * (without building a tx). The account's own resting orders are excluded
-	 * from the fill.
+	 * Preview what an LWAP order would do against the book right now (without
+	 * building a tx): the whole size as one immediate order, the next slice,
+	 * the price band, the estimated slice count and duration, and the gas
+	 * deposit its ticket would need. The account's own resting orders are
+	 * excluded from the depth.
 	 *
 	 * @param inputs - See {@link SdkPerpetualsLwapOrderPreviewInputs}.
 	 * @param abortSignal - Optional `AbortSignal` to cancel the request.
 	 *
-	 * @returns Either an error message or a preview including `markPrice`,
-	 *   `fillableSize`, `averageFillPrice`, `minSliceSize` and `gasDeposit`.
+	 * @returns Either an error message or the preview, including `markPrice`,
+	 *   the band edges, `order`, `slice`, `minSliceSize`, `chunksAmount`,
+	 *   `estimatedSliceCount`, `fitsMaxWait` and `gasDeposit`.
 	 */
 	public async getLwapOrderPreview(
 		inputs: SdkPerpetualsLwapOrderPreviewInputs,

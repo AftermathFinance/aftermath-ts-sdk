@@ -890,14 +890,36 @@ describe("PerpetualsAccount LWAP order contract", () => {
 		expect(order.lastError).toBeUndefined();
 	});
 
-	it("previews an LWAP slice for the account", async () => {
+	it("previews an LWAP order for the account", async () => {
 		const account = makeAccount();
+		const fill = {
+			size: "10000n",
+			fillableSize: "6000n",
+			levelsConsumed: 3,
+			averagePrice: 78_010.5,
+			impactBps: 1.3,
+			limitPrice: 78_195.25,
+		};
 		const calls = installJsonFetch({
 			markPrice: 78_000.25,
-			fillableSize: "6000n",
-			averageFillPrice: 78_010.5,
+			priceBandBps: 50,
+			bandLowerPrice: 77_610.25,
+			bandUpperPrice: 78_390.25,
+			order: fill,
+			slice: {
+				...fill,
+				size: "2000n",
+				fillableSize: "2000n",
+				waitReason: null,
+			},
 			minSliceSize: "500n",
+			chunksAmount: 20,
+			estimatedSliceCount: 5,
+			estimatedMinDurationMs: 60_000,
+			fitsMaxWait: true,
 			gasDeposit: "120000000n",
+			bookTimestampMs: null,
+			simulatedAtMs: 1_788_897_633_962,
 		});
 
 		const preview = await account.getLwapOrderPreview({
@@ -905,6 +927,8 @@ describe("PerpetualsAccount LWAP order contract", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: 10_000n,
 			maxSlippageBps: 25,
+			priceBandBps: 50,
+			maxWaitMs: 3_600_000,
 		});
 
 		expect(calls[0]?.input).toBe(
@@ -915,14 +939,21 @@ describe("PerpetualsAccount LWAP order contract", () => {
 			side: 0,
 			size: "10000n",
 			maxSlippageBps: 25,
+			priceBandBps: 50,
+			maxWaitMs: 3_600_000,
 			accountId: "9007199254740993n",
 		});
 		if ("error" in preview) {
 			throw new Error(preview.error);
 		}
-		expect(preview.fillableSize).toBe(6000n);
+		expect(preview.order.size).toBe(10_000n);
+		expect(preview.order.fillableSize).toBe(6000n);
+		expect(preview.order.averagePrice).toBe(78_010.5);
+		expect(preview.slice.size).toBe(2000n);
+		expect(preview.slice.waitReason).toBeUndefined();
 		expect(preview.minSliceSize).toBe(500n);
 		expect(preview.gasDeposit).toBe(120_000_000n);
-		expect(preview.averageFillPrice).toBe(78_010.5);
+		expect(preview.fitsMaxWait).toBe(true);
+		expect(preview.bookTimestampMs).toBeUndefined();
 	});
 });

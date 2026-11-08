@@ -3531,21 +3531,28 @@ export interface ApiPerpetualsLwapOrderDatasResponse {
 }
 
 /**
- * Request body for previewing what the book would fill of an LWAP order's
- * next slice right now, for an account or vault.
+ * Request body for previewing what an LWAP order would do against the book
+ * right now, for an account or vault.
  */
 export type ApiPerpetualsPreviewLwapOrderBody = {
 	/** Market ID associated with the request. */
 	marketId: PerpetualsMarketId;
 	/** Order side: `0` for bid or long, `1` for ask or short. */
 	side: PerpetualsOrderSide;
-	/** Slice size to preview (scaled base units). */
+	/** Total order size (scaled base units). */
 	size: bigint;
-	/** Max slippage of the slice from the live mark price, in basis points. */
+	/** Max slippage of each slice from the live mark price, in basis points (1 to `10000`). */
 	maxSlippageBps: Bps;
+	/**
+	 * How far the mark may move from the arrival mark before slices pause, in
+	 * basis points. Omit for twice `maxSlippageBps`.
+	 */
+	priceBandBps?: Bps;
+	/** How long the order may trade before its remainder is cancelled, in milliseconds. */
+	maxWaitMs: number;
 } & (
 	| {
-			/** Account whose own resting orders the slice cannot match. */
+			/** Account whose own resting orders the slices cannot match. */
 			accountId: PerpetualsAccountId | undefined;
 	  }
 	| {
@@ -3555,7 +3562,7 @@ export type ApiPerpetualsPreviewLwapOrderBody = {
 );
 
 /**
- * SDK-level inputs for previewing an LWAP order slice.
+ * SDK-level inputs for previewing an LWAP order.
  */
 export type SdkPerpetualsLwapOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewLwapOrderBody,
@@ -3563,7 +3570,37 @@ export type SdkPerpetualsLwapOrderPreviewInputs = Omit<
 >;
 
 /**
- * Response payload for an LWAP order slice preview.
+ * What an immediate-or-cancel order would fill within the slice slippage.
+ */
+export interface PerpetualsLwapFillPreview {
+	/** Size the order sends (scaled base units). */
+	size: bigint;
+	/** Size the book would fill within the slippage (scaled base units). */
+	fillableSize: bigint;
+	/** Distinct price levels the fill takes. */
+	levelsConsumed: number;
+	/** Size-weighted fill price; absent when nothing fills. */
+	averagePrice?: number;
+	/**
+	 * The average fill's distance from the mark, in basis points, positive when
+	 * the taker pays more on a buy or receives less on a sell; absent when
+	 * nothing fills.
+	 */
+	impactBps?: number;
+	/** The IOC limit price the slippage allows. */
+	limitPrice: number;
+}
+
+/**
+ * The next slice the LWAP executor would send.
+ */
+export interface PerpetualsLwapSlicePreview extends PerpetualsLwapFillPreview {
+	/** Why the executor would hold the slice back; absent when it would send it now. */
+	waitReason?: PerpetualsLwapWaitReasonCode;
+}
+
+/**
+ * Response payload for an LWAP order preview.
  */
 export type ApiPerpetualsPreviewLwapOrderResponse =
 	| {
@@ -3573,14 +3610,39 @@ export type ApiPerpetualsPreviewLwapOrderResponse =
 	| {
 			/** Live mark price the preview ran against. */
 			markPrice: number;
-			/** Size an immediate slice of `size` would fill within the slippage (scaled base units). */
-			fillableSize: bigint;
-			/** Size-weighted fill price of `fillableSize`; absent when nothing fills. */
-			averageFillPrice?: number;
-			/** Smallest slice the executor fires (scaled base units). */
+			/** The price band the order would use, in basis points. */
+			priceBandBps: Bps;
+			/** Lower band edge around the current mark. */
+			bandLowerPrice: number;
+			/** Upper band edge around the current mark. */
+			bandUpperPrice: number;
+			/** The whole size sent as one immediate order now. */
+			order: PerpetualsLwapFillPreview;
+			/** The next slice the executor would send. */
+			slice: PerpetualsLwapSlicePreview;
+			/** Smallest slice the executor sends (scaled base units). */
 			minSliceSize: bigint;
-			/** SUI (in MIST) the order's ticket would deposit for the executor. */
+			/** The ticket's slice count, which sets the gas deposit. */
+			chunksAmount: number;
+			/**
+			 * Slices of the next slice's size needed to fill the order at the
+			 * current depth; absent while the slice is held back.
+			 */
+			estimatedSliceCount?: number;
+			/** The shortest time those slices take, in milliseconds; absent while the slice is held back. */
+			estimatedMinDurationMs?: number;
+			/** Whether that duration fits in `maxWaitMs`; absent while the slice is held back. */
+			fitsMaxWait?: boolean;
+			/**
+			 * SUI (in MIST) the order's ticket would deposit for the executor. The
+			 * executor is paid by filled size and the rest is refunded when the
+			 * order ends.
+			 */
 			gasDeposit: bigint;
+			/** Timestamp (ms since epoch) of the checkpoint the book was read from. */
+			bookTimestampMs?: Timestamp;
+			/** When the book was matched, in milliseconds since the Unix epoch. */
+			simulatedAtMs: Timestamp;
 	  };
 
 // =========================================================================
