@@ -3421,15 +3421,27 @@ export interface PerpetualsLwapOrderData {
 	/** Milliseconds since the Unix epoch when the unfilled remainder is cancelled. */
 	windowEndMs: Timestamp;
 	/**
-	 * SUI (in MIST) deposited on the ticket for execution gas. Absent once the
-	 * ticket is gone from chain.
+	 * SUI (in MIST) deposited on the ticket for execution gas. Absent when the
+	 * deposit is unknown.
 	 */
 	gasDeposited?: bigint;
 	/**
 	 * SUI (in MIST) still on the ticket. Absent once the ticket is gone from
-	 * chain; the remainder was refunded on cancel or finalize.
+	 * chain; see `gasReturned` for where the remainder went.
 	 */
 	gasRemaining?: bigint;
+	/**
+	 * SUI (in MIST) of the deposit paid to the executor for filled slices:
+	 * paid so far while the ticket is live, the total once the order has
+	 * ended. Absent when the deposit is unknown.
+	 */
+	gasPaid?: bigint;
+	/**
+	 * SUI (in MIST) of the deposit returned to the account owner when the
+	 * order was cancelled or finalized. Absent while the ticket is live; `0n`
+	 * after a full fill.
+	 */
+	gasReturned?: bigint;
 }
 
 /**
