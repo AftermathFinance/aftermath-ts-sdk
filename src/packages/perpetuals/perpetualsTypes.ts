@@ -2934,6 +2934,54 @@ export interface PerpetualsTwapOrderLastError {
 	protocolModule?: string;
 	/** Move abort code, when this is a protocol error. */
 	protocolCode?: MoveErrorCode;
+	/**
+	 * Basket leg whose own fill check failed the shared slice. Every leg of the
+	 * basket reports the same failing leg. Omitted for independent TWAP orders
+	 * and when no leg can be named.
+	 */
+	failedLeg?: PerpetualsTwapOrderFailedLeg;
+	/**
+	 * Amount and prices of the execution that failed. Omitted for `finalize`
+	 * and `cancel` errors and when the backend had no price for the market.
+	 */
+	attempt?: PerpetualsTwapOrderAttempt;
+}
+
+/**
+ * The basket leg that failed a basket slice, reported on
+ * {@link PerpetualsTwapOrderLastError.failedLeg}.
+ */
+export interface PerpetualsTwapOrderFailedLeg {
+	/** ID of the failing leg's TWAP order object on-chain. */
+	twapOrderObjectId: ObjectId;
+	/** Market (clearing house) ID of the failing leg. */
+	clearingHouseId: PerpetualsMarketId;
+}
+
+/**
+ * What a failed TWAP execution asked for, reported on
+ * {@link PerpetualsTwapOrderLastError.attempt}.
+ */
+export interface PerpetualsTwapOrderAttempt {
+	/** Base-asset amount the slice requested (scaled base units). */
+	requestedAmount: bigint;
+	/**
+	 * Base-asset amount filled before the failure (scaled base units). JSON
+	 * `null` decodes to `undefined` when the amount is unknown.
+	 */
+	filledAmount?: bigint;
+	/** Mark price the backend derived when the slice failed. */
+	markPrice: number;
+	/**
+	 * Limit price the slice was sent with: mark price moved by the order's max
+	 * slippage toward the taker side, rounded to the market tick.
+	 */
+	limitPrice: number;
+	/**
+	 * Best price on the opposite side of the book. JSON `null` decodes to
+	 * `undefined` when unknown.
+	 */
+	bestOppositePrice?: number;
 }
 
 /**
@@ -3048,6 +3096,21 @@ export interface PerpetualsTwapOrderData {
 	 * Omitted for unconditional / legacy TWAPs.
 	 */
 	priceConditions?: PerpetualsTwapOrderPriceConditions;
+	/**
+	 * Milliseconds since the Unix epoch of the next execution retry while the
+	 * backend waits between retries. Omitted when no retry is scheduled.
+	 */
+	nextRetryAtMs?: Timestamp;
+	/**
+	 * 1-based number of the retry being waited for. Omitted when no retry is
+	 * scheduled.
+	 */
+	retryAttempt?: number;
+	/**
+	 * Retries the backend sends before it cancels the order. Omitted when no
+	 * retry is scheduled.
+	 */
+	retryLimit?: number;
 }
 
 /**

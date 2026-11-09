@@ -735,4 +735,80 @@ describe("PerpetualsAccount TWAP price-condition contract", () => {
 		// Scaled integer fields still decode as bigint.
 		expect(order.details.size).toBe(10_000n);
 	});
+
+	it("decodes TWAP error details and retry timing", async () => {
+		const account = makeAccount();
+		installJsonFetch({
+			twapOrderDatas: [
+				{
+					twapOrderObjectId: "0xtwap",
+					collateralType: USDC,
+					orderState: "active",
+					invalidReason: null,
+					statusMessage: null,
+					details: {
+						marketId: MARKET_ID,
+						side: 0,
+						size: "10000n",
+						reduceOnly: false,
+						chunksAmount: 4,
+						executionGapMs: 1000,
+						executionTimeUncertaintyMs: 100,
+						timeForRetryMs: 500,
+						amountUncertaintyBps: 10,
+						maxOneExecutionAmountBps: 2500,
+						smallTailMergeThresholdBps: 50,
+						maxSlippageBps: 100,
+					},
+					processedAmount: "0n",
+					scheduledAmount: "0n",
+					lastExecutionTimestampMs: 0,
+					orderCreationTimestampMs: 1_788_894_933_962,
+					lastError: {
+						code: "slippage_exceeded",
+						message: "Price moved past the slippage limit",
+						action: "execute",
+						retryable: true,
+						occurredAtMs: 1_788_894_990_000,
+						protocolModule: null,
+						protocolCode: null,
+						failedLeg: {
+							twapOrderObjectId: "0xleg",
+							clearingHouseId: MARKET_ID,
+						},
+						attempt: {
+							requestedAmount: "1500n",
+							filledAmount: null,
+							markPrice: 78_000.25,
+							limitPrice: 78_780.5,
+							bestOppositePrice: null,
+						},
+					},
+					nextRetryAtMs: 1_788_895_000_000,
+					retryAttempt: 2,
+					retryLimit: 5,
+				},
+			],
+		});
+
+		const response = await account.getTwapOrderDatas({
+			bytes: "0x00",
+			signature: "0x01",
+		});
+		const [order] = response.twapOrderDatas;
+		const attempt = order.lastError?.attempt;
+
+		expect(order.lastError?.failedLeg).toEqual({
+			twapOrderObjectId: "0xleg",
+			clearingHouseId: MARKET_ID,
+		});
+		expect(attempt?.requestedAmount).toBe(1500n);
+		expect(attempt?.filledAmount).toBeUndefined();
+		expect(attempt?.markPrice).toBe(78_000.25);
+		expect(attempt?.limitPrice).toBe(78_780.5);
+		expect(attempt?.bestOppositePrice).toBeUndefined();
+		expect(order.nextRetryAtMs).toBe(1_788_895_000_000);
+		expect(order.retryAttempt).toBe(2);
+		expect(order.retryLimit).toBe(5);
+	});
 });
