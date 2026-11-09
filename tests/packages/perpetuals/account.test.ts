@@ -774,7 +774,7 @@ describe("PerpetualsAccount TWAP price-condition contract", () => {
 						protocolCode: null,
 						failedLeg: {
 							twapOrderObjectId: "0xleg",
-							clearingHouseId: MARKET_ID,
+							marketId: MARKET_ID,
 						},
 						attempt: {
 							requestedAmount: "1500n",
@@ -784,7 +784,7 @@ describe("PerpetualsAccount TWAP price-condition contract", () => {
 							bestOppositePrice: null,
 						},
 					},
-					nextRetryAtMs: 1_788_895_000_000,
+					nextRetryTimestamp: 1_788_895_000_000,
 					retryAttempt: 2,
 					retryLimit: 5,
 				},
@@ -800,14 +800,14 @@ describe("PerpetualsAccount TWAP price-condition contract", () => {
 
 		expect(order.lastError?.failedLeg).toEqual({
 			twapOrderObjectId: "0xleg",
-			clearingHouseId: MARKET_ID,
+			marketId: MARKET_ID,
 		});
 		expect(attempt?.requestedAmount).toBe(1500n);
 		expect(attempt?.filledAmount).toBeUndefined();
 		expect(attempt?.markPrice).toBe(78_000.25);
 		expect(attempt?.limitPrice).toBe(78_780.5);
 		expect(attempt?.bestOppositePrice).toBeUndefined();
-		expect(order.nextRetryAtMs).toBe(1_788_895_000_000);
+		expect(order.nextRetryTimestamp).toBe(1_788_895_000_000);
 		expect(order.retryAttempt).toBe(2);
 		expect(order.retryLimit).toBe(5);
 	});

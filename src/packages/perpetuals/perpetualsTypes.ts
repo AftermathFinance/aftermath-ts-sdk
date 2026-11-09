@@ -2954,8 +2954,8 @@ export interface PerpetualsTwapOrderLastError {
 export interface PerpetualsTwapOrderFailedLeg {
 	/** ID of the failing leg's TWAP order object on-chain. */
 	twapOrderObjectId: ObjectId;
-	/** Market (clearing house) ID of the failing leg. */
-	clearingHouseId: PerpetualsMarketId;
+	/** Market ID of the failing leg. */
+	marketId: PerpetualsMarketId;
 }
 
 /**
@@ -3100,7 +3100,7 @@ export interface PerpetualsTwapOrderData {
 	 * Milliseconds since the Unix epoch of the next execution retry while the
 	 * backend waits between retries. Omitted when no retry is scheduled.
 	 */
-	nextRetryAtMs?: Timestamp;
+	nextRetryTimestamp?: Timestamp;
 	/**
 	 * 1-based number of the retry being waited for. Omitted when no retry is
 	 * scheduled.
