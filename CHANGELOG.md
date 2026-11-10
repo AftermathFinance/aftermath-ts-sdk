@@ -1,5 +1,11 @@
 # aftermath-ts-sdk
 
+## 6.5.0
+
+### Minor Changes
+
+- [#210](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/210) [`c921d04`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/c921d04d26fcf0aeb816b874835fa2abcd185e8d) Thanks [@admin-aftermath](https://github.com/admin-aftermath)! - Perpetuals TWAP order data (`getTwapOrderDatas` and the `twapOrders` WebSocket field) types the new optional error details and retry timing. `PerpetualsTwapOrderLastError` gains `failedLeg` (new `PerpetualsTwapOrderFailedLeg`, basket aborts only) and `attempt` (new `PerpetualsTwapOrderAttempt`, with bigint `requestedAmount` and `filledAmount`, plus `markPrice`, `limitPrice` and `bestOppositePrice`). `PerpetualsTwapOrderData` gains `nextRetryAtMs`, `retryAttempt` and `retryLimit`.
+
 ## 6.4.0
 
 ### Minor Changes
