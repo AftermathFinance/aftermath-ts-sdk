@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
+import type { PerpetualsWsUpdatesResponseMessage } from "@sdk/packages/perpetuals/perpetualsTypes";
 import { clientForTest } from "@test/packages/perpetuals/fixturesApi.js";
 
 class MockWebSocket {
@@ -67,6 +68,57 @@ describe("Perpetuals public WebSocket streams", () => {
 		expect(messages).toEqual([{ oracle: { marketId: "0x1", basePrice: 123 } }]);
 		stream.close();
 		expect(socket.readyState).toBe(3);
+	});
+
+	it("parses orderbook delta nonces with and without prevNonce", () => {
+		globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+		const messages: PerpetualsWsUpdatesResponseMessage[] = [];
+		const stream = clientForTest().openUpdatesWebsocketStream({
+			onMessage: (message) => messages.push(message),
+		});
+		const socket = stream.ws as unknown as MockWebSocket;
+
+		stream.subscribeOrderbook({ marketId: "0x1" });
+		expect(socket.sent).toEqual([
+			JSON.stringify({
+				action: "subscribe",
+				subscriptionType: { orderbook: { marketId: "0x1" } },
+			}),
+		]);
+
+		const deltas = {
+			bidsDeltas: [],
+			asksDeltas: [],
+			asksTotalSizeDelta: 0,
+			bidsTotalSizeDelta: 0,
+		};
+		const emitDelta = (nonces: Record<string, string>) =>
+			socket.emit(
+				"message",
+				Object.assign(new Event("message"), {
+					data: JSON.stringify({
+						orderbook: {
+							marketId: "0x1",
+							orderbookDeltas: { ...deltas, ...nonces },
+						},
+					}),
+				})
+			);
+		// Current backends: `prevNonce` uses the same suffixed encoding as `nonce`.
+		emitDelta({ nonce: "12n", prevNonce: "9n" });
+		// Older backends omit `prevNonce`.
+		emitDelta({ nonce: "13n" });
+
+		const parsed = messages.map((message) =>
+			"orderbook" in message ? message.orderbook.orderbookDeltas : undefined
+		);
+		expect(parsed).toEqual([
+			{ ...deltas, nonce: 12n, prevNonce: 9n },
+			{ ...deltas, nonce: 13n },
+		]);
+		expect(parsed[1]?.prevNonce).toBeUndefined();
+		expect(parsed[1] !== undefined && "prevNonce" in parsed[1]).toBe(false);
+		stream.close();
 	});
 
 	it("subscribes to candles on open and forwards the candle payload", () => {

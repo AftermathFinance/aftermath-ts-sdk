@@ -608,14 +608,22 @@ export interface PerpetualsOrderbook {
 	bestAskPrice: number | undefined;
 	/** Mid price between best bid and best ask, if both exist. */
 	midPrice: number | undefined;
-	/** Incremental nonce associated with this snapshot. */
+	/**
+	 * Orderbook version this snapshot reflects. It increases with each
+	 * orderbook update; do not assume it increases by 1.
+	 *
+	 * A snapshot fetched over HTTP and deltas received over a websocket can be
+	 * numbered by different backend instances, so combining the two by `nonce`
+	 * is not reliable.
+	 */
 	nonce: bigint;
 }
 
 /**
  * Incremental deltas to an orderbook snapshot.
  *
- * These are typically used over websockets for streaming updates.
+ * These are typically used over websockets for streaming updates. A delta can
+ * carry empty `bidsDeltas` and `asksDeltas`.
  */
 export interface PerpetualsOrderbookDeltas {
 	/** Updated bid-side price levels. */
@@ -626,8 +634,22 @@ export interface PerpetualsOrderbookDeltas {
 	asksTotalSizeDelta: number;
 	/** Delta of total bid-side size. */
 	bidsTotalSizeDelta: number;
-	/** Nonce for ordering deltas. */
+	/**
+	 * Orderbook version after this delta. It increases with each update; do not
+	 * assume it increases by 1. Use `prevNonce` to detect a missed delta.
+	 */
 	nonce: bigint;
+	/**
+	 * `nonce` of the previous delta sent for this market on the same websocket
+	 * connection. `undefined` when the server does not send it (older backends).
+	 *
+	 * Once deltas are being applied, each delta's `prevNonce` must equal the
+	 * `nonce` of the delta applied before it. If it does not, an update was
+	 * missed: discard the local book and resync. Skip this check for the first
+	 * delta after a snapshot or a new subscription, because `nonce` also
+	 * advances on changes that emit no delta.
+	 */
+	prevNonce?: bigint;
 }
 
 /**
