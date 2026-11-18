@@ -11,6 +11,7 @@ import type {
 	ApiRewardsGetClaimableResponse,
 	ApiRewardsGetFeeRateBody,
 	ApiRewardsGetFeeRateResponse,
+	ApiRewardsGetFeeScheduleResponse,
 	ApiRewardsGetHistoryBody,
 	ApiRewardsGetHistoryResponse,
 	ApiRewardsGetPointsBody,
@@ -168,6 +169,26 @@ export class Rewards extends Caller {
 			ApiRewardsGetFeeRateResponse,
 			ApiRewardsGetFeeRateBody
 		>("fee-rate", inputs);
+	}
+
+	/**
+	 * Fetches the running epoch's perpetuals fee schedule: the taker and maker
+	 * volume tiers, the maker rebate tiers, and the epoch bounds. The schedule
+	 * is the same for every wallet; pair it with `getFeeRate` to place a wallet
+	 * on it.
+	 *
+	 * @returns The running epoch, its start and end, and the tiers in ascending
+	 * order.
+	 * @throws `AftermathTransportError` when the API request or response fails.
+	 *
+	 * @example
+	 * ```ts
+	 * const { takerFeeTiers, epochEndTimestampMs } =
+	 *   await rewards.getFeeSchedule();
+	 * ```
+	 */
+	public async getFeeSchedule(): Promise<ApiRewardsGetFeeScheduleResponse> {
+		return this.fetchApi<ApiRewardsGetFeeScheduleResponse>("fee-schedule");
 	}
 
 	// =========================================================================

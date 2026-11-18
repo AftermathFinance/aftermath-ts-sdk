@@ -134,6 +134,8 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 			takerVolume: 34.5,
 			makerFeeRate: -0.00005,
 			takerFeeRate: 0.0004,
+			makerVolumeShare: 0.0061,
+			takerFeeOverride: false,
 		};
 		const calls = installJsonFetch(response);
 
@@ -145,6 +147,30 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 			`${BASE_URL}/api/rewards/fee-rate`,
 		]);
 		expect(requestBody(calls, 0)).toEqual({ walletAddress: WALLET });
+	});
+
+	it("reads the fee schedule with a bodiless GET", async () => {
+		const response = {
+			epoch: 19,
+			epochStartTimestampMs: 1_794_441_600_000,
+			epochEndTimestampMs: 1_795_651_200_000,
+			takerFeeTiers: [
+				{ minVolume: 0, feeRate: 0.00045 },
+				{ minVolume: 5_000_000, feeRate: 0.0004 },
+			],
+			makerFeeTiers: [{ minVolume: 0, feeRate: -0.00005 }],
+			makerRebateTiers: [{ minVolumeShare: 0.005, rebateRate: 0.00001 }],
+		};
+		const calls = installJsonFetch(response);
+
+		await expect(
+			new Rewards({ baseUrl: BASE_URL }).getFeeSchedule()
+		).resolves.toEqual(response);
+
+		expect(calls.map(({ input }) => String(input))).toEqual([
+			`${BASE_URL}/api/rewards/fee-schedule`,
+		]);
+		expect(calls[0]?.init?.method).toBeUndefined();
 	});
 
 	it("turns a server tx kind into a Transaction and forwards optional coin filters", async () => {

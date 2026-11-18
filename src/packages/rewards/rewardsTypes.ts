@@ -245,6 +245,83 @@ export interface ApiRewardsGetFeeRateResponse {
 	 * when one is configured for it.
 	 */
 	takerFeeRate: number;
+	/**
+	 * The wallet's share of all maker volume this epoch (`0.005` is 0.5%),
+	 * which picks its maker rebate tier. Zero when nobody has made yet.
+	 */
+	makerVolumeShare: number;
+	/**
+	 * True when `takerFeeRate` is a fixed rate configured for the wallet rather
+	 * than the tier reached by `takerVolume`.
+	 */
+	takerFeeOverride: boolean;
+}
+
+// =========================================================================
+//  API - Fee Schedule
+// =========================================================================
+
+/**
+ * A volume tier: the rate applies once the wallet's volume this epoch reaches
+ * `minVolume`.
+ */
+export interface RewardsFeeTier {
+	/**
+	 * Wallet volume this epoch in USD at which the tier starts (inclusive).
+	 */
+	minVolume: number;
+	/**
+	 * Fee rate as a fraction of notional (`0.0001` is 1 bp). Maker rates may be
+	 * negative.
+	 */
+	feeRate: number;
+}
+
+/**
+ * A maker rebate tier: the rebate applies once the wallet's share of all maker
+ * volume this epoch reaches `minVolumeShare`.
+ */
+export interface RewardsMakerRebateTier {
+	/**
+	 * Share of all maker volume this epoch (`0.005` is 0.5%) at which the tier
+	 * starts (inclusive).
+	 */
+	minVolumeShare: number;
+	/**
+	 * Rate subtracted from the maker fee, as a fraction of notional.
+	 */
+	rebateRate: number;
+}
+
+/**
+ * The running epoch's perpetuals fee schedule, the same for every wallet.
+ */
+export interface ApiRewardsGetFeeScheduleResponse {
+	/**
+	 * The running epoch, numbered from zero like `getFeeRate`.
+	 */
+	epoch: number;
+	/**
+	 * When the running epoch started.
+	 */
+	epochStartTimestampMs: Timestamp;
+	/**
+	 * When the epoch ends and wallet volumes, so tiers, start over.
+	 */
+	epochEndTimestampMs: Timestamp;
+	/**
+	 * Taker tiers in ascending `minVolume`, reached by taker volume.
+	 */
+	takerFeeTiers: RewardsFeeTier[];
+	/**
+	 * Maker tiers in ascending `minVolume`, reached by maker volume.
+	 */
+	makerFeeTiers: RewardsFeeTier[];
+	/**
+	 * Rebate tiers in ascending `minVolumeShare`, subtracted from the maker
+	 * tier rate.
+	 */
+	makerRebateTiers: RewardsMakerRebateTier[];
 }
 
 // =========================================================================
