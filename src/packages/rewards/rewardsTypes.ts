@@ -193,6 +193,61 @@ export interface RewardsClaimableReward {
 }
 
 // =========================================================================
+//  API - Fee Rate
+// =========================================================================
+
+/**
+ * Request body for fetching a wallet's volume and effective perpetuals fee
+ * rates in the running rewards epoch.
+ */
+export interface ApiRewardsGetFeeRateBody {
+	/**
+	 * Sui wallet address to query fee rates for.
+	 */
+	walletAddress: SuiAddress;
+}
+
+/**
+ * A wallet's traded volume and effective fee rates in the running rewards
+ * epoch.
+ *
+ * Fee tiers are decided per epoch from the volume a wallet trades in that
+ * epoch, so both volumes and rates move as the epoch goes on and start over
+ * when the next one begins. A wallet that has not traded this epoch gets zero
+ * volumes and the base rates; the same answer is returned while the running
+ * epoch's volumes are not loaded yet.
+ */
+export interface ApiRewardsGetFeeRateResponse {
+	/**
+	 * The running epoch the figures cover, numbered from zero.
+	 */
+	epoch: number;
+	/**
+	 * Maker volume so far this epoch in USD, summed over all of the wallet's
+	 * perpetuals accounts and markets.
+	 */
+	makerVolume: number;
+	/**
+	 * Taker volume so far this epoch in USD, summed over all of the wallet's
+	 * perpetuals accounts and markets.
+	 */
+	takerVolume: number;
+	/**
+	 * Effective maker fee rate as a fraction of notional (`0.0001` is 1 bp):
+	 * the maker fee tier reached by `makerVolume`, less the rebate tier reached
+	 * by the wallet's share of all maker volume. Negative when the rebate
+	 * exceeds the fee.
+	 */
+	makerFeeRate: number;
+	/**
+	 * Effective taker fee rate as a fraction of notional (`0.0001` is 1 bp):
+	 * the taker fee tier reached by `takerVolume`, or the wallet's fixed rate
+	 * when one is configured for it.
+	 */
+	takerFeeRate: number;
+}
+
+// =========================================================================
 //  API - Claim
 // =========================================================================
 

@@ -127,6 +127,26 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 		expect(result.rewards[0]?.accountId).toBe(18_446_744_073_709_551_615n);
 	});
 
+	it("routes the fee rate read and keeps a negative maker rate", async () => {
+		const response = {
+			epoch: 7,
+			makerVolume: 12.5,
+			takerVolume: 34.5,
+			makerFeeRate: -0.00005,
+			takerFeeRate: 0.0004,
+		};
+		const calls = installJsonFetch(response);
+
+		await expect(
+			new Rewards({ baseUrl: BASE_URL }).getFeeRate({ walletAddress: WALLET })
+		).resolves.toEqual(response);
+
+		expect(calls.map(({ input }) => String(input))).toEqual([
+			`${BASE_URL}/api/rewards/fee-rate`,
+		]);
+		expect(requestBody(calls, 0)).toEqual({ walletAddress: WALLET });
+	});
+
 	it("turns a server tx kind into a Transaction and forwards optional coin filters", async () => {
 		const txKind = await serializedTransactionKind();
 		const fetchBase64TxKindFromTx = jest.fn((_input: { tx: Transaction }) =>

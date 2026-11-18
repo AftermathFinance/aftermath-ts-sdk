@@ -9,6 +9,8 @@ import type {
 	ApiRewardsDistributionResponse,
 	ApiRewardsGetClaimableBody,
 	ApiRewardsGetClaimableResponse,
+	ApiRewardsGetFeeRateBody,
+	ApiRewardsGetFeeRateResponse,
 	ApiRewardsGetHistoryBody,
 	ApiRewardsGetHistoryResponse,
 	ApiRewardsGetPointsBody,
@@ -135,6 +137,37 @@ export class Rewards extends Caller {
 			ApiRewardsGetClaimableResponse,
 			ApiRewardsGetClaimableBody
 		>("claimable", inputs);
+	}
+
+	/**
+	 * Fetches the wallet's volume and effective perpetuals fee rates for the
+	 * running rewards epoch.
+	 *
+	 * Rates are fractions of notional (`0.0001` is 1 bp) decided by the volume
+	 * the wallet has traded this epoch. The maker rate already nets out the
+	 * maker rebate tier, so it can be negative. Zero volumes do not prove the
+	 * wallet has not traded: the API returns the same answer while the running
+	 * epoch's volumes are still loading.
+	 *
+	 * @param inputs - Wallet address to query.
+	 * @returns The running epoch, maker and taker volume in USD, and the
+	 * effective maker and taker fee rates.
+	 * @throws `AftermathTransportError` when the API request or response fails.
+	 *
+	 * @example
+	 * ```ts
+	 * const { takerFeeRate, makerFeeRate } = await rewards.getFeeRate({
+	 *   walletAddress: "0x...",
+	 * });
+	 * ```
+	 */
+	public async getFeeRate(
+		inputs: ApiRewardsGetFeeRateBody
+	): Promise<ApiRewardsGetFeeRateResponse> {
+		return this.fetchApi<
+			ApiRewardsGetFeeRateResponse,
+			ApiRewardsGetFeeRateBody
+		>("fee-rate", inputs);
 	}
 
 	// =========================================================================
