@@ -188,7 +188,10 @@ export class Rewards extends Caller {
 	 * ```
 	 */
 	public async getFeeSchedule(): Promise<ApiRewardsGetFeeScheduleResponse> {
-		return this.fetchApi<ApiRewardsGetFeeScheduleResponse>("fee-schedule");
+		return this.fetchApi<
+			ApiRewardsGetFeeScheduleResponse,
+			Record<string, never>
+		>("fee-schedule", {});
 	}
 
 	// =========================================================================

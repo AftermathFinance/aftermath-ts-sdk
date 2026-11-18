@@ -149,7 +149,7 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 		expect(requestBody(calls, 0)).toEqual({ walletAddress: WALLET });
 	});
 
-	it("reads the fee schedule with a bodiless GET", async () => {
+	it("reads the fee schedule with an empty POST body", async () => {
 		const response = {
 			epoch: 19,
 			epochStartTimestampMs: 1_794_441_600_000,
@@ -170,7 +170,8 @@ describe("Rewards HTTP, bigint mapping, pagination, and claim transactions", () 
 		expect(calls.map(({ input }) => String(input))).toEqual([
 			`${BASE_URL}/api/rewards/fee-schedule`,
 		]);
-		expect(calls[0]?.init?.method).toBeUndefined();
+		expect(calls[0]?.init?.method).toBe("POST");
+		expect(requestBody(calls, 0)).toEqual({});
 	});
 
 	it("turns a server tx kind into a Transaction and forwards optional coin filters", async () => {
