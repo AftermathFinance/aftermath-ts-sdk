@@ -193,6 +193,138 @@ export interface RewardsClaimableReward {
 }
 
 // =========================================================================
+//  API - Fee Rate
+// =========================================================================
+
+/**
+ * Request body for fetching a wallet's volume and effective perpetuals fee
+ * rates in the running rewards epoch.
+ */
+export interface ApiRewardsGetFeeRateBody {
+	/**
+	 * Sui wallet address to query fee rates for.
+	 */
+	walletAddress: SuiAddress;
+}
+
+/**
+ * A wallet's traded volume and effective fee rates in the running rewards
+ * epoch.
+ *
+ * Fee tiers are decided per epoch from the volume a wallet trades in that
+ * epoch, so both volumes and rates move as the epoch goes on and start over
+ * when the next one begins. A wallet that has not traded this epoch gets zero
+ * volumes and the base rates; the same answer is returned while the running
+ * epoch's volumes are not loaded yet.
+ */
+export interface ApiRewardsGetFeeRateResponse {
+	/**
+	 * The running epoch the figures cover, numbered from zero.
+	 */
+	epoch: number;
+	/**
+	 * Maker volume so far this epoch in USD, summed over all of the wallet's
+	 * perpetuals accounts and markets.
+	 */
+	makerVolume: number;
+	/**
+	 * Taker volume so far this epoch in USD, summed over all of the wallet's
+	 * perpetuals accounts and markets.
+	 */
+	takerVolume: number;
+	/**
+	 * Effective maker fee rate as a fraction of notional (`0.0001` is 1 bp):
+	 * the maker fee tier reached by `makerVolume`, less the rebate tier reached
+	 * by the wallet's share of all maker volume. Negative when the rebate
+	 * exceeds the fee.
+	 */
+	makerFeeRate: number;
+	/**
+	 * Effective taker fee rate as a fraction of notional (`0.0001` is 1 bp):
+	 * the taker fee tier reached by `takerVolume`, or the wallet's fixed rate
+	 * when one is configured for it.
+	 */
+	takerFeeRate: number;
+	/**
+	 * The wallet's share of all maker volume this epoch (`0.005` is 0.5%),
+	 * which picks its maker rebate tier. Zero when nobody has made yet.
+	 */
+	makerVolumeShare: number;
+	/**
+	 * True when `takerFeeRate` is a fixed rate configured for the wallet rather
+	 * than the tier reached by `takerVolume`.
+	 */
+	takerFeeOverride: boolean;
+}
+
+// =========================================================================
+//  API - Fee Schedule
+// =========================================================================
+
+/**
+ * A volume tier: the rate applies once the wallet's volume this epoch reaches
+ * `minVolume`.
+ */
+export interface RewardsFeeTier {
+	/**
+	 * Wallet volume this epoch in USD at which the tier starts (inclusive).
+	 */
+	minVolume: number;
+	/**
+	 * Fee rate as a fraction of notional (`0.0001` is 1 bp). Maker rates may be
+	 * negative.
+	 */
+	feeRate: number;
+}
+
+/**
+ * A maker rebate tier: the rebate applies once the wallet's share of all maker
+ * volume this epoch reaches `minVolumeShare`.
+ */
+export interface RewardsMakerRebateTier {
+	/**
+	 * Share of all maker volume this epoch (`0.005` is 0.5%) at which the tier
+	 * starts (inclusive).
+	 */
+	minVolumeShare: number;
+	/**
+	 * Rate subtracted from the maker fee, as a fraction of notional.
+	 */
+	rebateRate: number;
+}
+
+/**
+ * The running epoch's perpetuals fee schedule, the same for every wallet.
+ */
+export interface ApiRewardsGetFeeScheduleResponse {
+	/**
+	 * The running epoch, numbered from zero like `getFeeRate`.
+	 */
+	epoch: number;
+	/**
+	 * When the running epoch started.
+	 */
+	epochStartTimestampMs: Timestamp;
+	/**
+	 * When the epoch ends and wallet volumes, so tiers, start over.
+	 */
+	epochEndTimestampMs: Timestamp;
+	/**
+	 * Taker tiers in ascending `minVolume`, reached by taker volume.
+	 */
+	takerFeeTiers: RewardsFeeTier[];
+	/**
+	 * Maker tiers in ascending `minVolume`, reached by maker volume.
+	 */
+	makerFeeTiers: RewardsFeeTier[];
+	/**
+	 * Rebate tiers in ascending `minVolumeShare`, subtracted from the maker
+	 * tier rate.
+	 */
+	makerRebateTiers: RewardsMakerRebateTier[];
+}
+
+// =========================================================================
 //  API - Claim
 // =========================================================================
 
