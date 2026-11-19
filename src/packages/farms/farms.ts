@@ -1,7 +1,18 @@
 import type { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
+import {
+	effectivePageRequest,
+	FARM_CATALOGUE_PAGE_SIZE,
+	fetchAllOffsetPages,
+	fetchExplicitChunks,
+	isOffsetPageRequest,
+	pageFromItems,
+	SMALL_API_PAGE_SIZE,
+} from "../../general/utils/offsetPagination";
 import type {
 	ApiIndexerEventsBody,
+	ApiOffsetPageBody,
+	ApiPage,
 	CallerConfig,
 	ObjectId,
 	SuiAddress,
@@ -65,7 +76,7 @@ export class Farms extends Caller {
 
 	/**
 	 * Creates a `Farms` instance for farm API reads and transaction builders.
- *
+	 *
 	 * @param config - Optional network, API-host, and access-token configuration.
 	 * @param api - Optional provider used by transaction builders. Reads do not require it.
 	 */
@@ -128,21 +139,56 @@ export class Farms extends Caller {
 		inputs: { objectIds: ObjectId[] },
 		abortSignal?: AbortSignal
 	): Promise<FarmsStakingPool[]> {
-		const stakingPools = await this.fetchApi<
-			FarmsStakingPoolObject[],
-			{
-				farmIds: ObjectId[];
-			}
-		>(
-			"",
-			{
-				farmIds: inputs.objectIds,
-			},
-			abortSignal
-		);
+		const stakingPools = await fetchExplicitChunks({
+			inputs: inputs.objectIds,
+			fetchChunk: (farmIds) =>
+				this.fetchApi<
+					FarmsStakingPoolObject[],
+					{ farmIds: ObjectId[]; limit: number }
+				>("", { farmIds, limit: SMALL_API_PAGE_SIZE }, abortSignal),
+		});
 		return stakingPools.map(
 			(stakingPool) => new FarmsStakingPool(stakingPool, this.config, this.api)
 		);
+	}
+
+	/** Fetches one bounded page of staking pools. */
+	public async getStakingPoolsPage(
+		inputs: { objectIds?: ObjectId[] } & ApiOffsetPageBody = {},
+		abortSignal?: AbortSignal
+	): Promise<ApiPage<FarmsStakingPool>> {
+		const request = effectivePageRequest(inputs, SMALL_API_PAGE_SIZE);
+		if (inputs.objectIds) {
+			const farmIds = inputs.objectIds.slice(
+				request.cursor,
+				request.cursor + request.limit
+			);
+			const rows = await this.fetchApi<
+				FarmsStakingPoolObject[],
+				{ farmIds: ObjectId[]; limit: number }
+			>("", { farmIds, limit: SMALL_API_PAGE_SIZE }, abortSignal);
+			return {
+				items: rows.map(
+					(row) => new FarmsStakingPool(row, this.config, this.api)
+				),
+				nextCursor:
+					request.limit > 0 &&
+					request.cursor + request.limit < inputs.objectIds.length
+						? request.cursor + request.limit
+						: undefined,
+			};
+		}
+		const rows = await this.fetchApi<
+			FarmsStakingPoolObject[],
+			Required<ApiOffsetPageBody>
+		>("", request, abortSignal);
+		const page = pageFromItems(rows, request);
+		return {
+			items: page.items.map(
+				(row) => new FarmsStakingPool(row, this.config, this.api)
+			),
+			nextCursor: page.nextCursor,
+		};
 	}
 
 	/**
@@ -158,11 +204,16 @@ export class Farms extends Caller {
 	 * ```
 	 */
 	public async getAllStakingPools(abortSignal?: AbortSignal) {
-		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi(
-			"",
-			{},
-			abortSignal
-		);
+		const stakingPools = await fetchAllOffsetPages({
+			pageSize: FARM_CATALOGUE_PAGE_SIZE,
+			identity: (pool: FarmsStakingPoolObject) => pool.objectId,
+			fetchPage: (page) =>
+				this.fetchApi<FarmsStakingPoolObject[], Required<ApiOffsetPageBody>>(
+					"",
+					page,
+					abortSignal
+				),
+		});
 		return stakingPools.map(
 			(pool) => new FarmsStakingPool(pool, this.config, this.api)
 		);
@@ -183,12 +234,29 @@ export class Farms extends Caller {
 	 * ```
 	 */
 	public async getOwnedStakedPositions(
-		inputs: ApiFarmsOwnedStakedPositionsBody
+		inputs: ApiFarmsOwnedStakedPositionsBody,
+		abortSignal?: AbortSignal
 	) {
-		const positions = await this.fetchApi<
-			FarmsStakedPositionObject[],
-			ApiFarmsOwnedStakedPositionsBody
-		>("owned-staked-positions", inputs);
+		if (isOffsetPageRequest(inputs)) {
+			const page = effectivePageRequest(inputs, SMALL_API_PAGE_SIZE);
+			const positions = await this.fetchApi<
+				FarmsStakedPositionObject[],
+				ApiFarmsOwnedStakedPositionsBody
+			>("owned-staked-positions", { ...inputs, ...page }, abortSignal);
+			return positions.map(
+				(position) =>
+					new FarmsStakedPosition(position, undefined, this.config, this.api)
+			);
+		}
+		const positions = await fetchAllOffsetPages({
+			pageSize: SMALL_API_PAGE_SIZE,
+			identity: (position: FarmsStakedPositionObject) => position.objectId,
+			fetchPage: (page) =>
+				this.fetchApi<
+					FarmsStakedPositionObject[],
+					ApiFarmsOwnedStakedPositionsBody & Required<ApiOffsetPageBody>
+				>("owned-staked-positions", { ...inputs, ...page }, abortSignal),
+		});
 		return positions.map(
 			(pool) => new FarmsStakedPosition(pool, undefined, this.config, this.api)
 		);
@@ -209,10 +277,27 @@ export class Farms extends Caller {
 	 * console.log(ownerCaps);
 	 * ```
 	 */
-	public async getOwnedStakingPoolOwnerCaps(
-		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
+	public getOwnedStakingPoolOwnerCaps(
+		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody,
+		abortSignal?: AbortSignal
 	): Promise<StakingPoolOwnerCapObject[]> {
-		return this.fetchApi("owned-staking-pool-owner-caps", inputs);
+		if (isOffsetPageRequest(inputs)) {
+			return this.fetchApi(
+				"owned-staking-pool-owner-caps",
+				{ ...inputs, ...effectivePageRequest(inputs, SMALL_API_PAGE_SIZE) },
+				abortSignal
+			);
+		}
+		return fetchAllOffsetPages({
+			pageSize: SMALL_API_PAGE_SIZE,
+			identity: (cap: StakingPoolOwnerCapObject) => cap.objectId,
+			fetchPage: (page) =>
+				this.fetchApi(
+					"owned-staking-pool-owner-caps",
+					{ ...inputs, ...page },
+					abortSignal
+				),
+		});
 	}
 
 	/**
@@ -230,10 +315,27 @@ export class Farms extends Caller {
 	 * console.log(adminCaps);
 	 * ```
 	 */
-	public async getOwnedStakingPoolOneTimeAdminCaps(
-		inputs: ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
+	public getOwnedStakingPoolOneTimeAdminCaps(
+		inputs: ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
+		abortSignal?: AbortSignal
 	): Promise<StakingPoolOneTimeAdminCapObject[]> {
-		return this.fetchApi("owned-staking-pool-one-time-admin-caps", inputs);
+		if (isOffsetPageRequest(inputs)) {
+			return this.fetchApi(
+				"owned-staking-pool-one-time-admin-caps",
+				{ ...inputs, ...effectivePageRequest(inputs, SMALL_API_PAGE_SIZE) },
+				abortSignal
+			);
+		}
+		return fetchAllOffsetPages({
+			pageSize: SMALL_API_PAGE_SIZE,
+			identity: (cap: StakingPoolOneTimeAdminCapObject) => cap.objectId,
+			fetchPage: (page) =>
+				this.fetchApi(
+					"owned-staking-pool-one-time-admin-caps",
+					{ ...inputs, ...page },
+					abortSignal
+				),
+		});
 	}
 
 	// =========================================================================
@@ -260,7 +362,21 @@ export class Farms extends Caller {
 		inputs?: { farmIds?: ObjectId[] },
 		abortSignal?: AbortSignal
 	): Promise<number> {
-		return this.fetchApi("tvl", inputs ?? {}, abortSignal);
+		const farmIds = inputs?.farmIds ? [...new Set(inputs.farmIds)] : undefined;
+		if (farmIds && farmIds.length > SMALL_API_PAGE_SIZE) {
+			const values = await fetchExplicitChunks({
+				inputs: farmIds,
+				fetchChunk: async (farmIds) => [
+					await this.fetchApi<number, { farmIds: ObjectId[] }>(
+						"tvl",
+						{ farmIds },
+						abortSignal
+					),
+				],
+			});
+			return values.reduce((sum, value) => sum + value, 0);
+		}
+		return this.fetchApi("tvl", farmIds ? { farmIds } : {}, abortSignal);
 	}
 
 	/**
@@ -283,7 +399,25 @@ export class Farms extends Caller {
 		inputs?: { farmIds?: ObjectId[] },
 		abortSignal?: AbortSignal
 	): Promise<number> {
-		return this.fetchApi("rewards-tvl", inputs ?? {}, abortSignal);
+		const farmIds = inputs?.farmIds ? [...new Set(inputs.farmIds)] : undefined;
+		if (farmIds && farmIds.length > SMALL_API_PAGE_SIZE) {
+			const values = await fetchExplicitChunks({
+				inputs: farmIds,
+				fetchChunk: async (farmIds) => [
+					await this.fetchApi<number, { farmIds: ObjectId[] }>(
+						"rewards-tvl",
+						{ farmIds },
+						abortSignal
+					),
+				],
+			});
+			return values.reduce((sum, value) => sum + value, 0);
+		}
+		return this.fetchApi(
+			"rewards-tvl",
+			farmIds ? { farmIds } : {},
+			abortSignal
+		);
 	}
 
 	/**
@@ -294,11 +428,41 @@ export class Farms extends Caller {
 	 * @param abortSignal - An optional signal for cancelling the request.
 	 * @returns TVL and reward TVL metrics for each requested farm.
 	 */
-	public async getFarmSummaries(
+	public getFarmSummaries(
 		inputs?: ApiFarmsSummaryBody,
 		abortSignal?: AbortSignal
 	): Promise<FarmSummary[]> {
-		return this.fetchApi("summary", inputs ?? {}, abortSignal);
+		if (isOffsetPageRequest(inputs)) {
+			const page = effectivePageRequest(inputs, SMALL_API_PAGE_SIZE);
+			if (inputs?.farmIds) {
+				const farmIds = inputs.farmIds.slice(
+					page.cursor,
+					page.cursor + page.limit
+				);
+				return this.fetchApi(
+					"summary",
+					{ farmIds, limit: SMALL_API_PAGE_SIZE },
+					abortSignal
+				);
+			}
+			return this.fetchApi("summary", page, abortSignal);
+		}
+		if (inputs?.farmIds) {
+			return fetchExplicitChunks({
+				inputs: inputs.farmIds,
+				fetchChunk: (farmIds) =>
+					this.fetchApi(
+						"summary",
+						{ farmIds, limit: SMALL_API_PAGE_SIZE },
+						abortSignal
+					),
+			});
+		}
+		return fetchAllOffsetPages({
+			pageSize: FARM_CATALOGUE_PAGE_SIZE,
+			identity: (summary: FarmSummary) => summary.farmId,
+			fetchPage: (page) => this.fetchApi("summary", page, abortSignal),
+		});
 	}
 
 	// =========================================================================
@@ -367,17 +531,21 @@ export class Farms extends Caller {
 	 * console.log(userEvents);
 	 * ```
 	 */
-	public async getInteractionEvents(
+	public getInteractionEvents(
 		inputs: ApiIndexerEventsBody & {
 			walletAddress: SuiAddress;
 		}
 	) {
+		const limit = Math.min(
+			inputs.limit ?? SMALL_API_PAGE_SIZE,
+			SMALL_API_PAGE_SIZE
+		);
 		return this.fetchApiIndexerEvents<
 			FarmUserEvent,
 			ApiIndexerEventsBody & {
 				walletAddress: SuiAddress;
 			}
-		>("events-by-user", inputs);
+		>("events-by-user", { ...inputs, limit });
 	}
 
 	// =========================================================================
