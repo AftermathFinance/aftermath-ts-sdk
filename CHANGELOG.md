@@ -1,5 +1,13 @@
 # aftermath-ts-sdk
 
+## 6.6.0
+
+### Minor Changes
+
+- [#213](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/213) [`806c17c`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/806c17c42f9a548877e45202d1e593f6916b75d7) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Rewards `getFeeRate` returns a wallet's maker and taker volume and its effective volume-tier maker and taker fee rates for the running epoch (`POST /api/rewards/fee-rate`).
+
+- [#213](https://github.com/AftermathFinance/aftermath-ts-sdk/pull/213) [`806c17c`](https://github.com/AftermathFinance/aftermath-ts-sdk/commit/806c17c42f9a548877e45202d1e593f6916b75d7) Thanks [@matical-aftermath](https://github.com/matical-aftermath)! - Rewards `getFeeSchedule` returns the running epoch's perpetuals fee tiers and bounds (`POST /api/rewards/fee-schedule`), and `getFeeRate` now includes `makerVolumeShare` and `takerFeeOverride`.
+
 ## 6.5.0
 
 ### Minor Changes
