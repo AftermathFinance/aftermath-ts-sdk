@@ -239,6 +239,43 @@ describe("PerpetualsAccount state and order/margin branches", () => {
 			accountId: "9007199254740993n",
 		});
 
+		const marginSnapshot = {
+			timestamp: 1_792_670_400_000,
+			availableCollateralUsd: 2_104_518.22,
+			totalEquityUsd: 5_512_340.87,
+			realizedFundingsUsd: 18_422.51,
+			realizedPnlUsd: -38_122.56,
+			takerVolumeUsd: 41_250_833.1,
+			makerVolumeUsd: 388_120_455.72,
+			takerFeesUsd: 20_625.42,
+			makerFeesUsd: -19_406.02,
+			liquidatedFeesUsd: 0,
+			liquidatorFeesUsd: 0,
+		};
+		for (const boostedYieldUsd of [307_188.4, 0]) {
+			installJsonFetch({
+				marginHistoryDatas: [{ ...marginSnapshot, boostedYieldUsd }],
+			});
+			const { marginHistoryDatas } = await direct.getMarginHistory({
+				timeframe: "1M",
+			});
+			expect(marginHistoryDatas).toEqual([
+				{ ...marginSnapshot, boostedYieldUsd },
+			]);
+		}
+
+		for (const snapshot of [
+			{ ...marginSnapshot, boostedYieldUsd: null },
+			marginSnapshot,
+		]) {
+			installJsonFetch({ marginHistoryDatas: [snapshot] });
+			const { marginHistoryDatas } = await direct.getMarginHistory({
+				timeframe: "1M",
+			});
+			expect(marginHistoryDatas).toEqual([marginSnapshot]);
+			expect(marginHistoryDatas[0]?.boostedYieldUsd).toBeUndefined();
+		}
+
 		calls = installJsonFetch({ marketIdsToData: {} });
 		await expect(
 			direct.getCancelOrdersPreview({ marketIdsToData: {} })

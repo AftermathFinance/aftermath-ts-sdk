@@ -1189,6 +1189,22 @@ export interface PerpetualsAccountMarginHistoryData {
 	liquidatedFeesUsd: number;
 	/** Liquidator fees in USD at that time. */
 	liquidatorFeesUsd: number;
+	/**
+	 * Boosted yield paid into a vault's account, in USD.
+	 *
+	 * A lifetime running total of every yield deposit made before the end of
+	 * this snapshot's bucket, each valued at the collateral price when it
+	 * landed. Subtract two snapshots for the yield within a window. The vault's
+	 * boosted APR is derived from the same deposits.
+	 *
+	 * `undefined` for an account that is not a vault's account, when the yield
+	 * data is unavailable, or on API deployments that predate the field (the
+	 * API sends `null`, which this SDK decodes as `undefined`); every snapshot
+	 * in one response agrees. A vault that has never received a yield reports
+	 * `0`. A deposit is added a minute or two after it lands, so the most
+	 * recent snapshots may be revised.
+	 */
+	boostedYieldUsd?: number;
 }
 
 /**
